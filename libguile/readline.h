@@ -48,7 +48,8 @@ extern scm_option scm_readline_opts[];
 
 #define SCM_HISTORY_FILE_P     scm_readline_opts[0].val
 #define SCM_HISTORY_LENGTH     scm_readline_opts[1].val
-#define SCM_N_READLINE_OPTIONS 2
+#define SCM_READLINE_BOUNCE_PARENS scm_readline_opts[2].val
+#define SCM_N_READLINE_OPTIONS 3
 
 extern SCM scm_readline_options (SCM setting);
 extern SCM scm_readline (SCM txt, SCM inp, SCM outp, SCM read_hook);

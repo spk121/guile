@@ -1,3 +1,28 @@
+1999-01-28  Mikael Djurfeldt  <mdj@mdj.nada.kth.se>
+
+	* evalext.c, evalext.h (scm_m_generalized_set_x): New memoizing
+	macro.
+	(scm_init_evalext): Call scm_make_gsubr for
+	scm_m_generalized_set_x.
+
+	* eval.c, debug.c, tags.h (SCM_IM_SET_X): Renamed from SCM_IM_SET.
+
+	* eval.h: Declare scm_s_set_x, scm_sym_set_x;
+
+	* eval.c: Renamed "set" --> "set_x" in various names for
+	consistency of name correspondence between Scheme and C;
+	Renamed scm_i_set_x --> scm_sym_set_x and made global.
+	Renamed s_set_x --> scm_s_set_x and made global.
+
+1999-01-26  Mikael Djurfeldt  <mdj@mdj.nada.kth.se>
+
+	* random.c (scm_i_random_bignum): Made independent of endianness.
+
+1999-01-22  Mikael Djurfeldt  <mdj@mdj.nada.kth.se>
+
+	* eval.c (SCM_CEVAL): Added ENTER_APPLY in code for SCM_IM_APPLY.
+	(Thanks to Eric Hanchrow.)
+
 1999-01-21  Mikael Djurfeldt  <mdj@mdj.nada.kth.se>
 
 	* objects.c, objects.h (SCM_CLASS_REDEF): Renamed from CLASS_REDEF.

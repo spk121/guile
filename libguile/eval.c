@@ -501,19 +501,21 @@ scm_m_if (xorig, env)
 }
 
 
-SCM_SYNTAX(s_set,"set!", scm_makmmacro, scm_m_set);
-SCM_SYMBOL(scm_i_set,s_set);
+/* Will go into the RnRS module when Guile is factorized.
+SCM_SYNTAX(scm_s_set_x,"set!", scm_makmmacro, scm_m_set_x); */
+char scm_s_set_x[] = "set!";
+SCM_GLOBAL_SYMBOL(scm_sym_set_x, scm_s_set_x);
 
 SCM 
-scm_m_set (xorig, env)
+scm_m_set_x (xorig, env)
      SCM xorig;
      SCM env;
 {
   SCM x = SCM_CDR (xorig);
-  SCM_ASSYNT (2 == scm_ilength (x), xorig, scm_s_expression, s_set);
+  SCM_ASSYNT (2 == scm_ilength (x), xorig, scm_s_expression, scm_s_set_x);
   SCM_ASSYNT (SCM_NIMP (SCM_CAR (x)) && SCM_SYMBOLP (SCM_CAR (x)),
-	      xorig, scm_s_variable, s_set);
-  return scm_cons (SCM_IM_SET, x);
+	      xorig, scm_s_variable, scm_s_set_x);
+  return scm_cons (SCM_IM_SET_X, x);
 }
 
 
@@ -1183,8 +1185,8 @@ unmemocopy (x, env)
     case (127 & SCM_IM_QUOTE):
       ls = z = scm_cons (scm_i_quote, SCM_UNSPECIFIED);
       break;
-    case (127 & SCM_IM_SET):
-      ls = z = scm_cons (scm_i_set, SCM_UNSPECIFIED);
+    case (127 & SCM_IM_SET_X):
+      ls = z = scm_cons (scm_sym_set_x, SCM_UNSPECIFIED);
       break;
     case (127 & SCM_IM_DEFINE):
       {
@@ -1847,7 +1849,7 @@ dispatch:
       RETURN (SCM_CAR (SCM_CDR (x)));
 
 
-    case (127 & SCM_IM_SET):
+    case (127 & SCM_IM_SET_X):
       x = SCM_CDR (x);
       proc = SCM_CAR (x);
       switch (7 & (int) proc)
@@ -1940,6 +1942,7 @@ dispatch:
 	      if (scm_badargsp (SCM_CAR (SCM_CODE (proc)), t.arg1))
 		goto wrongnumargs;
 #endif
+	      ENTER_APPLY;
 	      /* Copy argument list */
 	      if (SCM_IMP (t.arg1))
 		argl = t.arg1;

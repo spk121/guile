@@ -662,7 +662,7 @@ scm_init_debug ()
   scm_sysintern ("SCM_IM_LETREC", SCM_IM_LETREC);
   scm_sysintern ("SCM_IM_OR", SCM_IM_OR);
   scm_sysintern ("SCM_IM_QUOTE", SCM_IM_QUOTE);
-  scm_sysintern ("SCM_IM_SET", SCM_IM_SET);
+  scm_sysintern ("SCM_IM_SET_X", SCM_IM_SET_X);
   scm_sysintern ("SCM_IM_DEFINE", SCM_IM_DEFINE);
   scm_sysintern ("SCM_IM_APPLY", SCM_IM_APPLY);
   scm_sysintern ("SCM_IM_CONT", SCM_IM_CONT);
