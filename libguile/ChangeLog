@@ -1,3 +1,31 @@
+1999-03-11  Mikael Djurfeldt  <mdj@mdj.nada.kth.se>
+
+	* gc.c, gc.h (scm_object_address): Renamed from scm_object_addr ().
+
+	* objects.h (scm_si_redefined, scm_si_hashsets): Shifted.
+
+	* eval.c, procs.c, procs.h, procprop.c: Renamed getter ->
+	procedure throughout.
+
+	* print.c (scm_iprin1): Removed extraneous space when printing
+	procedure-with-setters.
+
+	Entity and operator setter slots were introduced as a complement
+	to the <procedure-with-setter> type in order to support entities
+	and operators with setters in a reasonable and efficient way.
+	* procs.c (scm_procedure, scm_setter): Handle entity and operator
+	setter slots.
+
+	* objects.h (SCM_OPERATOR_SETTER, SCM_ENTITY_SETTER): New macros.
+	(struct scm_metaclass_operator): New setter slot.
+
+	* gc.c (scm_gc_mark): Mark struct setter slot.
+
+	* struct.c (scm_make_struct): Allocate one word more for
+	entities and initialize the new slot.
+
+	* struct.h (scm_struct_i_setter): New constant.
+
 1999-03-08  Mikael Djurfeldt  <mdj@barbara.nada.kth.se>
 
 	* objects.h (SCM_OBJ_CLASS_REDEF): New macro: Find class slots
