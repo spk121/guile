@@ -17,27 +17,39 @@ to be named `and-let*', of course.
 On systems that support it, there is also a compatibility module named
 (ice-9 and-let*).  It will go away in a future release.
 
-* bugfix: net_db.c `inet_aton' declaration now properly conditionalized
+* build fix: net_db.c `inet_aton' declaration now properly conditionalized
 
 This buglet typically caused compilation to fail at
 libguile/net_db.c:85, and in fact, motivated 1.4.1 release.
 
 * bugfix: `expt' now handles negative exponents correctly
 
-* installation process fix: some programs are no longer installed
+* installation fix: some programs are no longer installed
 
 The following programs are used in the build process and are now no longer
 installed in $bindir.
 
 	guile-doc-snarf
 	guile-func-name-check
-	guile-snarf
 	guile-snarf.awk
 
-We will eventually support doc snarfing through an "executable
-scheme module" mechanism.
+* guile-snarf usage now internalizes output-file creation/deletion
 
-* libltdl is now configured as as "installable" instead of "convenience"
+In Guile 1.4, the installed (in $bindir) program "guile-snarf" wrote
+to standard output and required this kind of construction in the Makefile:
+
+  guile-snarf foo.c $(snarf-cpp-opts) > foo.x || { rm foo.x; false; }
+
+The program now handles output-file deletion on error interanlly, and
+can be used like so:
+
+  guile-snarf -o foo.x foo.c $(snarf-cpp-opts)
+
+The "-o OUTFILE INFILE $(snarf-cpp-opts)" must appear in the specified order.
+This usage is upward compatible with future guile-snarf programs.  Support
+for the old usage is likely to be dropped in the future.
+
+* installation fix: libltdl now "installable" instead of "convenience"
 
 Previously, libguile included a private copy of libltdl.  Now,
 configuration detects if libltdl is already installed, and uses that.
@@ -73,8 +85,7 @@ something like:
   unsupported test cases: 9
   errors:                 0
 
-If there are any errors, "make check" returns failurefully; please file
-a bug report in that case (send email to <bug-guile@gnu.org>).
+If there are any errors, "make check" fails.
 
 The tests comprising "make check" are located under the test-suite
 subdir, and can be run individually using the "check-guile" script, like
@@ -85,6 +96,12 @@ so:
 (This is how "make check" does it, too.)  See the header comments in
 check-guile for more info.  If you write new tests, send them to
 bug-guile.
+
+* provisional documentation available
+
+The data-rep.info that was included in Guile 1.4 is now incorporated
+into guile.info, which is a temporary placeholder for the reference manual
+that is still to be fully integrated at some point in the future.
 
 * API summarization available
 
