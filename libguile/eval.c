@@ -2004,7 +2004,6 @@ dispatch:
 	      next_method:
 		i = (i + 1) & mask;
 	      } while (i != end);
-	  memoize_method:
 	    scm_memoize_method (x, SCM_CDAR (env));
 	    goto loop;
 	  
