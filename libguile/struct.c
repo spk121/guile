@@ -1,4 +1,4 @@
-/* Copyright (C) 1996, 97, 98, 99, 2000 Free Software Foundation, Inc.
+/* Copyright (C) 1996, 97, 98, 99, 2000, 2002 Free Software Foundation, Inc.
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -39,8 +39,6 @@
  * whether to permit this exception to apply to your modifications.
  * If you do not wish that, delete this exception notice.  */
 
-/* Software engineering face-lift by Greg J. Badros, 11-Dec-1999,
-   gjb@cs.washington.edu, http://www.cs.washington.edu/homes/gjb */
 
 
 

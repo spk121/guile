@@ -1,5 +1,5 @@
 /* classes: src_files 
- *	Copyright (C) 1995, 1997, 1998, 2000 Free Software Foundation, Inc.
+ *	Copyright (C) 1995, 1997, 1998, 2000, 2002 Free Software Foundation, Inc.
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,8 +16,6 @@
  * the Free Software Foundation, Inc., 59 Temple Place, Suite 330,
  * Boston, MA 02111-1307 USA */
 
-/* Software engineering face-lift by Greg J. Badros, 11-Dec-1999,
-   gjb@cs.washington.edu, http://www.cs.washington.edu/homes/gjb */
 
 
 

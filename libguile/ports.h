@@ -2,7 +2,7 @@
 
 #ifndef PORTSH
 #define PORTSH
-/*	Copyright (C) 1995,1996,1997,1998,1999, 2000 Free Software Foundation, Inc.
+/*	Copyright (C) 1995,1996,1997,1998,1999, 2000, 2002 Free Software Foundation, Inc.
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -43,8 +43,6 @@
  * whether to permit this exception to apply to your modifications.
  * If you do not wish that, delete this exception notice.  */
 
-/* Software engineering face-lift by Greg J. Badros, 11-Dec-1999,
-   gjb@cs.washington.edu, http://www.cs.washington.edu/homes/gjb */
 
 #include "libguile/__scm.h"
 
