@@ -1,3 +1,11 @@
+2002-05-03  Thien-Thi Nguyen  <ttn@giblet.glug.org>
+
+	* and-let-star.scm: Back port from HEAD (1.4).
+
+	* and-let-star-compat.scm: Back port from
+	branch_release-1-6 (1.2.4.3) w/ the following differences:
+	Use `export-syntax' instead of `re-export-syntax'.
+
 2002-03-04  Thien-Thi Nguyen  <ttn@giblet.glug.org>
 
 	* boot-9.scm (expt): Fix bug: Handle negative exponents correctly.
