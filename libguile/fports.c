@@ -1,15 +1,15 @@
 /*	Copyright (C) 1995,1996,1997,1998,1999, 2000 Free Software Foundation, Inc.
- * 
+ *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2, or (at your option)
  * any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this software; see the file COPYING.  If not, write to
  * the Free Software Foundation, Inc., 59 Temple Place, Suite 330,
@@ -60,7 +60,7 @@
 #else
 scm_sizet fwrite ();
 #endif
-#ifdef HAVE_ST_BLKSIZE
+#ifdef HAVE_STRUCT_STAT_ST_BLKSIZE
 #include <sys/stat.h>
 #endif
 
@@ -83,9 +83,9 @@ scm_fport_buffer_add (SCM port, int read_size, int write_size)
   if (read_size == -1 || write_size == -1)
     {
       int default_size;
-#ifdef HAVE_ST_BLKSIZE
+#ifdef HAVE_STRUCT_STAT_ST_BLKSIZE
       struct stat st;
-      
+
       default_size = (fstat (fp->fdes, &st) == -1) ? default_buffer_size
 	: st.st_blksize;
 #else
@@ -132,7 +132,7 @@ scm_fport_buffer_add (SCM port, int read_size, int write_size)
     SCM_SET_CELL_WORD_0 (port, SCM_CELL_WORD_0 (port) | SCM_BUF0);
 }
 
-SCM_DEFINE (scm_setvbuf, "setvbuf", 2, 1, 0, 
+SCM_DEFINE (scm_setvbuf, "setvbuf", 2, 1, 0,
             (SCM port, SCM mode, SCM size),
 	    "Set the buffering mode for @var{port}.  @var{mode} can be:\n"
 	    "@table @code\n"
@@ -402,7 +402,7 @@ fport_input_waiting (SCM port)
   FD_ZERO (&except_set);
 
   FD_SET (fdes, &read_set);
-  
+
   timeout.tv_sec = 0;
   timeout.tv_usec = 0;
 
@@ -415,7 +415,7 @@ fport_input_waiting (SCM port)
   int remir;
   ioctl(fdes, FIONREAD, &remir);
   return remir;
-#else    
+#else
   scm_misc_error ("fport_input_waiting",
 		  "Not fully implemented on this platform",
 		  SCM_EOL);
@@ -423,11 +423,11 @@ fport_input_waiting (SCM port)
 }
 
 
-static int 
+static int
 prinfport (SCM exp,SCM port,scm_print_state *pstate)
 {
   scm_puts ("#<", port);
-  scm_print_port_mode (exp, port);    
+  scm_print_port_mode (exp, port);
   if (SCM_OPFPORTP (exp))
     {
       int fdes;
@@ -438,7 +438,7 @@ prinfport (SCM exp,SCM port,scm_print_state *pstate)
 		port);
       scm_putc (' ', port);
       fdes = (SCM_FSTREAM (exp))->fdes;
-      
+
       if (isatty (fdes))
 	scm_puts (ttyname (fdes), port);
       else
@@ -552,7 +552,7 @@ fport_seek (SCM port, off_t offset, int whence)
     }
   else /* SCM_PORT_NEITHER */
     {
-      result = rv = lseek (fp->fdes, offset, whence);      
+      result = rv = lseek (fp->fdes, offset, whence);
     }
 
   if (rv == -1)
@@ -583,7 +583,7 @@ fport_write (SCM port, const void *data, size_t size)
       if (write (fdes, data, size) == -1)
 	scm_syserror ("fport_write");
     }
-  else 
+  else
     {
       const char *input = (char *) data;
       size_t remaining = size;
@@ -609,7 +609,7 @@ fport_write (SCM port, const void *data, size_t size)
 
 /* becomes 1 when process is exiting: normal exception handling won't
    work by this time.  */
-extern int terminating; 
+extern int terminating;
 
 static void
 fport_flush (SCM port)
@@ -630,7 +630,7 @@ fport_flush (SCM port)
 	  /* error.  assume nothing was written this call, but
 	     fix up the buffer for any previous successful writes.  */
 	  int done = init_size - remaining;
-	      
+
 	  if (done > 0)
 	    {
 	      int i;
@@ -668,7 +668,7 @@ fport_end_input (SCM port, int offset)
 {
   struct scm_fport *fp = SCM_FSTREAM (port);
   scm_port *pt = SCM_PTAB_ENTRY (port);
-  
+
   offset += pt->read_end - pt->read_pos;
 
   if (offset > 0)
