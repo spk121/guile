@@ -1,6 +1,6 @@
 2002-02-09  Thien-Thi Nguyen  <ttn@giblet.glug.org>
 
-	* lib.scm Back port from 1.20, with these exceptions:
+	* lib.scm: Back port from 1.20, with these exceptions:
 	do not remove `signals-error?' and `signals-error?*', and do not
 	include (ice-9 stack-catch), which is not available yet.
 
