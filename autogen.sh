@@ -5,6 +5,8 @@
   exit 1
 }
 
+set -ex
+
 ./guile-aclocal.sh
 
 libtoolize --copy --automake --ltdl
