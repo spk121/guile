@@ -1,7 +1,14 @@
+1999-03-08  Mikael Djurfeldt  <mdj@barbara.nada.kth.se>
+
+	* objects.h (SCM_OBJ_CLASS_REDEF): New macro: Find class slots
+	directly through the instance.
+
+	* objects.c (scm_class_of): Use SCM_OBJ_CLASS_REDEF.
+
 1999-03-08  Mikael Djurfeldt  <mdj@mdj.nada.kth.se>
 
 	* gc.c (scm_gc_sweep): Bugfix: Look for SCM_STRUCT_F_LIGHT flag at
-	scm_vtable_index_flags instead of scm_vtable_index_layout!
+	scm_struct_i_flags instead of scm_vtable_index_layout!
 
 	* list.c (scm_list_star): New procedure.
 

@@ -1114,7 +1114,7 @@ scm_gc_sweep ()
 		if ((SCM_CDR (vcell) == 0) || (SCM_CDR (vcell) == 1))
 		  {
 		    SCM *p = (SCM *) SCM_GCCDR (scmptr);
-		    if (((SCM*) vcell)[scm_vtable_index_flags]
+		    if (((SCM*) vcell)[scm_struct_i_flags]
 			& SCM_STRUCTF_LIGHT)
 		      {
 			SCM layout = ((SCM*)vcell)[scm_vtable_index_layout];
