@@ -84,13 +84,13 @@ DOT_DOC_FILES =								   \
 
 EXTRA_DOT_DOC_FILES = @EXTRA_DOT_DOC_FILES@
 
-BUILT_SOURCES = cpp_err_symbols.c cpp_sig_symbols.c libpath.h \
+BUILT_SOURCES = cpp_err_symbols.c cpp_sig_symbols.c libpath.h scmconfig.h \
     $(DOT_X_FILES) $(EXTRA_DOT_X_FILES) $(DOT_DOC_FILES)
 
-EXTRA_libguile_la_SOURCES = _scm.h		\
+EXTRA_libguile_la_SOURCES = _scm.h			\
     alloca.c inet_aton.c memmove.c putenv.c strerror.c	\
-    threads.c regex-posix.c \
-    filesys.c posix.c net_db.c socket.c \
+    threads.c regex-posix.c				\
+    filesys.c posix.c net_db.c socket.c			\
     ramap.c unif.c debug-malloc.c
 
 ## This is kind of nasty... there are ".c" files that we don't want to
@@ -145,8 +145,7 @@ libpath.h: $(srcdir)/Makefile.in  $(top_builddir)/config.status
 	@echo '#define SCM_SITE_DIR "$(pkgdatadir)/site"' >> libpath.tmp
 	@echo '#define SCM_BUILD_INFO { \' >> libpath.tmp
 	@echo '	{ "srcdir", "'"`cd @srcdir@; pwd`"'" }, \' >> libpath.tmp
-	@echo '	{ "top_srcdir", "'"`cd @top_srcdir@; pwd`"'" }, \' \
-		>> libpath.tmp
+	@echo ' { "top_srcdir",    "@top_srcdir_absolute@" }, \' >> libpath.tmp
 	@echo '	{ "prefix",	   "@prefix@" }, \' >> libpath.tmp
 	@echo '	{ "exec_prefix",   "@exec_prefix@" }, \' >> libpath.tmp
 	@echo '	{ "bindir",	   "@bindir@" }, \' >> libpath.tmp
@@ -173,13 +172,12 @@ libpath.h: $(srcdir)/Makefile.in  $(top_builddir)/config.status
 	@mv libpath.tmp libpath.h
 
 
+snarfcppopts = $(DEFS) $(INCLUDES) $(CPPFLAGS) $(CFLAGS)
 SUFFIXES = .x .doc
 .c.x:
-	PATH=.:${PATH} ./guile-doc-snarf $< $(DEFS) $(INCLUDES) $(CPPFLAGS) $(CFLAGS) $< > $@ \
-	|| { rm $@; false; }
+	./guile-snarf -o $@ $< $(snarfcppopts)
 .c.doc:
-	PATH=.:${PATH} ./guile-doc-snarf $< $(DEFS) $(INCLUDES) $(CPPFLAGS) $(CFLAGS) $< > /dev/null \
-        || { rm $@; false; }
+	./guile-doc-snarf -o $@ $< $(snarfcppopts)
 
 guile-procedures.txt: $(DOT_DOC_FILES) $(EXTRA_DOT_DOC_FILES)
 	cat *.doc > $@
