@@ -1,3 +1,8 @@
+2005-01-10  Marius Vollmer  <marius.vollmer@uni-dortmund.de>
+
+	* eval.c (scm_eval): Added example to docstring.  Thanks to Issac
+	Trotts!
+
 2004-12-27  Neil Jerram  <neil@ossau.uklinux.net>
 
 	* continuations.h, continuations.c (scm_t_contregs): New 'offset'

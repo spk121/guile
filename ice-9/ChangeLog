@@ -1,3 +1,9 @@
+2005-01-10  Marius Vollmer  <marius.vollmer@uni-dortmund.de>
+
+	* boot-9.scm (process-define-module): Check for #:use-syntax
+	keyword, not the symbol.  Changed references to 'spec' variable to
+	'interface-args'.  There is no 'spec'.
+
 2004-09-26  Kevin Ryde  <user42@zip.com.au>
 
 	* optargs.scm (let-optional-template, let-keywords-template): Change
