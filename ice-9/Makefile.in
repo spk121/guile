@@ -59,9 +59,11 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 host_alias = @host_alias@
 host_triplet = @host@
+AS = @AS@
 AWK = @AWK@
 CC = @CC@
 CPP = @CPP@
+DLLTOOL = @DLLTOOL@
 GUILE_LIBS = @GUILE_LIBS@
 GUILE_MAJOR_VERSION = @GUILE_MAJOR_VERSION@
 GUILE_MINOR_VERSION = @GUILE_MINOR_VERSION@
@@ -112,7 +114,7 @@ DIST_COMMON =  COPYING ChangeLog Makefile.am Makefile.in version.scm.in
 
 DISTFILES = $(DIST_COMMON) $(SOURCES) $(HEADERS) $(TEXINFOS) $(EXTRA_DIST)
 
-TAR = gtar
+TAR = tar
 GZIP_ENV = --best
 all: all-redirect
 .SUFFIXES:

@@ -59,9 +59,11 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 host_alias = @host_alias@
 host_triplet = @host@
+AS = @AS@
 AWK = @AWK@
 CC = @CC@
 CPP = @CPP@
+DLLTOOL = @DLLTOOL@
 GUILE_LIBS = @GUILE_LIBS@
 GUILE_MAJOR_VERSION = @GUILE_MAJOR_VERSION@
 GUILE_MINOR_VERSION = @GUILE_MINOR_VERSION@
@@ -201,7 +203,7 @@ guile-snarf.in scmconfig.h.in versiondat.h.in
 
 DISTFILES = $(DIST_COMMON) $(SOURCES) $(HEADERS) $(TEXINFOS) $(EXTRA_DIST)
 
-TAR = gtar
+TAR = tar
 GZIP_ENV = --best
 DEP_FILES =  .deps/alist.P .deps/alloca.P .deps/arbiters.P .deps/async.P \
 .deps/backtrace.P .deps/boolean.P .deps/chars.P .deps/continuations.P \
