@@ -1,3 +1,26 @@
+1999-01-21  Mikael Djurfeldt  <mdj@mdj.nada.kth.se>
+
+	* objects.c, objects.h (SCM_CLASS_REDEF): Renamed from CLASS_REDEF.
+
+	* random.c: Bugfix: Retrieve and store most significant 32 bits in
+	different order if the machine is bigendian.
+	(scm_init_random): Added safety check for bignum digit size.
+
+1999-01-21  Mikael Djurfeldt  <mdj@barbara.nada.kth.se>
+
+	* random.c, random.h (scm_i_make_rstate): New function: Makes
+	scm_rstate from seed.
+	(scm_copy_random_state, scm_seed_to_random_state): New functions.
+	(scm_make_random_state): Removed.
+
+	* random.c (scm_make_random_state): Use scm_i_make_rstate().
+
+1999-01-21  Mikael Djurfeldt  <mdj@mdj.nada.kth.se>
+
+	* random.c: Bugfix: Retrieve and store most significant 32 bits in
+	different order if the machine is bigendian.
+	(scm_init_random): Added safety check for bignum digit size.
+
 1999-01-11  Roland Orre  <mdj@mdj.nada.kth.se>
 
 	* sort.c (scm_merge, scm_merge_list_x): Bugfix: Place elements
