@@ -2226,7 +2226,7 @@ evapply:
 	goto evap1;
 #endif
       case scm_tc7_pws:
-	proc = SCM_GETTER (proc);
+	proc = SCM_PROCEDURE (proc);
 #ifdef DEVAL
 	debug.info->a.proc = proc;
 #endif
@@ -2372,7 +2372,7 @@ evapply:
 	  goto evap2;
 #endif
 	case scm_tc7_pws:
-	  proc = SCM_GETTER (proc);
+	  proc = SCM_PROCEDURE (proc);
 #ifdef DEVAL
 	  debug.info->a.proc = proc;
 #endif
@@ -2490,7 +2490,7 @@ evapply:
 		goto evap3; */
 #endif
 	case scm_tc7_pws:
-	  proc = SCM_GETTER (proc);
+	  proc = SCM_PROCEDURE (proc);
 #ifdef DEVAL
 	  debug.info->a.proc = proc;
 #endif
@@ -2608,7 +2608,7 @@ evapply:
 	goto cclon;
 #endif
       case scm_tc7_pws:
-	proc = SCM_GETTER (proc);
+	proc = SCM_PROCEDURE (proc);
 	debug.info->a.proc = proc;
 	goto evap3;
       case scm_tcs_closures:
@@ -2664,7 +2664,7 @@ evapply:
 	goto cclon;
 #endif
       case scm_tc7_pws:
-	proc = SCM_GETTER (proc);
+	proc = SCM_PROCEDURE (proc);
 	goto evap3;
       case scm_tcs_closures:
 #ifdef DEVAL
@@ -3054,7 +3054,7 @@ tail:
       goto tail;
 #endif
     case scm_tc7_pws:
-      proc = SCM_GETTER (proc);
+      proc = SCM_PROCEDURE (proc);
 #ifdef DEVAL
       debug.vect[0].a.proc = proc;
 #endif

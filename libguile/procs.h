@@ -91,7 +91,7 @@ typedef struct scm_dsubr
 /* Prcoedure-with-setter
  */
 #define SCM_PROCEDURE_WITH_SETTER_P(obj) (SCM_TYP7 (obj) == scm_tc7_pws)
-#define SCM_GETTER(obj) SCM_CADR (obj)
+#define SCM_PROCEDURE(obj) SCM_CADR (obj)
 #define SCM_SETTER(obj) SCM_CDDR (obj)
 
 
@@ -107,8 +107,8 @@ extern SCM scm_closure_p SCM_P ((SCM obj));
 extern SCM scm_thunk_p SCM_P ((SCM obj));
 extern SCM scm_procedure_documentation SCM_P ((SCM proc));
 extern SCM scm_procedure_with_setter_p SCM_P ((SCM obj));
-extern SCM scm_make_procedure_with_setter SCM_P ((SCM getter, SCM setter));
-extern SCM scm_getter SCM_P ((SCM proc));
+extern SCM scm_make_procedure_with_setter SCM_P ((SCM procedure, SCM setter));
+extern SCM scm_procedure SCM_P ((SCM proc));
 extern SCM scm_setter SCM_P ((SCM proc));
 extern void scm_init_iprocs SCM_P ((const scm_iproc *subra, int type));
 extern void scm_init_procs SCM_P ((void));

@@ -104,7 +104,7 @@ scm_i_procedure_arity (SCM proc)
       goto loop;
 #endif
     case scm_tc7_pws:
-      proc = SCM_GETTER (proc);
+      proc = SCM_PROCEDURE (proc);
       goto loop;
     case scm_tcs_closures:
       proc = SCM_CAR (SCM_CODE (proc));
