@@ -1,3 +1,8 @@
+2005-04-02  Kevin Ryde  <user42@zip.com.au>
+
+	* srfi-1.scm (lset-union): Rewrite to accumulate result by consing in
+	the order specified by the SRFI.
+
 2005-03-18  Kevin Ryde  <user42@zip.com.au>
 
 	* srfi-17.scm: Put "export" at the end of the file for redefined core
