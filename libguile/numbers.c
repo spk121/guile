@@ -1,4 +1,5 @@
-/* Copyright (C) 1995,1996,1997,1998,1999,2000,2001, 2002, 2003, 2004 Free Software Foundation, Inc.
+/* Copyright (C) 1995,1996,1997,1998,1999,2000,2001, 2002, 2003, 2004, 2005
+ * Free Software Foundation, Inc.
  *
  * Portions Copyright 1990, 1991, 1992, 1993 by AT&T Bell Laboratories
  * and Bellcore.  See scm_divide.
@@ -2691,7 +2692,7 @@ scm_istr2flo (char *str, long len, long radix)
       {				/* polar input for complex number */
 	/* get a `real' for scm_angle */
 	second = scm_istr2flo (&str[i], (long) (len - i), radix);
-	if (!SCM_SLOPPY_INEXACTP (second))
+	if (!SCM_INEXACTP (second))
 	  return SCM_BOOL_F;	/* not `real' */
 	if (SCM_SLOPPY_COMPLEXP (second))
 	  return SCM_BOOL_F;	/* not `real' */
