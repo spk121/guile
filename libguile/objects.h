@@ -89,6 +89,7 @@
 #define SCM_OPERATOR_PROC_1(obj) (SCM_OBJ_OPERATOR_CLASS (obj)->proc1)
 #define SCM_OPERATOR_PROC_2(obj) (SCM_OBJ_OPERATOR_CLASS (obj)->proc2)
 #define SCM_OPERATOR_PROC_3(obj) (SCM_OBJ_OPERATOR_CLASS (obj)->proc3)
+#define SCM_OPERATOR_SETTER(obj) (SCM_OBJ_OPERATOR_CLASS (obj)->setter)
 
 #define SCM_I_ENTITYP(obj)\
 ((SCM_OBJ_CLASS_FLAGS (obj) & SCM_CLASSF_ENTITY) != 0)
@@ -96,6 +97,7 @@
 #define SCM_ENTITY_PROC_1(obj) (SCM_STRUCT_DATA (obj)[scm_struct_i_proc + 1])
 #define SCM_ENTITY_PROC_2(obj) (SCM_STRUCT_DATA (obj)[scm_struct_i_proc + 2])
 #define SCM_ENTITY_PROC_3(obj) (SCM_STRUCT_DATA (obj)[scm_struct_i_proc + 3])
+#define SCM_ENTITY_SETTER(obj) (SCM_STRUCT_DATA (obj)[scm_struct_i_setter])
 
 /* {Operator classes}
  *
@@ -137,7 +139,7 @@ struct scm_metaclass_standard {
   SCM print;
 };
 
-#define SCM_METACLASS_OPERATOR_LAYOUT "popopopo"
+#define SCM_METACLASS_OPERATOR_LAYOUT "popopopopo"
 struct scm_metaclass_operator {
   SCM layout;
   SCM vcell;
@@ -147,6 +149,7 @@ struct scm_metaclass_operator {
   SCM proc1;
   SCM proc2;
   SCM proc3;
+  SCM setter;
 };
 
 /* {Entity classes}
@@ -162,8 +165,8 @@ struct scm_metaclass_operator {
 /* The following three definitions are Goops dependencies needed by
    scm_class_of. */
 #define SCM_CLASSF_GOOPS       (0x10 << 24)
-#define scm_si_redefined       17
-#define scm_si_hashsets        19
+#define scm_si_redefined       18
+#define scm_si_hashsets        20
 #define SCM_CLASS_OF(x)        SCM_STRUCT_VTABLE (x)
 
 #define SCM_OBJ_CLASS_REDEF(x) (SCM_STRUCT_VTABLE_DATA(x)[scm_si_redefined])
