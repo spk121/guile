@@ -159,6 +159,7 @@ scm_make_continuation (int *first)
 #ifndef SCM_STACK_GROWS_UP
   src -= stack_size;
 #endif
+  continuation->offset = continuation->stack - src;
   memcpy (continuation->stack, src, sizeof (SCM_STACKITEM) * stack_size);
 
 #ifdef __ia64__

@@ -75,9 +75,20 @@ typedef struct
   size_t num_stack_items;   /* size of the saved stack.  */
   unsigned long seq;        /* dynamic root identifier.  */
 
+  /* The offset from the live stack location and this copy.  This is
+     used to adjust pointers from within the copied stack to the stack
+     itself.
+
+     Thus, when you read a pointer from the copied stack that points
+     into the live stack, you need to add OFFSET to that it points
+     into the copy.
+  */
+  long offset;
+
 #ifdef DEBUG_EXTENSIONS
-  /* the most recently created debug frame on the live stack, before
-     it was saved.  */
+  /* The most recently created debug frame on the live stack, before
+     it was saved.  This needs to be adjusted with OFFSET, above.
+  */
   struct scm_t_debug_frame *dframe;
 #endif
   SCM_STACKITEM stack[1];    /* copied stack of size num_stack_items.  */ 

@@ -177,4 +177,29 @@
 	(map + '(1 2) '(3)))
     )))
 
+;;;
+;;; continuations
+;;;
+
+(with-test-prefix "continuations"
+
+  (with-test-prefix "stacks/debugging"
+
+    (let ((dopts (debug-options)))
+      (debug-enable 'debug)
+
+      (pass-if "make-stack"
+        (stack? (call-with-current-continuation make-stack)))
+
+      (pass-if "stack-id"
+        (let ((id (call-with-current-continuation stack-id)))
+	  (or (boolean? id) (symbol? id))))
+
+      (pass-if "last-stack-frame"
+        (pair? (call-with-current-continuation last-stack-frame)))
+
+      (debug-options dopts))
+
+    ))
+
 ;;; eval.test ends here
