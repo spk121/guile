@@ -61,6 +61,7 @@ SCM scm_metaclass_operator;
 /* These variables are filled in by the object system when loaded. */
 SCM scm_class_boolean, scm_class_char, scm_class_pair;
 SCM scm_class_procedure, scm_class_string, scm_class_symbol;
+SCM scm_class_procedure_with_setter;
 SCM scm_class_vector, scm_class_null;
 SCM scm_class_real, scm_class_complex, scm_class_integer;
 SCM scm_class_keyword, scm_class_unknown;
@@ -129,6 +130,8 @@ scm_class_of (SCM x)
 	case scm_tc7_lsubr_2:
 	case scm_tc7_lsubr:
 	  return scm_class_procedure;
+	case scm_tc7_pws:
+	  return scm_class_procedure_with_setter;
 
 	case scm_tc7_port:
 	  return scm_class_unknown;

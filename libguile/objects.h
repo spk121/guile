@@ -172,6 +172,7 @@ extern SCM scm_metaclass_standard;
 extern SCM scm_metaclass_operator;
 extern SCM scm_class_boolean, scm_class_char, scm_class_pair;
 extern SCM scm_class_procedure, scm_class_string, scm_class_symbol;
+extern SCM scm_class_procedure_with_setter;
 extern SCM scm_class_vector, scm_class_null;
 extern SCM scm_class_real, scm_class_complex, scm_class_integer;
 extern SCM scm_class_keyword, scm_class_unknown;
