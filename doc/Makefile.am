@@ -1,6 +1,6 @@
 ## Process this file with Automake to create Makefile.in
 ##
-##  	Copyright (C) 1998 Free Software Foundation, Inc.
+##  	Copyright (C) 1998, 2002 Free Software Foundation, Inc.
 ##
 ##   This file is part of GUILE.
 ##   
@@ -18,14 +18,9 @@
 ##   License along with GUILE; see the file COPYING.  If not, write
 ##   to the Free Software Foundation, Inc., 59 Temple Place, Suite
 ##   330, Boston, MA 02111-1307 USA
-info_TEXINFOS = data-rep.texi
-data_rep_TEXINFOS = data-rep.texi version.texi
 
-# This rule overrides automake's rule for version.texi.  It causes
-# version.texi to be created even in non-maintainer-mode.
-#
-$(srcdir)/version.texi: stamp-vti
-	@:
+info_TEXINFOS = guile.texi
+guile_TEXINFOS = preface.texi data-rep.texi
 
 EXAMPLE_SMOB_FILES = \
     ChangeLog Makefile README COPYING image-type.c image-type.h myguile.c
