@@ -1,3 +1,9 @@
+2005-01-12  Kevin Ryde  <user42@zip.com.au>
+
+	* srfi-39.scm (current-input-port, current-output-port): Parameter
+	replacements for core functions, per SRFI spec.
+	(current-error-port): The same, for consistency.
+
 2004-12-14  Kevin Ryde  <user42@zip.com.au>
 
 	* srfi-13.scm, srfi-13.c (string-any, string-every): Use a scheme
