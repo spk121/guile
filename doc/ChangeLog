@@ -1,3 +1,9 @@
+2002-05-13  Thien-Thi Nguyen  <ttn@giblet.glug.org>
+
+	* Makefile.am (EXTRA_DIST): New var.
+	(dist-hook): Simplified to not use "cd"; now it
+	works for relative pathnames in $(distdir).
+
 2002-05-11  Thien-Thi Nguyen  <ttn@giblet.glug.org>
 
 	* Makefile.am: Include ../am/maintainer-dirs (in MAINTAINER_MODE).
