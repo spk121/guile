@@ -12,6 +12,26 @@
 	* guile-doc-snarf.in: Rewrite to
 	support "-o OUTFILE INFILE [CPP-OPTS]" usage.
 
+	* alist.c, alloca.c, arbiters.c, async.c, async.h, backtrace.c,
+	boolean.c, chars.c, continuations.c, coop-defs.h, coop-threads.c,
+	debug-malloc.h, debug.c, debug.h, dynl.c, dynwind.c, eq.c,
+	error.c, eval.c, evalext.c, feature.c, feature.h, filesys.c,
+	filesys.h, fluids.c, fluids.h, fports.c, fports.h, gc.c, gc.h,
+	gdbint.c, gsubr.c, guardians.c, hash.c, hashtab.c, hooks.c,
+	hooks.h, inet_aton.c, init.c, ioext.c, keywords.c, keywords.h,
+	lang.c, list.c, load.c, macros.c, mallocs.c, memmove.c, modules.c,
+	net_db.c, numbers.c, numbers.h, objects.c, objprop.c, options.c,
+	pairs.c, pairs.h, ports.c, ports.h, posix.c, print.c, print.h,
+	procprop.c, procs.c, procs.h, putenv.c, ramap.c, random.c,
+	random.h, read.c, regex-posix.c, regex-posix.h, root.c, root.h,
+	scmsigs.c, script.c, simpos.c, smob.c, snarf.h, socket.c, sort.c,
+	srcprop.c, srcprop.h, stackchk.c, stacks.c, stacks.h, stime.c,
+	strerror.c, strings.c, strings.h, strop.c, strorder.c, strports.c,
+	struct.c, struct.h, symbols.c, symbols.h, tag.c, tags.h,
+	threads.c, threads.h, throw.c, unif.c, unif.h, variable.c,
+	variable.h, vectors.c, vectors.h, version.c, vports.c, weaks.c,
+	weaks.h: Update copyright.  Remove face-lift comment; nfc.
+
 2002-03-01  Thien-Thi Nguyen  <ttn@giblet.glug.org>
 
 	* Makefile.am (libguile_la_LDFLAGS):
