@@ -42,7 +42,7 @@ if [ ! -f guile-procedures.txt ] ; then
    @LN_S@ libguile/guile-procedures.txt .
 fi
 
-exec "$guile"
+exec "$guile" \
     -e main -s "$TEST_SUITE_DIR/guile-test" \
     --test-suite "$TEST_SUITE_DIR/tests" \
     --log-file check-guile.log "$@"
