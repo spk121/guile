@@ -1,15 +1,15 @@
 /*	Copyright (C) 1996, 1997, 1998, 1999, 2000 Free Software Foundation, Inc.
- * 
+ *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2, or (at your option)
  * any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this software; see the file COPYING.  If not, write to
  * the Free Software Foundation, Inc., 59 Temple Place, Suite 330,
@@ -123,7 +123,7 @@
 /* {Permissions}
  */
 
-SCM_DEFINE (scm_chown, "chown", 3, 0, 0, 
+SCM_DEFINE (scm_chown, "chown", 3, 0, 0,
             (SCM object, SCM owner, SCM group),
 	    "Change the ownership and group of the file referred to by @var{object} to\n"
 	    "the integer values @var{owner} and @var{group}.  @var{object} can be\n"
@@ -204,7 +204,7 @@ SCM_DEFINE (scm_chmod, "chmod", 2, 0, 0,
 }
 #undef FUNC_NAME
 
-SCM_DEFINE (scm_umask, "umask", 0, 1, 0, 
+SCM_DEFINE (scm_umask, "umask", 0, 1, 0,
             (SCM mode),
 	    "If @var{mode} is omitted, retuns a decimal number representing the current\n"
 	    "file creation mask.  Otherwise the file creation mask is set to\n"
@@ -229,7 +229,7 @@ SCM_DEFINE (scm_umask, "umask", 0, 1, 0,
 
 
 
-SCM_DEFINE (scm_open_fdes, "open-fdes", 2, 1, 0, 
+SCM_DEFINE (scm_open_fdes, "open-fdes", 2, 1, 0,
             (SCM path, SCM flags, SCM mode),
 	    "Similar to @code{open} but returns a file descriptor instead of a\n"
 	    "port.")
@@ -250,7 +250,7 @@ SCM_DEFINE (scm_open_fdes, "open-fdes", 2, 1, 0,
 }
 #undef FUNC_NAME
 
-SCM_DEFINE (scm_open, "open", 2, 1, 0, 
+SCM_DEFINE (scm_open, "open", 2, 1, 0,
             (SCM path, SCM flags, SCM mode),
 	    "Open the file named by @var{path} for reading and/or writing.\n"
 	    "@var{flags} is an integer specifying how the file should be opened.\n"
@@ -307,7 +307,7 @@ SCM_DEFINE (scm_open, "open", 2, 1, 0,
 }
 #undef FUNC_NAME
 
-SCM_DEFINE (scm_close, "close", 1, 0, 0, 
+SCM_DEFINE (scm_close, "close", 1, 0, 0,
             (SCM fd_or_port),
 	    "Similar to close-port (@pxref{Generic Port Operations, close-port}),\n"
 	    "but also works on file descriptors.  A side\n"
@@ -350,19 +350,19 @@ SCM_SYMBOL (scm_sym_fifo, "fifo");
 SCM_SYMBOL (scm_sym_sock, "socket");
 SCM_SYMBOL (scm_sym_unknown, "unknown");
 
-static SCM 
+static SCM
 scm_stat2scm (struct stat *stat_temp)
 {
   SCM ans = scm_make_vector (SCM_MAKINUM (15), SCM_UNSPECIFIED);
   SCM *ve = SCM_VELTS (ans);
-  
+
   ve[0] = scm_ulong2num ((unsigned long) stat_temp->st_dev);
   ve[1] = scm_ulong2num ((unsigned long) stat_temp->st_ino);
   ve[2] = scm_ulong2num ((unsigned long) stat_temp->st_mode);
   ve[3] = scm_ulong2num ((unsigned long) stat_temp->st_nlink);
   ve[4] = scm_ulong2num ((unsigned long) stat_temp->st_uid);
   ve[5] = scm_ulong2num ((unsigned long) stat_temp->st_gid);
-#ifdef HAVE_ST_RDEV
+#ifdef HAVE_STRUCT_STAT_ST_RDEV
   ve[6] = scm_ulong2num ((unsigned long) stat_temp->st_rdev);
 #else
   ve[6] = SCM_BOOL_F;
@@ -371,19 +371,19 @@ scm_stat2scm (struct stat *stat_temp)
   ve[8] = scm_ulong2num ((unsigned long) stat_temp->st_atime);
   ve[9] = scm_ulong2num ((unsigned long) stat_temp->st_mtime);
   ve[10] = scm_ulong2num ((unsigned long) stat_temp->st_ctime);
-#ifdef HAVE_ST_BLKSIZE
+#ifdef HAVE_STRUCT_STAT_ST_BLKSIZE
   ve[11] = scm_ulong2num ((unsigned long) stat_temp->st_blksize);
 #else
   ve[11] = scm_ulong2num (4096L);
 #endif
-#ifdef HAVE_ST_BLOCKS
+#ifdef HAVE_STRUCT_STAT_ST_BLOCKS
   ve[12] = scm_ulong2num ((unsigned long) stat_temp->st_blocks);
 #else
   ve[12] = SCM_BOOL_F;
 #endif
   {
     int mode = stat_temp->st_mode;
-    
+
     if (S_ISREG (mode))
       ve[13] = scm_sym_regular;
     else if (S_ISDIR (mode))
@@ -430,17 +430,17 @@ scm_stat2scm (struct stat *stat_temp)
        tmp <<= 1;
        if (S_IWOTH & mode) tmp += 1;
        tmp <<= 1;
-       if (S_IXOTH & mode) tmp += 1; 
+       if (S_IXOTH & mode) tmp += 1;
 
        ve[14] = SCM_MAKINUM (tmp);
-       
+
        */
-  }  
+  }
 
   return ans;
 }
 
-SCM_DEFINE (scm_stat, "stat", 1, 0, 0, 
+SCM_DEFINE (scm_stat, "stat", 1, 0, 0,
             (SCM object),
 	    "Returns an object containing various information\n"
 	    "about the file determined by @var{obj}.\n"
@@ -579,7 +579,7 @@ SCM_DEFINE (scm_rename, "rename-file", 2, 0, 0,
       SCM_SYSCALL (rv = unlink (SCM_ROCHARS (oldname)));;
       if (rv != 0)
 	/* unlink failed.  remove new name */
-	SCM_SYSCALL (unlink (SCM_ROCHARS (newname))); 
+	SCM_SYSCALL (unlink (SCM_ROCHARS (newname)));
     }
 #endif
   if (rv != 0)
@@ -589,7 +589,7 @@ SCM_DEFINE (scm_rename, "rename-file", 2, 0, 0,
 #undef FUNC_NAME
 
 
-SCM_DEFINE (scm_delete_file, "delete-file", 1, 0, 0, 
+SCM_DEFINE (scm_delete_file, "delete-file", 1, 0, 0,
            (SCM str),
 	    "Deletes (or \"unlinks\") the file specified by @var{path}.")
 #define FUNC_NAME s_scm_delete_file
@@ -636,7 +636,7 @@ SCM_DEFINE (scm_mkdir, "mkdir", 1, 1, 0,
 #endif /* HAVE_MKDIR */
 
 #ifdef HAVE_RMDIR
-SCM_DEFINE (scm_rmdir, "rmdir", 1, 0, 0, 
+SCM_DEFINE (scm_rmdir, "rmdir", 1, 0, 0,
             (SCM path),
 	    "Remove the existing directory named by @var{path}.  The directory must\n"
 	    "be empty for this to succeed.  The return value is unspecified.")
@@ -660,7 +660,7 @@ SCM_DEFINE (scm_rmdir, "rmdir", 1, 0, 0,
 
 long scm_tc16_dir;
 
-SCM_DEFINE (scm_directory_stream_p, "directory-stream?", 1, 0, 0, 
+SCM_DEFINE (scm_directory_stream_p, "directory-stream?", 1, 0, 0,
             (SCM obj),
 	    "Returns a boolean indicating whether @var{object} is a directory stream\n"
 	    "as returned by @code{opendir}.")
@@ -670,7 +670,7 @@ SCM_DEFINE (scm_directory_stream_p, "directory-stream?", 1, 0, 0,
 }
 #undef FUNC_NAME
 
-SCM_DEFINE (scm_opendir, "opendir", 1, 0, 0, 
+SCM_DEFINE (scm_opendir, "opendir", 1, 0, 0,
             (SCM dirname),
 	    "Open the directory specified by @var{path} and return a directory\n"
 	    "stream.")
@@ -687,7 +687,7 @@ SCM_DEFINE (scm_opendir, "opendir", 1, 0, 0,
 #undef FUNC_NAME
 
 
-SCM_DEFINE (scm_readdir, "readdir", 1, 0, 0, 
+SCM_DEFINE (scm_readdir, "readdir", 1, 0, 0,
             (SCM port),
 	    "Return (as a string) the next directory entry from the directory stream\n"
 	    "@var{stream}.  If there is no remaining entry to be read then the\n"
@@ -707,7 +707,7 @@ SCM_DEFINE (scm_readdir, "readdir", 1, 0, 0,
 
 
 
-SCM_DEFINE (scm_rewinddir, "rewinddir", 1, 0, 0, 
+SCM_DEFINE (scm_rewinddir, "rewinddir", 1, 0, 0,
             (SCM port),
 	    "Reset the directory port @var{stream} so that the next call to\n"
 	    "@code{readdir} will return the first directory entry.")
@@ -721,7 +721,7 @@ SCM_DEFINE (scm_rewinddir, "rewinddir", 1, 0, 0,
 
 
 
-SCM_DEFINE (scm_closedir, "closedir", 1, 0, 0, 
+SCM_DEFINE (scm_closedir, "closedir", 1, 0, 0,
             (SCM port),
 	    "Close the directory stream @var{stream}.\n"
 	    "The return value is unspecified.")
@@ -745,7 +745,7 @@ SCM_DEFINE (scm_closedir, "closedir", 1, 0, 0,
 
 
 
-static int 
+static int
 scm_dir_print (SCM exp, SCM port, scm_print_state *pstate)
 {
   scm_puts ("#<", port);
@@ -758,7 +758,7 @@ scm_dir_print (SCM exp, SCM port, scm_print_state *pstate)
 }
 
 
-static scm_sizet 
+static scm_sizet
 scm_dir_free (SCM p)
 {
   if (SCM_OPENP (p))
@@ -771,7 +771,7 @@ scm_dir_free (SCM p)
  */
 
 
-SCM_DEFINE (scm_chdir, "chdir", 1, 0, 0, 
+SCM_DEFINE (scm_chdir, "chdir", 1, 0, 0,
             (SCM str),
 	    "Change the current working directory to @var{path}.\n"
 	    "The return value is unspecified.")
@@ -843,7 +843,7 @@ set_element (SELECT_TYPE *set, SCM *ports_ready, SCM element, int pos)
 	{
 	  /* check whether port has buffered input.  */
 	  scm_port *pt = SCM_PTAB_ENTRY (element);
-      
+
 	  if (pt->read_pos < pt->read_end)
 	    use_buf = 1;
 	}
@@ -879,7 +879,7 @@ fill_select_type (SELECT_TYPE *set, SCM *ports_ready, SCM list_or_vec, int pos)
     {
       int i = SCM_LENGTH (list_or_vec);
       SCM *ve = SCM_VELTS (list_or_vec);
-      
+
       while (--i >= 0)
 	{
 	  int fd = set_element (set, ports_ready, ve[i], pos);
@@ -927,11 +927,11 @@ get_element (SELECT_TYPE *set, SCM element, SCM list)
    set: pointer to set of file descriptors found by select to be ready
    ports_ready: ports ready due to buffering
    list_or_vec: original list/vector handed to scm_select.
-   the return value is a list/vector of ready ports/file descriptors. 
+   the return value is a list/vector of ready ports/file descriptors.
    works by finding the objects in list which correspond to members of
    *set and appending them to ports_ready.  result is converted to a
    vector if list_or_vec is a vector.  */
-static SCM 
+static SCM
 retrieve_select_type (SELECT_TYPE *set, SCM ports_ready, SCM list_or_vec)
 {
   SCM answer_list = ports_ready;
@@ -960,7 +960,7 @@ retrieve_select_type (SELECT_TYPE *set, SCM ports_ready, SCM list_or_vec)
 }
 
 /* Static helper functions above refer to s_scm_select directly as s_select */
-SCM_DEFINE (scm_select, "select", 3, 2, 0, 
+SCM_DEFINE (scm_select, "select", 3, 2, 0,
             (SCM reads, SCM writes, SCM excepts, SCM secs, SCM usecs),
 	    "This procedure has a variety of uses: waiting for the ability\n"
 	    "to provide input, accept output, or the existance of\n"
@@ -1040,7 +1040,7 @@ SCM_DEFINE (scm_select, "select", 3, 2, 0,
   max_fd = fill_select_type (&read_set, &read_ports_ready, reads, SCM_ARG1);
 
   {
-    int write_max = fill_select_type (&write_set, &write_ports_ready, 
+    int write_max = fill_select_type (&write_set, &write_ports_ready,
 				      writes, SCM_ARG2);
     int except_max = fill_select_type (&except_set, NULL,
 				       excepts, SCM_ARG3);
@@ -1167,7 +1167,7 @@ SCM_DEFINE (scm_fcntl, "fcntl", 2, 1, 0,
 }
 #undef FUNC_NAME
 
-SCM_DEFINE (scm_fsync, "fsync", 1, 0, 0, 
+SCM_DEFINE (scm_fsync, "fsync", 1, 0, 0,
             (SCM object),
 	    "Copies any unwritten data for the specified output file descriptor to disk.\n"
 	    "If @var{port/fd} is a port, its buffer is flushed before the underlying\n"
@@ -1217,7 +1217,7 @@ SCM_DEFINE (scm_symlink, "symlink", 2, 0, 0,
 #endif /* HAVE_SYMLINK */
 
 #ifdef HAVE_READLINK
-SCM_DEFINE (scm_readlink, "readlink", 1, 0, 0, 
+SCM_DEFINE (scm_readlink, "readlink", 1, 0, 0,
             (SCM path),
 	    "Returns the value of the symbolic link named by\n"
 	    "@var{path} (a string), i.e., the\n"
@@ -1247,7 +1247,7 @@ SCM_DEFINE (scm_readlink, "readlink", 1, 0, 0,
 #endif /* HAVE_READLINK */
 
 #ifdef HAVE_LSTAT
-SCM_DEFINE (scm_lstat, "lstat", 1, 0, 0, 
+SCM_DEFINE (scm_lstat, "lstat", 1, 0, 0,
             (SCM str),
 	    "Similar to @code{stat}, but does not follow symbolic links, i.e.,\n"
 	    "it will return information about a symbolic link itself, not the \n"
@@ -1322,7 +1322,7 @@ SCM_DEFINE (scm_copy_file, "copy-file", 2, 0, 0,
 
 SCM scm_dot_string;
 
-SCM_DEFINE (scm_dirname, "dirname", 1, 0, 0, 
+SCM_DEFINE (scm_dirname, "dirname", 1, 0, 0,
             (SCM filename),
 	    "")
 #define FUNC_NAME s_scm_dirname
@@ -1348,7 +1348,7 @@ SCM_DEFINE (scm_dirname, "dirname", 1, 0, 0,
 }
 #undef FUNC_NAME
 
-SCM_DEFINE (scm_basename, "basename", 1, 1, 0, 
+SCM_DEFINE (scm_basename, "basename", 1, 1, 0,
             (SCM filename, SCM suffix),
 	    "")
 #define FUNC_NAME s_scm_basename
@@ -1402,63 +1402,63 @@ scm_init_filesys ()
                                          NULL, scm_dir_free,scm_dir_print, NULL);
 
   scm_dot_string = scm_permanent_object (scm_makfrom0str ("."));
-  
+
 #ifdef O_RDONLY
 scm_sysintern ("O_RDONLY", scm_long2num (O_RDONLY));
-#endif 	       
+#endif
 #ifdef O_WRONLY
 scm_sysintern ("O_WRONLY", scm_long2num (O_WRONLY));
-#endif 	       
+#endif
 #ifdef O_RDWR
 scm_sysintern ("O_RDWR", scm_long2num (O_RDWR));
-#endif 	       
+#endif
 #ifdef O_CREAT
 scm_sysintern ("O_CREAT", scm_long2num (O_CREAT));
-#endif 	       
-#ifdef O_EXCL  
+#endif
+#ifdef O_EXCL
 scm_sysintern ("O_EXCL", scm_long2num (O_EXCL));
-#endif 	       
+#endif
 #ifdef O_NOCTTY
 scm_sysintern ("O_NOCTTY", scm_long2num (O_NOCTTY));
-#endif 	       
-#ifdef O_TRUNC 
+#endif
+#ifdef O_TRUNC
 scm_sysintern ("O_TRUNC", scm_long2num (O_TRUNC));
-#endif 	       
+#endif
 #ifdef O_APPEND
 scm_sysintern ("O_APPEND", scm_long2num (O_APPEND));
-#endif 	       
+#endif
 #ifdef O_NONBLOCK
 scm_sysintern ("O_NONBLOCK", scm_long2num (O_NONBLOCK));
-#endif 	       
+#endif
 #ifdef O_NDELAY
 scm_sysintern ("O_NDELAY", scm_long2num (O_NDELAY));
-#endif 	       
-#ifdef O_SYNC  
+#endif
+#ifdef O_SYNC
 scm_sysintern ("O_SYNC", scm_long2num (O_SYNC));
-#endif 
+#endif
 
-#ifdef F_DUPFD  
+#ifdef F_DUPFD
 scm_sysintern ("F_DUPFD", scm_long2num (F_DUPFD));
-#endif 
-#ifdef F_GETFD  
+#endif
+#ifdef F_GETFD
 scm_sysintern ("F_GETFD", scm_long2num (F_GETFD));
-#endif 
-#ifdef F_SETFD  
+#endif
+#ifdef F_SETFD
 scm_sysintern ("F_SETFD", scm_long2num (F_SETFD));
-#endif 
-#ifdef F_GETFL  
+#endif
+#ifdef F_GETFL
 scm_sysintern ("F_GETFL", scm_long2num (F_GETFL));
-#endif 
-#ifdef F_SETFL  
+#endif
+#ifdef F_SETFL
 scm_sysintern ("F_SETFL", scm_long2num (F_SETFL));
-#endif 
-#ifdef F_GETOWN  
+#endif
+#ifdef F_GETOWN
 scm_sysintern ("F_GETOWN", scm_long2num (F_GETOWN));
-#endif 
-#ifdef F_SETOWN  
+#endif
+#ifdef F_SETOWN
 scm_sysintern ("F_SETOWN", scm_long2num (F_SETOWN));
-#endif 
-#ifdef FD_CLOEXEC  
+#endif
+#ifdef FD_CLOEXEC
 scm_sysintern ("FD_CLOEXEC", scm_long2num (FD_CLOEXEC));
 #endif
 
