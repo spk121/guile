@@ -6,6 +6,11 @@
 	branch_release-1-6 (1.2.4.3) w/ the following differences:
 	Use `export-syntax' instead of `re-export-syntax'.
 
+	* Makefile.am (ice9_sources): Replace and-let*.scm
+	w/ and-let-star.scm.
+	(install-data-local): New.
+	(EXTRA_DIST): Add and-let-star-compat.scm.
+
 2002-03-04  Thien-Thi Nguyen  <ttn@giblet.glug.org>
 
 	* boot-9.scm (expt): Fix bug: Handle negative exponents correctly.
