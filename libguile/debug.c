@@ -255,6 +255,7 @@ scm_make_memoized (exp, env)
  * - constant: SCM_IM_DEFINE
  * - constant: SCM_IM_APPLY
  * - constant: SCM_IM_CONT
+ * - constant: SCM_IM_DISPATCH
  */
 
 #include "variable.h"
@@ -666,6 +667,7 @@ scm_init_debug ()
   scm_sysintern ("SCM_IM_DEFINE", SCM_IM_DEFINE);
   scm_sysintern ("SCM_IM_APPLY", SCM_IM_APPLY);
   scm_sysintern ("SCM_IM_CONT", SCM_IM_CONT);
+  scm_sysintern ("SCM_IM_DISPATCH", SCM_IM_DISPATCH);
 #endif
   scm_add_feature ("debug-extensions");
 
