@@ -1,3 +1,10 @@
+2002-03-04  Thien-Thi Nguyen  <ttn@giblet.glug.org>
+
+	* configure.in (top_srcdir_absolute): New AC_SUBST var.
+
+	* pre-inst-guile.in (top_srcdir): Use `top_srcdir_absolute'
+	AC_SUBST var.
+
 2002-03-04  Thien-Thi Nguyen  <ttn@glug.org>
 
 	* acinclude.m4 (GUILE_HEADER_LIBC_WITH_UNISTD): Use [] rather than
