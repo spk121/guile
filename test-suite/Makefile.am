@@ -36,6 +36,7 @@ SCM_TESTS = tests/alist.test			\
 	    tests/srfi-10.test			\
 	    tests/srfi-13.test			\
 	    tests/srfi-14.test			\
+	    tests/srfi-17.test			\
 	    tests/srfi-19.test			\
 	    tests/srfi-31.test			\
 	    tests/srfi-39.test			\
