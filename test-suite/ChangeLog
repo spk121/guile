@@ -1,6 +1,6 @@
 2005-01-24  Kevin Ryde  <user42@zip.com.au>
 
-	* tests/srfi-1.test (lset=): Exercise no-arg case.
+	* tests/srfi-1.test (lset=): New tests.
 
 2005-01-12  Kevin Ryde  <user42@zip.com.au>
 
