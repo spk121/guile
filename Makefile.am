@@ -19,7 +19,7 @@
 ##   to the Free Software Foundation, Inc., 59 Temple Place, Suite
 ##   330, Boston, MA 02111-1307 USA
 
-SUBDIRS = ice-9 qt libltdl libguile guile-config guile-readline doc
+SUBDIRS = ice-9 qt libltdl libguile guile-config guile-readline doc am
 
 include_HEADERS = libguile.h
 
