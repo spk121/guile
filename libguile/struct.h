@@ -53,6 +53,7 @@
 #define scm_struct_n_extra_words 3
 
 /* These are how the initial words of a vtable are allocated. */
+#define scm_struct_i_setter	-8 /* Setter */
 #define scm_struct_i_proc	-7 /* Optional procedure slots */
 #define scm_struct_i_ptr	-3 /* start of block (see alloc_struct) */
 #define scm_struct_i_n_words	-2 /* How many words allocated to this struct? */
