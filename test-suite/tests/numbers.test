@@ -875,7 +875,12 @@
 	  ((> len 300))
 
 	(pass-if (list 'length len)
-	  (eqv? want (string->number (make-string len digit) base)))))))
+	  (eqv? want (string->number (make-string len digit) base))))))
+
+  ;; in guile 1.6.7 and earlier, bad polar forms (where the conversion of
+  ;; the angle gave #f) caused a segv
+  (pass-if "1@a"
+    (eq? #f (string->number "1@a"))))
 
 ;;;
 ;;; number?
