@@ -1,8 +1,5 @@
 This directory contains documentation on the Guile core.
 
-At the moment, we don't have a full manual on Guile; that's at the
-head of our task list.
-
 The file `data-rep.texi' is an essay on how to write C code that uses
 Guile values.  If you're interested in writing a application which is
 extensible via Guile, this is a good place to start.  Make builds the
@@ -13,3 +10,12 @@ in, and run `make data-rep.ps'.
 The file `oldfmt.c' contains a function which can be used by
 application writers to support both old-style and new-style error
 format strings.
+
+A full manual has been written but not yet integrated into this
+distribution.  For now, you can see snapshots of it (work in progress)
+on-line at:
+
+  http://www.glug.org/docbits/guile-doc-out/
+
+  NOTE: Some of the features described in the on-line manual
+        do not apply to Guile 1.4.x series.
