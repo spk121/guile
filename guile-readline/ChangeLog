@@ -1,6 +1,7 @@
 2002-05-13  Thien-Thi Nguyen  <ttn@giblet.glug.org>
 
 	* Makefile.am: Update copyright.
+	(EXTRA_DIST): Add LIBGUILEREADLINE-VERSION.
 
 2002-05-03  Thien-Thi Nguyen  <ttn@giblet.glug.org>
 
