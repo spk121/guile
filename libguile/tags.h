@@ -333,12 +333,13 @@ typedef long SCM;
 #define scm_tc7_string		21
 #define scm_tc7_substring	23
 
-/* 29 and 31 are free! */
+/* 29 is free! */
 
 /* Many of the following should be turned
  * into structs or smobs.  We need back some
  * of these 7 bit tags!
  */
+#define scm_tc7_pws		31
 #define scm_tc7_uvect		37
 #define scm_tc7_lvector		39
 #define scm_tc7_fvect		45
