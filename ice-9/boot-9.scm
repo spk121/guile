@@ -1,28 +1,28 @@
 ;;; installed-scm-file
 
 ;;;; Copyright (C) 1995, 1996, 1997, 1998, 1999, 2000 Free Software Foundation, Inc.
-;;;; 
+;;;;
 ;;;; This program is free software; you can redistribute it and/or modify
 ;;;; it under the terms of the GNU General Public License as published by
 ;;;; the Free Software Foundation; either version 2, or (at your option)
 ;;;; any later version.
-;;;; 
+;;;;
 ;;;; This program is distributed in the hope that it will be useful,
 ;;;; but WITHOUT ANY WARRANTY; without even the implied warranty of
 ;;;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ;;;; GNU General Public License for more details.
-;;;; 
+;;;;
 ;;;; You should have received a copy of the GNU General Public License
 ;;;; along with this software; see the file COPYING.  If not, write to
 ;;;; the Free Software Foundation, Inc., 59 Temple Place, Suite 330,
 ;;;; Boston, MA 02111-1307 USA
-;;;; 
+;;;;
 
 
 ;;; This file is the first thing loaded into Guile.  It adds many mundane
 ;;; definitions and a few that are interesting.
 ;;;
-;;; The module system (hence the hierarchical namespace) are defined in this 
+;;; The module system (hence the hierarchical namespace) are defined in this
 ;;; file.
 ;;;
 
@@ -98,12 +98,12 @@
 ;;; apply-to-args is functionally redunant with apply and, worse,
 ;;; is less general than apply since it only takes two arguments.
 ;;;
-;;; On the other hand, apply-to-args is a syntacticly convenient way to 
+;;; On the other hand, apply-to-args is a syntacticly convenient way to
 ;;; perform binding in many circumstances when the "let" family of
 ;;; of forms don't cut it.  E.g.:
 ;;;
 ;;;	(apply-to-args (return-3d-mouse-coords)
-;;;	  (lambda (x y z) 
+;;;	  (lambda (x y z)
 ;;;		...))
 ;;;
 
@@ -213,9 +213,9 @@
 	       ((concat) (string-set! buf (+ nchars start) terminator)
 			 (+ nchars 1))
 	       ((split) (cons nchars terminator))
-	       (else (error "unexpected handle-delim value: " 
+	       (else (error "unexpected handle-delim value: "
 			    handle-delim))))))))
-  
+
 (define (read-delimited delims . args)
   (let* ((port (if (pair? args)
 		   (let ((pt (car args)))
@@ -351,7 +351,7 @@
       new-port))
 
 ;; 0: type-name, 1: fields
-(define record-type-vtable 
+(define record-type-vtable
   (make-vtable-vtable "prpr" 0
 		      (lambda (s p)
 			(cond ((eq? s record-type-vtable)
@@ -529,7 +529,7 @@
 ;; Apply f to successive elements of l until exhaustion or f returns #f.
 ;; If returning early, return #f.  Otherwise, return the last value returned
 ;; by f.  If f has never been called because l is empty, return #t.
-;; 
+;;
 (define (and-map f lst)
   (let loop ((result #t)
 	     (l lst))
@@ -668,7 +668,7 @@
     (if (pair? maybe-fd)
 	(set-port-revealed! port 1))
     port))
-  
+
 (define (dup->inport port/fd . maybe-fd)
   (apply dup->port port/fd "r" maybe-fd))
 
@@ -793,8 +793,10 @@
 (define expt
   (let ((integer-expt integer-expt))
     (lambda (z1 z2)
-      (cond ((exact? z2)
-	     (integer-expt z1 z2))
+      (cond ((integer? z2)
+	     (if (>= z2 0)
+		 (integer-expt z1 z2)
+		 (/ 1 (integer-expt z1 (- z2)))))
 	    ((and (real? z2) (real? z1) (>= z1 0))
 	     ($expt z1 z2))
 	    (else
@@ -966,9 +968,9 @@
 	   (display help)
 	   (newline))))
    kw-desc))
-		  
 
-	   
+
+
 (define (transform-usage-lambda cases)
   (let* ((raw-usage (delq! 'else (map car cases)))
 	 (usage-sans-specials (map (lambda (x)
@@ -1191,7 +1193,7 @@
 ;;;
 
 ;; module-search fn m
-;; 
+;;
 ;; return the first non-#f result of FN applied to M and then to
 ;; the modules in the uses of m, and so on recursively.  If all applications
 ;; return #f, then so does this function.
@@ -1230,7 +1232,7 @@
 
 ;;; {Is a symbol interned in a module?}
 ;;;
-;;; Symbol S in Module M is interned if S occurs in 
+;;; Symbol S in Module M is interned if S occurs in
 ;;; of S in M has been set to some well-defined value.
 ;;;
 ;;; It is possible to intern a symbol in a module without providing
@@ -1256,7 +1258,7 @@
   ((if (symbol? key) hashq-remove! hash-remove!) ob key))
 
 ;; module-symbol-locally-interned? module symbol
-;; 
+;;
 ;; is a symbol interned (not neccessarily defined) locally in a given module
 ;; or its uses?  Interned symbols shadow inherited bindings even if
 ;; they are not themselves bound to a defined value.
@@ -1265,7 +1267,7 @@
   (not (not (module-obarray-get-handle (module-obarray m) v))))
 
 ;; module-symbol-interned? module symbol
-;; 
+;;
 ;; is a symbol interned (not neccessarily defined) anywhere in a given module
 ;; or its uses?  Interned symbols shadow inherited bindings even if
 ;; they are not themselves bound to a defined value.
@@ -1303,8 +1305,8 @@
 ;))
 
 ;; module-variable module symbol
-;; 
-;; like module-local-variable, except search the uses in the 
+;;
+;; like module-local-variable, except search the uses in the
 ;; case V is not found in M.
 ;;
 ;; NOTE: This function is superseded with C code (see modules.c)
@@ -1321,7 +1323,7 @@
 ;;;
 
 ;; module-symbol-binding module symbol opt-value
-;; 
+;;
 ;; return the binding of a variable specified by name within
 ;; a given module, signalling an error if the variable is unbound.
 ;; If the OPT-VALUE is passed, then instead of signalling an error,
@@ -1336,7 +1338,7 @@
 	    (error "Locally unbound variable." v)))))
 
 ;; module-symbol-binding module symbol opt-value
-;; 
+;;
 ;; return the binding of a variable specified by name within
 ;; a given module, signalling an error if the variable is unbound.
 ;; If the OPT-VALUE is passed, then instead of signalling an error,
@@ -1358,7 +1360,7 @@
 
 
 ;; module-make-local-var! module symbol
-;; 
+;;
 ;; ensure a variable for V in the local namespace of M.
 ;; If no variable was already there, then create a new and uninitialzied
 ;; variable.
@@ -1378,7 +1380,7 @@
 	  answer))))
 
 ;; module-add! module symbol var
-;; 
+;;
 ;; ensure a particular variable for V in the local namespace of M.
 ;;
 (define (module-add! m v var)
@@ -1387,8 +1389,8 @@
   (module-obarray-set! (module-obarray m) v var)
   (module-modified m))
 
-;; module-remove! 
-;; 
+;; module-remove!
+;;
 ;; make sure that a symbol is undefined in the local namespace of M.
 ;;
 (define (module-remove! m v)
@@ -1400,7 +1402,7 @@
   (module-modified m))
 
 ;; MODULE-FOR-EACH -- exported
-;; 
+;;
 ;; Call PROC on each symbol in MODULE, with arguments of (SYMBOL VARIABLE).
 ;;
 (define (module-for-each proc module)
@@ -1433,9 +1435,9 @@
 ;;; {Low Level Bootstrapping}
 ;;;
 
-;; make-root-module 
+;; make-root-module
 
-;; A root module uses the symhash table (the system's privileged 
+;; A root module uses the symhash table (the system's privileged
 ;; obarray).  Being inside a root module is like using SCM without
 ;; any module system.
 ;;
@@ -1454,7 +1456,7 @@
   (make-module 1019 '() root-module-closure))
 
 
-;; make-scm-module 
+;; make-scm-module
 
 ;; An scm module is a module into which the lazy binder copies
 ;; variable bindings from the system symhash table.  The mapping is
@@ -1545,7 +1547,7 @@
 ;; Returns the value of a variable called NAME in MODULE or any of its
 ;; used modules.  If there is no such variable, then if the optional third
 ;; argument DEFAULT is present, it is returned; otherwise an error is signaled.
-;; 
+;;
 (define (module-ref module name . rest)
   (let ((variable (module-variable module name)))
     (if (and variable (variable-bound? variable))
@@ -1559,7 +1561,7 @@
 ;;
 ;; Sets the variable called NAME in MODULE (or in a module that MODULE uses)
 ;; to VALUE; if there is no such variable, an error is signaled.
-;; 
+;;
 (define (module-set! module name value)
   (let ((variable (module-variable module name)))
     (if variable
@@ -1570,7 +1572,7 @@
 ;;
 ;; Sets the variable called NAME in MODULE to VALUE; if there is no such
 ;; variable, it is added first.
-;; 
+;;
 (define (module-define! module name value)
   (let ((variable (module-local-variable module name)))
     (if variable
@@ -1591,7 +1593,7 @@
 ;; MODULE-USE! module interface
 ;;
 ;; Add INTERFACE to the list of interfaces used by MODULE.
-;; 
+;;
 (define (module-use! module interface)
   (set-module-uses! module
 		    (cons interface (delq! interface (module-uses module))))
@@ -1609,7 +1611,7 @@
 ;;; modules.
 ;;;
 ;;;		(nested-ref some-root-module '(foo bar baz))
-;;;		=> <value of a variable named baz in the module bound to bar in 
+;;;		=> <value of a variable named baz in the module bound to bar in
 ;;;		    the module bound to foo in some-root-module>
 ;;;
 ;;;
@@ -1728,7 +1730,7 @@
 		(try-load-module name))
 	    ;; Get/create it.
 	    (make-modules-in (current-module) full-name))))))
-	    
+
 (define (beautify-user-module! module)
   (let ((interface (module-public-interface module)))
     (if (or (not interface)
@@ -1816,7 +1818,7 @@
 	      ((no-backtrace)
 	       (set-system-module! module #t)
 	       (loop (cdr kws) reversed-interfaces))
-	      (else	
+	      (else
 	       (error "unrecognized defmodule argument" kws))))))
     module))
 
@@ -1885,9 +1887,9 @@
 ;;     scm_init_ice_9_gtcltk_module
 ;;
 ;;   This is your `module init' function.  It should call
-;;   
+;;
 ;;     scm_register_module_xxx ("ice-9 gtcltk", scm_init_gtcltk);
-;;   
+;;
 ;;   "ice-9 gtcltk" is the C version of the module name. Slashes are
 ;;   replaced by spaces, the rest is untouched. `scm_init_gtcltk' is
 ;;   the real init function that executes the usual initializations
@@ -2015,7 +2017,7 @@
 				       (string-append libname ".la"))))
     (and (file-exists? libtool-filename)
 	 libtool-filename)))
-			      
+
 (define (try-using-sharlib-name libdir libname)
   (in-vicinity libdir (string-append libname ".so")))
 
@@ -2143,19 +2145,19 @@
 ((let* ((names '((eval-options-interface
 		  (eval-options eval-enable eval-disable)
 		  (eval-set!))
-		 
+
 		 (debug-options-interface
 		  (debug-options debug-enable debug-disable)
 		  (debug-set!))
-	       
+
 		 (evaluator-traps-interface
 		  (traps trap-enable trap-disable)
 		  (trap-set!))
-		
+
 		 (read-options-interface
 		  (read-options read-enable read-disable)
 		  (read-set!))
-		
+
 		 (print-options-interface
 		  (print-options print-enable print-disable)
 		  (print-set!))
@@ -2290,7 +2292,7 @@
   (let ((status #f)
 	(interactive #t))
     (define (loop first)
-      (let ((next 
+      (let ((next
 	     (catch #t
 
 		    (lambda ()
@@ -2302,7 +2304,7 @@
 				       (with-traps
 					(lambda ()
 					  (first)
-				       
+
 					  ;; This line is needed because mark
 					  ;; doesn't do closures quite right.
 					  ;; Unreferenced locals should be
@@ -2315,7 +2317,7 @@
 				     (lambda () (mask-signals))))
 
 				  lazy-handler-dispatch))
-		    
+
 		    (lambda (key . args)
 		      (case key
 			((quit)
@@ -2362,7 +2364,7 @@
 				  (apply bad-throw key args))))))))))
 	(if next (loop next) status)))
     (set! set-batch-mode?! (lambda (arg)
-			     (cond (arg 
+			     (cond (arg
 				    (set! interactive #f)
 				    (restore-signals))
 				   (#t
@@ -2560,7 +2562,7 @@
 				       -eval
 				       -print)))
       (-quit status))))
-  
+
 
 
 ;;; {IOTA functions: generating lists of numbers}
@@ -2696,12 +2698,12 @@
 	      (module-define! (current-module)
 			      ',name
 			      (module-ref (current-module) ',name #f))
-			       
+
 	      ;; Make sure that local is exported:
 	      ;;
 	      (module-add! public-i ',name
 			   (module-variable (current-module) ',name)))
-			       
+
 	    ;; Now (re)define the var normally.  Bernard URBAN
 	    ;; suggests we use eval here to accomodate Hobbit; it lets
 	    ;; the interpreter handle the define-private form, which
@@ -2728,11 +2730,11 @@
 			       (module-define! (current-module)
 					       ',name
 					       (module-ref (current-module) ',name #f))
-			       
+
 			       ;; Make sure that local is exported:
 			       ;;
 			       (module-add! public-i ',name (module-variable (current-module) ',name)))
-			       
+
 			     ;; Now (re)define the var normally.
 			     ;;
 			     (defmacro ,@ args))))))
@@ -2772,9 +2774,9 @@
       (lambda () (fluid-ref using-readline?))
       (lambda (v) (fluid-set! using-readline? v)))))
 
-;; this is just (scm-style-repl) with a wrapper to install and remove 
+;; this is just (scm-style-repl) with a wrapper to install and remove
 ;; signal handlers.
-(define (top-repl) 
+(define (top-repl)
 
   ;; Load emacs interface support if emacs option is given.
   (if (and (module-defined? the-root-module 'use-emacs-interface)
