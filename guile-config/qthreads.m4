@@ -4,17 +4,17 @@ dnl
 dnl  	Copyright (C) 1998, 1999 Free Software Foundation, Inc.
 dnl
 dnl   This file is part of GUILE.
-dnl
+dnl   
 dnl   GUILE is free software; you can redistribute it and/or modify
 dnl   it under the terms of the GNU General Public License as
 dnl   published by the Free Software Foundation; either version 2, or
 dnl   (at your option) any later version.
-dnl
+dnl   
 dnl   GUILE is distributed in the hope that it will be useful, but
 dnl   WITHOUT ANY WARRANTY; without even the implied warranty of
 dnl   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 dnl   GNU General Public License for more details.
-dnl
+dnl   
 dnl   You should have received a copy of the GNU General Public
 dnl   License along with GUILE; see the file COPYING.  If not, write
 dnl   to the Free Software Foundation, Inc., 59 Temple Place, Suite
@@ -50,9 +50,9 @@ dnl   We distinguish between THREAD_LIBS_LOCAL and
 dnl   THREAD_LIBS_INSTALLED because the thread library might be in
 dnl   this tree, and be built using libtool.  This means that:
 dnl	 1) when building other executables in this tree, one must
-dnl	    pass the relative path to the ../libfoo.la file, but
+dnl	    pass the relative path to the ../libfoo.la file, but 
 dnl	 2) once the whole package has been installed, users should
-dnl	    link using -lfoo.
+dnl	    link using -lfoo. 
 dnl   Normally, we only care about the first case, but since the
 dnl   guile-config script needs to give users all the flags they need
 dnl   to link programs against guile, the GUILE_WITH_THREADS macro
@@ -78,7 +78,7 @@ AC_DEFUN([QTHREADS_CONFIGURE],[
       port_name=i386
       qtmd_h=md/i386.h
       qtmds_s=md/i386.s
-      qtmdc_c=md/null.c
+      qtmdc_c=md/null.c 
       qtdmdb_s=
       case "$host" in
         *-*-netbsd* )
@@ -97,35 +97,35 @@ AC_DEFUN([QTHREADS_CONFIGURE],[
       qtmd_h=md/mips.h
       qtmds_s=md/mips-irix5.s
       qtmdc_c=md/null.c
-      qtdmdb_s=md/mips_b.s
+      qtdmdb_s=md/mips_b.s 
       ;;
     mips-*-*)
       port_name=mips
       qtmd_h=md/mips.h
       qtmds_s=md/mips.s
       qtmdc_c=md/null.c
-      qtdmdb_s=md/mips_b.s
+      qtdmdb_s=md/mips_b.s 
       ;;
     sparc-*-sunos*)
       port_name=sparc-sunos
       qtmd_h=md/sparc.h
       qtmds_s=md/_sparc.s
       qtmdc_c=md/null.c
-      qtdmdb_s=md/_sparc_b.s
+      qtdmdb_s=md/_sparc_b.s 
       ;;
-    sparc*-*-*)
+    sparc-*-*)
       port_name=sparc
       qtmd_h=md/sparc.h
       qtmds_s=md/sparc.s
       qtmdc_c=md/null.c
-      qtdmdb_s=md/sparc_b.s
+      qtdmdb_s=md/sparc_b.s 
       ;;
     alpha*-*-*)
       port_name=alpha
       qtmd_h=md/axp.h
       qtmds_s=md/axp.s
       qtmdc_c=md/null.c
-      qtdmdb_s=md/axp_b.s
+      qtdmdb_s=md/axp_b.s 
       ;;
     *)
       echo "Unknown configuration; threads package disabled"
@@ -154,5 +154,3 @@ AC_DEFUN([QTHREADS_CONFIGURE],[
   AC_SUBST(THREAD_LIBS_LOCAL)
   AC_SUBST(THREAD_LIBS_INSTALLED)
 ])
-
-dnl qthreads.m4 ends here
