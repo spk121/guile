@@ -49,7 +49,7 @@ SUFFIXES = .x
 .c.x:
 	$(GUILE_SNARF) -o $@ $< $(snarfcppopts)
 
-EXTRA_DIST = readline.scm
+EXTRA_DIST = $(ice9_DATA) LIBGUILEREADLINE-VERSION
 
 DISTCLEANFILES = *.x
 
