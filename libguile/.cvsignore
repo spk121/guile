@@ -1,8 +1,0 @@
-Makefile
-config.log
-config.status
-config.cache
-fd.h
-scmconfig.h
-*.x
-libpath.h
