@@ -1,3 +1,10 @@
+2002-05-02  Thien-Thi Nguyen  <ttn@giblet.glug.org>
+
+	* qthreads.m4: Move here from parent dir.
+
+	* Makefile.am: Update copyright.
+	(EXTRA_DIST): Add qthreads.m4.
+
 2000-01-12  Marius Vollmer  <mvo@zagadka.ping.de>
 
 	* Makefile.am (EXTRA_DIST): Added "guile.m4".
