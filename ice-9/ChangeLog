@@ -1,6 +1,8 @@
 2002-05-03  Thien-Thi Nguyen  <ttn@giblet.glug.org>
 
-	* and-let-star.scm: Back port from HEAD (1.4).
+	* and-let-star.scm: Back port from HEAD (1.4) w/ these differnces:
+	Do not use `:export-syntax' clause in `define-module'.
+	Instead, use `export' directly.
 
 	* and-let-star-compat.scm: Back port from
 	branch_release-1-6 (1.2.4.3) w/ the following differences:
