@@ -13,6 +13,8 @@ Changes since Guile 1.4:
 This buglet typically caused compilation to fail at
 libguile/net_db.c:85, and in fact, motivated 1.4.1 release.
 
+* bugfix: `expt' now handles negative exponents correctly
+
 * installation process fix: some programs are no longer installed
 
 The following programs are used in the build process and are now no longer
