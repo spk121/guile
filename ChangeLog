@@ -24,6 +24,9 @@
 	Add recursion into libltdl.
 	Add "now run configure" message.
 
+	* HACKING (Hacking It Yourself): Use text from 1.63, removing
+	"flex" reference.
+
 2000-06-21  Mikael Djurfeldt  <mdj@thalamus.nada.kth.se>
 
 	* Guile 1.4 released.
