@@ -1,3 +1,11 @@
+2002-02-23  Thien-Thi Nguyen  <ttn@giblet.glug.org>
+
+	* guile-api.alist: Update.
+
+2002-02-15  Thien-Thi Nguyen  <ttn@giblet.glug.org>
+
+	* guile-api.alist: New file.
+
 2000-06-20  Mikael Djurfeldt  <mdj@thalamus.nada.kth.se>
 
 	* data-rep.texi: Center discussion around the standard interface
@@ -53,7 +61,7 @@ Fri Jun 25 22:21:43 1999  Greg Badros  <gjb@cs.washington.edu>
 	* data-rep.texi: Updated SMOB docs to talk about
  	scm_make_smob_type_mfpe, SCM_RETURN_NEWSMOB, SCM_NEWSMOB function
  	and macros.
-	
+
 1999-04-17  Jim Blandy  <jimb@savonarola.red-bean.com>
 
 	* Makefile.in: Regenerated.
@@ -83,7 +91,7 @@ Fri Jun 25 22:21:43 1999  Greg Badros  <gjb@cs.washington.edu>
 	* Makefile.am (EXAMPLE_SMOB_FILES, dist-hook): New variable and
 	target, to get the example-smob directory into the distribution.
 	* Makefile.in: Regenerated.
-	
+
 1998-10-08  Jim Blandy  <jimb@zwingli.cygnus.com>
 
 	* .cvsignore: New file, containing data-rep.info.  I'm not sure
