@@ -139,6 +139,7 @@ scm_procedure_p (obj)
 #ifdef CCLO
       case scm_tc7_cclo:
 #endif
+      case scm_tc7_pws:
 	return SCM_BOOL_T;
       default:
 	return SCM_BOOL_F;
@@ -167,23 +168,29 @@ scm_thunk_p (obj)
 #endif
 {
   if (SCM_NIMP (obj))
-    switch (SCM_TYP7 (obj))
-      {
-      case scm_tcs_closures:
-	if (SCM_NULLP (SCM_CAR (SCM_CODE (obj))))
-	  return SCM_BOOL_T;
-      case scm_tc7_subr_0:
-      case scm_tc7_subr_1o:
-      case scm_tc7_lsubr:
-      case scm_tc7_rpsubr:
-      case scm_tc7_asubr:
+    {
+    again:
+      switch (SCM_TYP7 (obj))
+	{
+	case scm_tcs_closures:
+	  if (SCM_NULLP (SCM_CAR (SCM_CODE (obj))))
+	    return SCM_BOOL_T;
+	case scm_tc7_subr_0:
+	case scm_tc7_subr_1o:
+	case scm_tc7_lsubr:
+	case scm_tc7_rpsubr:
+	case scm_tc7_asubr:
 #ifdef CCLO
-      case scm_tc7_cclo:
+	case scm_tc7_cclo:
 #endif
-	return SCM_BOOL_T;
-      default:
-	;
-      }
+	  return SCM_BOOL_T;
+	case scm_tc7_pws:
+	  obj = SCM_GETTER (obj);
+	  goto again;
+	default:
+	  ;
+	}
+    }
   return SCM_BOOL_F;
 }
 
@@ -219,6 +226,56 @@ scm_procedure_documentation (proc)
 }
 
 
+/* Procedure-with-setter
+ */
+
+SCM_PROC (s_procedure_with_setter_p, "procedure-with-setter?", 1, 0, 0, scm_procedure_with_setter_p);
+
+SCM
+scm_procedure_with_setter_p (SCM obj)
+{
+  return (SCM_NIMP (obj) && SCM_PROCEDURE_WITH_SETTER_P (obj)
+	  ? SCM_BOOL_T
+	  : SCM_BOOL_F);
+}
+
+SCM_PROC (s_make_procedure_with_setter, "make-procedure-with-setter", 2, 0, 0, scm_make_procedure_with_setter);
+
+SCM
+scm_make_procedure_with_setter (SCM getter, SCM setter)
+{
+  SCM z;
+  SCM_ASSERT (SCM_NFALSEP (scm_procedure_p (getter)),
+	      getter, SCM_ARG1, s_make_procedure_with_setter);
+  SCM_ASSERT (SCM_NFALSEP (scm_procedure_p (setter)),
+	      setter, SCM_ARG2, s_make_procedure_with_setter);
+  SCM_NEWCELL (z);
+  SCM_ENTER_A_SECTION;
+  SCM_SETCDR (z, scm_cons (getter, setter));
+  SCM_SETCAR (z, scm_tc7_pws);
+  SCM_EXIT_A_SECTION;
+  return z;
+}
+
+SCM_PROC (s_getter, "getter", 1, 0, 0, scm_getter);
+
+SCM
+scm_getter (SCM proc)
+{
+  SCM_ASSERT (SCM_NIMP (proc) && SCM_PROCEDURE_WITH_SETTER_P (proc),
+	      proc, SCM_ARG1, s_getter);
+  return SCM_GETTER (proc);
+}
+
+SCM_PROC (s_setter, "setter", 1, 0, 0, scm_setter);
+
+SCM
+scm_setter (SCM proc)
+{
+  SCM_ASSERT (SCM_NIMP (proc) && SCM_PROCEDURE_WITH_SETTER_P (proc),
+	      proc, SCM_ARG1, s_setter);
+  return SCM_SETTER (proc);
+}
 
 void
 scm_init_iprocs(subra, type)
