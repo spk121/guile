@@ -13,6 +13,19 @@ Changes since Guile 1.4:
 This buglet typically caused compilation to fail at
 libguile/net_db.c:85, and in fact, motivated 1.4.1 release.
 
+* installation process fix: some programs are no longer installed
+
+The following programs are used in the build process and are now no longer
+installed in $bindir.
+
+	guile-doc-snarf
+	guile-func-name-check
+	guile-snarf
+	guile-snarf.awk
+
+We will eventually support doc snarfing through an "executable
+scheme module" mechanism.
+
 * libltdl is now configured as as "installable" instead of "convenience"
 
 Previously, libguile included a private copy of libltdl.  Now,
