@@ -34,9 +34,8 @@ INCLUDES = -I.. -I$(srcdir)/..
 libqthreads_la_SOURCES = qt.c copyright.h
 libqthreads_la_LIBADD = qtmds.lo qtmdc.lo
 libqthreads_la_DEPENDENCIES = qtmds.lo qtmdc.lo
-libqthreads_la_LDFLAGS = -rpath $(libdir)
-
-##- OMIT_DEPENDENCIES = axp.h hppa.h i386.h ksr.h m88k.h mips.h sparc.h vax.h
+libqthreads_la_LDFLAGS = -rpath $(libdir) -export-dynamic -no-undefined \
+  -version-info @LIBQTHREADS_INTERFACE@
 
 .s.lo:
 	$(LIBTOOL) --mode=compile $(COMPILE) $(qthread_asflags) -c $<
