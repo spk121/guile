@@ -2060,6 +2060,7 @@ dispatch:
 #ifdef CCLO
     case scm_tc7_cclo:
 #endif
+    case scm_tc7_pws:
     case scm_tcs_subrs:
       RETURN (x);
 
@@ -2201,6 +2202,7 @@ evapply:
   PREP_APPLY (proc, SCM_EOL);
   if (SCM_NULLP (SCM_CDR (x))) {
     ENTER_APPLY;
+  evap0:
     switch (SCM_TYP7 (proc))
       {				/* no arguments given */
       case scm_tc7_subr_0:
@@ -2223,6 +2225,12 @@ evapply:
 #endif
 	goto evap1;
 #endif
+      case scm_tc7_pws:
+	proc = SCM_GETTER (proc);
+#ifdef DEVAL
+	debug.info->a.proc = proc;
+#endif
+	goto evap0;
       case scm_tcs_closures:
 	x = SCM_CODE (proc);
 	env = EXTEND_ENV (SCM_CAR (x), SCM_EOL, SCM_ENV (proc));
@@ -2363,6 +2371,12 @@ evapply:
 #endif
 	  goto evap2;
 #endif
+	case scm_tc7_pws:
+	  proc = SCM_GETTER (proc);
+#ifdef DEVAL
+	  debug.info->a.proc = proc;
+#endif
+	  goto evap1;
 	case scm_tcs_closures:
 	clos1:
 	  x = SCM_CODE (proc);
@@ -2475,6 +2489,12 @@ evapply:
 		proc = SCM_CCLO_SUBR(proc);
 		goto evap3; */
 #endif
+	case scm_tc7_pws:
+	  proc = SCM_GETTER (proc);
+#ifdef DEVAL
+	  debug.info->a.proc = proc;
+#endif
+	  goto evap2;
 	case scm_tcs_cons_gloc:
 	  if (!SCM_I_OPERATORP (proc))
 	    goto badfun;
@@ -2538,6 +2558,7 @@ evapply:
 		      SCM_CDRLOC (SCM_CDR (debug.info->a.args))));
 #endif
     ENTER_APPLY;
+  evap3:
     switch (SCM_TYP7 (proc))
       {			/* have 3 or more arguments */
 #ifdef DEVAL
@@ -2586,6 +2607,10 @@ evapply:
       case scm_tc7_cclo:
 	goto cclon;
 #endif
+      case scm_tc7_pws:
+	proc = SCM_GETTER (proc);
+	debug.info->a.proc = proc;
+	goto evap3;
       case scm_tcs_closures:
 	SCM_SET_ARGSREADY (debug);
 	env = EXTEND_ENV (SCM_CAR (SCM_CODE (proc)),
@@ -2638,6 +2663,9 @@ evapply:
       case scm_tc7_cclo:
 	goto cclon;
 #endif
+      case scm_tc7_pws:
+	proc = SCM_GETTER (proc);
+	goto evap3;
       case scm_tcs_closures:
 #ifdef DEVAL
 	SCM_SET_ARGSREADY (debug);
@@ -3025,6 +3053,12 @@ tail:
 #endif
       goto tail;
 #endif
+    case scm_tc7_pws:
+      proc = SCM_GETTER (proc);
+#ifdef DEVAL
+      debug.vect[0].a.proc = proc;
+#endif
+      goto tail;
     case scm_tcs_cons_gloc:
       if (!SCM_I_OPERATORP (proc))
 	goto badproc;
