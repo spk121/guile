@@ -1,3 +1,7 @@
+2002-05-13  Thien-Thi Nguyen  <ttn@giblet.glug.org>
+
+	* acinclude.m4, configure.in, NEWS: Update copyright.
+
 2002-05-02  Thien-Thi Nguyen  <ttn@giblet.glug.org>
 
 	* qthreads.m4: bye bye (move to guile-config/ subdir).
