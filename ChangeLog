@@ -1,3 +1,8 @@
+2002-02-26  Thien-Thi Nguyen  <ttn@giblet.glug.org>
+
+	* .cvsignore (check-guile, check-guile.log, config.guess,
+	config.sub, guile-tools, libltdl, ltconfig, ltmain.sh): Add.
+
 2002-02-26  Thien-Thi Nguyen  <ttn@glug.org>
 
 	* pre-inst-guile.in: New file.
