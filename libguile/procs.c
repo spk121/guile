@@ -185,7 +185,7 @@ scm_thunk_p (obj)
 #endif
 	  return SCM_BOOL_T;
 	case scm_tc7_pws:
-	  obj = SCM_GETTER (obj);
+	  obj = SCM_PROCEDURE (obj);
 	  goto again;
 	default:
 	  ;
@@ -242,29 +242,36 @@ scm_procedure_with_setter_p (SCM obj)
 SCM_PROC (s_make_procedure_with_setter, "make-procedure-with-setter", 2, 0, 0, scm_make_procedure_with_setter);
 
 SCM
-scm_make_procedure_with_setter (SCM getter, SCM setter)
+scm_make_procedure_with_setter (SCM procedure, SCM setter)
 {
   SCM z;
-  SCM_ASSERT (SCM_NFALSEP (scm_procedure_p (getter)),
-	      getter, SCM_ARG1, s_make_procedure_with_setter);
+  SCM_ASSERT (SCM_NFALSEP (scm_procedure_p (procedure)),
+	      procedure, SCM_ARG1, s_make_procedure_with_setter);
   SCM_ASSERT (SCM_NFALSEP (scm_procedure_p (setter)),
 	      setter, SCM_ARG2, s_make_procedure_with_setter);
   SCM_NEWCELL (z);
   SCM_ENTER_A_SECTION;
-  SCM_SETCDR (z, scm_cons (getter, setter));
+  SCM_SETCDR (z, scm_cons (procedure, setter));
   SCM_SETCAR (z, scm_tc7_pws);
   SCM_EXIT_A_SECTION;
   return z;
 }
 
-SCM_PROC (s_getter, "getter", 1, 0, 0, scm_getter);
+SCM_PROC (s_procedure, "procedure", 1, 0, 0, scm_procedure);
 
 SCM
-scm_getter (SCM proc)
+scm_procedure (SCM proc)
 {
-  SCM_ASSERT (SCM_NIMP (proc) && SCM_PROCEDURE_WITH_SETTER_P (proc),
-	      proc, SCM_ARG1, s_getter);
-  return SCM_GETTER (proc);
+  SCM_ASSERT (SCM_NIMP (proc), proc, SCM_ARG1, s_procedure);
+  if (SCM_PROCEDURE_WITH_SETTER_P (proc))
+    return SCM_PROCEDURE (proc);
+  else if (SCM_STRUCTP (proc))
+    {
+      SCM_ASSERT (SCM_I_OPERATORP (proc), proc, SCM_ARG1, s_procedure);
+      return proc;
+    }
+  scm_wrong_type_arg (s_procedure, SCM_ARG1, proc);
+  return 0; /* not reached */
 }
 
 SCM_PROC (s_setter, "setter", 1, 0, 0, scm_setter);
@@ -272,9 +279,18 @@ SCM_PROC (s_setter, "setter", 1, 0, 0, scm_setter);
 SCM
 scm_setter (SCM proc)
 {
-  SCM_ASSERT (SCM_NIMP (proc) && SCM_PROCEDURE_WITH_SETTER_P (proc),
-	      proc, SCM_ARG1, s_setter);
-  return SCM_SETTER (proc);
+  SCM_ASSERT (SCM_NIMP (proc), proc, SCM_ARG1, s_setter);
+  if (SCM_PROCEDURE_WITH_SETTER_P (proc))
+    return SCM_SETTER (proc);
+  else if (SCM_STRUCTP (proc))
+    {
+      SCM_ASSERT (SCM_I_OPERATORP (proc), proc, SCM_ARG1, s_setter);
+      return (SCM_I_ENTITYP (proc)
+	      ? SCM_ENTITY_SETTER (proc)
+	      : SCM_OPERATOR_SETTER (proc));
+    }
+  scm_wrong_type_arg (s_setter, SCM_ARG1, proc);
+  return 0;
 }
 
 void
