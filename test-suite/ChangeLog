@@ -1,3 +1,7 @@
+2002-05-13  Thien-Thi Nguyen  <ttn@giblet.glug.org>
+
+	* lib.scm, tests/r4rs.test, guile-test: Update copyright.
+
 2002-02-09  Thien-Thi Nguyen  <ttn@giblet.glug.org>
 
 	* lib.scm: Back port from 1.20, with these exceptions:
