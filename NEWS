@@ -6,23 +6,66 @@ Please send Guile bug reports to bug-guile@gnu.org.
 
 Changes since Guile 1.3:
 
+* Changes to the distribution
+
+** The configure script now accepts a --with-readline flag.
+
+By default, Guile includes support for the readline line-editing
+library, if a sufficiently recent version of the library is installed
+on your system.
+
+If you do not want readline included in Guile, pass the following flag
+to the configure script:
+
+  --with-readline=no
+
+You may not want to configure Guile to use readline if you are unable
+to release your program under the GNU General Public License; the
+readline library is released under the GPL, so anything linked with it
+must also be distributed under the GPL.
+
+Enabling readline support does not significantly increase the size of
+the Guile library.  Readline itself is a shared library on most
+systems, and the readline interface code in Guile is less than 3
+kilobytes long.
+
+In future releases of Guile, we hope to have the readline support
+linked into Guile dynamically, if and when you use it.  This would
+make this configuration option unnecessary; the same Guile library
+could be used both with and without the readline library.
+
 * Changes to the stand-alone interpreter
 
-** New options interface: readline-options,
-readline-enable, readline-disable, readline-set!
+** Command-line editing is enhanced.
 
-** Command line history is now restored from and saved to file
+If you have a sufficiently recent version of the GNU readline library
+installed on your system, Guile will use it to read expressions
+interactively.  
 
-If readline is used and the readline option `history-file' is enabled,
-the command line history is read from file when the interpreter is
-entered, and written to file on exit.  The filename used can be
-specified with the environment variable GUILE_HISTORY.  Default file
-name is "$HOME/.guile_history".  Nothing special happens if errors
-occur during read or write.
+You can now use the readline-options interface to control readline's
+behavior.  You can now control the readline library's behavior by
+changing the options listed below.
 
-** Command line history length can now be customized.
-Command line history length is now controlled by the readline option
-`history-length'.  Default is 200 lines.
+  (readline-enable 'history-file)
+    Tell readline to record your commands in a file when you exit
+    Guile, and restore them when you restart Guile.  By default, Guile
+    saves commands to `$HOME/.guile_history', but if the
+    `GUILE_HISTORY' environment variable is set, Guile will use its
+    value as the name of the history file.
+
+    If Guile is unable to save or restore lines from the history file,
+    the operation is simply not performed; the user is not notified.
+
+  (readline-disable 'history-file)
+    Tell Guile not to save or restore command history.
+
+  (readline-set! history-length N)
+    Tell Guile to save at most N lines of command history.
+
+  (readline-set! bounce-parens N)
+    Tell Guile to indicate the matching opening parenthesis when you
+    type a closing parenthesis, by resting the cursor on it for N
+    milliseconds.  If N is zero, do not highlight opening parethesis.
 
 ** All builtins now print as primitives.
 Previously builtin procedures not belonging to the fundamental subr
@@ -34,6 +77,232 @@ gsubr-apply and macro transformer application frames no longer appear
 in backtraces.
 
 * Changes to Scheme functions and syntax
+
+** New module (ice-9 getopt-long), with the function `getopt-long'.
+
+getopt-long is a function for parsing command-line arguments in a
+manner consistent with other GNU programs.
+
+(getopt-long ARGS GRAMMAR)
+Parse the arguments ARGS according to the argument list grammar GRAMMAR.
+
+ARGS should be a list of strings.  Its first element should be the
+name of the program; subsequent elements should be the arguments
+that were passed to the program on the command line.  The
+`program-arguments' procedure returns a list of this form.
+
+GRAMMAR is a list of the form:
+((OPTION (PROPERTY VALUE) ...) ...)
+
+Each OPTION should be a symbol.  `getopt-long' will accept a
+command-line option named `--OPTION'.
+Each option can have the following (PROPERTY VALUE) pairs:
+
+  (single-char CHAR) --- Accept `-CHAR' as a single-character
+            equivalent to `--OPTION'.  This is how to specify traditional
+            Unix-style flags.
+  (required? BOOL) --- If BOOL is true, the option is required.
+            getopt-long will raise an error if it is not found in ARGS.
+  (value BOOL) --- If BOOL is #t, the option accepts a value; if
+            it is #f, it does not; and if it is the symbol
+            `optional', the option may appear in ARGS with or
+            without a value. 
+  (predicate FUNC) --- If the option accepts a value (i.e. you
+            specified `(value #t)' for this option), then getopt
+            will apply FUNC to the value, and throw an exception
+            if it returns #f.  FUNC should be a procedure which
+            accepts a string and returns a boolean value; you may
+            need to use quasiquotes to get it into GRAMMAR.
+
+The (PROPERTY VALUE) pairs may occur in any order, but each
+property may occur only once.  By default, options do not have
+single-character equivalents, are not required, and do not take
+values.
+
+In ARGS, single-character options may be combined, in the usual
+Unix fashion: ("-x" "-y") is equivalent to ("-xy").  If an option
+accepts values, then it must be the last option in the
+combination; the value is the next argument.  So, for example, using
+the following grammar:
+     ((apples    (single-char #\a))
+      (blimps    (single-char #\b) (value #t))
+      (catalexis (single-char #\c) (value #t)))
+the following argument lists would be acceptable:
+   ("-a" "-b" "bang" "-c" "couth")     ("bang" and "couth" are the values
+                                        for "blimps" and "catalexis")
+   ("-ab" "bang" "-c" "couth")         (same)
+   ("-ac" "couth" "-b" "bang")         (same)
+   ("-abc" "couth" "bang")             (an error, since `-b' is not the
+                                        last option in its combination)
+
+If an option's value is optional, then `getopt-long' decides
+whether it has a value by looking at what follows it in ARGS.  If
+the next element is a string, and it does not appear to be an
+option itself, then that string is the option's value.
+
+The value of a long option can appear as the next element in ARGS,
+or it can follow the option name, separated by an `=' character.
+Thus, using the same grammar as above, the following argument lists
+are equivalent:
+  ("--apples" "Braeburn" "--blimps" "Goodyear")
+  ("--apples=Braeburn" "--blimps" "Goodyear")
+  ("--blimps" "Goodyear" "--apples=Braeburn")
+
+If the option "--" appears in ARGS, argument parsing stops there;
+subsequent arguments are returned as ordinary arguments, even if
+they resemble options.  So, in the argument list:
+        ("--apples" "Granny Smith" "--" "--blimp" "Goodyear")
+`getopt-long' will recognize the `apples' option as having the
+value "Granny Smith", but it will not recognize the `blimp'
+option; it will return the strings "--blimp" and "Goodyear" as
+ordinary argument strings.
+
+The `getopt-long' function returns the parsed argument list as an
+assocation list, mapping option names --- the symbols from GRAMMAR
+--- onto their values, or #t if the option does not accept a value.
+Unused options do not appear in the alist.
+
+All arguments that are not the value of any option are returned
+as a list, associated with the empty list.
+
+`getopt-long' throws an exception if:
+- it finds an unrecognized option in ARGS
+- a required option is omitted
+- an option that requires an argument doesn't get one
+- an option that doesn't accept an argument does get one (this can
+  only happen using the long option `--opt=value' syntax)
+- an option predicate fails
+
+So, for example:
+
+(define grammar
+  `((lockfile-dir (required? #t)
+                  (value #t)
+                  (single-char #\k)
+                  (predicate ,file-is-directory?))
+    (verbose (required? #f)
+             (single-char #\v)
+             (value #f))
+    (x-includes (single-char #\x))
+    (rnet-server (single-char #\y) 
+                 (predicate ,string?))))
+
+(getopt-long '("my-prog" "-vk" "/tmp" "foo1" "--x-includes=/usr/include" 
+               "--rnet-server=lamprod" "--" "-fred" "foo2" "foo3")
+               grammar)
+=> ((() "foo1" "-fred" "foo2" "foo3")
+    (rnet-server . "lamprod")
+    (x-includes . "/usr/include")
+    (lockfile-dir . "/tmp")
+    (verbose . #t))
+
+** The (ice-9 getopt-gnu-style) module is obsolete; use (ice-9 getopt-long).
+
+It will be removed in a few releases.
+
+** New syntax: lambda*
+** New syntax: define*
+** New syntax: define*-public   
+** New syntax: defmacro*
+** New syntax: defmacro*-public
+Guile now supports optional arguments. 
+
+`lambda*', `define*', `define*-public', `defmacro*' and
+`defmacro*-public' are identical to the non-* versions except that
+they use an extended type of parameter list that has the following BNF
+syntax (parentheses are literal, square brackets indicate grouping,
+and `*', `+' and `?' have the usual meaning):
+
+   ext-param-list ::= ( [identifier]* [#&optional [ext-var-decl]+]?
+      [#&key [ext-var-decl]+ [#&allow-other-keys]?]? 
+      [[#&rest identifier]|[. identifier]]? ) | [identifier]
+
+   ext-var-decl ::= identifier | ( identifier expression )  
+
+The semantics are best illustrated with the following documentation
+and examples for `lambda*':
+
+ lambda* args . body
+   lambda extended for optional and keyword arguments
+   
+ lambda* creates a procedure that takes optional arguments. These
+ are specified by putting them inside brackets at the end of the
+ paramater list, but before any dotted rest argument. For example,
+   (lambda* (a b #&optional c d . e) '())
+ creates a procedure with fixed arguments a and b, optional arguments c
+ and d, and rest argument e. If the optional arguments are omitted
+ in a call, the variables for them are unbound in the procedure. This
+ can be checked with the bound? macro.
+
+ lambda* can also take keyword arguments. For example, a procedure
+ defined like this:
+   (lambda* (#&key xyzzy larch) '())
+ can be called with any of the argument lists (#:xyzzy 11)
+ (#:larch 13) (#:larch 42 #:xyzzy 19) (). Whichever arguments
+ are given as keywords are bound to values.
+
+ Optional and keyword arguments can also be given default values
+ which they take on when they are not present in a call, by giving a
+ two-item list in place of an optional argument, for example in:
+   (lambda* (foo #&optional (bar 42) #&key (baz 73)) (list foo bar baz)) 
+ foo is a fixed argument, bar is an optional argument with default
+ value 42, and baz is a keyword argument with default value 73.
+ Default value expressions are not evaluated unless they are needed
+ and until the procedure is called.  
+
+ lambda* now supports two more special parameter list keywords.
+
+ lambda*-defined procedures now throw an error by default if a
+ keyword other than one of those specified is found in the actual
+ passed arguments. However, specifying #&allow-other-keys
+ immediately after the kyword argument declarations restores the
+ previous behavior of ignoring unknown keywords. lambda* also now
+ guarantees that if the same keyword is passed more than once, the
+ last one passed is the one that takes effect. For example,
+  ((lambda* (#&key (heads 0) (tails 0)) (display (list heads tails)))
+    #:heads 37 #:tails 42 #:heads 99)
+ would result in (99 47) being displayed.
+
+ #&rest is also now provided as a synonym for the dotted syntax rest
+ argument. The argument lists (a . b) and (a #&rest b) are equivalent in
+ all respects to lambda*. This is provided for more similarity to DSSSL,
+ MIT-Scheme and Kawa among others, as well as for refugees from other
+ Lisp dialects.
+
+Further documentation may be found in the optargs.scm file itself.
+
+The optional argument module also exports the macros `let-optional',
+`let-optional*', `let-keywords', `let-keywords*' and `bound?'. These
+are not documented here because they may be removed in the future, but
+full documentation is still available in optargs.scm.
+
+** New syntax: and-let*
+Guile now supports the `and-let*' form, described in the draft SRFI-2.
+
+Syntax: (land* (<clause> ...) <body> ...)
+Each <clause> should have one of the following forms:
+  (<variable> <expression>)
+  (<expression>)
+  <bound-variable>
+Each <variable> or <bound-variable> should be an identifier.  Each
+<expression> should be a valid expression.  The <body> should be a
+possibly empty sequence of expressions, like the <body> of a
+lambda form.
+
+Semantics: A LAND* expression is evaluated by evaluating the
+<expression> or <bound-variable> of each of the <clause>s from
+left to right.  The value of the first <expression> or
+<bound-variable> that evaluates to a false value is returned; the
+remaining <expression>s and <bound-variable>s are not evaluated.
+The <body> forms are evaluated iff all the <expression>s and
+<bound-variable>s evaluate to true values.
+
+The <expression>s and the <body> are evaluated in an environment
+binding each <variable> of the preceding (<variable> <expression>)
+clauses to the value of the <expression>.  Later bindings
+shadow earlier bindings.
+
+Guile's and-let* macro was contributed by Michael Livshin.
 
 ** New function: sorted? SEQUENCE LESS?
 Returns `#t' when the sequence argument is in non-decreasing order
