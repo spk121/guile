@@ -1,3 +1,13 @@
+2002-05-05  Thien-Thi Nguyen  <ttn@giblet.glug.org>
+
+	* data-rep.texi: Comment out (w/ "@c essay " prefix) portions
+	required for stand-alone processing.
+
+	* preface.texi: Back port from HEAD, with these differences:
+	Remove "Manual Layout" and "Manual Conventions" nodes.
+
+	* guile.texi: New file.
+
 2002-05-04  Thien-Thi Nguyen  <ttn@giblet.glug.org>
 
 	* README: Replace "no manual yet" w/ "see manual on-line (for now)".
