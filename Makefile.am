@@ -19,26 +19,22 @@
 ##   to the Free Software Foundation, Inc., 59 Temple Place, Suite
 ##   330, Boston, MA 02111-1307 USA
 
+AUTOMAKE_OPTIONS = 1.5
+
 SUBDIRS = ice-9 qt libltdl libguile guile-config guile-readline doc am
 
 include_HEADERS = libguile.h
 
 # automake sometimes forgets to distribute acconfig.h,
 # apparently depending on the phase of the moon.
-EXTRA_DIST = qthreads.m4 HACKING GUILE-VERSION ANON-CVS SNAPSHOTS \
-	     $(ACLOCAL) acconfig.h
+EXTRA_DIST = HACKING GUILE-VERSION ANON-CVS SNAPSHOTS \
+	     $(ACLOCAL)
 
 TESTS = check-guile
 
 # The rule will cd to $(top_srcdir).
 ACLOCAL = ./guile-aclocal.sh
 
-if MAINTAINER_MODE
-# Fill dist tree.
-include $(top_srcdir)/am/maintainer-dirs
-dist-hook:
-	( echo 'This is a snapshot of the TODO file.' ; date ; echo ; \
-	  cat $(workbook)/tasks/TODO ) > TODO
-endif
+DISTCLEANFILES = check-guile.log
 
 # Makefile.am ends here
