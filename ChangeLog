@@ -1,3 +1,7 @@
+2002-04-09  Thien-Thi Nguyen  <ttn@giblet.glug.org>
+
+	* ANON-CVS, HACKING, INSTALL, SNAPSHOTS: bye bye
+
 2002-04-03  Thien-Thi Nguyen  <ttn@giblet.glug.org>
 
 	* RELEASE: bye bye
@@ -11,8 +15,6 @@
 	* autogen.sh: Add usage comment.
 	Add workbook specification.
 	Add dist-files symlinking.
-
-	* ANON-CVS, HACKING, INSTALL, SNAPSHOTS: bye bye
 
 2002-03-04  Thien-Thi Nguyen  <ttn@giblet.glug.org>
 
