@@ -386,9 +386,9 @@ scm_gc_end ()
 }
 
 
-SCM_PROC(s_object_address, "object-address", 1, 0, 0, scm_object_addr);
+SCM_PROC (s_object_address, "object-address", 1, 0, 0, scm_object_address);
 SCM
-scm_object_addr (obj)
+scm_object_address (obj)
      SCM obj;
 {
   return scm_ulong2num ((unsigned long)obj);
@@ -651,6 +651,7 @@ gc_mark_nimp:
 		  scm_gc_mark (mem[scm_struct_i_proc + 1]);
 		  scm_gc_mark (mem[scm_struct_i_proc + 2]);
 		  scm_gc_mark (mem[scm_struct_i_proc + 3]);
+		  scm_gc_mark (mem[scm_struct_i_setter]);
 		}
 	      if (len)
 		{
