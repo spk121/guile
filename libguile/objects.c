@@ -78,6 +78,8 @@ SCM scm_class_unknown;
 SCM *scm_port_class = 0;
 SCM *scm_smob_class = 0;
 
+int scm_classes_initialized = 0;
+
 SCM scm_no_applicable_method;
 
 /* This function is used for efficient type dispatch.  */
@@ -86,6 +88,9 @@ SCM_DEFINE (scm_class_of, "class-of", 1, 0, 0,
 	    "Return the class of @var{x}.")
 #define FUNC_NAME s_scm_class_of
 {
+  if (!scm_classes_initialized)
+    scm_misc_error (FUNC_NAME, "GOOPS not loaded yet.", SCM_EOL);
+
   switch (SCM_ITAG3 (x))
     {
     case scm_tc3_int_1:

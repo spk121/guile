@@ -2377,6 +2377,7 @@ create_standard_classes (void)
 	       scm_class_class,
 	       scm_list_2 (scm_class_input_port, scm_class_output_port),
 	       SCM_EOL);
+  scm_classes_initialized = 1;
 }
 
 /**********************************************************************

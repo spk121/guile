@@ -207,6 +207,7 @@ extern SCM scm_class_real, scm_class_complex, scm_class_integer;
 extern SCM scm_class_unknown;
 extern SCM *scm_port_class;
 extern SCM *scm_smob_class;
+extern int scm_classes_initialized;
 
 extern SCM scm_no_applicable_method;
 
