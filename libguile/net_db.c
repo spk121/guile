@@ -1,16 +1,16 @@
 /* "net_db.c" network database support
  * Copyright (C) 1995, 96, 97, 98, 99, 2000 Free Software Foundation, Inc.
- * 
+ *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2, or (at your option)
  * any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this software; see the file COPYING.  If not, write to
  * the Free Software Foundation, Inc., 59 Temple Place, Suite 330,
@@ -82,9 +82,12 @@ extern int h_errno;
 int close ();
 #endif /* STDC_HEADERS */
 
+#ifndef HAVE_INET_ATON
+/* for our definition in inet_aton.c, not usually needed.  */
 extern int inet_aton ();
+#endif
 
-SCM_DEFINE (scm_inet_aton, "inet-aton", 1, 0, 0, 
+SCM_DEFINE (scm_inet_aton, "inet-aton", 1, 0, 0,
             (SCM address),
 	    "Converts a string containing an Internet host address in the traditional\n"
 	    "dotted decimal notation into an integer.\n\n"
@@ -105,7 +108,7 @@ SCM_DEFINE (scm_inet_aton, "inet-aton", 1, 0, 0,
 #undef FUNC_NAME
 
 
-SCM_DEFINE (scm_inet_ntoa, "inet-ntoa", 1, 0, 0, 
+SCM_DEFINE (scm_inet_ntoa, "inet-ntoa", 1, 0, 0,
             (SCM inetid),
 	    "Converts an integer Internet host address into a string with the\n"
 	    "traditional dotted decimal representation.\n\n"
@@ -125,7 +128,7 @@ SCM_DEFINE (scm_inet_ntoa, "inet-ntoa", 1, 0, 0,
 #undef FUNC_NAME
 
 #ifdef HAVE_INET_NETOF
-SCM_DEFINE (scm_inet_netof, "inet-netof", 1, 0, 0, 
+SCM_DEFINE (scm_inet_netof, "inet-netof", 1, 0, 0,
             (SCM address),
 	    "Returns the network number part of the given integer Internet address.\n\n"
 	    "@smalllisp\n"
@@ -141,7 +144,7 @@ SCM_DEFINE (scm_inet_netof, "inet-netof", 1, 0, 0,
 #endif
 
 #ifdef HAVE_INET_LNAOF
-SCM_DEFINE (scm_lnaof, "inet-lnaof", 1, 0, 0, 
+SCM_DEFINE (scm_lnaof, "inet-lnaof", 1, 0, 0,
             (SCM address),
 	    "Returns the local-address-with-network part of the given Internet\n"
 	    "address.\n\n"
@@ -207,15 +210,15 @@ static void scm_resolv_error (const char *subr, SCM bad_value)
 	{
 	case HOST_NOT_FOUND:
 	  key = scm_host_not_found_key;
-	  errmsg = "Unknown host"; 
+	  errmsg = "Unknown host";
 	  break;
-	case TRY_AGAIN:	
+	case TRY_AGAIN:
 	  key = scm_try_again_key;
 	  errmsg = "Host name lookup failure";
 	  break;
 	case NO_RECOVERY:
 	  key = scm_no_recovery_key;
-	  errmsg = "Unknown server error"; 
+	  errmsg = "Unknown server error";
 	  break;
 	case NO_DATA:
 	  key = scm_no_data_key;
@@ -237,7 +240,7 @@ static void scm_resolv_error (const char *subr, SCM bad_value)
    Should use reentrant facilities if available.
  */
 
-SCM_DEFINE (scm_gethost, "gethost", 0, 1, 0, 
+SCM_DEFINE (scm_gethost, "gethost", 0, 1, 0,
             (SCM name),
 	    "@deffnx procedure gethostbyname hostname\n"
 	    "@deffnx procedure gethostbyaddr address\n"
@@ -289,8 +292,8 @@ SCM_DEFINE (scm_gethost, "gethost", 0, 1, 0,
     }
   if (!entry)
     scm_resolv_error (FUNC_NAME, name);
-  
-  ve[0] = scm_makfromstr (entry->h_name, 
+
+  ve[0] = scm_makfromstr (entry->h_name,
 			  (scm_sizet) strlen (entry->h_name), 0);
   ve[1] = scm_makfromstrs (-1, entry->h_aliases);
   ve[2] = SCM_MAKINUM (entry->h_addrtype + 0L);
@@ -322,7 +325,7 @@ SCM_DEFINE (scm_gethost, "gethost", 0, 1, 0,
    operation?), but it seems to work okay.  We'll see.  */
 
 #if defined(HAVE_GETNETENT) && defined(HAVE_GETNETBYNAME) && defined(HAVE_GETNETBYADDR)
-SCM_DEFINE (scm_getnet, "getnet", 0, 1, 0, 
+SCM_DEFINE (scm_getnet, "getnet", 0, 1, 0,
             (SCM name),
 	    "@deffnx procedure getnetbyname net-name\n"
 	    "@deffnx procedure getnetbyaddr net-number\n"
@@ -347,7 +350,7 @@ SCM_DEFINE (scm_getnet, "getnet", 0, 1, 0,
 	{
 	  if (errno)
 	    SCM_SYSERROR;
-	  else 
+	  else
 	    return SCM_BOOL_F;
 	}
     }
@@ -375,7 +378,7 @@ SCM_DEFINE (scm_getnet, "getnet", 0, 1, 0,
 #endif
 
 #ifdef HAVE_GETPROTOENT
-SCM_DEFINE (scm_getproto, "getproto", 0, 1, 0, 
+SCM_DEFINE (scm_getproto, "getproto", 0, 1, 0,
             (SCM name),
 	    "@deffnx procedure getprotobyname name\n"
 	    "@deffnx procedure getprotobynumber number\n"
@@ -481,7 +484,7 @@ SCM_DEFINE (scm_getserv, "getserv", 0, 2, 0,
       entry = getservbyport (htons (SCM_INUM (name)), SCM_ROCHARS (proto));
     }
   if (!entry)
-    SCM_SYSERROR_MSG("no such service ~A", 
+    SCM_SYSERROR_MSG("no such service ~A",
                      scm_listify (name, SCM_UNDEFINED), errno);
   return scm_return_entry (entry);
 }
@@ -489,7 +492,7 @@ SCM_DEFINE (scm_getserv, "getserv", 0, 2, 0,
 #endif
 
 #if defined(HAVE_SETHOSTENT) && defined(HAVE_ENDHOSTENT)
-SCM_DEFINE (scm_sethost, "sethost", 0, 1, 0, 
+SCM_DEFINE (scm_sethost, "sethost", 0, 1, 0,
             (SCM arg),
 	    "If @var{stayopen} is omitted, this is equivalent to @code{endhostent}.\n"
 	    "Otherwise it is equivalent to @code{sethostent stayopen}.")
@@ -504,8 +507,8 @@ SCM_DEFINE (scm_sethost, "sethost", 0, 1, 0,
 #undef FUNC_NAME
 #endif
 
-#if defined(HAVE_SETNETENT) && defined(HAVE_ENDNETENT) 
-SCM_DEFINE (scm_setnet, "setnet", 0, 1, 0, 
+#if defined(HAVE_SETNETENT) && defined(HAVE_ENDNETENT)
+SCM_DEFINE (scm_setnet, "setnet", 0, 1, 0,
             (SCM arg),
 	    "If @var{stayopen} is omitted, this is equivalent to @code{endnetent}.\n"
 	    "Otherwise it is equivalent to @code{setnetent stayopen}.")
@@ -521,7 +524,7 @@ SCM_DEFINE (scm_setnet, "setnet", 0, 1, 0,
 #endif
 
 #if defined(HAVE_SETPROTOENT) && defined(HAVE_ENDPROTOENT)
-SCM_DEFINE (scm_setproto, "setproto", 0, 1, 0, 
+SCM_DEFINE (scm_setproto, "setproto", 0, 1, 0,
             (SCM arg),
 	    "If @var{stayopen} is omitted, this is equivalent to @code{endprotoent}.\n"
 	    "Otherwise it is equivalent to @code{setprotoent stayopen}.")
@@ -537,7 +540,7 @@ SCM_DEFINE (scm_setproto, "setproto", 0, 1, 0,
 #endif
 
 #if defined(HAVE_SETSERVENT) && defined(HAVE_ENDSERVENT)
-SCM_DEFINE (scm_setserv, "setserv", 0, 1, 0, 
+SCM_DEFINE (scm_setserv, "setserv", 0, 1, 0,
             (SCM arg),
 	    "If @var{stayopen} is omitted, this is equivalent to @code{endservent}.\n"
 	    "Otherwise it is equivalent to @code{setservent stayopen}.")
@@ -553,7 +556,7 @@ SCM_DEFINE (scm_setserv, "setserv", 0, 1, 0,
 #endif
 
 
-void 
+void
 scm_init_net_db ()
 {
 #ifdef INADDR_ANY
