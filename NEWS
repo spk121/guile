@@ -5,7 +5,7 @@ See the end for copying conditions.
 Please send Guile bug reports to bug-guile@gnu.org.
 
 
-Guile 1.4.1 NOT YET RELEASED
+Guile 1.4.1 released 2002-05-13
 Changes since Guile 1.4:
 
 * installation fix: (ice-9 and-let*) has been renamed to (ice-9 and-let-star)
