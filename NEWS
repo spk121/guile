@@ -3,7 +3,80 @@ Copyright (C) 1996, 1997, 1998, 1999, 2000 Free Software Foundation, Inc.
 See the end for copying conditions.
 
 Please send Guile bug reports to bug-guile@gnu.org.
+
 
+Guile 1.4.1 NOT YET RELEASED
+Changes since Guile 1.4:
+
+* bugfix: net_db.c `inet_aton' declaration now properly conditionalized
+
+This buglet typically caused compilation to fail at
+libguile/net_db.c:85, and in fact, motivated 1.4.1 release.
+
+* libltdl is now configured as as "installable" instead of "convenience"
+
+Previously, libguile included a private copy of libltdl.  Now,
+configuration detects if libltdl is already installed, and uses that.
+If libltdl is not already installed, a copy is built and installed.
+In any case, libguile no longer includes libltdl, see next item.
+
+* library versioning now more disciplined
+
+The CURRENT:REVISION:AGE scheme is now applied to all shared-object
+libraries built as part of guile:
+
+                      guile-1.4	    guile-1.4.1
+  libguile		  9.0.0          10.0.0
+  libqthreads		  0.0.0           0.1.0
+  libguile-readline       0.0.0           0.1.0
+
+The change in CURRENT for libguile is due to libltdl unbundling
+(14 symbols w/ "lt_" prefix are no longer provided).
+
+* "make check" now works
+
+This optional step in the build process (between "make" and "make
+install") runs some tests on the built guile and reports a summary,
+something like:
+
+  Totals for this test run:
+  passes:                 2109
+  failures:               0
+  unexpected passes:      0
+  expected failures:      11
+  unresolved test cases:  11
+  untested test cases:    0
+  unsupported test cases: 9
+  errors:                 0
+
+If there are any errors, "make check" returns failurefully; please file
+a bug report in that case (send email to <bug-guile@gnu.org>).
+
+The tests comprising "make check" are located under the test-suite
+subdir, and can be run individually using the "check-guile" script, like
+so:
+
+  check-guile numbers.test
+
+(This is how "make check" does it, too.)  See the header comments in
+check-guile for more info.  If you write new tests, send them to
+bug-guile.
+
+* API summarization available
+
+Scheme and C programming interfaces are now summarized in
+doc/guile-api.alist.  This file contains a single sexp of the form:
+
+  ((scheme SCHEME-API) (C C-API))
+
+SCHEME-API and C-API are sub-alists whose keys are names of Scheme (or
+C) functions and variables.  The values behind the keys are unspecified
+for now.
+
+
+
+
+Guile 1.4 released 2000-06-21
 Changes since Guile 1.3.4:
 
 * Changes to the distribution
@@ -144,7 +217,7 @@ Linux POSIX threads due to their use of the stack pointer to find the
 thread context.  This has now been fixed with a workaround which uses
 the pthreads to allocate the stack.
 
-** New primitives: `pkgdata-dir', `site-dir', `library-dir' 
+** New primitives: `pkgdata-dir', `site-dir', `library-dir'
 
 ** Positions of erring expression in scripts
 
@@ -375,13 +448,13 @@ Thus, the use of SCM_HOOK_NAME and scm_make_hook_with_name is deprecated.
 
 You can emulate this feature by using object properties.
 
-** Deprecated macros: SCM_INPORTP, SCM_OUTPORTP, SCM_CRDY, SCM_ICHRP, 
+** Deprecated macros: SCM_INPORTP, SCM_OUTPORTP, SCM_CRDY, SCM_ICHRP,
 SCM_ICHR, SCM_MAKICHR, SCM_SETJMPBUF, SCM_NSTRINGP, SCM_NRWSTRINGP,
 SCM_NVECTORP
 
 These macros will be removed in a future release of Guile.
 
-** The following types, functions and macros from numbers.h are deprecated:  
+** The following types, functions and macros from numbers.h are deprecated:
 scm_dblproc, SCM_UNEGFIXABLE, SCM_FLOBUFLEN, SCM_INEXP, SCM_CPLXP, SCM_REAL,
 SCM_IMAG, SCM_REALPART, scm_makdbl, SCM_SINGP, SCM_NUM2DBL, SCM_NO_BIGDIG
 
@@ -653,7 +726,7 @@ now possible to use `defined?' to check whether the facility is
 available.
 
 ** Procedures which depend on the timezone should now give the correct
-result on systems which cache the TZ environment variable, even if TZ 
+result on systems which cache the TZ environment variable, even if TZ
 is changed without calling tzset.
 
 * Changes to the networking interfaces:
@@ -1163,7 +1236,7 @@ when the hook was created.
     in a regular expression will still match before a line-break or
     end-of-file.  The default is `regexp/noteol'.
 
-*** The expect-strings macro now uses a variable 
+*** The expect-strings macro now uses a variable
     `expect-strings-compile-flags' for the flags to be supplied to
     `make-regexp'.  The default is `regexp/newline', which was previously
     hard-coded.
@@ -1641,7 +1714,7 @@ string, and the source and destination areas may overlap; in all
 cases, the function behaves as if all the characters were copied
 simultanously.
 
-*** Extended functions: substring-move-left! substring-move-right! 
+*** Extended functions: substring-move-left! substring-move-right!
 
 These functions now correctly copy arbitrarily overlapping substrings;
 they are both synonyms for substring-move!.
@@ -1675,7 +1748,7 @@ Each option can have the following (PROPERTY VALUE) pairs:
   (value BOOL) --- If BOOL is #t, the option accepts a value; if
             it is #f, it does not; and if it is the symbol
             `optional', the option may appear in ARGS with or
-            without a value. 
+            without a value.
   (predicate FUNC) --- If the option accepts a value (i.e. you
             specified `(value #t)' for this option), then getopt
             will apply FUNC to the value, and throw an exception
@@ -1753,10 +1826,10 @@ So, for example:
              (single-char #\v)
              (value #f))
     (x-includes (single-char #\x))
-    (rnet-server (single-char #\y) 
+    (rnet-server (single-char #\y)
                  (predicate ,string?))))
 
-(getopt-long '("my-prog" "-vk" "/tmp" "foo1" "--x-includes=/usr/include" 
+(getopt-long '("my-prog" "-vk" "/tmp" "foo1" "--x-includes=/usr/include"
                "--rnet-server=lamprod" "--" "-fred" "foo2" "foo3")
                grammar)
 => ((() "foo1" "-fred" "foo2" "foo3")
@@ -1771,10 +1844,10 @@ It will be removed in a few releases.
 
 ** New syntax: lambda*
 ** New syntax: define*
-** New syntax: define*-public   
+** New syntax: define*-public
 ** New syntax: defmacro*
 ** New syntax: defmacro*-public
-Guile now supports optional arguments. 
+Guile now supports optional arguments.
 
 `lambda*', `define*', `define*-public', `defmacro*' and
 `defmacro*-public' are identical to the non-* versions except that
@@ -1783,17 +1856,17 @@ syntax (parentheses are literal, square brackets indicate grouping,
 and `*', `+' and `?' have the usual meaning):
 
    ext-param-list ::= ( [identifier]* [#&optional [ext-var-decl]+]?
-      [#&key [ext-var-decl]+ [#&allow-other-keys]?]? 
+      [#&key [ext-var-decl]+ [#&allow-other-keys]?]?
       [[#&rest identifier]|[. identifier]]? ) | [identifier]
 
-   ext-var-decl ::= identifier | ( identifier expression )  
+   ext-var-decl ::= identifier | ( identifier expression )
 
 The semantics are best illustrated with the following documentation
 and examples for `lambda*':
 
  lambda* args . body
    lambda extended for optional and keyword arguments
-   
+
  lambda* creates a procedure that takes optional arguments. These
  are specified by putting them inside brackets at the end of the
  paramater list, but before any dotted rest argument. For example,
@@ -1813,11 +1886,11 @@ and examples for `lambda*':
  Optional and keyword arguments can also be given default values
  which they take on when they are not present in a call, by giving a
  two-item list in place of an optional argument, for example in:
-   (lambda* (foo #&optional (bar 42) #&key (baz 73)) (list foo bar baz)) 
+   (lambda* (foo #&optional (bar 42) #&key (baz 73)) (list foo bar baz))
  foo is a fixed argument, bar is an optional argument with default
  value 42, and baz is a keyword argument with default value 73.
  Default value expressions are not evaluated unless they are needed
- and until the procedure is called.  
+ and until the procedure is called.
 
  lambda* now supports two more special parameter list keywords.
 
@@ -2123,7 +2196,7 @@ SIZE to the system.  The return value is a tag that is used in
 creating instances of the type.  If SIZE is 0, then no memory will
 be allocated when instances of the smob are created, and nothing
 will be freed by the default free function.
-    
+
 *** Function: void scm_set_smob_mark (long tc, SCM (*mark) (SCM))
 This function sets the smob marking procedure for the smob type
 specified by the tag TC. TC is the tag returned by
@@ -2508,7 +2581,7 @@ For example:
     the-scm-module: backtrace       #<primitive-procedure backtrace>
     the-scm-module: after-backtrace-hook    ()
     the-scm-module: has-shown-backtrace-hint?       #f
-    guile> 
+    guile>
 
 ** There are new functions and syntax for working with macros.
 
@@ -2540,7 +2613,7 @@ values are:
     The symbol `syntax' --- a macro created by procedure->syntax.
     The symbol `macro' --- a macro created by procedure->macro.
     The symbol `macro!' --- a macro created by procedure->memoizing-macro.
-    The boolean #f --- if OBJ is not a macro object.  
+    The boolean #f --- if OBJ is not a macro object.
 
 *** New function: (macro-name MACRO)
 Return the name of the macro object MACRO's procedure, as returned by
@@ -2558,7 +2631,7 @@ top-level environment.  TRANSFORMER is an expression evaluated in the
 resulting environment which must yield a procedure to use as the
 module's eval transformer: every expression evaluated in this module
 is passed to this function, and the result passed to the Guile
-interpreter. 
+interpreter.
 
 *** macro-eval! is removed.  Use local-eval instead.
 
@@ -2633,7 +2706,7 @@ Function: with-fluids* FLUIDS VALUES THUNK
 
     FLUIDS is a list of fluids and VALUES a corresponding list of
     values for these fluids.  Before THUNK gets called the values are
-    installed in the fluids and the old values of the fluids are 
+    installed in the fluids and the old values of the fluids are
     saved in the VALUES list.  When the flow of control leaves THUNK
     or reenters it, the values get swapped again.  You might think of
     this as a `safe-fluid-excursion'.  Note that the VALUES list is
@@ -3180,7 +3253,7 @@ Here is a small example that works on GNU/Linux:
 See the file `libguile/DYNAMIC-LINKING' for additional comments.
 
 ** The #/ syntax for module names is depreciated, and will be removed
-in a future version of Guile.  Instead of 
+in a future version of Guile.  Instead of
 
 	#/foo/bar/baz
 
@@ -3803,7 +3876,7 @@ argument.
 
 ** Changes to I/O functions
 
-*** The functions `read', `primitive-load', `read-and-eval!', and 
+*** The functions `read', `primitive-load', `read-and-eval!', and
 `primitive-load-path' no longer take optional arguments controlling
 case insensitivity and a `#' parser.
 
@@ -3821,7 +3894,7 @@ syntax of Guile Scheme in a somewhat controlled way.
 
   The reader applies PROC to two arguments: CHAR and an input port.
 
-*** The new functions read-delimited and read-delimited! provide a 
+*** The new functions read-delimited and read-delimited! provide a
 general mechanism for doing delimited input on streams.
 
 (read-delimited DELIMS [PORT HANDLE-DELIM])
@@ -3940,7 +4013,7 @@ and `recvfrom!'.  They no longer accept a size for a second argument;
 you must pass a string to hold the received value.  They no longer
 return the buffer.  Instead, `recv' returns the length of the message
 received, and `recvfrom' returns a pair containing the packet's length
-and originating address. 
+and originating address.
 
 *** The file descriptor datatype has been removed, as have the
 `read-fd', `write-fd', `close', `lseek', and `dup' functions.
@@ -4066,17 +4139,17 @@ internet protocols:
 
   Component                 Accessor
   ========================= ===============
-  official service name     servent:name   
+  official service name     servent:name
   alias list		    servent:aliases
-  port number		    servent:port   
-  protocol to use	    servent:proto  
+  port number		    servent:port
+  protocol to use	    servent:proto
 
 *** There are new accessors for the sockaddr structures returned by
 `accept', `getsockname', `getpeername', `recvfrom!':
 
   Component                                Accessor
   ======================================== ===============
-  address format (`family')                sockaddr:fam 
+  address format (`family')                sockaddr:fam
   path, for file domain addresses	   sockaddr:path
   address, for internet domain addresses   sockaddr:addr
   TCP or UDP port, for internet		   sockaddr:port
@@ -4248,7 +4321,7 @@ command interpreter.  For details, see "Changes to the stand-alone
 interpreter" above.
 
 ** The new functions scm_get_meta_args and scm_count_argv help you
-implement the SCSH-style meta-argument, `\'.  
+implement the SCSH-style meta-argument, `\'.
 
 char **scm_get_meta_args (int ARGC, char **ARGV)
   If the second element of ARGV is a string consisting of a single
@@ -4256,7 +4329,7 @@ char **scm_get_meta_args (int ARGC, char **ARGV)
   named by the following argument, parse arguments from it, and return
   the spliced command line.  The returned array is terminated by a
   null pointer.
-  
+
   For details of argument parsing, see above, under "guile now accepts
   command-line arguments compatible with SCSH..."
 
