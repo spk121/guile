@@ -1,33 +1,22 @@
-The Guile maintainer committee consists of
-
-	Jim Blandy
-     Maciej Stachowiak
-     Marius Vollmer
-     Mikael Djurfeldt
-
-Contributors since the last release:
-
-       Greg Badros
- 	Jim Blandy
-     Mikael Djurfeldt
-       Dirk Herrmann
-       Gary Houston
-    Michael Livshin
-     Thomas Tanner
-     Marius Vollmer
-
-For fixes or providing information which led to a fix:
+Thanks to go these people for contributions, fixes,
+or information which led to a fix:
 
       Lauri Alanko
+       Greg Badros
+ 	Jim Blandy
       Craig Brozefsky
       Diego Dainese
+     Mikael Djurfeldt
        Mark Galassi
         Ian Grant
        Greg Harvey
     Karl M. Hegbloom
 	Jon Hellan
+       Dirk Herrmann
+       Gary Houston
     Richard Kim
        Brad Knotwell
+    Michael Livshin
  	Tim Mooney
        Eric Moore
 Kalle Olavi Niemitalo
@@ -40,8 +29,11 @@ Kalle Olavi Niemitalo
        Bill Schottstaedt
      Daniel Skarda
     Dale P. Smith
+     Maciej Stachowiak
+     Thomas Tanner
        Ivan Toshkov
  	Tal Tversky
     Bernard Urban
+     Marius Vollmer
        Lynn Winebarger
        Ryan Yeske
