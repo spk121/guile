@@ -1,3 +1,7 @@
+2005-01-02  Kevin Ryde  <user42@zip.com.au>
+
+	* Makefile.am (SCM_TESTS): Add srfi-39.test.
+
 2004-12-27  Neil Jerram  <neil@ossau.uklinux.net>
 
 	* tests/eval.test (continuations): Test making a stack from a
