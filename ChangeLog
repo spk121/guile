@@ -1,3 +1,27 @@
+2002-05-02  Thien-Thi Nguyen  <ttn@giblet.glug.org>
+
+	* qthreads.m4: bye bye (move to guile-config/ subdir).
+
+	* acconfig.h: bye bye
+
+	* Makefile.am (AUTOMAKE_OPTIONS, DISTCLEANFILES): New.
+	(EXTRA_DIST): Remove qthreads.m4.
+	(dist-hook): Remove.
+
+	* guile-aclocal.sh: Rewrite as single call to aclocal.
+
+	* configure.in: For each AC_DEFINE, add 2nd and 3rd args.
+	Replace direct LIBOBJS setting w/ AC_LIBOBJ constructs.
+	Update sed commands for computing LIBLOBJS and EXTRA_DOT_DOC_FILES.
+
+	* acinclude.m4: For each AC_DEFINE, add 2nd and 3rd args.
+
+	* autogen.sh: Sync w/ HEAD (1.18).
+
+2002-04-29  Thien-Thi Nguyen  <ttn@giblet.glug.org>
+
+	* configure.in (AC_PREREQ): Bump to 2.53.
+
 2002-04-09  Thien-Thi Nguyen  <ttn@giblet.glug.org>
 
 	* ANON-CVS, HACKING, INSTALL, SNAPSHOTS: bye bye
