@@ -1,35 +1,43 @@
 Hacking It Yourself ==================================================
 
-As distributed, Guile needs only an ANSI C compiler and a Unix system
-to compile.  However, Guile's makefiles, configuration scripts, and a
-few other files are automatically generated, not written by hand.  If
-you want to make changes to the system (which we encourage!) you will
-find it helpful to have the tools we use to develop Guile.  They
-are the following:
+When Guile is obtained from CVS, a few extra steps must be taken
+before the usual configure, make, make install.  You will need to have
+up-to-date versions of the tools listed below, correctly installed.
+i.e., they must be found in the current PATH and not shadowed or
+otherwise broken by files left behind from other versions.
 
-Autoconf 2.13 --- a system for automatically generating `configure'
+"up-to-date" means the latest released versions at the time that Guile
+was obtained from CVS.  Sometimes older or newer versions will work.
+
+Then you must run the autogen.sh script, as described below.
+
+In case of problems, it may be worth getting a fresh copy of Guile
+from CVS: synchronisation problems have been known to occur
+occasionally.
+
+The same procedure can be used to regenerate the files in released
+versions of Guile.  In that case the headers of the original generated
+files (e.g., configure, Makefile.in, ltmain.sh) can be used to
+identify which tool versions may be required.
+
+Autoconf --- a system for automatically generating `configure'
 	scripts from templates which list the non-portable features a
 	program would like to use.  Available in
 	"ftp://ftp.gnu.org/pub/gnu/autoconf"
 
-Automake 1.4 --- a system for automatically generating Makefiles that
+Automake --- a system for automatically generating Makefiles that
 	conform to the (rather Byzantine) GNU coding standards.  The
 	nice thing is that it takes care of hairy targets like 'make
 	dist' and 'make distclean', and automatically generates
 	Makefile dependencies.  Automake is available in
 	"ftp://ftp.gnu.org/pub/gnu/automake"
 
-	Before using automake, you may need to copy `threads.m4' and
-	`guile.m4' from the top directory of the Guile core disty to
-	`/usr/local/share/aclocal.
-
-libtool 1.3.5 --- a system for managing the zillion hairy options needed
+libtool --- a system for managing the zillion hairy options needed
 	on various systems to produce shared libraries.  Available in
 	"ftp://ftp.gnu.org/pub/gnu/libtool"
 
-You are lost in a little maze of automatically generated files, all
-different.
-> 
+One false move and you will be lost in a little maze of automatically
+generated files, all different.
 
 
 Contributing Your Changes ============================================
@@ -287,7 +295,7 @@ diff -r -u cvs-1.10/src/cvs.h cvs-1.10.ignore-hack/src/cvs.h
 --- cvs-1.10/src/cvs.h	Mon Jul 27 04:54:11 1998
 +++ cvs-1.10.ignore-hack/src/cvs.h	Sun Jan 23 12:58:09 2000
 @@ -516,7 +516,7 @@
- 
+
  extern int ign_name PROTO ((char *name));
  void ign_add PROTO((char *ign, int hold));
 -void ign_add_file PROTO((char *file, int hold));
@@ -327,27 +335,27 @@ diff -r -u cvs-1.10/src/ignore.c cvs-1.10.ignore-hack/src/ignore.c
      free (line);
 +    return 1;
  }
- 
+
  /* Parse a line of space-separated wildcards and add them to the list. */
 @@ -375,6 +376,7 @@
      struct stat sb;
      char *file;
      char *xdir;
 +    char *cvsdotignore;
- 
+
      /* Set SUBDIRS if we have subdirectory information in ENTRIES.  */
      if (entries == NULL)
 @@ -397,7 +399,10 @@
      if (dirp == NULL)
  	return;
- 
+
 -    ign_add_file (CVSDOTIGNORE, 1);
 +    cvsdotignore = getenv("CVSDOTIGNORE");
 +    if (cvsdotignore == NULL || !ign_add_file (cvsdotignore, 1))
 +      ign_add_file (CVSDOTIGNORE, 1);
 +
      wrap_add_file (CVSDOTWRAPPER, 1);
- 
+
      while ((dp = readdir (dirp)) != NULL)
 === patch end ===
 
@@ -362,7 +370,7 @@ This one is for pcl-cvs-2.9.2, so that `i' adds to the local
  Can only be used in the *cvs* buffer."
    (save-window-excursion
 -    (set-buffer (find-file-noselect (expand-file-name ".cvsignore" dir)))
-+    (set-buffer (find-file-noselect 
++    (set-buffer (find-file-noselect
 +                (expand-file-name (or (getenv "CVSDOTIGNORE")
 +                                      ".cvsignore")
 +                                  dir)))
