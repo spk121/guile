@@ -4,6 +4,12 @@
 	(dist-hook): Add, including related am/maintainers-dirs,
 	surrounded by "if MAINTAINER_MODE".
 
+	* autogen.sh: Add usage comment.
+	Add workbook specification.
+	Add dist-files symlinking.
+
+	* ANON-CVS, HACKING, INSTALL, SNAPSHOTS: bye bye
+
 2002-03-04  Thien-Thi Nguyen  <ttn@giblet.glug.org>
 
 	* configure.in (top_srcdir_absolute): New AC_SUBST var.
