@@ -1,3 +1,8 @@
+2005-03-08  Kevin Ryde  <user42@zip.com.au>
+
+	* slib.scm (*features*): Remove 'random, need to use the slib code for
+	that module since guile doesn't provide `random:chunk'.
+
 2005-01-10  Marius Vollmer  <marius.vollmer@uni-dortmund.de>
 
 	* boot-9.scm (process-define-module): Check for #:use-syntax
