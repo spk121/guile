@@ -1,3 +1,0 @@
-@page
-@node Deprecated
-@chapter Deprecated

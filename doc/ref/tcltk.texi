@@ -1,3 +1,0 @@
-@page
-@node Tcl/Tk Interface
-@chapter Tcl/Tk Interface
