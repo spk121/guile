@@ -127,7 +127,10 @@ modinclude_HEADERS =							\
 ## and not a header -- headers are included in the distribution.
 modinclude_DATA = scmconfig.h
 
-bin_SCRIPTS = guile-snarf guile-doc-snarf guile-snarf.awk guile-func-name-check
+# We can re-enable install for some of these if/when they are documented
+# and people feel like maintaining them.  For now, this is not the case.
+noinst_SCRIPTS = guile-snarf guile-doc-snarf guile-snarf.awk \
+    guile-func-name-check
 
 EXTRA_DIST = ChangeLog-gh ChangeLog-scm ChangeLog-threads cpp_signal.c	\
     cpp_errno.c cpp_err_symbols.in cpp_sig_symbols.in cpp_cnvt.awk
