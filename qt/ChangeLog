@@ -1,3 +1,8 @@
+2002-02-09  Thien-Thi Nguyen  <ttn@giblet.glug.org>
+
+	* Makefile.am, md/Makefile.am, time/Makefile.am
+	(AUTOMAKE_OPTIONS): Replace "foreign" with "gnu".
+
 2000-06-12  Mikael Djurfeldt  <mdj@thalamus.nada.kth.se>
 
 	* Makefile.am (OMIT_DEPENDENCIES): Defined to contain the list of
@@ -14,7 +19,7 @@
 	and we don't want that.
 	(INCLUDES): Removed all -I options except for the root source
 	directory and the root build directory.
-	
+
 1999-10-05  Jim Blandy  <jimb@savonarola.red-bean.com>
 
 	* Makefile.in, md/Makefile.in, time/Makefile.in: Deleted from CVS
