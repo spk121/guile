@@ -1,3 +1,10 @@
+2002-05-03  Thien-Thi Nguyen  <ttn@giblet.glug.org>
+
+	* autogen.sh: Sync w/ HEAD (1.5).
+
+	* Makefile.am (snarfcppopts): New var.
+	(.c.x): Rewrite using `guile-snarf -o $@'.
+
 2002-03-01  Thien-Thi Nguyen  <ttn@giblet.glug.org>
 
 	* LIBGUILEREADLINE-VERSION: New file.
