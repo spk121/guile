@@ -1,3 +1,28 @@
+2002-02-26  Thien-Thi Nguyen  <ttn@glug.org>
+
+	* pre-inst-guile.in: New file.
+
+	* pre-inst-guile, pre-inst-guile.am: bye bye
+
+	* configure.in (top_builddir_absolute): New AC_SUBST var.
+	(AC_CONFIG_FILES): Add am/Makefile, pre-inst-guile.
+	(AC_CONFIG_COMMANDS): Also chmod +x pre-inst-guile.
+
+	* check-guile.in (top_builddir): Use AC_SUBST var
+	`top_builddir_absolute'.
+	(guile): Look for pre-inst-guile in $top_builddir.
+
+	* Makefile.am (EXTRA_DIST): Remove pre-inst-guile,
+	pre-inst-guile.am.
+
+2002-02-24  Thien-Thi Nguyen  <ttn@glug.org>
+
+	* check-guile.in: Sync w/ 1.12 from HEAD branch.
+
+	* Makefile.am (EXTRA_DIST): Add pre-inst-guile, pre-inst-guile.am.
+
+	* pre-inst-guile.am: Back port 1.1 from HEAD branch.
+
 2002-02-09  Thien-Thi Nguyen  <ttn@glug.org>
 
 	* acinclude.m4: Remove embedded libtool.m4.
