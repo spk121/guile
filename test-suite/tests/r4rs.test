@@ -1,16 +1,16 @@
 ;;;; r4rs.test --- tests for R4RS compliance      -*- scheme -*-
 ;;;; Copyright (C) 1991, 1992, 1993, 1994, 1995, 1999 Free Software Foundation, Inc.
-;;;; 
+;;;;
 ;;;; This program is free software; you can redistribute it and/or modify
 ;;;; it under the terms of the GNU General Public License as published by
 ;;;; the Free Software Foundation; either version 2, or (at your option)
 ;;;; any later version.
-;;;; 
+;;;;
 ;;;; This program is distributed in the hope that it will be useful,
 ;;;; but WITHOUT ANY WARRANTY; without even the implied warranty of
 ;;;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ;;;; GNU General Public License for more details.
-;;;; 
+;;;;
 ;;;; You should have received a copy of the GNU General Public License
 ;;;; along with this software; see the file COPYING.  If not, write to
 ;;;; the Free Software Foundation, Inc., 59 Temple Place, Suite 330,
@@ -38,7 +38,7 @@
 ;;;;
 ;;;; If you write modifications of your own for GUILE, it is your choice
 ;;;; whether to permit this exception to apply to your modifications.
-;;;; If you do not wish that, delete this exception notice.  
+;;;; If you do not wish that, delete this exception notice.
 
 
 ;;;; ============= NOTE =============
@@ -75,9 +75,9 @@
 
 ;;;   There are three optional tests:
 ;;; (TEST-CONT) tests multiple returns from call-with-current-continuation
-;;; 
+;;;
 ;;; (TEST-SC4) tests procedures required by R4RS but not by IEEE
-;;; 
+;;;
 ;;; (TEST-DELAY) tests DELAY and FORCE, which are not required by
 ;;;   either standard.
 
@@ -235,7 +235,7 @@
 	`((foo ,(- 10 3)) ,@(cdr '(c)) . ,(car '(cons))))
 
 ;;; sqt is defined here because not all implementations are required to
-;;; support it. 
+;;; support it.
 (define (sqt x)
 	(do ((i 0 (+ i 1)))
 	    ((> (* i i) x) (- i 1))))
@@ -873,7 +873,7 @@
 ;;; other than escape procedures.  I am indebted to
 ;;; raja@copper.ucs.indiana.edu (Raja Sooriamurthi) for fixing this
 ;;; code.  The function leaf-eq? compares the leaves of 2 arbitrary
-;;; trees constructed of conses.  
+;;; trees constructed of conses.
 (define (next-leaf-generator obj eot)
   (letrec ((return #f)
 	   (cont (lambda (x)
@@ -935,8 +935,8 @@
 (SECTION 6 10 1)
 (test #t input-port? (current-input-port))
 (test #t output-port? (current-output-port))
-(test #t call-with-input-file (data-file "tests/r4rs.test") input-port?)
-(define this-file (open-input-file (data-file "tests/r4rs.test")))
+(test #t call-with-input-file (test-file-name "r4rs.test") input-port?)
+(define this-file (open-input-file (test-file-name "r4rs.test")))
 (test #t input-port? this-file)
 (SECTION 6 10 2)
 (test #\; peek-char this-file)
@@ -997,7 +997,7 @@
   (test '#(dididit dah) list->vector '(dididit dah))
   (test '#() list->vector '())
   (SECTION 6 10 4)
-  (load (data-file "tmp1"))
+  (load (data-file-name "tmp1"))
   (test write-test-obj 'load foo)
   (report-errs))
 
