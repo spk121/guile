@@ -12,6 +12,8 @@
 	w/ and-let-star.scm.
 	(install-data-local): New.
 	(EXTRA_DIST): Add and-let-star-compat.scm.
+	(install-data-hook): Fix scheduling bug:
+	Rename from `install-data-local'.
 
 2002-03-04  Thien-Thi Nguyen  <ttn@giblet.glug.org>
 
