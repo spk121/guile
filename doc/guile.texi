@@ -1,0 +1,213 @@
+\input texinfo
+@c -*-texinfo-*-
+@c %**start of header
+@setfilename guile.info
+@settitle Guile Reference Manual
+@set guile
+@set MANUAL_EDITION 0.1
+@c %**end of header
+
+@c Define indices that are used in the Guile Scheme part of the
+@c reference manual to group stuff according to whether it is R5RS or a
+@c Guile extension.
+@defcodeindex rn
+
+@include version.texi
+
+@c vnew - For (some) new items, indicates the Guile version in which
+@c item first appeared.  In future, this could be made to expand to
+@c something like a "New in Guile 45!" banner.
+@macro vnew{VERSION}
+@end macro
+
+@c @iftex
+@c @cropmarks
+@c @end iftex
+
+@dircategory The Algorithmic Language Scheme
+@direntry
+* Guile Reference: (guile).     The Guile reference manual.
+@end direntry
+
+@setchapternewpage off
+
+@ifinfo
+Guile Reference Manual
+Copyright (C) 1996 Free Software Foundation @*
+Copyright (C) 1997 Free Software Foundation @*
+Copyright (C) 2000 Free Software Foundation @*
+Copyright (C) 2001 Free Software Foundation @*
+Copyright (C) 2002 Free Software Foundation
+
+Permission is granted to make and distribute verbatim copies of
+this manual provided the copyright notice and this permission notice
+are preserved on all copies.
+
+@ignore
+Permission is granted to process this file through TeX and print the
+results, provided the printed document carries copying permission
+notice identical to this one except for the removal of this paragraph
+(this paragraph not being relevant to the printed manual).
+@end ignore
+
+Permission is granted to copy and distribute modified versions of this
+manual under the conditions for verbatim copying, provided that the entire
+resulting derived work is distributed under the terms of a permission
+notice identical to this one.
+
+Permission is granted to copy and distribute translations of this manual
+into another language, under the above conditions for modified versions,
+except that this permission notice may be stated in a translation approved
+by the Free Software Foundation.
+@end ifinfo
+
+@titlepage
+@sp 10
+@comment The title is printed in a large font.
+@title Guile Reference Manual
+@subtitle Edition @value{MANUAL_EDITION}, for use with Guile @value{VERSION}
+@subtitle $Id: guile.texi,v 1.13.2.1 2002-05-05 11:31:59 ttn Exp $
+
+@c AUTHORS
+
+@c The Guile reference and tutorial manuals were written and edited
+@c largely by Mark Galassi and Jim Blandy.  In particular, Jim wrote the
+@c original tutorial on Guile's data representation and the C API for
+@c accessing Guile objects.
+
+@c Significant portions were contributed by Gary Houston (contributions
+@c to POSIX system calls and networking, expect, I/O internals and
+@c extensions, slib installation, error handling) and Tim Pierce
+@c (sections on script interpreter triggers, alists, function tracing).
+
+@c Tom Lord contributed a great deal of material with early Guile
+@c snapshots; although most of this text has been rewritten, all of it
+@c was important, and some of the structure remains.
+
+@c Aubrey Jaffer wrote the SCM Scheme implementation and manual upon
+@c which the Guile program and manual are based.  Some portions of the
+@c SCM and SLIB manuals have been included here verbatim.
+
+@c Since Guile 1.4, Neil Jerram has been maintaining and improving the
+@c reference manual.  Among other contributions, he wrote the Basic
+@c Ideas chapter, developed the tools for keeping the manual in sync
+@c with snarfed libguile docstrings, and reorganized the structure so as
+@c to accommodate docstrings for all Guile's primitives.
+
+@c Martin Grabmueller has made substantial contributions throughout the
+@c reference manual in preparation for the Guile 1.6 release, including
+@c filling out a lot of the documentation of Scheme data types, control
+@c mechanisms and procedures.  In addition, he wrote the documentation
+@c for Guile's SRFI modules and modules associated with the Guile REPL.
+
+@author Mark Galassi
+@author Cygnus Solution and Los Alamos National Laboratory
+@author @email{rosalia@@cygnus.com}
+@author
+@author Jim Blandy
+@author Free Software Foundation and MIT AI Lab
+@author @email{jimb@@red-bean.com}
+@author
+@author Gary Houston
+@author @email{ghouston@@arglist.com}
+@author
+@author Tim Pierce
+@author @email{twp@@skepsis.com}
+@author
+@author Neil Jerram
+@author @email{neil@@ossau.uklinux.net}
+@author
+@author Martin Grabmueller
+@author @email{mgrabmue@@cs.tu-berlin.de}
+
+@c The following two commands start the copyright page.
+@page
+@vskip 0pt plus 1filll
+@vskip 0pt plus 1filll
+Copyright @copyright{} 1996 Free Software Foundation
+
+Copyright @copyright{} 1997 Free Software Foundation
+
+Copyright @copyright{} 2000 Free Software Foundation
+
+Copyright @copyright{} 2001 Free Software Foundation
+
+Copyright @copyright{} 2002 Free Software Foundation
+
+Permission is granted to make and distribute verbatim copies of
+this manual provided the copyright notice and this permission notice
+are preserved on all copies.
+
+Permission is granted to copy and distribute modified versions of this
+manual under the conditions for verbatim copying, provided that the entire
+resulting derived work is distributed under the terms of a permission
+notice identical to this one.
+
+Permission is granted to copy and distribute translations of this manual
+into another language, under the above conditions for modified versions,
+except that this permission notice may be stated in a translation approved
+by Free Software Foundation.
+@end titlepage
+
+@c @smallbook
+@finalout
+@headings double
+
+@c @c Where to find Guile examples.
+@c @set example-dir doc/examples
+
+@ifnottex
+@node Top, Guile License, (dir), (dir)
+@top The Guile Reference Manual
+
+This reference manual documents Guile, GNU's Ubiquitous Intelligent
+Language for Extensions.  It describes how to use Guile in many useful
+and interesting ways.
+
+This Info file contains edition @value{MANUAL_EDITION} of the reference
+manual, corresponding to Guile version @value{VERSION}.
+@end ifnottex
+
+@menu
+Preface
+
+* Guile License::               Conditions for copying and using Guile.
+* Data Representation::         How to use Guile objects in your C code.
+* Coming Attractions::          Where is the rest of the manual?!
+
+@end menu
+
+@include preface.texi
+@include data-rep.texi
+
+@c -----------------------------------------------------------------------
+@c BEGIN cheesy stub
+
+@node Coming Attractions
+@chapter Coming Attractions
+
+Where is the rest of the manual?
+
+Good question.  At the time of this writing (2002-05), the rest of
+the (very comprehensive) manual is still to be integrated into the
+guile-1.4.x distribution.
+
+In the meantime, you can obtain work-in-progress snapshots of the
+manual in info and html formats under directory:
+
+@example
+http://www.glug.org/docbits/guile-doc-out/
+http://www.glug.org/docbits/            (parent has tarballs)
+@end example
+
+Keep in mind these snapshots are not necessarily specific to
+guile-1.4.x.  As the integration progresses, we expect to mark
+version-specific information as such.  (Feel free to suggest to the
+guile maintainers which areas need attention.)
+
+@c END cheesy stub
+@c -----------------------------------------------------------------------
+
+@contents
+
+@bye
