@@ -1,9 +1,0 @@
-Directories:
-
-policy		Guile policy documents
-
-build		information related to the build/installation process
-
-Files:
-
-tasks.text	Guile project task list
