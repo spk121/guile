@@ -1,3 +1,7 @@
+2002-01-24  Thien-Thi Nguyen  <ttn@glug.org>
+
+	* net_db.c (inet_aton): Surround decl w/ `#ifndef HAVE_INET_ATON'.
+
 2000-06-20  Mikael Djurfeldt  <mdj@mdj.nada.kth.se>
 
 	* gc.h, tags.h: Be kind to compilers which must see hash signs in
@@ -269,7 +273,7 @@ Sun Jun 18 14:45:21 2000  Greg J. Badros  <gjb@cs.washington.edu>
 	that a chain of Scheme level procedures has been evaluated for
 	every top-level symbol lookup during the first pass through the
 	code.
-	
+
 	The following is a kludge which I suggested four years ago, and
 	which I've repeatedly suggested since.  Personally, I've never
 	been bothered by Guile's slow loading speed, so I thought I would
@@ -278,7 +282,7 @@ Sun Jun 18 14:45:21 2000  Greg J. Badros  <gjb@cs.washington.edu>
 	But since the new environments will be included first in
 	Guile-1.5, I thought it would make people happy to get the kludge
 	into 1.4.
-	
+
 	* modules.c: Added #include "libguile/vectors.h";
 	Added #include "libguile/hashtab.h";
 	Added #include "libguile/struct.h";
@@ -386,7 +390,7 @@ Sun Jun 18 14:45:21 2000  Greg J. Badros  <gjb@cs.washington.edu>
 	* filesys.h (SCM_OPDIRP), fluids.h (SCM_FLUIDP, SCM_FLUID_NUM),
 	fports.h (SCM_OPFPORTP, SCM_OPINFPORTP, SCM_OPOUTFPORTP), hooks.h
 	(SCM_HOOK_ARITY), keywords.h (SCM_KEYWORDP, SCM_KEYWORDSYM),
-	numbers.h (SCM_NUMP, SCM_BIGSIGN, SCM_BDIGITS, SCM_NUMDIGS): 
+	numbers.h (SCM_NUMP, SCM_BIGSIGN, SCM_BDIGITS, SCM_NUMDIGS):
 	Replace SCM_UNPACK_CAR appropriately.  Don't access cells via
 	SCM_{SET}?C[AD]R unless they are known to be cons cells.
 
@@ -441,7 +445,7 @@ Sun Jun 18 14:45:21 2000  Greg J. Badros  <gjb@cs.washington.edu>
 	cookies anyway.  in the long term, it would be nice not to depend
 	on AWK for anything.)
 
-	* gc.h (SCM_[SET_]CELL_{WORD,OBJECT}, SCM_VALIDATE_CELL): reverted 
+	* gc.h (SCM_[SET_]CELL_{WORD,OBJECT}, SCM_VALIDATE_CELL): reverted
 	the previous change to this macros, after deciding to torture the
 	snarfer instead.
 
@@ -468,7 +472,7 @@ Sun Jun 18 14:45:21 2000  Greg J. Badros  <gjb@cs.washington.edu>
 	* hashtab.c (scm_hash_fn_create_handle_x): add missing
 	SCM_REALLOW_INTS before return.  I really wonder about the
 	possible interactions between hashtables, threads & GC.  it
-	doesn't look healthy at all. 
+	doesn't look healthy at all.
 
 2000-05-20  Dirk Herrmann  <D.Herrmann@tu-bs.de>
 
@@ -550,7 +554,7 @@ Sun Jun 18 14:45:21 2000  Greg J. Badros  <gjb@cs.washington.edu>
 
 	* stacks.c (scm_make_stack), stacks.h (scm_make_stack), throw.c
 	(ss_handler, handler_message):  Make first mandatory rest argument
-	of scm_make_stack into a standard mandatory argument.  
+	of scm_make_stack into a standard mandatory argument.
 
 	* unif.c (scm_transpose_array, scm_enclose_array,
 	scm_array_in_bounds_p), unif.h (scm_transpose_array,
@@ -878,7 +882,7 @@ Sun Jun 18 14:45:21 2000  Greg J. Badros  <gjb@cs.washington.edu>
 	comparisons of SCM values with integer constants.
 
 	* number.c (scm_logtest):  Removed some redundant SCM_{N}?IMP
-	tests. 
+	tests.
 
 2000-04-28  Dirk Herrmann  <D.Herrmann@tu-bs.de>
 
@@ -916,7 +920,7 @@ Sun Jun 18 14:45:21 2000  Greg J. Badros  <gjb@cs.washington.edu>
 
 	Better modularization of GC extensions through new C level GC
 	hooks:
-	
+
 	* weaks.c (scm_weaks_prehistory): New function: Add
 	scm_weak_vector_gc_init to scm_before_mark_c_hook; Add
 	scm_mark_weak_vector_spines to scm_before_sweep_c_hook.
@@ -980,7 +984,7 @@ Sun Jun 18 14:45:21 2000  Greg J. Badros  <gjb@cs.washington.edu>
 	the new code is not less clear.)
 
 	* gc.c (scm_must_malloc, scm_must_realloc, scm_must_free): Added
-	calls to malloc debugging functions. 
+	calls to malloc debugging functions.
 
 	* init.c (scm_boot_guile_1): Added calls to debug-malloc init
 	functions.
@@ -1051,8 +1055,8 @@ Sun Jun 18 14:45:21 2000  Greg J. Badros  <gjb@cs.washington.edu>
 
 Tue Apr 18 08:22:41 2000  Greg J. Badros  <gjb@cs.washington.edu>
 
-	* validate.h: Do not cast to (unsigned) in SCM_VALIDATE_INUM_RANGE 
-	when testing high-end of the range.  Mikael Djurfeldt noticed this 
+	* validate.h: Do not cast to (unsigned) in SCM_VALIDATE_INUM_RANGE
+	when testing high-end of the range.  Mikael Djurfeldt noticed this
 	anomaly -- thanks Mikael!
 
 2000-04-18  Dirk Herrmann  <D.Herrmann@tu-bs.de>
@@ -1190,7 +1194,7 @@ Tue Apr 18 08:22:41 2000  Greg J. Badros  <gjb@cs.washington.edu>
 	symbols.c (scm_intern_obarray_soft, msymbolize, scm_symbol_fset_x,
 	scm_symbol_pset_x):  Use them.
 
-	* symbols.c (scm_symbol_hash):  Unpack to access SCM raw data. 
+	* symbols.c (scm_symbol_hash):  Unpack to access SCM raw data.
 
 2000-04-12  Dirk Herrmann  <D.Herrmann@tu-bs.de>
 
@@ -1241,7 +1245,7 @@ Tue Apr 18 08:22:41 2000  Greg J. Badros  <gjb@cs.washington.edu>
 	* numbers.c (scm_quotient, scm_modulo):  Reordered to handle the
 	case of immediate numbers parameters first.  Also, only use
 	decoded numbers for numerical comparison.
-	
+
 2000-04-10  Mikael Djurfeldt  <mdj@thalamus.nada.kth.se>
 
 	* objects.h: Don't redeclare scm_call_generic_0 and
