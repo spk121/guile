@@ -93,6 +93,12 @@ EXTRA_libguile_la_SOURCES = _scm.h			\
     filesys.c posix.c net_db.c socket.c			\
     ramap.c unif.c debug-malloc.c
 
+## delete guile-snarf.awk from the installation bindir, in case it's
+## lingering there due to an earlier guile version not having been
+## wiped out.
+install-exec-hook:
+	rm -f $(DESTDIR)$(bindir)/guile-snarf.awk
+
 ## This is kind of nasty... there are ".c" files that we don't want to
 ## compile, since they are #included in threads.c.  So instead we list
 ## them here.  Perhaps we can deal with them normally once the merge
@@ -127,10 +133,11 @@ modinclude_HEADERS =							\
 ## and not a header -- headers are included in the distribution.
 modinclude_DATA = scmconfig.h
 
+bin_SCRIPTS = guile-snarf
+
 # We can re-enable install for some of these if/when they are documented
 # and people feel like maintaining them.  For now, this is not the case.
-noinst_SCRIPTS = guile-snarf guile-doc-snarf guile-snarf.awk \
-    guile-func-name-check
+noinst_SCRIPTS = guile-doc-snarf guile-func-name-check
 
 EXTRA_DIST = ChangeLog-gh ChangeLog-scm ChangeLog-threads cpp_signal.c	\
     cpp_errno.c cpp_err_symbols.in cpp_sig_symbols.in cpp_cnvt.awk
