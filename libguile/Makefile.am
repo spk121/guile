@@ -101,7 +101,7 @@ noinst_HEADERS = coop-threads.c coop-threads.h coop.c
 
 libguile_la_DEPENDENCIES = @LIBLOBJS@
 libguile_la_LIBADD = @LIBLOBJS@ $(LIBLTDL)
-libguile_la_LDFLAGS = -version-info @LIBGUILE_MAJOR_VERSION@:@LIBGUILE_MINOR_VERSION@:@LIBGUILE_REVISION_VERSION@ -export-dynamic
+libguile_la_LDFLAGS = -version-info @LIBGUILE_INTERFACE@ -export-dynamic
 
 # These are headers visible as <guile/mumble.h>
 pkginclude_HEADERS = gh.h
@@ -165,13 +165,13 @@ libpath.h: $(srcdir)/Makefile.in  $(top_builddir)/config.status
 	@echo '	{ "pkgincludedir", "$(includedir)/@PACKAGE@" }, \' \
 		>> libpath.tmp
 	@echo '	{ "guileversion", "@GUILE_VERSION@" }, \' >> libpath.tmp
-	@echo '	{ "libguileversion", "@LIBGUILE_VERSION@" }, \' >> libpath.tmp
+	@echo '	{ "libguileinterface", "@LIBGUILE_INTERFACE@" }, \' \
+		>> libpath.tmp
 	@echo '	{ "LIBS",	   "@GUILE_LIBS@" }, \' >> libpath.tmp
+	@echo '	{ "buildstamp",    "'"`date`"'" }, \' >> libpath.tmp
 	@echo '}' >> libpath.tmp
 	@mv libpath.tmp libpath.h
 
-
-#	./guile-snarf $(DEFS) $(INCLUDES) $(CPPFLAGS) $(CFLAGS) $< > $@
 
 SUFFIXES = .x .doc
 .c.x:
