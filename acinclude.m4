@@ -1,6 +1,6 @@
 dnl acinclude.m4 for guile
 
-dnl  	Copyright (C) 1998, 1999, 2000 Free Software Foundation, Inc.
+dnl	Copyright (C) 1998, 1999, 2000 Free Software Foundation, Inc.
 
 dnl This file is part of GUILE.
 dnl
@@ -36,7 +36,9 @@ struct utime blah;
                 guile_cv_struct_utimbuf_needs_posix=no,
 		guile_cv_struct_utimbuf_needs_posix=yes)])
   if test "$guile_cv_struct_utimbuf_needs_posix" = yes; then
-     AC_DEFINE(UTIMBUF_NEEDS_POSIX)
+     AC_DEFINE([UTIMBUF_NEEDS_POSIX], 1,
+       [Define this if <utime.h> doesn't define struct utimbuf unless
+        _POSIX_SOURCE is defined.  See GUILE_STRUCT_UTIMBUF in aclocal.m4.])
   fi])
 
 
@@ -74,7 +76,11 @@ AC_DEFUN([GUILE_HEADER_LIBC_WITH_UNISTD],
       ]
     )
     if test "$guile_cv_header_libc_with_unistd" = yes; then
-      AC_DEFINE(LIBC_H_WITH_UNISTD_H)
+      AC_DEFINE(LIBC_H_WITH_UNISTD_H, 1,
+        [Define this if we should include <libc.h> when we've already
+         included <unistd.h>.  On some systems, they conflict, and libc.h
+         should be omitted.  See GUILE_HEADER_LIBC_WITH_UNISTD in
+         aclocal.m4.])
     fi
   ]
 )
