@@ -1,3 +1,9 @@
+2005-02-21  Kevin Ryde  <user42@zip.com.au>
+
+	* numbers.c (scm_istr2flo): In polar form angle part, use SCM_INEXACTP
+	not SCM_SLOPPY_INEXACTP, since recursive scm_istr2flo can give #f.
+	Reported by Rafael Avila de Espíndola.
+
 2005-01-24  Kevin Ryde  <user42@zip.com.au>
 
 	* posix.c (scm_setlocale): Force errno=EINVAL for an error, since
