@@ -1,3 +1,7 @@
+2002-05-09  Thien-Thi Nguyen  <ttn@giblet.glug.org>
+
+	* groupings.alist: New file, sync from HEAD (1.2).
+
 2002-05-05  Thien-Thi Nguyen  <ttn@giblet.glug.org>
 
 	* data-rep.texi: Comment out (w/ "@c essay " prefix) portions
