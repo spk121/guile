@@ -1,10 +1,9 @@
-;; Generated Sat Feb 23 18:37:05 PST 2002 by guile-scripts/scan-api -- do not edit!
-;; GUILE_LOAD_PATH:
-;; LTDL_LOAD_PATH:
-;; guile: /home/ttn/build/.gnu/guile-core-1.4/pre-inst-guile /home/ttn/tmp/.tmp-1.4
-;; sofile: libguile/.libs/libguile.so.10.0.0
-
+;; Generated Fri Mar 1 00:44:30 PST 2002 by guile-scripts/scan-api -- do not edit!
 (
+(meta (GUILE_LOAD_PATH . "")
+      (LTDL_LIBRARY_PATH . "")
+      (guile . "pre-inst-guile")
+      (sofile . "libguile/.libs/libguile.so.10.0.0"))
 (scheme
 ($abs "#<primitive-procedure $abs>")
 ($acos "#<primitive-procedure $acos>")
@@ -2918,4 +2917,4 @@
 (scm_zero_p T)
 (terminating B)
 ) ;; end of C
-)
+) ;; eof
