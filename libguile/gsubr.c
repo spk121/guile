@@ -1,15 +1,15 @@
 /*	Copyright (C) 1995,1996,1997,1998, 1999, 2000 Free Software Foundation, Inc.
- * 
+ *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2, or (at your option)
  * any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this software; see the file COPYING.  If not, write to
  * the Free Software Foundation, Inc., 59 Temple Place, Suite 330,
@@ -80,7 +80,9 @@ scm_make_gsubr(const char *name,int req,int opt,int rst,SCM (*fcn)())
       SCM symcell = scm_sysintern (name, SCM_UNDEFINED);
       SCM cclo = scm_makcclo (scm_f_gsubr_apply, 3L);
       if (SCM_GSUBR_MAX < req + opt + rst) {
-	fputs("ERROR in scm_make_gsubr: too many args\n", stderr);
+        fprintf (stderr,
+                 "ERROR in scm_c_make_gsubr: too many args (%d) to %s\n",
+                 req + opt + rst, name);
 	exit (1);
       }
       SCM_GSUBR_PROC (cclo) = scm_make_subr_opt (name, scm_tc7_subr_0, fcn, 0);
@@ -180,7 +182,7 @@ scm_gsubr_apply (SCM args)
 
 #ifdef GSUBR_TEST
 /* A silly example, taking 2 required args, 1 optional, and
-   a scm_list of rest args 
+   a scm_list of rest args
    */
 SCM
 gsubr_21l(SCM req1, SCM req2, SCM opt, SCM rst)
