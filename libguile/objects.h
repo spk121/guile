@@ -166,7 +166,7 @@ struct scm_metaclass_operator {
 #define scm_si_hashsets        19
 #define SCM_CLASS_OF(x)        SCM_STRUCT_VTABLE (x)
 
-#define CLASS_REDEF(c) (SCM_STRUCT_DATA(c)[scm_si_redefined])
+#define SCM_CLASS_REDEF(c) (SCM_STRUCT_DATA(c)[scm_si_redefined])
 
 extern SCM scm_metaclass_standard;
 extern SCM scm_metaclass_operator;
