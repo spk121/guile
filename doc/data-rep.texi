@@ -1,84 +1,83 @@
-\input texinfo
-@c -*-texinfo-*-
-@c %**start of header
-@setfilename data-rep.info
-@settitle Data Representation in Guile
-@c %**end of header
+@c essay \input texinfo
+@c essay @c -*-texinfo-*-
+@c essay @c %**start of header
+@c essay @setfilename data-rep.info
+@c essay @settitle Data Representation in Guile
+@c essay @c %**end of header
+@c essay
+@c essay @include version.texi
+@c essay
+@c essay @dircategory The Algorithmic Language Scheme
+@c essay @direntry
+@c essay * data-rep: (data-rep).  Data Representation in Guile --- how to use
+@c essay                          Guile objects in your C code.
+@c essay @end direntry
+@c essay
+@c essay @setchapternewpage off
+@c essay
+@c essay @ifinfo
+@c essay Data Representation in Guile
+@c essay
+@c essay Copyright (C) 1998, 1999, 2000 Free Software Foundation
+@c essay
+@c essay Permission is granted to make and distribute verbatim copies of
+@c essay this manual provided the copyright notice and this permission notice
+@c essay are preserved on all copies.
+@c essay
+@c essay @ignore
+@c essay Permission is granted to process this file through TeX and print the
+@c essay results, provided the printed document carries copying permission
+@c essay notice identical to this one except for the removal of this paragraph
+@c essay (this paragraph not being relevant to the printed manual).
+@c essay @end ignore
+@c essay
+@c essay Permission is granted to copy and distribute modified versions of this
+@c essay manual under the conditions for verbatim copying, provided that the entire
+@c essay resulting derived work is distributed under the terms of a permission
+@c essay notice identical to this one.
+@c essay
+@c essay Permission is granted to copy and distribute translations of this manual
+@c essay into another language, under the above conditions for modified versions,
+@c essay except that this permission notice may be stated in a translation approved
+@c essay by the Free Software Foundation.
+@c essay @end ifinfo
+@c essay
+@c essay @titlepage
+@c essay @sp 10
+@c essay @comment The title is printed in a large font.
+@c essay @title Data Representation in Guile
+@c essay @subtitle $Id: data-rep.texi,v 1.11.2.1 2002-05-05 11:29:56 ttn Exp $
+@c essay @subtitle For use with Guile @value{VERSION}
+@c essay @author Jim Blandy
+@c essay @author Free Software Foundation
+@c essay @author @email{jimb@@red-bean.com}
+@c essay @c The following two commands start the copyright page.
+@c essay @page
+@c essay @vskip 0pt plus 1filll
+@c essay @vskip 0pt plus 1filll
+@c essay Copyright @copyright{} 1998 Free Software Foundation
+@c essay
+@c essay Permission is granted to make and distribute verbatim copies of
+@c essay this manual provided the copyright notice and this permission notice
+@c essay are preserved on all copies.
+@c essay
+@c essay Permission is granted to copy and distribute modified versions of this
+@c essay manual under the conditions for verbatim copying, provided that the entire
+@c essay resulting derived work is distributed under the terms of a permission
+@c essay notice identical to this one.
+@c essay
+@c essay Permission is granted to copy and distribute translations of this manual
+@c essay into another language, under the above conditions for modified versions,
+@c essay except that this permission notice may be stated in a translation approved
+@c essay by Free Software Foundation.
+@c essay @end titlepage
+@c essay
+@c essay @c @smallbook
+@c essay @c @finalout
+@c essay @headings double
 
-@include version.texi
-
-@dircategory The Algorithmic Language Scheme
-@direntry
-* data-rep: (data-rep).  Data Representation in Guile --- how to use
-                         Guile objects in your C code.
-@end direntry
-
-@setchapternewpage off
-
-@ifinfo
-Data Representation in Guile
-
-Copyright (C) 1998, 1999, 2000 Free Software Foundation
-
-Permission is granted to make and distribute verbatim copies of
-this manual provided the copyright notice and this permission notice
-are preserved on all copies.
-
-@ignore
-Permission is granted to process this file through TeX and print the
-results, provided the printed document carries copying permission
-notice identical to this one except for the removal of this paragraph
-(this paragraph not being relevant to the printed manual).
-@end ignore
-
-Permission is granted to copy and distribute modified versions of this
-manual under the conditions for verbatim copying, provided that the entire
-resulting derived work is distributed under the terms of a permission
-notice identical to this one.
-
-Permission is granted to copy and distribute translations of this manual
-into another language, under the above conditions for modified versions,
-except that this permission notice may be stated in a translation approved
-by the Free Software Foundation.
-@end ifinfo
-
-@titlepage
-@sp 10
-@comment The title is printed in a large font.
-@title Data Representation in Guile
-@subtitle $Id: data-rep.texi,v 1.11 2000-06-20 03:22:56 mdj Exp $
-@subtitle For use with Guile @value{VERSION}
-@author Jim Blandy
-@author Free Software Foundation
-@author @email{jimb@@red-bean.com}
-@c The following two commands start the copyright page.
-@page
-@vskip 0pt plus 1filll
-@vskip 0pt plus 1filll
-Copyright @copyright{} 1998 Free Software Foundation
-
-Permission is granted to make and distribute verbatim copies of
-this manual provided the copyright notice and this permission notice
-are preserved on all copies.
-
-Permission is granted to copy and distribute modified versions of this
-manual under the conditions for verbatim copying, provided that the entire
-resulting derived work is distributed under the terms of a permission
-notice identical to this one.
-
-Permission is granted to copy and distribute translations of this manual
-into another language, under the above conditions for modified versions,
-except that this permission notice may be stated in a translation approved
-by Free Software Foundation.
-@end titlepage
-
-@c @smallbook
-@c @finalout
-@headings double
-
-
-@node Top, Data Representation in Scheme, (dir), (dir)
-@top Data Representation in Guile
+@node Data Representation
+@chapter Data Representation
 
 @ifinfo
 This essay is meant to provide the background necessary to read and
@@ -93,7 +92,7 @@ actually represents Scheme values.  Otherwise, a lot of the code, and
 the conventions it follows, won't make very much sense.
 
 We assume you know both C and Scheme, but we do not assume you are
-familiar with Guile's C interface.
+familiar with Guile's implementation.
 @end ifinfo
 
 @menu
@@ -106,7 +105,7 @@ familiar with Guile's C interface.
                                         application-specific datatypes.
 @end menu
 
-@node Data Representation in Scheme, How Guile does it, Top, Top
+@node Data Representation in Scheme
 @section Data Representation in Scheme
 
 Scheme is a latently-typed language; this means that the system cannot,
@@ -137,13 +136,13 @@ does it}.
 
 
 @menu
-* A Simple Representation::     
-* Faster Integers::             
-* Cheaper Pairs::               
-* Guile Is Hairier::            
+* A Simple Representation::
+* Faster Integers::
+* Cheaper Pairs::
+* Guile Is Hairier::
 @end menu
 
-@node A Simple Representation, Faster Integers, Data Representation in Scheme, Data Representation in Scheme
+@node A Simple Representation
 @subsection A Simple Representation
 
 The simplest way to meet the above requirements in C would be to
@@ -187,7 +186,7 @@ semantics.  If @var{x} is an @code{SCM} value:
 @end itemize
 
 
-@node Faster Integers, Cheaper Pairs, A Simple Representation, Data Representation in Scheme
+@node Faster Integers
 @subsection Faster Integers
 
 Unfortunately, the above representation has a serious disadvantage.  In
@@ -282,7 +281,7 @@ but this essay isn't about bit-twiddling.  (Hint: what if pointers had
 @code{01} in their least significant bits, and integers had @code{00}?)
 
 
-@node Cheaper Pairs, Guile Is Hairier, Faster Integers, Data Representation in Scheme
+@node Cheaper Pairs
 @subsection Cheaper Pairs
 
 However, there is yet another issue to confront.  Most Scheme heaps
@@ -380,7 +379,7 @@ are referencing, making a modified pointer as fast to use as an
 unmodified pointer.
 
 
-@node Guile Is Hairier,  , Cheaper Pairs, Data Representation in Scheme
+@node Guile Is Hairier
 @subsection Guile Is Hairier
 
 We originally started with a very simple typing system --- each object
@@ -396,7 +395,7 @@ significant loss of efficiency, but the simplified system would still be
 more complex than what we've presented above.
 
 
-@node How Guile does it, Defining New Types (Smobs), Data Representation in Scheme, Top
+@node How Guile does it
 @section How Guile does it
 
 Here we present the specifics of how Guile represents its data.  We
@@ -407,15 +406,15 @@ everything one need know to use Guile's data.
 
 
 @menu
-* General Rules::               
-* Garbage Collection::          
-* Immediates vs. Non-immediates::  
-* Immediate Datatypes::         
-* Non-immediate Datatypes::     
-* Signalling Type Errors::      
+* General Rules::
+* Garbage Collection::
+* Immediates vs. Non-immediates::
+* Immediate Datatypes::
+* Non-immediate Datatypes::
+* Signalling Type Errors::
 @end menu
 
-@node General Rules, Garbage Collection, How Guile does it, How Guile does it
+@node General Rules
 @subsection General Rules
 
 Any code which operates on Guile datatypes must @code{#include} the
@@ -446,7 +445,7 @@ boolean value have names starting with @code{SCM_N}.  For example,
 @emph{not} a pair object (a @code{CONS}).
 
 
-@node Garbage Collection, Immediates vs. Non-immediates, General Rules, How Guile does it
+@node Garbage Collection
 @subsection Garbage Collection
 
 Aside from the latent typing, the major source of constraints on a
@@ -530,7 +529,7 @@ many pieces of code, it is enough for the collector to find the cell,
 and then use the cell's type to find more pointers to trace.
 
 
-@node Immediates vs. Non-immediates, Immediate Datatypes, Garbage Collection, How Guile does it
+@node Immediates vs. Non-immediates
 @subsection Immediates vs. Non-immediates
 
 Guile classifies Scheme objects into two kinds: those that fit entirely
@@ -571,7 +570,7 @@ from this weakness.
 @end deftypefn
 
 
-@node Immediate Datatypes, Non-immediate Datatypes, Immediates vs. Non-immediates, How Guile does it
+@node Immediate Datatypes
 @subsection Immediate Datatypes
 
 The following datatypes are immediate values; that is, they fit entirely
@@ -588,13 +587,13 @@ before applying them.
 
 
 @menu
-* Integers::                    
-* Characters::                  
-* Booleans::                    
-* Unique Values::               
+* Integers::
+* Characters::
+* Booleans::
+* Unique Values::
 @end menu
 
-@node Integers, Characters, Immediate Datatypes, Immediate Datatypes
+@node Integers
 @subsubsection Integers
 
 Here are functions for operating on small integers, that fit within an
@@ -627,7 +626,7 @@ This function does not check for overflow.
 @end deftypefn
 
 
-@node Characters, Booleans, Integers, Immediate Datatypes
+@node Characters
 @subsubsection Characters
 
 Here are functions for operating on characters.
@@ -647,7 +646,7 @@ character value.
 @end deftypefn
 
 
-@node Booleans, Unique Values, Characters, Immediate Datatypes
+@node Booleans
 @subsubsection Booleans
 
 Here are functions and macros for operating on booleans.
@@ -670,7 +669,7 @@ Scheme boolean, the result is undefined.
 @end deftypefn
 
 
-@node Unique Values,  , Booleans, Immediate Datatypes
+@node Unique Values
 @subsubsection Unique Values
 
 The immediate values that are neither small integers, characters, nor
@@ -715,8 +714,8 @@ symbol's value to see if it has a binding as a global variable.
 @end deftypefn
 
 
-@node Non-immediate Datatypes, Signalling Type Errors, Immediate Datatypes, How Guile does it
-@subsection Non-immediate Datatypes 
+@node Non-immediate Datatypes
+@subsection Non-immediate Datatypes
 
 A non-immediate datatype is one which lives in the heap, either because
 it cannot fit entirely within a @code{SCM} word, or because it denotes a
@@ -738,15 +737,15 @@ corrupted.
 @menu
 * Non-immediate Type Predicates::  Special rules for using the type
                                         predicates described here.
-* Pairs::                       
-* Vectors::                     
-* Procedures::                  
-* Closures::                    
-* Subrs::                       
-* Ports::                       
+* Pairs::
+* Vectors::
+* Procedures::
+* Closures::
+* Subrs::
+* Ports::
 @end menu
 
-@node Non-immediate Type Predicates, Pairs, Non-immediate Datatypes, Non-immediate Datatypes
+@node Non-immediate Type Predicates
 @subsubsection Non-immediate Type Predicates
 
 As mentioned in @ref{Garbage Collection}, all non-immediate objects
@@ -767,7 +766,7 @@ SCM_NIMP (@var{x}) && SCM_CONSP (@var{x})
 @end example
 
 
-@node Pairs, Vectors, Non-immediate Type Predicates, Non-immediate Datatypes
+@node Pairs
 @subsubsection Pairs
 
 Pairs are the essential building block of list structure in Scheme.  A
@@ -852,7 +851,7 @@ Return the @sc{car} of the @sc{car} of @var{cell}, the @sc{car} of the
 @end deftypefn
 
 
-@node Vectors, Procedures, Pairs, Non-immediate Datatypes
+@node Vectors
 @subsubsection Vectors, Strings, and Symbols
 
 Vectors, strings, and symbols have some properties in common.  They all
@@ -899,7 +898,7 @@ There are also a few magic values stuffed into memory before a symbol's
 characters, but you don't want to know about those.  What cruft!
 
 
-@node Procedures, Closures, Vectors, Non-immediate Datatypes
+@node Procedures
 @subsubsection Procedures
 
 Guile provides two kinds of procedures: @dfn{closures}, which are the
@@ -916,7 +915,7 @@ any sort.  Otherwise, return @code{SCM_BOOL_F}.
 @end deftypefun
 
 
-@node Closures, Subrs, Procedures, Non-immediate Datatypes
+@node Closures
 @subsubsection Closures
 
 [FIXME: this needs to be further subbed, but texinfo has no subsubsub]
@@ -965,7 +964,7 @@ connected with the interpreter's implementation.
 @end deftypefn
 
 
-@node Subrs, Ports, Closures, Non-immediate Datatypes
+@node Subrs
 @subsubsection Subrs
 
 [FIXME: this needs to be further subbed, but texinfo has no subsubsub]
@@ -1016,13 +1015,13 @@ object instead of a subr object.
 @end deftypefun
 
 
-@node Ports,  , Subrs, Non-immediate Datatypes
+@node Ports
 @subsubsection Ports
 
 Haven't written this yet, 'cos I don't understand ports yet.
 
 
-@node Signalling Type Errors,  , Non-immediate Datatypes, How Guile does it
+@node Signalling Type Errors
 @subsection Signalling Type Errors
 
 Every function visible at the Scheme level should aggressively check the
@@ -1083,7 +1082,7 @@ Signal an error complaining that @var{obj} is ``out of range'' for
 @end deftypefn
 
 
-@node Defining New Types (Smobs),  , How Guile does it, Top
+@node Defining New Types (Smobs)
 @section Defining New Types (Smobs)
 
 @dfn{Smobs} are Guile's mechanism for adding new non-immediate types to
@@ -1104,16 +1103,16 @@ you can build a complete interactive Guile shell, extended with the
 datatypes described here.)
 
 @menu
-* Describing a New Type::       
-* Creating Instances::          
-* Typechecking::                
-* Garbage Collecting Smobs::    
-* A Common Mistake In Allocating Smobs::  
-* Garbage Collecting Simple Smobs::  
-* A Complete Example::          
+* Describing a New Type::
+* Creating Instances::
+* Typechecking::
+* Garbage Collecting Smobs::
+* A Common Mistake In Allocating Smobs::
+* Garbage Collecting Simple Smobs::
+* A Complete Example::
 @end menu
 
-@node Describing a New Type, Creating Instances, Defining New Types (Smobs), Defining New Types (Smobs)
+@node Describing a New Type
 @subsection Describing a New Type
 
 To define a new type, the programmer must write four functions to
@@ -1140,14 +1139,14 @@ non-zero) using @code{scm_must_free} and returns the size of that
 struct.  @xref{Garbage Collecting Smobs}, for more details.
 
 @item print
-@c GJB:FIXME:: @var{exp} and @var{port} need to refer to a prototype of 
+@c GJB:FIXME:: @var{exp} and @var{port} need to refer to a prototype of
 @c the print function.... where is that, or where should it go?
 Guile will apply this function to each instance of the new type to print
 the value, as for @code{display} or @code{write}.  The function should
 write a printed representation of @var{exp} on @var{port}, in accordance
 with the parameters in @var{pstate}.  (For more information on print
-states, see @ref{Ports}.)  The default print function prints @code{#<NAME ADDRESS>} 
-where @code{NAME} is the first argument passed to @code{scm_make_smob_type} or 
+states, see @ref{Ports}.)  The default print function prints @code{#<NAME ADDRESS>}
+where @code{NAME} is the first argument passed to @code{scm_make_smob_type} or
 @code{scm_make_smob_type_mfpe}.
 
 @item equalp
@@ -1209,9 +1208,9 @@ type@footnote{Warning: There is an ongoing discussion among the developers which
 may result in deprecating @code{scm_make_smob_type_mfpe} in next release
 of Guile.}:
 
-@deftypefun long scm_make_smob_type_mfpe(const char *name, scm_sizet size, SCM (*mark) (SCM), scm_sizet (*free) (SCM), int (*print) (SCM, SCM, scm_print_state*), SCM (*equalp) (SCM, SCM))
+@deftypefun long scm_make_smob_type_mfpe (const char *name, scm_sizet size, SCM (*mark) (SCM), scm_sizet (*free) (SCM), int (*print) (SCM, SCM, scm_print_state*), SCM (*equalp) (SCM, SCM))
 This function invokes @code{scm_make_smob_type} on its first two arguments
-to add a new smob type named @var{name}, with instance size @var{size} to the system.  
+to add a new smob type named @var{name}, with instance size @var{size} to the system.
 It also registers the @var{mark}, @var{free}, @var{print}, @var{equalp} smob
 special functions for that new type.  Any of these parameters can be @code{NULL}
 to have that special function use the default behaviour for guile.
@@ -1236,17 +1235,17 @@ init_image_type ()
 @end example
 
 
-@node Creating Instances, Typechecking, Describing a New Type, Defining New Types (Smobs)
+@node Creating Instances
 @subsection Creating Instances
 
 Like other non-immediate types, smobs start with a cell whose @sc{car}
 contains typing information, and whose @code{cdr} is free for any use.  For smobs,
-the @code{cdr} stores a pointer to the internal C structure holding the 
+the @code{cdr} stores a pointer to the internal C structure holding the
 smob-specific data.
 To create an instance of a smob type following these standards, you should
 use @code{SCM_NEWSMOB}:
 
-@deftypefn Macro void SCM_NEWSMOB(SCM value,long tag,void *data)
+@deftypefn Macro void SCM_NEWSMOB (SCM value, long tag, void *data)
 Make @var{value} contain a smob instance of the type with tag @var{tag}
 and smob data @var{data}.  @var{value} must be previously declared
 as C type @code{SCM}.
@@ -1256,10 +1255,10 @@ Since it is often the case (e.g., in smob constructors) that you will
 create a smob instance and return it, there is also a slightly specialized
 macro for this situation:
 
-@deftypefn Macro fn_returns SCM_RETURN_NEWSMOB(long tab, void *data)
+@deftypefn Macro fn_returns SCM_RETURN_NEWSMOB (long tab, void *data)
 This macro expands to a block of code that creates a smob instance of
 the type with tag @var{tag} and smob data @var{data}, and returns
-that @code{SCM} value.  It should be the last piece of code in 
+that @code{SCM} value.  It should be the last piece of code in
 a block.
 @end deftypefn
 
@@ -1336,7 +1335,7 @@ make_image (SCM name, SCM s_width, SCM s_height)
 
   width = SCM_INUM (s_width);
   height = SCM_INUM (s_height);
-  
+
   image = (struct image *) scm_must_malloc (sizeof (struct image), "image");
   image->width = width;
   image->height = height;
@@ -1349,7 +1348,7 @@ make_image (SCM name, SCM s_width, SCM s_height)
 @end example
 
 
-@node Typechecking, Garbage Collecting Smobs, Creating Instances, Defining New Types (Smobs)
+@node Typechecking
 @subsection Typechecking
 
 Functions that operate on smobs should aggressively check the types of
@@ -1401,9 +1400,7 @@ Note that checking types is a little more complicated during garbage
 collection; see the description of @code{SCM_GCTYP16} in @ref{Garbage
 Collecting Smobs}.
 
-@c GJB:FIXME:: should talk about guile-snarf somewhere!
-
-@node Garbage Collecting Smobs, A Common Mistake In Allocating Smobs, Typechecking, Defining New Types (Smobs)
+@node Garbage Collecting Smobs
 @subsection Garbage Collecting Smobs
 
 Once a smob has been released to the tender mercies of the Scheme
@@ -1544,7 +1541,7 @@ very simple.  Since collections occur at unpredictable times, it is easy
 for any unusual activity to interfere with normal code.
 
 
-@node A Common Mistake In Allocating Smobs, Garbage Collecting Simple Smobs, Garbage Collecting Smobs, Defining New Types (Smobs)
+@node A Common Mistake In Allocating Smobs
 @subsection A Common Mistake In Allocating Smobs
 
 When constructing new objects, you must be careful that the garbage
@@ -1566,7 +1563,7 @@ make_image (SCM name, SCM s_width, SCM s_height)
 
   width = SCM_INUM (s_width);
   height = SCM_INUM (s_height);
-  
+
   image = (struct image *) scm_must_malloc (sizeof (struct image), "image");
   image->width = width;
   image->height = height;
@@ -1616,7 +1613,7 @@ traverse @code{image}, so any objects @code{image} points to will be
 preserved.
 
 
-@node Garbage Collecting Simple Smobs, A Complete Example, A Common Mistake In Allocating Smobs, Defining New Types (Smobs)
+@node Garbage Collecting Simple Smobs
 @subsection Garbage Collecting Simple Smobs
 
 It is often useful to define very simple smob types --- smobs which have
@@ -1644,7 +1641,7 @@ other than the smob's header cell.
 @end deftypefun
 
 
-@node A Complete Example,  , Garbage Collecting Simple Smobs, Defining New Types (Smobs)
+@node A Complete Example
 @subsection A Complete Example
 
 Here is the complete text of the implementation of the image datatype,
@@ -1692,7 +1689,7 @@ make_image (SCM name, SCM s_width, SCM s_height)
 
   width = SCM_INUM (s_width);
   height = SCM_INUM (s_height);
-  
+
   image = (struct image *) scm_must_malloc (sizeof (struct image), "image");
   image->width = width;
   image->height = height;
@@ -1795,9 +1792,9 @@ guile> (clear-image 4)
 ERROR: In procedure clear-image in expression (clear-image 4):
 ERROR: Wrong type argument in position 1: 4
 ABORT: (wrong-type-arg)
- 
+
 Type "(backtrace)" to get more information.
-guile> 
+guile>
 @end example
 
-@bye
+@c essay @bye
