@@ -1,3 +1,19 @@
+2002-03-01  Thien-Thi Nguyen  <ttn@giblet.glug.org>
+
+	* LIBGUILEREADLINE-VERSION: New file.
+	Interface for libguile-readline set to 0:1:0.
+
+	* configure.in: Use AC_PREREQ and AC_CONFIG_SRCDIR.
+	Source $srcdir/LIBGUILEREADLINE-VERSION.
+	Use AC_CONFIG_FILES.
+
+	(LIBGUILEREADLINE_INTERFACE_CURRENT,
+	LIBGUILEREADLINE_INTERFACE_REVISION,
+	LIBGUILEREADLINE_INTERFACE_AGE): New AC_SUBST vars.
+
+	* Makefile.am (libguilereadline_la_SOURCES): Remove readline.h.
+	(libguilereadline_la_LIBADD, libguilereadline_la_LDFLAGS): New.
+
 2002-02-12  Thien-Thi Nguyen  <ttn@giblet.glug.org>
 
 	* Makefile.am (AUTOMAKE_OPTIONS): Replace "gnu" with "foreign".
