@@ -61,6 +61,16 @@ AM_PROG_CC_STDC
 
 AC_C_CONST
 AC_C_INLINE
+AC_CHECK_SIZEOF(int)
+AC_CHECK_SIZEOF(long)
+AC_CACHE_CHECK([for long longs], scm_cv_long_longs,
+	       AC_TRY_COMPILE(,
+			      [long long a],
+			      scm_cv_long_longs=yes,
+			      scm_cv_long_longs=no))
+if test "$scm_cv_long_longs" = yes; then
+  AC_DEFINE(HAVE_LONG_LONGS)
+fi
 
 AC_HEADER_STDC
 AC_HEADER_DIRENT
@@ -103,7 +113,7 @@ if test "$ac_cv_var_rl_getc_function" = "yes"; then
   AC_DEFINE(HAVE_RL_GETC_FUNCTION)
 fi
 
-if test $ac_cv_lib_readline_readline = yes -a $ac_cv_var_rl_getc_function = no; then
+if test $ac_cv_lib_readline_main = yes -a $ac_cv_var_rl_getc_function = no; then
   echo 'Warning: libreadline is too old on your system.  Need >= 2.1.'
 fi
 

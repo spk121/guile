@@ -1,3 +1,26 @@
+1999-01-11  Jim Blandy  <jimb@zwingli.cygnus.com>
+
+	* configure.in: Remove quotes around ac_cv_lib_readline_main and
+ 	ac_cv_var_rl_getc_function.  They should both always be set to
+	non-null values; this way, we get error messages.
+	* configure: Regenerated.
+
+1999-01-10  Jim Blandy  <jimb@savonarola.red-bean.com>
+
+	* configure.in: Cite the variable ac_cv_lib_readline_main, not
+	ac_cv_lib_readline_readline; the latter isn't set any more, since
+	we look for 'main' in libreadline now.  Add quotes around
+	reference to the variable references, too, so this will work even
+	when a variable's value is the empty string.
+	* configure: Regenerated.
+
+1999-01-07  Mikael Djurfeldt  <mdj@mdj.nada.kth.se>
+
+	* acconfig.h: Added HAVE_LONG_LONGS.
+
+	* configure.in: Added AC_CHECK_SIZEOF(long), AC_CHECK_SIZEOF(int);
+	Added check for long longs.
+
 1998-12-14  Jim Blandy  <jimb@zwingli.cygnus.com>
 
 	* configure.in: Check for tgoto in ncurses, then termcap.
