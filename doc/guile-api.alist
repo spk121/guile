@@ -1,4 +1,4 @@
-;; Generated Fri Mar 1 00:44:30 PST 2002 by guile-scripts/scan-api -- do not edit!
+;; Generated Tue Apr 30 22:54:33 PDT 2002 by guile-scripts/scan-api -- do not edit!
 (
 (meta (GUILE_LOAD_PATH . "")
       (LTDL_LIBRARY_PATH . "")
@@ -1483,7 +1483,9 @@
 (yield "#<primitive-procedure yield>")
 (zero? "#<primitive-procedure zero?>")
 ) ;; end of scheme
-(C
+(C     
+(_fini T)
+(_init T)
 (collisionp B)
 (coop_abort T)
 (coop_condition_variable_destroy T)
