@@ -1,3 +1,17 @@
+2002-05-03  Thien-Thi Nguyen  <ttn@giblet.glug.org>
+
+	* Makefile.am (BUILT_SOURCES): Add scmconfig.h.
+	(libpath.h): Use `@top_srcdir_absolute@'.
+	(snarfcppopts): New var.
+	(.c.x): Rewrite to use `guile-snarf -o $@'.
+	(.c.doc): Rewrite to use `guile-doc-snarf -o $@'.
+
+	* guile-snarf.in: Sync w/ HEAD, with these differences:
+	(old_school_snarf): New, used in place of `modern_snarf'.
+
+	* guile-doc-snarf.in: Rewrite to
+	support "-o OUTFILE INFILE [CPP-OPTS]" usage.
+
 2002-03-01  Thien-Thi Nguyen  <ttn@giblet.glug.org>
 
 	* Makefile.am (libguile_la_LDFLAGS):
