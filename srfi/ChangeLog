@@ -1,3 +1,9 @@
+2005-03-18  Kevin Ryde  <user42@zip.com.au>
+
+	* srfi-17.scm: Put "export" at the end of the file for redefined core
+	procedures, to avoid deprecation warnings about re-exporting with
+	export.  Reported by Alan Grover.
+
 2005-02-18  Kevin Ryde  <user42@zip.com.au>
 
 	* srfi-1.scm (lset-adjoin): Revert change using `list' not `acc', the
