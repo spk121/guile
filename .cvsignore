@@ -1,7 +1,0 @@
-Makefile
-config.cache
-config.log
-config.status
-guile-*.tar.gz
-config.build-subdirs
-libtool
