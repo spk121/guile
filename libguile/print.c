@@ -627,7 +627,7 @@ taloop:
 	  break;
 #endif
 	case scm_tc7_pws:
-	  scm_puts ("#<procedure-with-setter ", port);
+	  scm_puts ("#<procedure-with-setter", port);
 	  {
 	    SCM name = scm_procedure_name (exp);
 	    if (SCM_NFALSEP (name))
