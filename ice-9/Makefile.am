@@ -23,7 +23,7 @@ AUTOMAKE_OPTIONS = gnu
 
 # These should be installed and distributed.
 ice9_sources =								\
-	and-let*.scm arrays.scm boot-9.scm				\
+	and-let-star.scm arrays.scm boot-9.scm				\
 	calling.scm common-list.scm debug.scm				\
 	debugger.scm documentation.scm emacs.scm expect.scm format.scm	\
 	getopt-long.scm hcons.scm lineio.scm				\
@@ -37,5 +37,9 @@ subpkgdatadir = $(pkgdatadir)/$(VERSION)/ice-9
 subpkgdata_DATA = $(ice9_sources)
 ETAGS_ARGS = $(subpkgdata_DATA)
 
+install-data-local:
+	-$(INSTALL_DATA) $(srcdir)/and-let-star-compat.scm \
+           $(DESTDIR)$(subpkgdatadir)/'and-let*.scm'
+
 ## test.scm is not currently installed.
-EXTRA_DIST = $(ice9_sources) test.scm
+EXTRA_DIST = $(ice9_sources) test.scm and-let-star-compat.scm
