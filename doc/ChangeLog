@@ -8,6 +8,12 @@
 
 	* guile.texi: New file.
 
+	* Makefile.am: Update copyright.
+	(version.texi): Remove rule to make this.
+	(info_TEXINFOS): Remove data-rep.texi. Add guile.texi.
+	(data_rep_TEXINFOS): Delete var.
+	(guile_TEXINFOS): New var.
+
 2002-05-04  Thien-Thi Nguyen  <ttn@giblet.glug.org>
 
 	* README: Replace "no manual yet" w/ "see manual on-line (for now)".
