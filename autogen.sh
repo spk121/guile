@@ -28,20 +28,50 @@ for f in $workbookdistfiles ; do
 done
 rm -f examples/example.gdbinit
 ln -s $workbook/build/dist-files/.gdbinit examples/example.gdbinit
+
+# TODO: This should be moved to dist-guile
+mscripts=$workbook/../scripts
+rm -f BUGS
+$mscripts/render-bugs > BUGS
+
 ######################################################################
+
+# Make sure this matches the ACLOCAL invokation in Makefile.am
 
 ./guile-aclocal.sh
 
-libtoolize --copy --force --automake --ltdl
+######################################################################
+### Libtool setup.
+
+# Get a clean version.
+rm -rf libltdl
+libtoolize --force --copy --automake --ltdl
+
+# Make sure we use a ./configure.in compatible autoconf in ./libltdl/
+mv libltdl/configure.in libltdl/configure.tmp
+echo 'AC_PREREQ(2.50)' > libltdl/configure.in
+cat libltdl/configure.tmp >> libltdl/configure.in
+rm libltdl/configure.tmp
+######################################################################
+
 autoheader
 autoconf
+
+# Automake has a bug that will let it only add one copy of a missing
+# file.  We need two mdate-sh, tho, one in doc/ref/ and one in
+# doc/tutorial/.  We run automake twice as a workaround.
+
+automake --add-missing
 automake --add-missing
 
 # Make sure that libltdl uses the same autoconf version as the rest.
 #
-( echo "libltdl..."; cd libltdl; autoconf )
+echo "libltdl..."
+(cd libltdl && autoconf)
+(cd libltdl && automake --gnu --add-missing)
 
-( echo "guile-readline..."; cd guile-readline; ./autogen.sh )
+echo "guile-readline..."
+(cd guile-readline && ./autogen.sh)
 
 echo "Now run configure and make."
 echo "You must pass the \`--enable-maintainer-mode' option to configure."
