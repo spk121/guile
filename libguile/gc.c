@@ -1114,11 +1114,11 @@ scm_gc_sweep ()
 		if ((SCM_CDR (vcell) == 0) || (SCM_CDR (vcell) == 1))
 		  {
 		    SCM *p = (SCM *) SCM_GCCDR (scmptr);
-		    if (((SCM*) vcell)[scm_vtable_index_layout]
+		    if (((SCM*) vcell)[scm_vtable_index_flags]
 			& SCM_STRUCTF_LIGHT)
 		      {
 			SCM layout = ((SCM*)vcell)[scm_vtable_index_layout];
-			m += SCM_LENGTH (layout) / 2;
+			m += (SCM_LENGTH (layout) / 2) * sizeof (SCM);
 			free ((char *) p);
 		      }
 		    else
