@@ -1,6 +1,6 @@
 ;;;; srfi-1.test --- Test suite for Guile's SRFI-1 functions. -*- scheme -*-
 ;;;;
-;;;; Copyright 2003, 2004 Free Software Foundation, Inc.
+;;;; Copyright 2003, 2004, 2005 Free Software Foundation, Inc.
 ;;;;
 ;;;; This program is free software; you can redistribute it and/or modify
 ;;;; it under the terms of the GNU General Public License as published by
@@ -636,6 +636,17 @@
   (pass-if "three improper" (equal? '(1 2 . 3)     (list-copy '(1 2 . 3))))
   (pass-if "four  improper" (equal? '(1 2 3 . 4)   (list-copy '(1 2 3 . 4))))
   (pass-if "five  improper" (equal? '(1 2 3 4 . 5) (list-copy '(1 2 3 4 . 5)))))
+
+;;
+;; lset=
+;;
+
+(with-test-prefix "lset="
+
+  ;; in guile 1.6.7 and earlier, lset= incorrectly demanded at least one
+  ;; list arg
+  (pass-if "no args"
+    (eq? #t (lset= eq?))))
 
 ;;
 ;; map
