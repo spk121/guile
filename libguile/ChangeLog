@@ -1,3 +1,10 @@
+1999-03-08  Mikael Djurfeldt  <mdj@mdj.nada.kth.se>
+
+	* gc.c (scm_gc_sweep): Bugfix: Look for SCM_STRUCT_F_LIGHT flag at
+	scm_vtable_index_flags instead of scm_vtable_index_layout!
+
+	* list.c (scm_list_star): New procedure.
+
 1999-02-19  Mikael Djurfeldt  <mdj@barbara.nada.kth.se>
 
 	* debug.c (scm_init_debug): Added scheme level constant
