@@ -1,3 +1,11 @@
+2005-03-26  Kevin Ryde  <user42@zip.com.au>
+
+	Change from the head 2004-04-06 by Han-Wen Nienhuys:
+	Fixes srfi-13 string-index segv on strings containing 8-bit
+	characters, reported by Alexey Voinov.
+	* chars.h (SCM_MAKE_CHAR): add (unsigned char) cast. This prevents
+	havoc when hi-bit ASCII is subjected to SCM_MAKE_CHAR().
+
 2005-02-21  Kevin Ryde  <user42@zip.com.au>
 
 	* numbers.c (scm_istr2flo): In polar form angle part, use SCM_INEXACTP
