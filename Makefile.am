@@ -21,7 +21,8 @@
 
 AUTOMAKE_OPTIONS = 1.5
 
-SUBDIRS = ice-9 qt libltdl libguile guile-config guile-readline doc am
+SUBDIRS = ice-9 qt libltdl libguile guile-config guile-readline \
+          doc am test-suite
 
 include_HEADERS = libguile.h
 
