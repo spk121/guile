@@ -517,8 +517,13 @@ AC_SUBST(AWK)
 AC_SUBST(LIBLOBJS)
 AC_SUBST(EXTRA_DOT_DOC_FILES)
 
+dnl See also top_builddir in info node: (libtool)AC_PROG_LIBTOOL
+top_builddir_absolute=`pwd`
+AC_SUBST(top_builddir_absolute)
+
 AC_CONFIG_FILES([
   Makefile
+  am/Makefile
   libguile/Makefile
   libguile/guile-snarf
   libguile/guile-doc-snarf
@@ -534,13 +539,15 @@ AC_CONFIG_FILES([
   doc/Makefile
   test-suite/Makefile
   check-guile
+  pre-inst-guile
 ])
 
 AC_CONFIG_COMMANDS(default,[
   chmod +x libguile/guile-snarf \
            libguile/guile-doc-snarf \
            libguile/guile-func-name-check \
-	   check-guile
+           check-guile \
+           pre-inst-guile
 ])
 
 AC_OUTPUT
