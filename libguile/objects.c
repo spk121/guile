@@ -156,10 +156,10 @@ scm_class_of (SCM x)
 	  /* must be a struct */
 	  if (SCM_OBJ_CLASS_FLAGS (x) & SCM_CLASSF_GOOPS)
 	  {
-	    if (SCM_CLASS_REDEF (SCM_CLASS_OF (x)) != SCM_BOOL_F)
+	    if (SCM_OBJ_CLASS_REDEF (x) != SCM_BOOL_F)
 	      scm_change_object_class (x,
-				       SCM_CLASS_OF (x),
-				       SCM_CLASS_REDEF (SCM_CLASS_OF (x)));
+				       SCM_CLASS_OF (x),         /* old */
+				       SCM_OBJ_CLASS_REDEF (x)); /* new */
 	    return SCM_CLASS_OF (x);
 	  }
 	default:
