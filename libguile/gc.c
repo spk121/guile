@@ -608,6 +608,7 @@ gc_mark_nimp:
       ptr = SCM_GCCDR (ptr);
       goto gc_mark_nimp;
     case scm_tcs_cons_imcar:
+    case scm_tc7_pws:
       if (SCM_GCMARKP (ptr))
 	break;
       SCM_SETGCMARK (ptr);
@@ -1132,6 +1133,7 @@ scm_gc_sweep ()
 	    case scm_tcs_cons_imcar:
 	    case scm_tcs_cons_nimcar:
 	    case scm_tcs_closures:
+	    case scm_tc7_pws:
 	      if (SCM_GCMARKP (scmptr))
 		goto cmrkcontinue;
 	      break;
