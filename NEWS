@@ -103,16 +103,18 @@ The data-rep.info that was included in Guile 1.4 is now incorporated
 into guile.info, which is a temporary placeholder for the reference manual
 that is still to be fully integrated at some point in the future.
 
-* API summarization available
+* interface summarization available
 
-Scheme and C programming interfaces are now summarized in
-doc/guile-api.alist.  This file contains a single sexp of the form:
+Programming interfaces are now summarized in doc/guile-api.alist, in a
+program-friendly format.  This file contains a single sexp of the form:
 
-  ((scheme SCHEME-API) (C C-API))
+  ((meta ...) (interface ...))
 
-SCHEME-API and C-API are sub-alists whose keys are names of Scheme (or
-C) functions and variables.  The values behind the keys are unspecified
-for now.
+The meta fields are `GUILE_LOAD_PATH', `LTDL_LIBRARY_PATH', `guile'
+`libguileinterface', `sofile' and `groups'.  The interface elements are
+in turn sub-alists w/ keys `groups' and `scan-data'.  Interface elements
+initially belong in one of two groups `Scheme' or `C' (but not both) and
+sometimes belong in other groups (see doc/groupings.alist for defs).
 
 
 
