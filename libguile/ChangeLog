@@ -1,3 +1,8 @@
+2002-02-08  Thien-Thi Nguyen  <ttn@glug.org>
+
+	* gsubr.c (scm_make_gsubr): On "too many args" error,
+	also display arg count and name.  Thanks to Bill Schottstaedt.
+
 2002-01-24  Thien-Thi Nguyen  <ttn@glug.org>
 
 	* net_db.c (inet_aton): Surround decl w/ `#ifndef HAVE_INET_ATON'.
