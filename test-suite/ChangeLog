@@ -1,3 +1,17 @@
+2002-02-09  Thien-Thi Nguyen  <ttn@giblet.glug.org>
+
+	* lib.scm Back port from 1.20, with these exceptions:
+	do not remove `signals-error?' and `signals-error?*', and do not
+	include (ice-9 stack-catch), which is not available yet.
+
+	* tests/r4rs.test: Use `test-file-name' and `data-file-name'
+	instead of `data-file'.
+
+	* guile-test: Back port from 1.12, with the following exception:
+	do not use modules (ice-9 and-let-star) or (ice-9 rdelim).
+
+	* paths.scm: bye bye.
+
 2000-06-16  Dirk Herrmann  <D.Herrmann@tu-bs.de>
 
 	* tests/list.test:  Use cons* instead of list*.
@@ -73,7 +87,7 @@ Fri Dec 17 12:14:10 1999  Greg J. Badros  <gjb@cs.washington.edu>
 
 	* tests/c-api.test: Refine the list of files that are checked in
 	the seek-offset-test.  Was just using files that end in "c", but
-	that caught the new ".doc" files, too, so make sure that files end 
+	that caught the new ".doc" files, too, so make sure that files end
 	in ".c" before requiring that they include unistd.h if they
 	reference SEEK_(SET|CUR|END).
 
@@ -95,7 +109,7 @@ Fri Dec 17 12:14:10 1999  Greg J. Badros  <gjb@cs.washington.edu>
 
 	* tests/reader.test: Check that number->string checks its radix
 	properly.
-	
+
 1999-09-20  Jim Blandy  <jimb@savonarola.red-bean.com>
 
 	* tests/ports.test: Check that our input functions cope when
