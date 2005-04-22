@@ -117,17 +117,6 @@ scm_list_n (SCM elt, ...)
 }
 
 
-SCM_DEFINE (scm_list, "list", 0, 0, 1, 
-           (SCM objs),
-	    "Return a list containing @var{objs}, the arguments to\n"
-	    "@code{list}.")
-#define FUNC_NAME s_scm_list
-{
-  return objs;
-}
-#undef FUNC_NAME
-
-
 #if (SCM_DEBUG_DEPRECATED == 0)
 
 SCM_REGISTER_PROC (s_list_star, "list*", 1, 0, 1, scm_cons_star);
@@ -546,6 +535,13 @@ SCM_DEFINE (scm_list_copy, "list-copy", 1, 0, 0,
   return newlst;
 }
 #undef FUNC_NAME
+
+
+SCM_PROC (s_list, "list", 0, 0, 1, scm_list_copy);
+SCM_SNARF_DOCS (register, scm_list_copy, "list", (SCM objs), 0, 0, 1,
+                "Return a list containing @var{objs}, the arguments to\n"
+                "@code{list}.")
+
 
 
 /* membership tests (memq, memv, etc.) */ 
