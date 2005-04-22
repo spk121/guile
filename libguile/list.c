@@ -133,18 +133,20 @@ SCM_DEFINE (scm_cons_star, "cons*", 1, 0, 1,
 	    "Schemes and in Common LISP.")
 #define FUNC_NAME s_scm_cons_star
 {
+  SCM ret = SCM_EOL;
+  SCM *p = &ret;
+
   SCM_VALIDATE_REST_ARGUMENT (rest);
-  if (!SCM_NULLP (rest))
+
+  for ( ; SCM_CONSP (rest); rest = SCM_CDR (rest))
     {
-      SCM prev = arg = scm_cons (arg, rest);
-      while (SCM_NNULLP (SCM_CDR (rest)))
-	{
-	  prev = rest;
-	  rest = SCM_CDR (rest);
-	}
-      SCM_SETCDR (prev, SCM_CAR (rest));
+      *p = scm_cons (arg, SCM_EOL);
+      p = SCM_CDRLOC (*p);
+      arg = SCM_CAR (rest);
     }
-  return arg;
+
+  *p = arg;
+  return ret;
 }
 #undef FUNC_NAME
 
