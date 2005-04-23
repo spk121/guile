@@ -1,3 +1,8 @@
+2005-04-23  Kevin Ryde  <user42@zip.com.au>
+
+	* boot-9.scm (numerator, denominator): New functions as specified by
+	R5RS, 7 lines by Aubrey Jaffer.
+
 2005-03-08  Kevin Ryde  <user42@zip.com.au>
 
 	* slib.scm (*features*): Remove 'random, need to use the slib code for

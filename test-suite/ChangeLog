@@ -1,3 +1,9 @@
+2005-04-23  Kevin Ryde  <user42@zip.com.au>
+
+	* tests/list.test (list, make-list, cons*): New tests.
+
+	* tests/numbers.test (numerator, denominator): New tests.
+
 2005-04-02  Kevin Ryde  <user42@zip.com.au>
 
 	* tests/srfi-1.test (lset-union): New tests.
