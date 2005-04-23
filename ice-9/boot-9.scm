@@ -774,6 +774,15 @@
 (define (log10 arg)
   (/ (log arg) (log 10)))
 
+(define (numerator q)
+  (do ((num q (* 2 num)))
+      ((integer? num) num)))
+
+(define (denominator q)
+  (do ((num q (* 2 num))
+       (den (- q q -1) (* 2 den)))
+      ((integer? num) den)))
+
 
 
 ;;; {Reader Extensions}
