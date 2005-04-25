@@ -91,8 +91,9 @@
 	(equal? a (make-array 0 5))))
 
     ;; in Guile 1.6.4 and earlier this resulted in a segv
-    (pass-if-exception "noop" exception:wrong-num-args
-      (array-map! (make-array #f 5) noop)))
+    (pass-if "noop"
+      (array-map! (make-array #f 5) noop)
+      #t))
 
   (with-test-prefix "one source"
 
