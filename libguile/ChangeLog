@@ -1,3 +1,8 @@
+2005-04-25  Kevin Ryde  <user42@zip.com.au>
+
+	* ramap.c (scm_array_map_x): Allow no source args, add num args checks
+	to subr_1, subr_2, subr_2o and cxr cases.
+
 2005-04-23  Kevin Ryde  <user42@zip.com.au>
 
 	* list.c (scm_cons_star): Don't modify the rest list, it belongs to
