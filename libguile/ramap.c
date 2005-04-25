@@ -1,4 +1,4 @@
-/* Copyright (C) 1996,1998,2000,2001 Free Software Foundation, Inc.
+/* Copyright (C) 1996,1998,2000,2001,2002,2004,2005 Free Software Foundation, Inc.
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -1529,9 +1529,6 @@ SCM_DEFINE (scm_array_map_x, "array-map!", 2, 0, 1,
 {
   SCM_VALIDATE_PROC (2,proc);
 
-  if (!(SCM_CONSP (sources)))
-    SCM_WRONG_NUM_ARGS ();
-
   switch (SCM_TYP7 (proc))
     {
     default:
@@ -1539,15 +1536,25 @@ SCM_DEFINE (scm_array_map_x, "array-map!", 2, 0, 1,
       scm_ramapc (ramap, proc, dest, sources, FUNC_NAME);
       return SCM_UNSPECIFIED;
     case scm_tc7_subr_1:
+      if (! SCM_CONSP (sources))
+        SCM_WRONG_NUM_ARGS ();  /* need 1 source */
       scm_ramapc (ramap_1, proc, dest, sources, FUNC_NAME);
       return SCM_UNSPECIFIED;
     case scm_tc7_subr_2:
+      if (! (SCM_CONSP (sources) && SCM_CONSP (SCM_CDR (sources))))
+        SCM_WRONG_NUM_ARGS ();  /* need 2 sources */
+      goto subr_2o;
     case scm_tc7_subr_2o:
+      if (! SCM_CONSP (sources))
+        SCM_WRONG_NUM_ARGS ();  /* need 1 source */
+    subr_2o:
       scm_ramapc (ramap_2o, proc, dest, sources, FUNC_NAME);
       return SCM_UNSPECIFIED;
     case scm_tc7_cxr:
       if (!SCM_SUBRF (proc))
 	goto gencase;
+      if (! SCM_CONSP (sources))
+        SCM_WRONG_NUM_ARGS ();  /* need 1 source */
       scm_ramapc (ramap_cxr, proc, dest, sources, FUNC_NAME);
       return SCM_UNSPECIFIED;
     case scm_tc7_rpsubr:
