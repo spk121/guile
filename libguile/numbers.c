@@ -3738,7 +3738,7 @@ scm_divide (SCM x, SCM y)
     } else if (SCM_COMPLEXP (x)) {
       double r = SCM_COMPLEX_REAL (x);
       double i = SCM_COMPLEX_IMAG (x);
-      if (r <= i) {
+      if (fabs(r) <= fabs(i)) {
 	double t = r / i;
 	double d = i * (1.0 + t * t);
 	return scm_make_complex (t / d, -1.0 / d);
@@ -3782,7 +3782,7 @@ scm_divide (SCM x, SCM y)
       {
 	double r = SCM_COMPLEX_REAL (y);
 	double i = SCM_COMPLEX_IMAG (y);
-	if (r <= i) {
+        if (fabs(r) <= fabs(i)) {
 	  double t = r / i;
 	  double d = i * (1.0 + t * t);
 	  return scm_make_complex ((a * t) / d,  -a / d);
@@ -3873,7 +3873,7 @@ scm_divide (SCM x, SCM y)
     } else if (SCM_COMPLEXP (y)) {
       double ry = SCM_COMPLEX_REAL (y);
       double iy = SCM_COMPLEX_IMAG (y);
-      if (ry <= iy) {
+      if (fabs(ry) <= fabs(iy)) {
 	double t = ry / iy;
 	double d = iy * (1.0 + t * t);
 	return scm_make_complex ((rx * t + ix) / d, (ix * t - rx) / d);
