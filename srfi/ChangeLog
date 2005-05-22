@@ -1,3 +1,18 @@
+2005-05-22  Marius Vollmer  <mvo@zagadka.de>
+
+	* srfi-13.c: (scm_string_any, scm_string_every,
+	scm_string_to_listS, scm_string_trim, scm_string_trim_right,
+	scm_string_trim_both, scm_string_compare, scm_string_compare_ci,
+	scm_string_eq, scm_string_neq, scm_string_lt, scm_string_gt,
+	scm_string_le, scm_string_ge, scm_string_ci_eq, scm_string_ci_neq,
+	scm_string_ci_lt, scm_string_ci_gt, scm_string_ci_le,
+	scm_string_ci_ge, scm_string_indexS, scm_string_index_right,
+	scm_string_skip, scm_string_skip_right, scm_string_count,
+	scm_string_map, scm_string_map_x, scm_string_fold,
+	scm_string_fold_right, scm_string_for_each, scm_string_filter,
+	scm_string_delete): Use "unsigned char" instead of "char" so that
+	non-ASCII characters can be dealt with.  Thanks to Alexey Voinov!
+
 2005-04-02  Kevin Ryde  <user42@zip.com.au>
 
 	* srfi-1.scm (lset-union): Rewrite to accumulate result by consing in
