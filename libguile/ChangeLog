@@ -1,3 +1,9 @@
+2005-06-06  Kevin Ryde  <user42@zip.com.au>
+
+	* strop.c (scm_string_split): Compare char/char in scan.  Mixing an
+	unsigned int SCM_CHAR and a char string meant an 8-bit char was never
+	matched.
+
 2005-04-30  Kevin Ryde  <user42@zip.com.au>
 
 	* numbers.c (scm_divide): Correction to 1/complex and <any>/complex,
