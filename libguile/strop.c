@@ -549,7 +549,7 @@ SCM_DEFINE (scm_string_split, "string-split", 2, 0, 0,
 {
   long idx, last_idx;
   char * p;
-  int ch;
+  char ch;
   SCM res = SCM_EOL;
 
   SCM_VALIDATE_STRING (1, str);
