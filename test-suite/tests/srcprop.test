@@ -78,3 +78,24 @@
 	(let ((t (cons 3 4)))
 	  (set-source-properties! t (source-properties s))
 	  (not (null? (source-properties t))))))))
+
+;;;
+;;; set-source-property!
+;;;
+
+(with-test-prefix "set-source-property!"
+  (read-enable 'positions)
+  (let ((s (read (open-input-string "(display \"\")"))))
+    
+    (pass-if "set-source-property! before eval"
+      (set-source-property! s 'test-sym 10)
+      (eval s the-scm-module)
+      #t)
+      
+    (pass-if "set-source-property! after eval"
+      (hash-fold (lambda (x props acc)
+                   (if (eq? (source-property x 'test-sym) 10)
+                       (set-source-property! x 'test-sym 11)))
+		 0
+		 source-whash)
+      #t)))
