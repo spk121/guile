@@ -1,3 +1,10 @@
+2005-06-07  Neil Jerram  <neil@ossau.uklinux.net>
+
+	* srcprop.c (scm_source_properties): Use SCM_NECONSP instead of
+	SCM_NCONSP in arg validation.
+	(scm_set_source_properties_x): Ditto.
+	(scm_set_source_property_x): Ditto.
+
 2005-06-06  Kevin Ryde  <user42@zip.com.au>
 
 	* strop.c (scm_string_split): Compare char/char in scan.  Mixing an
