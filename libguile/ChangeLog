@@ -1,3 +1,8 @@
+2005-06-19  Han-Wen Nienhuys  <hanwen@xs4all.nl>
+
+	* guile.c (main): use pointer iso. array. This fixes compile error
+	on GCC 4. 
+
 2005-06-07  Neil Jerram  <neil@ossau.uklinux.net>
 
 	* srcprop.c (scm_source_properties): Use SCM_NECONSP instead of
