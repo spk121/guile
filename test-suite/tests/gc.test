@@ -78,3 +78,4 @@
       (gc)
       (remove-hook! after-gc-hook thunk)
       foo)))
+

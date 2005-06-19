@@ -1,4 +1,11 @@
-2005-06-19  Han-Wen Nienhuys  <hanwen@xs4all.nl>
+2005-06-10  Han-Wen Nienhuys  <hanwen@xs4all.nl>
+
+	* modules.c (s_scm_eval_closure_module): new function. Return the
+	module inside an eval-closure.
+
+	* gc.c (scm_init_storage): make scm_stand_in_procs a weak_key hash
+	table. This means that procedure properties are GC'd if the
+	procedure dies.
 
 	* guile.c (main): use pointer iso. array. This fixes compile error
 	on GCC 4. 

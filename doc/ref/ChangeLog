@@ -1,3 +1,8 @@
+2004-08-16  Han-Wen Nienhuys   <hanwen@xs4all.nl>
+
+	* gh.texi (Defining new Scheme procedures in C): remove : - note:
+	causes spurious info reference.
+
 2004-09-07  Kevin Ryde  <user42@zip.com.au>
 
 	* posix.texi (System Identification): Remove software-type, it doesn't

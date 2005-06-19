@@ -258,7 +258,7 @@
 
 (define (environment-module env)
   (let ((closure (and (pair? env) (car (last-pair env)))))
-    (and closure (procedure-property closure 'module))))
+    (and closure (eval-closure-module closure))))
 
 
 ;;; {Records}
@@ -1063,10 +1063,12 @@
   (let ((setter (record-modifier module-type 'eval-closure)))
     (lambda (module closure)
       (setter module closure)
-      ;; Make it possible to lookup the module from the environment.
-      ;; This implementation is correct since an eval closure can belong
-      ;; to maximally one module.
-      (set-procedure-property! closure 'module module))))
+      
+
+      ;; do not set procedure properties on closures.
+      ;; since procedure properties are weak-hashes, they cannot
+      ;; have cyclical data, otherwise the data cannot be GC-ed.
+      )))
 
 (begin-deprecated
  (define (eval-in-module exp mod)

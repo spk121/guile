@@ -25,7 +25,6 @@ exec ${GUILE-guile} -l $0 -c "(apply $main (cdr (command-line)))" "$@"
 ;;; Author: Michael Livshin
 
 ;;; Code:
-
 (define-module (scripts snarf-check-and-output-texi)
     :use-module (ice-9 streams)
     :use-module (ice-9 match)
