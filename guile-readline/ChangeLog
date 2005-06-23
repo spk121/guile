@@ -1,7 +1,7 @@
 2005-06-24  Kevin Ryde  <user42@zip.com.au>
 
-	* guile-readline/ice-9/readline.scm (readline-options-interface):
-	Export this, for use by readline-set! macro.  Reported by Alan Grover.
+	* ice-9/readline.scm (readline-options-interface): Export this, for
+	use by readline-set! macro.  Reported by Alan Grover.
 	
 2004-08-29  Rob Browning  <rlb@defaultvalue.org>
 
