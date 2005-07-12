@@ -1,5 +1,5 @@
 /* ltdl.h -- generic dlopen functions
-   Copyright (C) 1998-2000, 2002 Free Software Foundation, Inc.
+   Copyright (C) 1998-2000, 2002, 2005 Free Software Foundation, Inc.
    Originally by Thomas Tanner <tanner@ffii.org>
    This file is part of GNU Libtool.
 
@@ -211,10 +211,7 @@ LT_SCOPE  void	   (*lt_dlfree)		LT_PARAMS((lt_ptr ptr));
 
 /* A preopened symbol. Arrays of this type comprise the exported
    symbols for a dlpreopened module. */
-typedef struct SCM_INSERTED_DLSYMLIST_STRUCT_DECL {
-  const char *name;
-  lt_ptr      address;
-} lt_dlsymlist;
+typedef struct scm_i_lt_dlsymlist_struct lt_dlsymlist;
 
 SCMLTXT	int	lt_dlpreload	LT_PARAMS((const lt_dlsymlist *preloaded));
 SCMLTXT	int	lt_dlpreload_default
