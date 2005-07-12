@@ -1,3 +1,9 @@
+2005-07-12  Kevin Ryde  <user42@zip.com.au>
+
+	* guile-ltdl.h, raw-ltdl.h (scm_lt_dlsymlist): Define the struct in
+	full in guile-ltdl.h, gcc 4 objects to the use of an undefined struct
+	in libguile/guile.c main().
+
 2003-10-12  Rob Browning  <rlb@defaultvalue.org>
 
 	* raw-ltdl.c: merged changes from libtool 1.5.  Looks like most of
