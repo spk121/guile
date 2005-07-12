@@ -1,5 +1,5 @@
 /* guile-ltdl.h -- dlopen function actually used by guile
-   Copyright (C) 1998-2000, 2002 Free Software Foundation, Inc.
+   Copyright (C) 1998-2000, 2002, 2005 Free Software Foundation, Inc.
 
 This library is free software; you can redistribute it and/or
 modify it under the terms of the GNU Lesser General Public
@@ -27,8 +27,11 @@ Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 #define SCM_LTDL_H 1
 
 typedef struct scm_i_lt_dlhandle_struct *scm_lt_dlhandle;
-typedef struct scm_i_lt_dlsymlist_struct scm_lt_dlsymlist;
 typedef void * scm_lt_ptr;
+typedef struct scm_i_lt_dlsymlist_struct {
+  const char *name;
+  scm_lt_ptr address;
+} scm_lt_dlsymlist;
 
 void            scm_lt_dlpreload_default (const scm_lt_dlsymlist *preloads);
 int             scm_lt_dlinit (void);
