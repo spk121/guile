@@ -118,7 +118,6 @@ extern SCM scm_current_module_lookup_closure (void);
 extern SCM scm_current_module_transformer (void);
 extern SCM scm_eval_closure_lookup (SCM eclo, SCM sym, SCM definep);
 extern SCM scm_standard_eval_closure (SCM module);
-extern SCM scm_eval_closure_module (SCM closure);
 extern SCM scm_standard_interface_eval_closure (SCM module);
 extern SCM scm_get_pre_modules_obarray (void);
 extern SCM scm_lookup_closure_module (SCM proc);
