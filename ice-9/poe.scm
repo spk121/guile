@@ -1,6 +1,6 @@
 ;;; installed-scm-file
 
-;;;; 	Copyright (C) 1996, 2001 Free Software Foundation, Inc.
+;;;; 	Copyright (C) 1996, 2001, 2003 Free Software Foundation, Inc.
 ;;;; 
 ;;;; This program is free software; you can redistribute it and/or modify
 ;;;; it under the terms of the GNU General Public License as published by
@@ -83,17 +83,20 @@
 			(cdr arg-list))))))
     it))
 
-(define (funcq-assoc arg-list alist)
-  (let ((it (and alist
-		 (let and-map ((key arg-list)
-			       (entry (caar alist)))
-		   (or (and (and (not key) (not entry))
-			    (car alist))
-		       (and key entry
-			    (eq? (car key) (car entry))
-			    (and-map (cdr key) (cdr entry))))))))
-    it))
+;; return true if lists X and Y are the same length and each element is `eq?'
+(define (eq?-list x y)
+  (if (null? x)
+      (null? y)
+      (and (not (null? y))
+	   (eq? (car x) (car y))
+	   (eq?-list (cdr x) (cdr y)))))
 
+(define (funcq-assoc arg-list alist)
+  (if (null? alist)
+      #f
+      (if (eq?-list arg-list (caar alist))
+	  (car alist)
+	  (funcq-assoc arg-list (cdr alist)))))
 
 
 (define (pure-funcq base-func)
