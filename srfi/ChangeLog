@@ -1,3 +1,7 @@
+2005-08-19  Kevin Ryde  <user42@zip.com.au>
+
+	* srfi-19.scm (priv:leap-second-table): Add new 2005 leap second.
+
 2005-05-22  Marius Vollmer  <mvo@zagadka.de>
 
 	* srfi-13.c: (scm_string_any, scm_string_every,
