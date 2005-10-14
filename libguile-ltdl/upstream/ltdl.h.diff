@@ -1,9 +1,9 @@
---- ./ltdl.h	2003-10-12 12:43:05.000000000 -0500
-+++ raw-ltdl.guilemod.h	2003-10-12 13:13:55.000000000 -0500
+--- ./ltdl.h	2005-05-23 13:15:32.000000000 -0700
++++ raw-ltdl.guilemod.h	2005-10-13 22:58:45.000000000 -0700
 @@ -1,5 +1,5 @@
  /* ltdl.h -- generic dlopen functions
 -   Copyright (C) 1998-2000 Free Software Foundation, Inc.
-+   Copyright (C) 1998-2000, 2002 Free Software Foundation, Inc.
++   Copyright (C) 1998-2000, 2002, 2005 Free Software Foundation, Inc.
     Originally by Thomas Tanner <tanner@ffii.org>
     This file is part of GNU Libtool.
  
@@ -25,7 +25,19 @@
  /* LTDL_BEGIN_C_DECLS should be used at the beginning of your declarations,
     so that C++ compilers don't mangle their names.  Use LTDL_END_C_DECLS at
     the end of C declarations. */
-@@ -341,21 +339,6 @@
+@@ -213,10 +211,7 @@
+ 
+ /* A preopened symbol. Arrays of this type comprise the exported
+    symbols for a dlpreopened module. */
+-typedef struct {
+-  const char *name;
+-  lt_ptr      address;
+-} lt_dlsymlist;
++typedef struct scm_i_lt_dlsymlist_struct lt_dlsymlist;
+ 
+ extern	int	lt_dlpreload	LT_PARAMS((const lt_dlsymlist *preloaded));
+ extern	int	lt_dlpreload_default
+@@ -341,21 +336,6 @@
  
  
  
