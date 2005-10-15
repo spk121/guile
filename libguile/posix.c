@@ -797,7 +797,8 @@ SCM_DEFINE (scm_ctermid, "ctermid", 0, 0, 0,
 	    "terminal for the current process.")
 #define FUNC_NAME s_scm_ctermid
 {
-  char *result = ctermid (NULL);
+  char result[L_ctermid];
+  ctermid (result);
   if (*result == '\0')
     SCM_SYSERROR;
   return scm_makfrom0str (result);
