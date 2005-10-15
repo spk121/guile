@@ -1,3 +1,25 @@
+2005-10-14  Rob Browning  <rlb@defaultvalue.org>
+
+	* srfi-13.c:
+	(scm_string_any, scm_string_every, scm_string_to_listS)
+	(scm_string_trim, scm_string_trim_right)
+	(scm_string_trim_right, scm_string_trim_both)
+	(scm_string_compare, scm_string_compare_ci, scm_string_eq)
+	(scm_string_neq, scm_string_lt, scm_string_gt)
+	(scm_string_le, scm_string_ge, scm_string_ci_eq)
+	(scm_string_ci_neq, scm_string_ci_lt, scm_string_ci_gt)
+	(scm_string_ci_le, scm_string_ci_ge, scm_string_indexS)
+	(scm_string_index_right, scm_string_skip)
+	(scm_string_skip_right, scm_string_count, scm_string_map)
+	(scm_string_map_x, scm_string_fold, scm_string_fold_right)
+	(scm_string_for_each, scm_string_filter, scm_string_delete): Fix
+	char vs unsigned char mismatches in various function calls.  For
+	the most part, this means adding a char * alias to existing
+	unsigned char * for calls to SCM_VALIDATE_SUBSTRING_SPEC_COPY
+	which won't accept a simple coercion and requires a char *.  There
+	were also some calls to scm_mem2string() and SCM_STRING_CHARS()
+	that needed to be fixed.
+	
 2005-08-19  Kevin Ryde  <user42@zip.com.au>
 
 	* srfi-19.scm (priv:leap-second-table): Add new 2005 leap second.

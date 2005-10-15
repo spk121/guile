@@ -1,3 +1,31 @@
+2005-10-14  Rob Browning  <rlb@defaultvalue.org>
+
+	* socket.c: Use socklen_t for socket calls whenever it is
+	available and appropriate.  This fixes some type problems on
+	systems (recent linux) where int wasn't quite right.  If
+	HAVE_SOCKLEN_T isn't defined, then revert to int.  This is a
+	short-term fix, local to socket.c, and will be addressed more
+	generally in the next major release.
+	(ipv6_net_to_num): Change the argument type from "const char *" to
+	"const unsigned char *" to match the sign of the s6_addr type.
+	(ipv6_num_to_net): Change the argument type from "const char *" to
+	"const unsigned char *" to match its usage.
+	(s_scm_inet_pton): Use unsigned type when calling ipv6_net_to_num.
+	(s_scm_inet_ntop): Use unsigned type when calling ipv6_net_to_num.
+	(s_scm_getsockopt): Use scm_socklen_t rather than int.
+	(s_scm_accept): Use socklen_t rather than int.
+	(s_scm_getsockname): Use socklen_t rather than int.
+	(s_scm_getpeername): Use socklen_t rather than int.
+	(s_scm_recvfrom): Use socklen_t rather than int.
+
+	* rdelim.c (s_scm_read_line): Initialize slen to make gcc happy.
+
+	* posix.c (s_scm_ctermid): Use a fixed size buffer of length
+	L_ctermid for the ctermid() result rather than passing NULL and
+	expecting a static pointer.  This fixes a problem caused when
+	glibc sets a __nonnull attribute for ctermid() whenever
+	__USE_XOPEN is defined.
+
 2005-08-12  Kevin Ryde  <user42@zip.com.au>
 
 	* strports.c (st_flush): Increase buffer by 1.5x when growing, to

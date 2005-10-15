@@ -1,3 +1,8 @@
+2005-10-14  Rob Browning  <rlb@defaultvalue.org>
+
+	* configure.in: Check for socklen_t and set HAVE_SOCKLEN_T if it's
+	available.  This is required by the socket.c compile fixes.
+
 2004-12-21  Rob Browning  <rlb@defaultvalue.org>
 
 	* Guile 1.6.7 released.
