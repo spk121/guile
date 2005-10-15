@@ -73,6 +73,12 @@
 #include <arpa/inet.h>
 #endif
 
+/* Temporary hack -- in the next major Guile release, this will be
+   handled more generally. */
+#ifndef HAVE_SOCKLEN_T
+typedef int socklen_t;
+#endif
+
 #if defined (HAVE_UNIX_DOMAIN_SOCKETS) && !defined (SUN_LEN)
 #define SUN_LEN(ptr) ((size_t) (((struct sockaddr_un *) 0)->sun_path) \
 		      + strlen ((ptr)->sun_path))
@@ -278,12 +284,12 @@ SCM_DEFINE (scm_inet_makeaddr, "inet-makeaddr", 2, 0, 0,
 
 /* convert a 128 bit IPv6 address in network order to a host ordered
    SCM integer.  */
-static SCM ipv6_net_to_num (const char *src)
+static SCM ipv6_net_to_num (const unsigned char *src)
 {
   int big_digits = 128 / SCM_BITSPERDIG;
   const int bytes_per_dig = SCM_BITSPERDIG / 8;
-  char addr[16];
-  char *ptr = addr;
+  unsigned char addr[16];
+  unsigned char *ptr = addr;
   SCM result;
 
   memcpy (addr, src, 16);
@@ -317,7 +323,7 @@ static SCM ipv6_net_to_num (const char *src)
 
 /* convert a host ordered SCM integer to a 128 bit IPv6 address in
    network order.  */
-static void ipv6_num_to_net (SCM src, char *dst)
+static void ipv6_num_to_net (SCM src, unsigned char *dst)
 {
   if (SCM_INUMP (src))
     {
@@ -364,7 +370,7 @@ SCM_DEFINE (scm_inet_pton, "inet-pton", 2, 0, 0,
 {
   int af;
   char *src;
-  char dst[16];
+  unsigned char dst[16];
   int rv;
 
   SCM_VALIDATE_INUM_COPY (1, family, af);
@@ -378,7 +384,7 @@ SCM_DEFINE (scm_inet_pton, "inet-pton", 2, 0, 0,
   if (af == AF_INET)
     return scm_ulong2num (ntohl (*(uint32_t *) dst));
   else
-    return ipv6_net_to_num ((char *) dst);
+    return ipv6_net_to_num (dst);
 }
 #undef FUNC_NAME
 #endif
@@ -403,7 +409,7 @@ SCM_DEFINE (scm_inet_ntop, "inet-ntop", 2, 0, 0,
 #else
   char dst[46];
 #endif
-  char addr6[16];
+  unsigned char addr6[16];
 
   SCM_VALIDATE_INUM_COPY (1, family, af);
   SCM_ASSERT_RANGE (1, family, af == AF_INET || af == AF_INET6);
@@ -497,10 +503,10 @@ SCM_DEFINE (scm_getsockopt, "getsockopt", 3, 0, 0,
   /* size of optval is the largest supported option.  */
 #ifdef HAVE_STRUCT_LINGER
   char optval[sizeof (struct linger)];
-  int optlen = sizeof (struct linger);
+  socklen_t optlen = sizeof (struct linger);
 #else
   char optval[sizeof (size_t)];
-  int optlen = sizeof (size_t);
+  socklen_t optlen = sizeof (size_t);
 #endif
   int ilevel;
   int ioptname;
@@ -1010,7 +1016,7 @@ SCM_DEFINE (scm_accept, "accept", 1, 0, 0,
   int newfd;
   SCM address;
   SCM newsock;
-  int addr_size = MAX_ADDR_SIZE;
+  socklen_t addr_size = MAX_ADDR_SIZE;
   char max_addr[MAX_ADDR_SIZE];
   struct sockaddr *addr = (struct sockaddr *) max_addr;
 
@@ -1034,7 +1040,7 @@ SCM_DEFINE (scm_getsockname, "getsockname", 1, 0, 0,
 #define FUNC_NAME s_scm_getsockname
 {
   int fd;
-  int addr_size = MAX_ADDR_SIZE;
+  socklen_t addr_size = MAX_ADDR_SIZE;
   char max_addr[MAX_ADDR_SIZE];
   struct sockaddr *addr = (struct sockaddr *) max_addr;
 
@@ -1056,7 +1062,7 @@ SCM_DEFINE (scm_getpeername, "getpeername", 1, 0, 0,
 #define FUNC_NAME s_scm_getpeername
 {
   int fd;
-  int addr_size = MAX_ADDR_SIZE;
+  socklen_t addr_size = MAX_ADDR_SIZE;
   char max_addr[MAX_ADDR_SIZE];
   struct sockaddr *addr = (struct sockaddr *) max_addr;
 
@@ -1170,7 +1176,7 @@ SCM_DEFINE (scm_recvfrom, "recvfrom!", 2, 3, 0,
   int offset;
   int cend;
   SCM address;
-  int addr_size = MAX_ADDR_SIZE;
+  socklen_t addr_size = MAX_ADDR_SIZE;
   char max_addr[MAX_ADDR_SIZE];
   struct sockaddr *addr = (struct sockaddr *) max_addr;
 
