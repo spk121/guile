@@ -29,6 +29,10 @@ A number of changes have been made to accomodate GCC 4.0.
 
 * Changes to Scheme functions and syntax
 
+** The r5rs numerator and denominator functions have been added.
+
+These are now available in the default environment.
+
 ** array-map! and array-map-in-order! now correctly require at least one source
 
 A mistake caused a call with just one source array to be rejected,
