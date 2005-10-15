@@ -553,6 +553,8 @@ case $guile_cv_type_float_fits_long in
   ;;
 esac
 
+AC_CHECK_TYPES([socklen_t],,,[#include <sys/socket.h>])
+AC_SUBST(HAVE_SOCKLEN_T)
 
 AC_MSG_CHECKING(for struct linger)
 AC_CACHE_VAL(scm_cv_struct_linger,
