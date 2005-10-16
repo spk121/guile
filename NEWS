@@ -21,11 +21,38 @@ Changes since Guile 1.6.7 (changes in 1.6.8):
 A number of changes have been made to accomodate GCC 4.0.
 
 * Changes to the stand-alone interpreter
+
+** `readline-set!' now works.
+
 * Changes to Scheme functions and syntax
 
 ** The r5rs numerator and denominator functions have been added.
 
 These are now available in the default environment.
+
+** `/' fix to <any>/0-<y>i complex division case, avoiding divide-by-zero
+
+** `array-map!' fix, accepts just a destination array again
+
+** `cons*', `list' fix to not clobber source list when called via `apply'
+
+** `string-index', `split-string' and other string func fixes for 8-bit chars
+
+** `number->string' fix for parsing of polar complex number with invalid angle
+
+** (ice-9 poe) bug fixes
+
+** srfi-1 `lset-adjoin' fix to actually use given equality procedure
+
+** srfi-1 `lset-union' fixes to cons in the order specified by the SRFI
+
+** srfi-1 `lset=', `list=' fix to equality procedure argument order
+
+** srfi-17 avoid deprecation warnings about reexport
+
+** srfi-19 new 2005 leap second
+
+** srfi-39 new parameter versions of `current-output-port' etc, per SRFI
 
 * Changes to the C interface 
 
