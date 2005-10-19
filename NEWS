@@ -54,6 +54,8 @@ These are now available in the default environment.
 
 ** srfi-39 new parameter versions of `current-output-port' etc, per SRFI
 
+** make-stack can now correctly construct a stack from a continuation.
+
 * Changes to the C interface 
 
 
