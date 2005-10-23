@@ -1576,9 +1576,6 @@ They are displayed as a sequence of @code{0}s and
 @example
 (make-uniform-vector 8 #t #f) @result{}
 #*00000000
-
-#b(#t #f #t) @result{}
-#*101
 @end example
 
 @deffn {Scheme Procedure} bit-count b bitvector
