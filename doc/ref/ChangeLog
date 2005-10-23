@@ -1,7 +1,7 @@
 2005-10-24  Kevin Ryde  <user42@zip.com.au>
 
 	* scheme-compound.texi (Bit Vectors): Remove #b(#t ...) example, that
-	syntax was never implemented.
+	syntax was never implemented.  Reported by Ludovic Courtès.
 
 2004-08-16  Han-Wen Nienhuys   <hanwen@xs4all.nl>
 
