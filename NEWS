@@ -56,6 +56,13 @@ These are now available in the default environment.
 
 ** make-stack can now correctly construct a stack from a continuation.
 
+** Output string port speed problems have been improved
+
+Output string port (open-output-string, etc) writing was very slow at
+about 50 to 100 kbytes or above.  This affected various things, in
+particular regexp-substitute/global on a large string, and stack
+backtraces with a large object.
+
 * Changes to the C interface 
 
 
