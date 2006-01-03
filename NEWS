@@ -44,7 +44,16 @@ These are now available in the default environment.
 
 ** srfi-1 `lset-adjoin' fix to actually use given equality procedure
 
-** srfi-1 `lset-union' fixes to cons in the order specified by the SRFI
+** srfi-1 `lset-union' fixes to operate in the way specified by the SRFI
+
+Note in particular that if the first list is empty then the first
+non-empty is the starting point, and duplicates are not cast out of
+that.  So
+
+	(lset-union = '() '(1 1 1)) => '(1 1 1)
+
+where previously it was '(1).  This, though perhaps unhelpful, comes
+from the SRFI spec (that if list A is empty then the result is B).
 
 ** srfi-1 `lset=', `list=' fix to equality procedure argument order
 
