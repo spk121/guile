@@ -72,6 +72,12 @@ about 50 to 100 kbytes or above.  This affected various things, in
 particular regexp-substitute/global on a large string, and stack
 backtraces with a large object.
 
+** Bug fix: printing values no longer protects them from GC
+
+A bug in the printing code used to mean that printing a value (using
+`display' or `write') would incorrectly protect that value from GC for
+a while afterwards.  This has now been fixed.
+
 * Changes to the C interface 
 
 

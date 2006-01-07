@@ -161,7 +161,8 @@ SCM_DEFINE (scm_print_options, "print-options-interface", 0, 1, 0,
  */
 #define PUSH_REF(pstate, obj) \
 do { \
-  pstate->ref_stack[pstate->top++] = (obj); \
+  pstate->ref_stack[pstate->top] = (obj); \
+  pstate->top++; \
   if (pstate->top == pstate->ceiling) \
     grow_ref_stack (pstate); \
 } while(0)
@@ -183,7 +184,11 @@ do { \
   PUSH_REF(pstate, obj); \
 } while(0)
 
-#define EXIT_NESTED_DATA(pstate) { --pstate->top; }
+#define EXIT_NESTED_DATA(pstate) \
+do { \
+  --pstate->top; \
+  pstate->ref_stack[pstate->top] = SCM_UNDEFINED; \
+} while(0)
 
 SCM scm_print_state_vtable;
 
