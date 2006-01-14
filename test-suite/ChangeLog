@@ -1,3 +1,8 @@
+2006-01-13  Rob Browning  <rlb@defaultvalue.org>
+
+	* tests/slib.test: Pass as32 to create-array rather than As32 in
+	order to match the current SLIB definition.
+
 2005-10-24  Kevin Ryde  <user42@zip.com.au>
 
 	* tests/time.test (strftime %Z): Disable this test, its assumptions

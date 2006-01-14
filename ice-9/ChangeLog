@@ -1,3 +1,13 @@
+2006-01-13  Rob Browning  <rlb@defaultvalue.org>
+
+	* Makefile.am (ice9_sources): Add slib-old.scm.
+
+	* slib.scm: Rewrite to rely as much as possible (almost entirely)
+	on SLIB's load code.  Use the old approach (now in slib-old.scm)
+	iff *guile-use-old-ice-9-slib* is defined and not false.
+
+	* slib-old.scm: Renamed from slib.scm.
+
 2005-08-13  Kevin Ryde  <user42@zip.com.au>
 
 	* poe.scm (funcq-assoc): Rewrite, don't assume '() is false, and

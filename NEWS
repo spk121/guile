@@ -26,6 +26,20 @@ A number of changes have been made to accomodate GCC 4.0.
 
 * Changes to Scheme functions and syntax
 
+** Guile supports newer versions of SLIB more cleanly.
+
+Guile now relies on the upstream SLIB code (guile.init) to handle the
+load process.  Previously Guile relied on its own copy of that code,
+which was incorrect, at least for more recent versions of SLIB.
+
+If you still need to use Guile with an older version of SLIB, and the
+new approach doesn't work for you, please add the following definition
+to your code before (ice-9 slib) is loaded for the first time:
+
+  (define *guile-use-old-ice-9-slib* #t)
+
+This will cause Guile to revert to the old load behavior.
+
 ** The r5rs numerator and denominator functions have been added.
 
 These are now available in the default environment.
