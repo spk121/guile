@@ -312,5 +312,5 @@
 	;; create-array isn't in old slib, but when it exists it should work
 	(if (defined? 'create-array)
 	    (with-test-prefix "create-array"
-	      (pass-if "As32 create"
-		(array? (create-array (As32 0) '(0 1)))))))))
+	      (pass-if "as32 create"
+		(array? (create-array (as32 0) '(0 1)))))))))
