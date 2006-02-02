@@ -1,4 +1,4 @@
-/* Copyright (C) 1995,1996,1997,2000,2001,2002,2003,2004 Free Software Foundation, Inc.
+/* Copyright (C) 1995,1996,1997,2000,2001,2002,2003,2004,2006 Free Software Foundation, Inc.
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -543,6 +543,16 @@ SCM_PROC (s_list, "list", 0, 0, 1, scm_list_copy);
 SCM_SNARF_DOCS (register, scm_list_copy, "list", (SCM objs), 0, 0, 1,
                 "Return a list containing @var{objs}, the arguments to\n"
                 "@code{list}.")
+
+/* This used to be the code for "list", but it's wrong when used via apply
+   (it should copy the list).  It seems pretty unlikely anyone would have
+   been using this from C code, since it's a no-op, but keep it for strict
+   binary compatibility.  */
+SCM
+scm_list (SCM objs)
+{
+  return objs;
+}
 
 
 

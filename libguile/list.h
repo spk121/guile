@@ -2,7 +2,7 @@
 
 #ifndef LISTH
 #define LISTH
-/*	Copyright (C) 1995,1996,1997, 2000, 2001 Free Software Foundation, Inc.
+/*	Copyright (C) 1995,1996,1997, 2000, 2001, 2006 Free Software Foundation, Inc.
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -54,6 +54,7 @@ extern SCM scm_list_3 (SCM e1, SCM e2, SCM e3);
 extern SCM scm_list_4 (SCM e1, SCM e2, SCM e3, SCM e4);
 extern SCM scm_list_5 (SCM e1, SCM e2, SCM e3, SCM e4, SCM e5);
 extern SCM scm_list_n (SCM elt, ...);
+extern SCM scm_list (SCM objs);
 extern SCM scm_list_head (SCM lst, SCM k);
 extern SCM scm_list (SCM objs);
 extern SCM scm_cons_star (SCM arg, SCM objs);
