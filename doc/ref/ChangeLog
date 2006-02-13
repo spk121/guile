@@ -1,3 +1,8 @@
+2006-02-13  Marius Vollmer  <mvo@zagadka.de>
+
+	* scheme-utility.texi (Object Properties): Removed confusing
+	paragraph about 'name' property.
+
 2005-10-24  Kevin Ryde  <user42@zip.com.au>
 
 	* scheme-compound.texi (Bit Vectors): Remove #b(#t ...) example, that
