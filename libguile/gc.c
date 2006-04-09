@@ -2031,27 +2031,18 @@ scm_must_realloc (void *where,
 		  const char *what)
 {
   void *ptr;
-    
-  if (size <= old_size)
-    return where;
 
+  scm_done_free (old_size);
+  scm_done_malloc (size);
 
   /*
     run a slight risk here, in the unlikely event that realloc would
     return NULL, but wouldn't if we did the GC in check_mtrigger.
   */
-  if (scm_mallocated  < 0)
-    /* The byte count of allocated objects has overflowed.  This is
-       probably because you forgot to report the correct size of freed
-       memory in some of your smob free methods. */
-    abort ();
-
   /*
     We don't want to get 0 back if we try to alloc 0 bytes, because
     scm_must_free() won't take NULL.
   */
-  scm_mallocated += size - old_size;
-
   /*
     The realloc must be after check_mtrigger(), since realloc might
     munge the old block of memory, which will be scanned by GC.
