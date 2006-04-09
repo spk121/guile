@@ -1,3 +1,8 @@
+2006-04-09  Kevin Ryde  <user42@zip.com.au>
+
+	* tests/gc.test (scm_must_realloc): Exercise `malloced' change on
+	shrinking blocks by bignum trim.
+
 2006-01-13  Rob Browning  <rlb@defaultvalue.org>
 
 	* tests/slib.test: Pass as32 to create-array rather than As32 in
