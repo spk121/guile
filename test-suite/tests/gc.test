@@ -79,3 +79,42 @@
       (remove-hook! after-gc-hook thunk)
       foo)))
 
+(with-test-prefix "scm_must_realloc"
+
+  (define (malloced-steady thunk)
+    (define old-malloced -1)
+    (define new-malloced -1)
+
+    (let more ((attempt 0))
+      (if (> attempt 30)
+	  (begin
+	    (format #t "bytes-malloced kept changing: ~a ~a\n"
+		    old-malloced new-malloced)
+	    #f)
+	  (begin
+	    (set! old-malloced new-malloced)
+
+	    (gc)
+	    (thunk)
+	    (thunk)
+	    (thunk)
+	    (gc)
+	    (gc)
+	    (set! new-malloced (assoc-ref (gc-stats) 'bytes-malloced))
+
+	    (if (= old-malloced new-malloced)
+		#t
+		(more (1+ attempt)))))))
+
+  ;; In guile 1.6.7 and earlier, scm_must_realloc didn't adjust
+  ;; scm_mallocated when reducing the size of a block, so when high zeros on
+  ;; a bignum were trimmed by scm_i_adjbig the mallocated count ended up too
+  ;; high after gc.
+  ;;
+  (with-test-prefix "bignum string->number trim"
+    (do ((i 64 (1+ i)))
+	((> i 80))
+      (pass-if i
+	(malloced-steady
+	 (lambda ()
+	   (string->number (string-append "1" (make-string i #\0)) 16)))))))
