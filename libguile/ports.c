@@ -497,6 +497,8 @@ scm_remove_from_port_table (SCM port)
   if (p->putback_buf)
     scm_must_free (p->putback_buf);
   scm_must_free (p);
+  scm_done_free (sizeof (*p));  /* matching scm_must_malloc above */
+
   /* Since we have just freed slot i we can shrink the table by moving
      the last entry to that slot... */
   if (i < scm_port_table_size - 1)
