@@ -1,3 +1,8 @@
+2006-04-09  Kevin Ryde  <user42@zip.com.au>
+
+	* ports.c (scm_remove_from_port_table): Report freed ptab entry size
+	with scm_done_free, matching scm_must_malloc in scm_add_to_port_table.
+
 2006-04-06  Kevin Ryde  <user42@zip.com.au>
 
 	* fports.c (scm_setvbuf): Fix for not _IOLBF, clear SCM_BUFLINE
