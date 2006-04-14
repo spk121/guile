@@ -1,3 +1,11 @@
+2006-04-13  Rob Browning  <rlb@defaultvalue.org>
+
+	* GUILE-VERSION
+	(LIBQTHREADS_INTERFACE_REVISION): increment for release.
+	(LIBGUILE_INTERFACE_REVISION): increment for release.
+	(LIBGUILE_SRFI_SRFI_4_INTERFACE_REVISION): increment for release.
+	(LIBGUILE_SRFI_SRFI_13_14_INTERFACE_REVISION): increment for release.
+
 2005-10-15  Rob Browning  <rlb@defaultvalue.org>
 
 	* Guile 1.6.8 release candidate 0.
