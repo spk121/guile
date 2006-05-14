@@ -255,21 +255,21 @@ static void
 skip_scsh_block_comment (SCM port)
 #define FUNC_NAME "skip_scsh_block_comment"
 {
-  /* Is this portable?  Dear God, spare me from the non-eight-bit
-     characters.  But is it tasteful?  */
-  long history = 0;
+  int bang_seen = 0;
 
   for (;;)
     {
       int c = scm_getc (port);
-
+      
       if (c == EOF)
 	SCM_MISC_ERROR ("unterminated `#! ... !#' comment", SCM_EOL);
-      history = ((history << 8) | (c & 0xff)) & 0xffffffff;
 
-      /* Were the last four characters read "\n!#\n"?  */
-      if (history == (('\n' << 24) | ('!' << 16) | ('#' << 8) | '\n'))
+      if (c == '!')
+	bang_seen = 1;
+      else if (c == '#' && bang_seen)
 	return;
+      else
+	bang_seen = 0;
     }
 }
 #undef FUNC_NAME
