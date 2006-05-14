@@ -1,3 +1,9 @@
+2006-05-14  Rob Browning  <rlb@defaultvalue.org>
+
+	* read.c (skip_scsh_block_comment): Recognize "!#" everywhere, not
+	just on a line of its own.  (Backport 1.8 fix by Marius Vollmer
+	<mvo@zagadka.de>.)
+
 2006-04-09  Kevin Ryde  <user42@zip.com.au>
 
 	* gc.c (scm_must_realloc): Actually resize down when requested, in
