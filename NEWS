@@ -26,6 +26,12 @@ A number of changes have been made to accomodate GCC 4.0.
 
 * Changes to Scheme functions and syntax
 
+** Guile now allows multiple line comments to end without a trailing newline.
+
+Previously Guile would throw an exception if a multiple line comment
+ended without a trailing newline.  Now "!#" will end a multiple line
+comment regardless of what follows.
+
 ** Guile supports newer versions of SLIB more cleanly.
 
 Guile now relies on the upstream SLIB code (guile.init) to handle the
