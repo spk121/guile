@@ -1,5 +1,5 @@
 /* guile-ltdl.h -- dlopen function actually used by guile
-   Copyright (C) 1998-2000, 2002, 2005 Free Software Foundation, Inc.
+   Copyright (C) 1998, 1999, 2000, 2002, 2005 Free Software Foundation, Inc.
 
 This library is free software; you can redistribute it and/or
 modify it under the terms of the GNU Lesser General Public
