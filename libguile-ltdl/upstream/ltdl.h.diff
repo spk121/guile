@@ -1,9 +1,9 @@
---- ./ltdl.h	2005-05-23 13:15:32.000000000 -0700
-+++ raw-ltdl.guilemod.h	2005-10-13 22:58:45.000000000 -0700
+--- ./ltdl.h	2005-06-09 15:42:56.000000000 -0700
++++ raw-ltdl.guilemod.h	2006-05-26 17:35:14.000000000 -0700
 @@ -1,5 +1,5 @@
  /* ltdl.h -- generic dlopen functions
 -   Copyright (C) 1998-2000 Free Software Foundation, Inc.
-+   Copyright (C) 1998-2000, 2002, 2005 Free Software Foundation, Inc.
++   Copyright (C) 1998, 1999, 2000, 2002, 2005 Free Software Foundation, Inc.
     Originally by Thomas Tanner <tanner@ffii.org>
     This file is part of GNU Libtool.
  
