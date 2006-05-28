@@ -1,3 +1,8 @@
+2006-05-27  Rob Browning  <rlb@defaultvalue.org>
+
+	* Makefile.am (libguile_ltdl_la_LDFLAGS): Increment library
+	revision in -version-info.
+
 2005-10-13  Rob Browning  <rlb@defaultvalue.org>
 
 	* upstream/ltdl.h.diff: Updated to match the current raw-ltdl.h.
