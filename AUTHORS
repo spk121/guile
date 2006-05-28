@@ -328,3 +328,14 @@ In the subdirectory libguile, changes to:
 
 John W. Eaton, based on code from AT&T Bell Laboratories and Bellcore:
  The complex number division method in libguile/numbers.c.
+
+Han-Wen Nienhuys (compiled via examination of ChangeLogs):
+  Changes to:
+    doc/ref/gh.texi
+    ice-9/boot-9.scm
+    libguile/chars.h
+    libguile/gc.c
+    libguile/init.c
+    libguile/modules.c
+    libguile/script.c
+    test-suite/tests/gc.test
