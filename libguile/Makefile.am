@@ -1,6 +1,6 @@
 ## Process this file with Automake to create Makefile.in
 ##
-##  	Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003, 2004 Free Software Foundation, Inc.
+##  	Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2006 Free Software Foundation, Inc.
 ##
 ##   This file is part of GUILE.
 ##
@@ -221,7 +221,7 @@ SUFFIXES = .x .doc
 	(./guile-snarf-docs $(snarfcppopts) $< | \
 	./guile_filter_doc_snarfage --filter-snarfage) > $@ || { rm $@; false; }
 
-$(DOT_X_FILES) $(EXTRA_DOT_DOC_FILES): snarf.h guile-snarf.in
+$(DOT_X_FILES) $(EXTRA_DOT_X_FILES): snarf.h guile-snarf.in
 
 $(DOT_DOC_FILES) $(EXTRA_DOT_DOC_FILES): snarf.h guile-snarf-docs.in guile_filter_doc_snarfage$(EXEEXT)
 
