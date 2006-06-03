@@ -1,3 +1,8 @@
+2006-06-04  Kevin Ryde  <user42@zip.com.au>
+
+	* Makefile.am (EXTRA_DOT_X_FILES): Typo in dependency rule, was a
+	duplicate of EXTRA_DOT_DOC_FILES.
+
 2006-05-23  Rob Browning  <rlb@defaultvalue.org>
 
 	* script.c (scm_compile_shell_switches): Update copyright.
