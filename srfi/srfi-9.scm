@@ -88,6 +88,31 @@
 
 (cond-expand-provide (current-module) '(srfi-9))
 
+(define (check-record-type rtd obj)
+  (or (eq? rtd (record-type-descriptor obj))
+      (error 'wrong-record-type obj)))
+
+;; same as boot-9.scm, but with check-record-type
+(define (record-accessor-strict rtd field-name)
+  (let* ((pos (list-index (record-type-fields rtd) field-name)))
+    (if (not pos)
+	(error 'no-such-field field-name))
+    (local-eval `(lambda (obj)
+		   (,check-record-type ,rtd obj)
+		   (struct-ref obj ,pos))
+		the-root-environment)))
+
+;; same as boot-9.scm, but with check-record-type
+(define (record-modifier-strict rtd field-name)
+  (let* ((pos (list-index (record-type-fields rtd) field-name)))
+    (if (not pos)
+	(error 'no-such-field field-name))
+    (local-eval `(lambda (obj val)
+		   (,check-record-type ,rtd obj)
+		   (struct-set! obj ,pos val))
+		the-root-environment)))
+
+
 (define-macro (define-record-type type-name constructor/field-tag
 		predicate-name . field-specs)
   `(begin
@@ -102,13 +127,13 @@
 	  (cond
 	   ((= (length spec) 2)
 	    `(define ,(cadr spec)
-	       (record-accessor ,type-name ',(car spec))))
+	       (,record-accessor-strict ,type-name ',(car spec))))
 	   ((= (length spec) 3)
 	    `(begin
 	       (define ,(cadr spec)
-		 (record-accessor ,type-name ',(car spec)))
+		 (,record-accessor-strict ,type-name ',(car spec)))
 	       (define ,(caddr spec)
-		 (record-modifier ,type-name ',(car spec)))))
+		 (,record-modifier-strict ,type-name ',(car spec)))))
 	   (else
 	    (error "invalid field spec " spec))))
 	field-specs)))
