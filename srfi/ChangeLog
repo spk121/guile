@@ -1,3 +1,11 @@
+2006-06-13  Kevin Ryde  <user42@zip.com.au>
+
+	* srfi-9.scm (define-record-type): In accessor and modifier procedures
+	generated, check that the record is the right type and throw an error
+	if not, as per srfi-9 spec.  Previously a different record type
+	resulted in #f from an accessor and silently doing nothing in
+	modifier.
+
 2005-10-14  Rob Browning  <rlb@defaultvalue.org>
 
 	* srfi-13.c:
