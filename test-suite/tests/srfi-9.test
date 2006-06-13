@@ -1,7 +1,7 @@
 ;;;; srfi-9.test --- Test suite for Guile's SRFI-9 functions. -*- scheme -*-
 ;;;; Martin Grabmueller, 2001-05-10
 ;;;;
-;;;; Copyright (C) 2001 Free Software Foundation, Inc.
+;;;; Copyright (C) 2001, 2006 Free Software Foundation, Inc.
 ;;;; 
 ;;;; This program is free software; you can redistribute it and/or modify
 ;;;; it under the terms of the GNU General Public License as published by
@@ -20,23 +20,66 @@
 
 (use-modules (srfi srfi-9))
 
+(define exception:not-a-record
+  (cons 'misc-error "^not-a-record"))
+(define exception:wrong-record-type
+  (cons 'misc-error "^wrong-record-type"))
+
+
 (define-record-type :foo (make-foo x) foo? 
   (x get-x) (y get-y set-y!))
+
+(define-record-type :bar (make-bar i j) bar? 
+  (i get-i) (i get-j set-j!))
 
 (define f (make-foo 1))
 (set-y! f 2)
 
-(with-test-prefix "record procedures"
+(define b (make-bar 123 456))
 
-  (pass-if "predicate"
+(with-test-prefix "constructor"
+
+  (pass-if-exception "foo 0 args" exception:wrong-num-args
+     (make-foo))
+  (pass-if-exception "foo 2 args" exception:wrong-num-args
+     (make-foo 1 2)))
+
+(with-test-prefix "predicate"
+
+  (pass-if "pass"
      (foo? f))
+  (pass-if "fail wrong record type"
+     (eq? #f (foo? b)))
+  (pass-if "fail number"
+     (eq? #f (foo? 123))))
 
-  (pass-if "accessor 1"
+(with-test-prefix "accessor"
+
+  (pass-if "get-x"
      (= 1 (get-x f)))
-
-  (pass-if "accessor 2"
+  (pass-if "get-y"
      (= 2 (get-y f)))
 
-  (pass-if "modifier"
+  (pass-if-exception "get-x on number" exception:not-a-record
+     (get-x 999))
+  (pass-if-exception "get-y on number" exception:not-a-record
+     (get-y 999))
+
+  ;; in guile 1.6.8 and earlier this wasn't an error
+  (pass-if-exception "get-x on bar" exception:wrong-record-type
+     (get-x b))
+  (pass-if-exception "get-y on bar" exception:wrong-record-type
+     (get-y b)))
+
+(with-test-prefix "modifier"
+
+  (pass-if "set-y!"
      (set-y! f #t)
-     (eq? #t (get-y f))))
+     (eq? #t (get-y f)))
+
+  (pass-if-exception "set-y! on number" exception:not-a-record
+     (set-y! 999 #t))
+
+  ;; in guile 1.6.8 and earlier this wasn't an error
+  (pass-if-exception "set-y! on bar" exception:wrong-record-type
+     (set-y! b 99)))
