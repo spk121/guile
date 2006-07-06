@@ -1,5 +1,5 @@
 Guile NEWS --- history of user-visible changes.
-Copyright (C) 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005 Free Software Foundation, Inc.
+Copyright (C) 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006 Free Software Foundation, Inc.
 See the end for copying conditions.
 
 Please send Guile bug reports to bug-guile@gnu.org.
@@ -10,6 +10,22 @@ Each release reports the NEWS in the following sections:
 * Changes to the stand-alone interpreter
 * Changes to Scheme functions and syntax
 * Changes to the C interface 
+
+
+Changes in 1.6.9 (since 1.6.8):
+
+* Changes to the distribution
+
+* Changes to the stand-alone interpreter
+
+* Changes to Scheme functions and syntax
+
+** srfi-9 accessor and modifier procedures have strict record type checks
+(As per the srfi-9 specification.)
+** strftime %z sign fix
+
+* Changes to the C interface 
+
 
 
 Changes since Guile 1.6.7 (changes in 1.6.8):
