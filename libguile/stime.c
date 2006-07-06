@@ -480,8 +480,10 @@ bdtime2c (SCM sbd_time, struct tm *lt, int pos, const char *subr)
   lt->tm_wday = SCM_INUM (velts[6]);
   lt->tm_yday = SCM_INUM (velts[7]);
   lt->tm_isdst = SCM_INUM (velts[8]);
+#if HAVE_STRUCT_TM_TM_GMTOFF
+  lt->tm_gmtoff = - SCM_INUM (velts[9]);
+#endif
 #ifdef HAVE_TM_ZONE
-  lt->tm_gmtoff = SCM_INUM (velts[9]);
   if (SCM_FALSEP (velts[10]))
     lt->tm_zone = NULL;
   else
@@ -692,6 +694,7 @@ SCM_DEFINE (scm_strptime, "strptime", 2, 0, 0,
 {
   struct tm t;
   char *fmt, *str, *rest;
+  long zoff;
 
   SCM_VALIDATE_STRING (1, format);
   SCM_VALIDATE_STRING (2, string);
@@ -711,6 +714,9 @@ SCM_DEFINE (scm_strptime, "strptime", 2, 0, 0,
   tm_init (tm_year);
   tm_init (tm_wday);
   tm_init (tm_yday);
+#if HAVE_STRUCT_TM_TM_GMTOFF
+  tm_init (tm_gmtoff);
+#endif
 #undef tm_init
 
   t.tm_isdst = -1;
@@ -725,7 +731,16 @@ SCM_DEFINE (scm_strptime, "strptime", 2, 0, 0,
     }
 
   SCM_ALLOW_INTS;
-  return scm_cons (filltime (&t, 0, NULL),  SCM_MAKINUM (rest - str));
+
+  /* tm_gmtoff is set by GNU glibc strptime "%s", so capture it when
+     available */
+#if HAVE_STRUCT_TM_TM_GMTOFF
+  zoff = - t.tm_gmtoff;  /* seconds west, not east */
+#else
+  zoff = 0;
+#endif
+
+  return scm_cons (filltime (&t, zoff, NULL),  SCM_MAKINUM (rest - str));
 }
 #undef FUNC_NAME
 #endif /* HAVE_STRPTIME */
