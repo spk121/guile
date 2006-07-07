@@ -1,3 +1,7 @@
+2006-07-06  Kevin Ryde  <user42@zip.com.au>
+
+	* tests/time.test (localtime, mktime, strptime): More tests.
+
 2006-06-13  Kevin Ryde  <user42@zip.com.au>
 
 	* tests/srfi-9.test: Further tests, in particular check error on wrong
