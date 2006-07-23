@@ -134,6 +134,17 @@ SCM_DEFINE (scm_ntohs, "ntohs", 1, 0, 0,
 }
 #undef FUNC_NAME
 
+static uint32_t
+scm_num2uint32 (SCM num, unsigned long int pos, const char *func)
+{
+  unsigned long uu = scm_num2ulong (num, pos, func);
+#if SIZEOF_LONG > 4
+  if (uu > 0xFFFFFFFFL)
+    scm_out_of_range (s_caller, num);
+#endif
+  return (uint32_t) uu;
+}
+
 SCM_DEFINE (scm_htonl, "htonl", 1, 0, 0, 
             (SCM value),
 	    "Convert a 32 bit quantity from host to network byte ordering.\n"
@@ -141,7 +152,7 @@ SCM_DEFINE (scm_htonl, "htonl", 1, 0, 0,
 	    "and returned as a new integer.")
 #define FUNC_NAME s_scm_htonl
 {
-  uint32_t c_in = SCM_NUM2ULONG (1, value);
+  uint32_t c_in = scm_num2uint32 (value, SCM_ARG1, FUNC_NAME);
 
   return scm_ulong2num (htonl (c_in));
 }
@@ -154,7 +165,7 @@ SCM_DEFINE (scm_ntohl, "ntohl", 1, 0, 0,
 	    "and returned as a new integer.")
 #define FUNC_NAME s_scm_ntohl
 {
-  uint32_t c_in = SCM_NUM2ULONG (1, value);
+  uint32_t c_in = scm_num2uint32 (value, SCM_ARG1, FUNC_NAME);
 
   return scm_ulong2num (ntohl (c_in));
 }
