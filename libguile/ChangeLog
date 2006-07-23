@@ -1,3 +1,9 @@
+2006-07-24  Kevin Ryde  <user42@zip.com.au>
+
+	* socket.c (scm_num2uint32): New function.
+	(scm_htonl, scm_ntohl): Use it to enforce 32-bit range check on
+	systems with 64-bit long.
+
 2006-07-18  Rob Browning  <rlb@defaultvalue.org>
 
 	* continuations.c: Add __attribute__ ((returns_twice)) to the

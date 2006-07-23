@@ -1,3 +1,7 @@
+2006-07-24  Kevin Ryde  <user42@zip.com.au>
+
+	* tests/socket.test: New file, exercising htonl and ntohl.
+
 2006-07-06  Kevin Ryde  <user42@zip.com.au>
 
 	* tests/time.test (localtime, mktime, strptime): More tests.
