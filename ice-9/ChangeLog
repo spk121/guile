@@ -1,3 +1,9 @@
+2006-09-07  Kevin Ryde  <user42@zip.com.au>
+
+	* format.scm (format:parse-float): Fix normalization of leading zeros
+	like "02.5" to "2.5".  left-zeros was zeroed before adjusting
+	format:fn-dot, resulting in the latter being unchanged.
+
 2006-01-13  Rob Browning  <rlb@defaultvalue.org>
 
 	* Makefile.am (ice9_sources): Add slib-old.scm.
