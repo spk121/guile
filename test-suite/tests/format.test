@@ -1,7 +1,7 @@
 ;;;; format.test --- test suite for Guile's CL-ish format  -*- scheme -*-
 ;;;; Matthias Koeppe <mkoeppe@mail.math.uni-magdeburg.de> --- June 2001
 ;;;;
-;;;; 	Copyright (C) 2001, 2004 Free Software Foundation, Inc.
+;;;; 	Copyright (C) 2001, 2004, 2006 Free Software Foundation, Inc.
 ;;;; 
 ;;;; This program is free software; you can redistribute it and/or modify
 ;;;; it under the terms of the GNU General Public License as published by
@@ -69,6 +69,20 @@
 
     (pass-if "+1"
       (string=? (format #f "~@d" 1) "+1"))))
+
+;;;
+;;; ~f
+;;;
+
+(with-test-prefix "~f fixed-point"
+
+  (pass-if "1.5"
+    (string=? "1.5" (format #f "~f" 1.5)))
+  
+  ;; in guile prior to 1.6.9 and 1.8.1, leading zeros were incorrectly
+  ;; stripped, moving the decimal point and giving "25.0" here
+  (pass-if "string 02.5"
+    (string=? "2.5" (format #f "~f" "02.5"))))
 
 ;;;
 ;;; ~{
