@@ -23,6 +23,7 @@ Changes in 1.6.9 (since 1.6.8):
 ** srfi-9 accessor and modifier procedures have strict record type checks
 (As per the srfi-9 specification.)
 ** strftime %z sign fix
+** apply arg count checking fix on "1 or 2 arg" functions such as make-vector
 
 * Changes to the C interface 
 
