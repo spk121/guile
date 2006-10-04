@@ -1,0 +1,106 @@
+;;;; ftw.test --- exercise ice-9/ftw.scm      -*- scheme -*-
+;;;;
+;;;; Copyright (C) 2006 Free Software Foundation, Inc.
+;;;;
+;;;; This program is free software; you can redistribute it and/or modify
+;;;; it under the terms of the GNU General Public License as published by
+;;;; the Free Software Foundation; either version 2, or (at your option)
+;;;; any later version.
+;;;;
+;;;; This program is distributed in the hope that it will be useful,
+;;;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;;;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;;;; GNU General Public License for more details.
+;;;;
+;;;; You should have received a copy of the GNU General Public License
+;;;; along with this software; see the file COPYING.  If not, write to
+;;;; the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+;;;; Boston, MA 02110-1301 USA
+;;;;
+;;;; As a special exception, the Free Software Foundation gives permission
+;;;; for additional uses of the text contained in its release of GUILE.
+;;;;
+;;;; The exception is that, if you link the GUILE library with other files
+;;;; to produce an executable, this does not by itself cause the
+;;;; resulting executable to be covered by the GNU General Public License.
+;;;; Your use of that executable is in no way restricted on account of
+;;;; linking the GUILE library code into it.
+;;;;
+;;;; This exception does not however invalidate any other reasons why
+;;;; the executable file might be covered by the GNU General Public License.
+;;;;
+;;;; This exception applies only to the code released by the
+;;;; Free Software Foundation under the name GUILE.  If you copy
+;;;; code from other Free Software Foundation releases into a copy of
+;;;; GUILE, as the General Public License permits, the exception does
+;;;; not apply to the code that you add in this way.  To avoid misleading
+;;;; anyone as to the status of such modified files, you must delete
+;;;; this exception notice from them.
+;;;;
+;;;; If you write modifications of your own for GUILE, it is your choice
+;;;; whether to permit this exception to apply to your modifications.
+;;;; If you do not wish that, delete this exception notice.
+
+(define-module (test-suite test-ice-9-ftw)
+  #:use-module (test-suite lib)
+  #:use-module (ice-9 ftw))
+
+
+;; the procedure-source checks here ensure the vector indexes we write match
+;; what ice-9/posix.scm stat:dev and stat:ino do (which in turn match
+;; libguile/filesys.c of course)
+
+(or (equal? (procedure-source stat:dev)
+	    '(lambda (f) (vector-ref f 0)))
+    (error "oops, unexpected stat:dev definition"))
+(define (stat:dev! st dev)
+  (vector-set! st 0 dev))
+
+(or (equal? (procedure-source stat:ino)
+	    '(lambda (f) (vector-ref f 1)))
+    (error "oops, unexpected stat:ino definition"))
+(define (stat:ino! st ino)
+  (vector-set! st 1 ino))
+
+
+;; similar to what's now in guile 1.8, but only working to fetch, not with set!
+(define-macro (@@ mod-name var-name)
+  (let ((var (module-variable (resolve-module mod-name) var-name)))
+    (if (not var)
+	(error "no such variable" (list '@@ mod-name var-name)))
+    (list variable-ref var)))
+
+
+;;
+;; visited?-proc
+;;
+
+(with-test-prefix "visited?-proc"
+
+  ;; normally internal-only
+  (let* ((visited?-proc (@@ (ice-9 ftw) visited?-proc))
+	 (visited? (visited?-proc 97))
+	 (s (stat "/")))
+
+    (define (try-visited? dev ino)
+      (stat:dev! s dev)
+      (stat:ino! s ino)
+      (visited? s))
+
+    (pass-if "0 0 - 1st" (eq? #f (try-visited? 0 0)))
+    (pass-if "0 0 - 2nd" (eq? #t (try-visited? 0 0)))
+    (pass-if "0 0 - 3rd" (eq? #t (try-visited? 0 0)))
+
+    (pass-if "0 1" (eq? #f (try-visited? 0 1)))
+    (pass-if "0 2" (eq? #f (try-visited? 0 2)))
+    (pass-if "0 3" (eq? #f (try-visited? 0 3)))
+
+    (pass-if "5 5" (eq? #f (try-visited? 5 5)))
+    (pass-if "5 7" (eq? #f (try-visited? 5 7)))
+    (pass-if "7 5" (eq? #f (try-visited? 7 5)))
+    (pass-if "7 7" (eq? #f (try-visited? 7 7)))
+
+    (pass-if "5 5 - 2nd" (eq? #t (try-visited? 5 5)))
+    (pass-if "5 7 - 2nd" (eq? #t (try-visited? 5 7)))
+    (pass-if "7 5 - 2nd" (eq? #t (try-visited? 7 5)))
+    (pass-if "7 7 - 2nd" (eq? #t (try-visited? 7 7)))))
