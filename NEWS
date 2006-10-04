@@ -24,6 +24,7 @@ Changes in 1.6.9 (since 1.6.8):
 (As per the srfi-9 specification.)
 ** strftime %z sign fix
 ** apply arg count checking fix on "1 or 2 arg" functions such as make-vector
+** ice-9 ftw fix for same inodes across different devices
 
 * Changes to the C interface 
 
