@@ -9,6 +9,7 @@ SCM_TESTS = tests/alist.test			\
 	    tests/exceptions.test		\
 	    tests/filesys.test			\
 	    tests/format.test			\
+	    tests/ftw.test			\
 	    tests/gc.test			\
 	    tests/getopt-long.test		\
 	    tests/goops.test			\
