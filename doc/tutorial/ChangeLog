@@ -1,3 +1,8 @@
+2006-11-17  Neil Jerram  <neil@ossau.uklinux.net>
+
+	* doc/tutorial/guile-tut.texi (What is libguile): Correction to
+	reference manual "Data representation" cross reference.
+
 2004-06-28  Marius Vollmer  <marius.vollmer@uni-dortmund.de>
 
 	* Makefile.am: Removed home-grown code for HTML generation.

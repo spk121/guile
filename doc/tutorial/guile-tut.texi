@@ -941,8 +941,8 @@ more stable, because it is simpler.
 The @code{scm_} interface is necessary if you want to poke into the
 innards of Scheme data structures, or do anything else that is not
 offered by the @code{gh_} interface.  It is not covered in this
-tutorial, but is covered extensively in @ref{Scheme data representation,
-Guile Reference Manual, guile-ref, Guile Reference Manual}.
+tutorial, but is covered extensively in @ref{Data representation,, Data
+Representation in Guile, guile, Guile Reference Manual}.
 
 This chapter gives a gentle introduction to the @code{gh_} interface,
 presenting some @emph{hello world}-style programs which I wrote while
