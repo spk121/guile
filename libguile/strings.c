@@ -131,7 +131,11 @@ scm_makstr (size_t len, int dummy)
   mem = (char *) scm_must_malloc (len + 1, FUNC_NAME);
   mem[len] = 0;
 
+#ifndef GUILE_EXPERIMENTAL_BIG_STRINGS
   SCM_NEWCELL (s);
+#else
+  SCM_NEWCELL2 (s);
+#endif
   SCM_SET_STRING_CHARS (s, mem);
   SCM_SET_STRING_LENGTH (s, len);
 
@@ -173,7 +177,11 @@ scm_take_str (char *s, size_t len)
 
   SCM_ASSERT_RANGE (2, scm_ulong2num (len), len <= SCM_STRING_MAX_LENGTH);
 
+#ifndef GUILE_EXPERIMENTAL_BIG_STRINGS
   SCM_NEWCELL (answer);
+#else
+  SCM_NEWCELL2 (answer);
+#endif
   SCM_SET_STRING_CHARS (answer, s);
   SCM_SET_STRING_LENGTH (answer, len);
   scm_done_malloc (len + 1);
@@ -241,7 +249,11 @@ scm_allocate_string (size_t len)
   mem = (char *) scm_must_malloc (len + 1, FUNC_NAME);
   mem[len] = 0;
 
+#ifndef GUILE_EXPERIMENTAL_BIG_STRINGS
   SCM_NEWCELL (s);
+#else
+  SCM_NEWCELL2 (s);
+#endif
   SCM_SET_STRING_CHARS (s, mem);
   SCM_SET_STRING_LENGTH (s, len);
 
@@ -415,13 +427,26 @@ SCM_DEFINE (scm_make_shared_substring, "make-shared-substring", 1, 2, 0,
 
   SCM_VALIDATE_ROSTRING (1,str);
   SCM_VALIDATE_INUM_DEF_COPY (2,start,0,f);
+#ifndef GUILE_EXPERIMENTAL_BIG_STRINGS
   SCM_VALIDATE_INUM_DEF_COPY (3,end,SCM_ROLENGTH(str),t);
+#else
+  SCM_VALIDATE_INUM_DEF_COPY (3,end,SCM_STRING_LENGTH(str),t);
+#endif
 
   SCM_ASSERT_RANGE (2,start,(f >= 0));
+#ifndef GUILE_EXPERIMENTAL_BIG_STRINGS
   SCM_ASSERT_RANGE (3,end, (f <= t) && (t <= SCM_ROLENGTH (str)));
+#else
+  SCM_ASSERT_RANGE (3,end, (f <= t) && (t <= SCM_STRING_LENGTH (str)));
+#endif
 
+#ifndef GUILE_EXPERIMENTAL_BIG_STRINGS
   SCM_NEWCELL (answer);
   SCM_NEWCELL (len_str);
+#else
+  SCM_NEWCELL2 (answer);
+  SCM_NEWCELL2 (len_str);
+#endif
 
   SCM_DEFER_INTS;
   if (SCM_SUBSTRP (str))
@@ -433,14 +458,22 @@ SCM_DEFINE (scm_make_shared_substring, "make-shared-substring", 1, 2, 0,
       SCM_SETCAR (len_str, SCM_MAKINUM (f));
       SCM_SETCDR (len_str, SCM_SUBSTR_STR (str));
       SCM_SETCDR (answer, len_str);
+#ifndef GUILE_EXPERIMENTAL_BIG_STRINGS
       SCM_SETLENGTH (answer, t - f, scm_tc7_substring);
+#else
+      SCM_SET_SUBSTRING_LENGTH (answer, t - f);
+#endif
     }
   else
     {
       SCM_SETCAR (len_str, SCM_MAKINUM (f));
       SCM_SETCDR (len_str, str);
       SCM_SETCDR (answer, len_str);
+#ifndef GUILE_EXPERIMENTAL_BIG_STRINGS
       SCM_SETLENGTH (answer, t - f, scm_tc7_substring);
+#else
+      SCM_SET_SUBSTRING_LENGTH (answer, t - f);
+#endif
     }
   SCM_ALLOW_INTS;
   return answer;

@@ -1,3 +1,22 @@
+2006-11-17  Neil Jerram  <neil@ossau.uklinux.net>
+
+	Integration of patch from Daniel Ridge to allow strings in 1.6.x
+	to have length up to 2^32 - 1, instead of 2^24 - 1 as currently.
+	All changes are subject to #ifdef GUILE_EXPERIMENTAL_BIG_STRINGS;
+	GUILE_EXPERIMENTAL_BIG_STRINGS is _not_ defined by default, and we
+	have no intention of changing this within the official 1.6.x
+	series.  The only reason for integrating this is as a convenience
+	for the contributor, as and when we make further 1.6.x releases.
+	
+	* strings.h: If GUILE_EXPERIMENTAL_BIG_STRINGS is defined, use
+	different definitions for SCM_STRING_MAX_LENGTH, SCM_STRING_LENGTH
+	and SCM_SET_STRING_LENGTH, and add new convenience macro
+	SCM_SET_SUBSTRING_LENGTH.
+
+	* strings.c (scm_makstr, scm_take_str, scm_allocate_string,
+	scm_make_shared_substring): Allocate a double cell for a string,
+	if GUILE_EXPERIMENTAL_BIG_STRINGS is defined.
+
 2006-10-03  Kevin Ryde  <user42@zip.com.au>
 
 	* eval.c (SCM_APPLY): For scm_tc7_subr_2o, throw wrong-num-args on 0

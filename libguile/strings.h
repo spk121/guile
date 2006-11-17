@@ -55,9 +55,21 @@
 #define SCM_STRING_CHARS(x) ((char *) (SCM_CELL_WORD_1 (x)))
 #endif
 #define SCM_SET_STRING_CHARS(s, c) (SCM_SET_CELL_WORD_1 ((s), (c)))
+
+#ifndef GUILE_EXPERIMENTAL_BIG_STRINGS
+
 #define SCM_STRING_MAX_LENGTH ((1UL << 24) - 1UL)
 #define SCM_STRING_LENGTH(x) ((size_t) (SCM_CELL_WORD_0 (x) >> 8))
 #define SCM_SET_STRING_LENGTH(s, l) (SCM_SET_CELL_WORD_0 ((s), (((long) (l)) << 8) + scm_tc7_string))
+
+#else
+
+#define SCM_STRING_MAX_LENGTH ((1UL << (SCM_C_BVEC_LIMB_BITS)) - 1UL)
+#define SCM_STRING_LENGTH(x) ((size_t) (SCM_CELL_WORD_2 (x)))
+#define SCM_SET_STRING_LENGTH(s, l) (SCM_SET_CELL_WORD_0 ((s), scm_tc7_string), SCM_SET_CELL_WORD_2 ((s), (((long) (l)))))
+#define SCM_SET_SUBSTRING_LENGTH(s, l) (SCM_SET_CELL_WORD_0 ((s), scm_tc7_substring), SCM_SET_CELL_WORD_2 ((s), (((long) (l)))))
+
+#endif
 
 #define SCM_STRING_COERCE_0TERMINATION_X(x) \
   { if (!SCM_IMP (x) && (SCM_TYP7 (x) == scm_tc7_substring)) \
