@@ -1,3 +1,9 @@
+2006-11-17  Neil Jerram  <neil@ossau.uklinux.net>
+
+	* Makefile.am (goops_TEXINFOS): Added hierarchy.pdf.
+
+	* hierarchy.pdf: New file.
+
 2004-06-28  Marius Vollmer  <marius.vollmer@uni-dortmund.de>
 
 	* Makefile.am: Removed home-grown code for HTML generation.

@@ -23,7 +23,8 @@ AUTOMAKE_OPTIONS = gnu
 
 info_TEXINFOS = goops.texi
 
-goops_TEXINFOS = goops-tutorial.texi hierarchy.eps hierarchy.png hierarchy.txt
+goops_TEXINFOS = goops-tutorial.texi \
+  hierarchy.eps hierarchy.png hierarchy.txt hierarchy.pdf
 
 TEXINFO_TEX = ../ref/texinfo.tex
 
