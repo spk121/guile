@@ -3632,6 +3632,9 @@ scm_product (SCM x, SCM y)
     }
   } else if (SCM_REALP (x)) {
     if (SCM_INUMP (y)) {
+      /* inexact*exact0 => exact 0, per R5RS "Exactness" section */
+      if (SCM_EQ_P (y, SCM_INUM0))
+        return y;
       return scm_make_real (SCM_INUM (y) * SCM_REAL_VALUE (x));
     } else if (SCM_BIGP (y)) {
       return scm_make_real (scm_i_big2dbl (y) * SCM_REAL_VALUE (x));
@@ -3645,6 +3648,9 @@ scm_product (SCM x, SCM y)
     }
   } else if (SCM_COMPLEXP (x)) {
     if (SCM_INUMP (y)) {
+      /* inexact*exact0 => exact 0, per R5RS "Exactness" section */
+      if (SCM_EQ_P (y, SCM_INUM0))
+        return y;
       return scm_make_complex (SCM_INUM (y) * SCM_COMPLEX_REAL (x),
 			       SCM_INUM (y) * SCM_COMPLEX_IMAG (x));
     } else if (SCM_BIGP (y)) {
