@@ -33,6 +33,9 @@
  ;; Naming groups of tests in a regular fashion.
  with-test-prefix with-test-prefix* current-test-prefix
 
+ ;; Using the debugging evaluator.
+ with-debugging-evaluator with-debugging-evaluator*
+
  ;; Reporting results in various ways.
  register-reporter unregister-reporter reporter-registered?
  make-count-reporter print-counts
@@ -351,6 +354,22 @@
 ;;; BODY expression.
 (defmacro with-test-prefix (prefix . body)
   `(with-test-prefix* ,prefix (lambda () ,@body)))
+
+;;; Call THUNK using the debugging evaluator.
+(define (with-debugging-evaluator* thunk)
+  (let ((dopts #f))
+    (dynamic-wind
+	(lambda ()
+	  (set! dopts (debug-options))
+	  (debug-enable 'debug))
+	thunk
+	(lambda ()
+	  (debug-options dopts)))))
+
+;;; Evaluate BODY... using the debugging evaluator.
+(define-macro (with-debugging-evaluator . body)
+  `(with-debugging-evaluator* (lambda () ,@body)))
+
 
 
 ;;;; REPORTERS
