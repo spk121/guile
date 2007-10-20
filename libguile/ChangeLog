@@ -1,3 +1,9 @@
+2007-10-20  Neil Jerram  <neil@ossau.uklinux.net>
+
+	* eval.c (unmemocopy): For SCM_IM_DELAY, extend the environment
+	before unmemoizing the promise thunk.  This fixes a segmentation
+	fault reported by Frank Schwidom.
+
 2006-12-05  Kevin Ryde  <user42@zip.com.au>
 
 	* numbers.c (scm_product): For flonum*inum and complex*inum, return

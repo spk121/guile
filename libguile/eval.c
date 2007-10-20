@@ -1438,6 +1438,13 @@ unmemocopy (SCM x, SCM env)
 	case (SCM_ISYMNUM (SCM_IM_DELAY)):
 	  ls = z = scm_cons (scm_sym_delay, SCM_UNSPECIFIED);
 	  x = SCM_CDR (x);
+	  /* A promise is implemented as a closure, and when applying
+	     a closure the evaluator adds a new frame to the
+	     environment - even though, in the case of a promise, the
+	     added frame is always empty.  We need to extend the
+	     environment here in the same way, so that any ILOCs in
+	     thunk_expr can be unmemoized correctly. */
+	  env = EXTEND_ENV (SCM_EOL, SCM_EOL, env);
 	  goto loop;
 	case (SCM_ISYMNUM (SCM_IM_CALL_WITH_VALUES)):
 	  ls = z = scm_cons (scm_sym_at_call_with_values, SCM_UNSPECIFIED);
