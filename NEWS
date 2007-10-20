@@ -25,6 +25,8 @@ Changes in 1.6.9 (since 1.6.8):
 ** strftime %z sign fix
 ** apply arg count checking fix on "1 or 2 arg" functions such as make-vector
 ** ice-9 ftw fix for same inodes across different devices
+** Fixed a segmentation fault which occurred when displaying the
+backtrace of a stack with a promise object (made by `delay') in it.
 
 * Changes to the C interface 
 
