@@ -1413,7 +1413,7 @@ SCM_DEFINE (scm_dirname, "dirname", 1, 0, 0,
   i = len - 1;
 #ifdef __MINGW32__
   while (i >= 0 && (s[i] == '/' || s[i] == '\\')) --i;
-  while (i >= 0 && (s[i] != '/' || s[i] != '\\')) --i;
+  while (i >= 0 && (s[i] != '/' && s[i] != '\\')) --i;
   while (i >= 0 && (s[i] == '/' || s[i] == '\\')) --i;
 #else
   while (i >= 0 && s[i] == '/') --i;
@@ -1470,7 +1470,7 @@ SCM_DEFINE (scm_basename, "basename", 1, 1, 0,
   if (j == -1)
     end = i;
 #ifdef __MINGW32__
-  while (i >= 0 && (f[i] != '/' || f[i] != '\\')) --i;
+  while (i >= 0 && f[i] != '/' && f[i] != '\\') --i;
 #else
   while (i >= 0 && f[i] != '/') --i;
 #endif /* ndef __MINGW32__ */

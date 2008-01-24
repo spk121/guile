@@ -1,3 +1,7 @@
+2008-01-24  Neil Jerram  <neil@ossau.uklinux.net>
+
+	* tests/filesys.test ("dirname"): New test.
+
 2007-10-19  Neil Jerram  <neil@ossau.uklinux.net>
 
 	* tests/eval.test ("continuations"): Use with-debugging-evaluator.

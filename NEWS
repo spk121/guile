@@ -27,6 +27,7 @@ Changes in 1.6.9 (since 1.6.8):
 ** ice-9 ftw fix for same inodes across different devices
 ** Fixed a segmentation fault which occurred when displaying the
 backtrace of a stack with a promise object (made by `delay') in it.
+** Fixed MinGW versions of dirname and basename.
 
 * Changes to the C interface 
 

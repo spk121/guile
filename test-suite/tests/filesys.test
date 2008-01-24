@@ -62,3 +62,10 @@
     (let ((old-next (next-fd)))
       (false-if-exception (copy-file "/dev/null" "no/such/dir/foo"))
       (= old-next (next-fd)))))
+
+(with-test-prefix "dirname"
+
+  (pass-if "abc/def"
+    (string=? (dirname "abc/def") "abc"))
+
+  )

@@ -1,3 +1,9 @@
+2008-01-24  Neil Jerram  <neil@ossau.uklinux.net>
+
+	* filesys.c (scm_basename): Fix ||/&& typo in MinGW32 code.
+	Thanks to Charles Day for the report and fix.
+	(scm_dirname): Same again.
+
 2007-10-20  Neil Jerram  <neil@ossau.uklinux.net>
 
 	* eval.c (unmemocopy): For SCM_IM_DELAY, extend the environment
