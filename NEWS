@@ -28,6 +28,7 @@ Changes in 1.6.9 (since 1.6.8):
 ** Fixed a segmentation fault which occurred when displaying the
 backtrace of a stack with a promise object (made by `delay') in it.
 ** Fixed MinGW versions of dirname and basename.
+** Fixed uses of #:use-syntax within (define-module ...) forms.
 
 * Changes to the C interface 
 

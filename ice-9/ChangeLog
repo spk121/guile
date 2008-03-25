@@ -1,3 +1,9 @@
+2008-03-25  Neil Jerram  <neil@ossau.uklinux.net>
+
+	* boot-9.scm (process-define-module): In #:use-syntax processing,
+	change two occurrences of interface-args to (car interface-args).
+	Fixes a problem with #:use-syntax reported by Bruce Carleton.
+
 2006-12-09  Kevin Ryde  <user42@zip.com.au>
 
 	* boot-9.scm (top-repl): Remove module-use! of the core `(guile)'
