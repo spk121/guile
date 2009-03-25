@@ -104,6 +104,7 @@ make_hash_table (int flags, unsigned long k, const char *func_name)
   t->upper = 9 * n / 10;
   t->flags = flags;
   t->hash_fn = NULL;
+  t->mutex = SCM_BOOL_F;
   if (flags)
     {
       SCM_NEWSMOB3 (table, scm_tc16_hashtable, vector, t, weak_hashtables);
@@ -217,6 +218,13 @@ scm_i_rehash (SCM table,
     }
 }
 
+
+static SCM 
+hashtable_mark (SCM table)
+{
+  scm_gc_mark (SCM_HASHTABLE_MUTEX (table));
+  return SCM_CELL_OBJECT_1 (table);
+}
 
 static int
 hashtable_print (SCM exp, SCM port, scm_print_state *pstate SCM_UNUSED)
@@ -440,18 +448,34 @@ scm_hash_fn_get_handle (SCM table, SCM obj, unsigned long (*hash_fn)(), SCM (*as
 #define FUNC_NAME "scm_hash_fn_get_handle"
 {
   unsigned long k;
-  SCM h;
+  SCM h, mutex = SCM_BOOL_F;
 
   if (SCM_HASHTABLE_P (table))
-    table = SCM_HASHTABLE_VECTOR (table);
+    {
+      mutex = SCM_HASHTABLE_MUTEX (table);
+      if (!scm_is_false (mutex))
+	{
+	  scm_dynwind_begin (SCM_F_DYNWIND_REWINDABLE);
+	  scm_dynwind_lock_mutex (mutex);
+	}
+      table = SCM_HASHTABLE_VECTOR (table);
+    }
   else
     SCM_VALIDATE_VECTOR (1, table);
   if (SCM_SIMPLE_VECTOR_LENGTH (table) == 0)
-    return SCM_BOOL_F;
+    {
+      h = SCM_BOOL_F;
+      goto end;
+    }
   k = hash_fn (obj, SCM_SIMPLE_VECTOR_LENGTH (table), closure);
   if (k >= SCM_SIMPLE_VECTOR_LENGTH (table))
     scm_out_of_range ("hash_fn_get_handle", scm_from_ulong (k));
   h = assoc_fn (obj, SCM_SIMPLE_VECTOR_REF (table, k), closure);
+
+ end:
+  if (!scm_is_false (mutex))
+    scm_dynwind_end ();
+
   return h;
 }
 #undef FUNC_NAME
@@ -463,10 +487,18 @@ scm_hash_fn_create_handle_x (SCM table, SCM obj, SCM init, unsigned long (*hash_
 #define FUNC_NAME "scm_hash_fn_create_handle_x"
 {
   unsigned long k;
-  SCM buckets, it;
+  SCM buckets, it, mutex = SCM_BOOL_F;
 
   if (SCM_HASHTABLE_P (table))
-    buckets = SCM_HASHTABLE_VECTOR (table);
+    {
+      mutex = SCM_HASHTABLE_MUTEX (table);
+      if (!scm_is_false (mutex))
+	{
+	  scm_dynwind_begin (SCM_F_DYNWIND_REWINDABLE);
+	  scm_dynwind_lock_mutex (mutex);
+	}
+      buckets = SCM_HASHTABLE_VECTOR (table);
+    }
   else
     {
       SCM_ASSERT (scm_is_simple_vector (table),
@@ -481,7 +513,7 @@ scm_hash_fn_create_handle_x (SCM table, SCM obj, SCM init, unsigned long (*hash_
     scm_out_of_range ("hash_fn_create_handle_x", scm_from_ulong (k));
   it = assoc_fn (obj, SCM_SIMPLE_VECTOR_REF (buckets, k), closure);
   if (scm_is_pair (it))
-    return it;
+    ;
   else if (scm_is_true (it))
     scm_wrong_type_arg_msg (NULL, 0, it, "a pair");
   else
@@ -515,8 +547,13 @@ scm_hash_fn_create_handle_x (SCM table, SCM obj, SCM init, unsigned long (*hash_
 	      || SCM_HASHTABLE_N_ITEMS (table) > SCM_HASHTABLE_UPPER (table))
 	    scm_i_rehash (table, hash_fn, closure, FUNC_NAME, NULL);
 	}
-      return SCM_CAR (new_bucket);
+      it = SCM_CAR (new_bucket);
     }
+
+  if (!scm_is_false (mutex))
+    scm_dynwind_end ();
+
+  return it;
 }
 #undef FUNC_NAME
 
@@ -554,10 +591,18 @@ scm_hash_fn_remove_x (SCM table, SCM obj,
                       void *closure)
 {
   unsigned long k;
-  SCM buckets, h;
+  SCM buckets, h, mutex = SCM_BOOL_F;
 
   if (SCM_HASHTABLE_P (table))
-    buckets = SCM_HASHTABLE_VECTOR (table);
+    {
+      mutex = SCM_HASHTABLE_MUTEX (table);
+      if (!scm_is_false (mutex))
+	{
+	  scm_dynwind_begin (SCM_F_DYNWIND_REWINDABLE);
+	  scm_dynwind_lock_mutex (mutex);
+	}
+      buckets = SCM_HASHTABLE_VECTOR (table);
+    }
   else
     {
       SCM_ASSERT (scm_is_simple_vector (table), table,
@@ -565,7 +610,10 @@ scm_hash_fn_remove_x (SCM table, SCM obj,
       buckets = table;
     }
   if (SCM_SIMPLE_VECTOR_LENGTH (table) == 0)
-    return SCM_EOL;
+    {
+      h = SCM_EOL;
+      goto end;
+    }
 
   k = hash_fn (obj, SCM_SIMPLE_VECTOR_LENGTH (buckets), closure);
   if (k >= SCM_SIMPLE_VECTOR_LENGTH (buckets))
@@ -582,6 +630,9 @@ scm_hash_fn_remove_x (SCM table, SCM obj,
 	    scm_i_rehash (table, hash_fn, closure, "scm_hash_fn_remove_x", NULL);
 	}
     }
+ end:
+  if (!scm_is_false (mutex))
+    scm_dynwind_end ();
   return h;
 }
 
@@ -592,8 +643,16 @@ SCM_DEFINE (scm_hash_clear_x, "hash-clear!", 1, 0, 0,
 {
   if (SCM_HASHTABLE_P (table))
     {
+      SCM mutex = SCM_HASHTABLE_MUTEX (table);
+      if (!scm_is_false (mutex))
+	{
+	  scm_dynwind_begin (SCM_F_DYNWIND_REWINDABLE);
+	  scm_dynwind_lock_mutex (mutex);
+	}
       scm_vector_fill_x (SCM_HASHTABLE_VECTOR (table), SCM_EOL);
       SCM_SET_HASHTABLE_N_ITEMS (table, 0);
+      if (!scm_is_false (mutex))
+	scm_dynwind_end ();
     }
   else
     scm_vector_fill_x (table, SCM_EOL);
@@ -940,10 +999,18 @@ SCM
 scm_internal_hash_fold (SCM (*fn) (), void *closure, SCM init, SCM table)
 {
   long i, n;
-  SCM buckets, result = init;
+  SCM buckets, result = init, mutex = SCM_BOOL_F;
   
   if (SCM_HASHTABLE_P (table))
-    buckets = SCM_HASHTABLE_VECTOR (table);
+    {
+      mutex = SCM_HASHTABLE_MUTEX (table);
+      if (!scm_is_false (mutex))
+	{
+	  scm_dynwind_begin (SCM_F_DYNWIND_REWINDABLE);
+	  scm_dynwind_lock_mutex (mutex);
+	}
+      buckets = SCM_HASHTABLE_VECTOR (table);
+    }
   else
     buckets = table;
   
@@ -963,6 +1030,9 @@ scm_internal_hash_fold (SCM (*fn) (), void *closure, SCM init, SCM table)
 	}
     }
 
+  if (!scm_is_false (mutex))
+    scm_dynwind_end ();
+
   return result;
 }
 
@@ -978,10 +1048,18 @@ void
 scm_internal_hash_for_each_handle (SCM (*fn) (), void *closure, SCM table)
 {
   long i, n;
-  SCM buckets;
+  SCM buckets, mutex = SCM_BOOL_F;
   
   if (SCM_HASHTABLE_P (table))
-    buckets = SCM_HASHTABLE_VECTOR (table);
+    {
+      mutex = SCM_HASHTABLE_MUTEX (table);
+      if (!scm_is_false (mutex))
+	{
+	  scm_dynwind_begin (SCM_F_DYNWIND_REWINDABLE);
+	  scm_dynwind_lock_mutex (mutex);
+	}
+      buckets = SCM_HASHTABLE_VECTOR (table);
+    }
   else
     buckets = table;
   
@@ -1000,6 +1078,9 @@ scm_internal_hash_for_each_handle (SCM (*fn) (), void *closure, SCM table)
 	  ls = SCM_CDR (ls);
 	}
     }
+
+  if (!scm_is_false (mutex))
+    scm_dynwind_end ();
 }
 
 SCM_DEFINE (scm_hash_fold, "hash-fold", 3, 0, 0, 
@@ -1088,6 +1169,25 @@ SCM_DEFINE (scm_hash_map_to_list, "hash-map->list", 2, 0, 0,
 }
 #undef FUNC_NAME
 
+SCM_DEFINE (scm_hash_use_mutex_x, "hash-use-mutex!", 2, 0, 0, 
+            (SCM table, SCM mutex),
+	    "Use @var{mutex} to serialize operations on @var{table} from multiple threads.")
+#define FUNC_NAME s_scm_hash_use_mutex_x
+{
+  /* Must be a real (i.e. not a vector) and non-weak hash table. */
+  SCM_VALIDATE_HASHTABLE (1, table);
+  if (SCM_HASHTABLE_WEAK_P (table))
+    SCM_MISC_ERROR ("can't use mutex with a weak hash table", SCM_EOL);
+    
+  if (!scm_is_false (mutex))
+    SCM_VALIDATE_MUTEX (2, mutex);
+
+  SCM_SET_HASHTABLE_MUTEX (table, mutex);
+
+  return SCM_UNSPECIFIED;
+}
+#undef FUNC_NAME
+
 
 
 
@@ -1095,7 +1195,7 @@ void
 scm_hashtab_prehistory ()
 {
   scm_tc16_hashtable = scm_make_smob_type (s_hashtable, 0);
-  scm_set_smob_mark (scm_tc16_hashtable, scm_markcdr);
+  scm_set_smob_mark (scm_tc16_hashtable, hashtable_mark);
   scm_set_smob_print (scm_tc16_hashtable, hashtable_print);
   scm_set_smob_free (scm_tc16_hashtable, hashtable_free);
   scm_c_hook_add (&scm_after_gc_c_hook, rehash_after_gc, 0, 0);
