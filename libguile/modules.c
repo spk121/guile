@@ -279,7 +279,6 @@ SCM_DEFINE (scm_env_module, "env-module", 1, 0, 0,
  * C level implementation of the standard eval closure
  *
  * This increases loading speed substantially.
- * The code will be replaced by the low-level environments in next release.
  */
 
 static SCM module_make_local_var_x_var;

@@ -264,6 +264,7 @@ scm_c_with_throw_handler (SCM tag,
 {
   SCM pre_unwind, answer;
   struct pre_unwind_data c;
+  SCM new_dynwinds;
 
   c.handler = handler;
   c.handler_data = handler_data;
@@ -272,7 +273,9 @@ scm_c_with_throw_handler (SCM tag,
   pre_unwind = make_pre_unwind_data (&c);
 
   SCM_CRITICAL_SECTION_START;
-  scm_i_set_dynwinds (scm_acons (tag, pre_unwind, scm_i_dynwinds ()));
+  new_dynwinds = scm_acons (tag, pre_unwind, SCM_BOOL_F);
+  SCM_SETCDR (new_dynwinds, scm_i_dynwinds ());
+  scm_i_set_dynwinds (new_dynwinds);
   SCM_CRITICAL_SECTION_END;
 
   answer = (*body) (body_data);
