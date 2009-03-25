@@ -30,6 +30,7 @@
 #include "libguile/root.h"
 #include "libguile/vectors.h"
 #include "libguile/ports.h"
+#include "libguile/symbols.h"
 
 #include "libguile/validate.h"
 #include "libguile/hashtab.h"
@@ -117,13 +118,15 @@ void
 scm_i_rehash (SCM table,
 	      unsigned long (*hash_fn)(),
 	      void *closure,
-	      const char* func_name)
+	      const char* func_name,
+	      scm_i_pthread_mutex_t *mutex)
 {
-  SCM buckets, new_buckets;
-  int i;
+  SCM buckets, new_buckets = SCM_BOOL_F;
+  int i = 0;
   unsigned long old_size;
   unsigned long new_size;
 
+ restart:
   if (SCM_HASHTABLE_N_ITEMS (table) < SCM_HASHTABLE_LOWER (table))
     {
       /* rehashing is not triggered when i <= min_size */
@@ -133,7 +136,7 @@ scm_i_rehash (SCM table,
       while (i > SCM_HASHTABLE (table)->min_size_index
 	     && SCM_HASHTABLE_N_ITEMS (table) < hashtable_size[i] / 4);
     }
-  else
+  else if (SCM_HASHTABLE_N_ITEMS (table) > SCM_HASHTABLE_UPPER (table))
     {
       i = SCM_HASHTABLE (table)->size_index + 1;
       if (i >= HASHTABLE_SIZE_N)
@@ -157,12 +160,28 @@ scm_i_rehash (SCM table,
   SCM_HASHTABLE (table)->upper = 9 * new_size / 10;
   buckets = SCM_HASHTABLE_VECTOR (table);
   
-  if (SCM_HASHTABLE_WEAK_P (table))
-    new_buckets = scm_i_allocate_weak_vector (SCM_HASHTABLE_FLAGS (table),
-					      scm_from_ulong (new_size),
-					      SCM_EOL);
-  else
-    new_buckets = scm_c_make_vector (new_size, SCM_EOL);
+  if (scm_is_false (new_buckets) ||
+      (SCM_SIMPLE_VECTOR_LENGTH (new_buckets) != new_size))
+    {
+      /* Need to allocate or reallocate the new_buckets vector. */
+      if (mutex)
+	scm_i_pthread_mutex_unlock (mutex);
+
+      if (SCM_HASHTABLE_WEAK_P (table))
+	new_buckets = scm_i_allocate_weak_vector (SCM_HASHTABLE_FLAGS (table),
+						  scm_from_ulong (new_size),
+						  SCM_EOL);
+      else
+	new_buckets = scm_c_make_vector (new_size, SCM_EOL);
+
+      if (mutex)
+	scm_i_pthread_mutex_lock (mutex);
+
+      /* Another thread could have messed with the hashtable while the
+	 mutex was unlocked.  So we now have to recalculate the rehash
+	 size from scratch. */
+      goto restart;
+    }
 
   /* When this is a weak hashtable, running the GC might change it.
      We need to cope with this while rehashing its elements.  We do
@@ -271,11 +290,15 @@ rehash_after_gc (void *dummy1 SCM_UNUSED,
       h = first;
       do
 	{
-	  /* Rehash only when we have a hash_fn.
+	  /* Special treatment for the symbol hash, as it is protected
+	     by a mutex. */
+	  if (scm_is_eq (h, scm_i_symbols))
+	    scm_i_rehash_symbols_after_gc ();
+	  /* Otherwise, rehash only when we have a hash_fn.
 	   */
-	  if (SCM_HASHTABLE (h)->hash_fn)
+	  else if (SCM_HASHTABLE (h)->hash_fn)
 	    scm_i_rehash (h, SCM_HASHTABLE (h)->hash_fn, NULL,
-			  "rehash_after_gc");
+			  "rehash_after_gc", NULL);
 	  last = h;
 	  h = SCM_HASHTABLE_NEXT (h);
 	} while (!scm_is_null (h));
@@ -490,7 +513,7 @@ scm_hash_fn_create_handle_x (SCM table, SCM obj, SCM init, unsigned long (*hash_
 	  SCM_HASHTABLE_INCREMENT (table);
 	  if (SCM_HASHTABLE_N_ITEMS (table) < SCM_HASHTABLE_LOWER (table)
 	      || SCM_HASHTABLE_N_ITEMS (table) > SCM_HASHTABLE_UPPER (table))
-	    scm_i_rehash (table, hash_fn, closure, FUNC_NAME);
+	    scm_i_rehash (table, hash_fn, closure, FUNC_NAME, NULL);
 	}
       return SCM_CAR (new_bucket);
     }
@@ -556,7 +579,7 @@ scm_hash_fn_remove_x (SCM table, SCM obj,
 	{
 	  SCM_HASHTABLE_DECREMENT (table);
 	  if (SCM_HASHTABLE_N_ITEMS (table) < SCM_HASHTABLE_LOWER (table))
-	    scm_i_rehash (table, hash_fn, closure, "scm_hash_fn_remove_x");
+	    scm_i_rehash (table, hash_fn, closure, "scm_hash_fn_remove_x", NULL);
 	}
     }
   return h;
