@@ -58,6 +58,8 @@ SCM_API scm_t_bits scm_tc16_hashtable;
 #define SCM_HASHTABLE_DECREMENT(x) (SCM_HASHTABLE_N_ITEMS(x)--)
 #define SCM_HASHTABLE_UPPER(x)     (SCM_HASHTABLE (x)->upper)
 #define SCM_HASHTABLE_LOWER(x)     (SCM_HASHTABLE (x)->lower)
+#define SCM_HASHTABLE_MUTEX(x)     (SCM_HASHTABLE (x)->mutex)
+#define SCM_SET_HASHTABLE_MUTEX(x, m)     (SCM_HASHTABLE (x)->mutex = m)
 
 #define SCM_HASHTABLE_N_BUCKETS(h) \
  SCM_SIMPLE_VECTOR_LENGTH (SCM_HASHTABLE_VECTOR (h))
@@ -74,6 +76,7 @@ typedef struct scm_t_hashtable {
   int size_index;		/* index into hashtable_size */
   int min_size_index;		/* minimum size_index */
   unsigned long (*hash_fn) ();  /* for rehashing after a GC. */
+  SCM mutex;			/* mutex for thread safety */
 } scm_t_hashtable;
 
 
@@ -133,6 +136,7 @@ SCM_API SCM scm_hash_fold (SCM proc, SCM init, SCM hash);
 SCM_API SCM scm_hash_for_each (SCM proc, SCM hash);
 SCM_API SCM scm_hash_for_each_handle (SCM proc, SCM hash);
 SCM_API SCM scm_hash_map_to_list (SCM proc, SCM hash);
+SCM_API SCM scm_hash_use_mutex_x (SCM hash, SCM mutex);
 SCM_API void scm_hashtab_prehistory (void);
 SCM_API void scm_init_hashtab (void);
 
