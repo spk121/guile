@@ -46,7 +46,8 @@
 
 
 
-static SCM symbols;
+SCM scm_i_symbols;
+static scm_i_pthread_mutex_t symbols_mutex;
 
 #ifdef GUILE_DEBUG
 SCM_DEFINE (scm_sys_symbols, "%symbols", 0, 0, 0,
@@ -54,7 +55,7 @@ SCM_DEFINE (scm_sys_symbols, "%symbols", 0, 0, 0,
 	    "Return the system symbol obarray.")
 #define FUNC_NAME s_scm_sys_symbols
 {
-  return symbols;
+  return scm_i_symbols;
 }
 #undef FUNC_NAME
 #endif
@@ -90,9 +91,13 @@ lookup_interned_symbol (const char *name, size_t len,
 {
   /* Try to find the symbol in the symbols table */
   SCM l;
-  unsigned long hash = raw_hash % SCM_HASHTABLE_N_BUCKETS (symbols);
+  unsigned long hash;
 
-  for (l = SCM_HASHTABLE_BUCKET (symbols, hash);
+  scm_i_pthread_mutex_lock (&symbols_mutex);
+
+  hash = raw_hash % SCM_HASHTABLE_N_BUCKETS (scm_i_symbols);
+
+  for (l = SCM_HASHTABLE_BUCKET (scm_i_symbols, hash);
        !scm_is_null (l);
        l = SCM_CDR (l))
     {
@@ -110,31 +115,69 @@ lookup_interned_symbol (const char *name, size_t len,
 		goto next_symbol;
 	    }
 
+	  scm_i_pthread_mutex_unlock (&symbols_mutex);
 	  return sym;
 	}
     next_symbol:
       ;
     }
 
+  scm_i_pthread_mutex_unlock (&symbols_mutex);
   return SCM_BOOL_F;
 }
 
 /* Intern SYMBOL, an uninterned symbol.  */
-static void
-intern_symbol (SCM symbol)
+static SCM
+intern_symbol (SCM symbol, const char *name, size_t len, size_t raw_hash)
 {
-  SCM slot, cell;
+  SCM slot, new_bucket, l;
   unsigned long hash;
 
-  hash = scm_i_symbol_hash (symbol) % SCM_HASHTABLE_N_BUCKETS (symbols);
-  slot = SCM_HASHTABLE_BUCKET (symbols, hash);
-  cell = scm_cons (symbol, SCM_UNDEFINED);
+  /* Allocate new cell and bucket before locking the mutex. */
+  new_bucket = scm_acons (symbol, SCM_UNDEFINED, SCM_BOOL_F);
 
-  SCM_SET_HASHTABLE_BUCKET (symbols, hash, scm_cons (cell, slot));
-  SCM_HASHTABLE_INCREMENT (symbols);
+  scm_i_pthread_mutex_lock (&symbols_mutex);
 
-  if (SCM_HASHTABLE_N_ITEMS (symbols) > SCM_HASHTABLE_UPPER (symbols))
-    scm_i_rehash (symbols, scm_i_hash_symbol, 0, "intern_symbol");
+  hash = raw_hash % SCM_HASHTABLE_N_BUCKETS (scm_i_symbols);
+  slot = SCM_HASHTABLE_BUCKET (scm_i_symbols, hash);
+
+  /* We have to check again here that the symbol isn't already hashed;
+     another thread could have interned it inbetween when we tried to
+     look up the symbol and the scm_i_pthread_mutex_lock call
+     above. */
+  for (l = slot; !scm_is_null (l); l = SCM_CDR (l))
+    {
+      SCM sym = SCM_CAAR (l);
+      if ((scm_i_symbol_hash (sym) == raw_hash) &&
+	  (scm_i_symbol_length (sym) == len))
+	{
+	  const char *chrs = scm_i_symbol_chars (sym);
+	  size_t i = len;
+
+	  while (i != 0)
+	    {
+	      --i;
+	      if (name[i] != chrs[i])
+		goto next_symbol;
+	    }
+
+	  scm_i_pthread_mutex_unlock (&symbols_mutex);
+	  return sym;
+	}
+    next_symbol:
+      ;
+    }
+
+  SCM_SETCDR (new_bucket, slot);
+  SCM_SET_HASHTABLE_BUCKET (scm_i_symbols, hash, new_bucket);
+  SCM_HASHTABLE_INCREMENT (scm_i_symbols);
+  if (SCM_HASHTABLE_N_ITEMS (scm_i_symbols) > SCM_HASHTABLE_UPPER (scm_i_symbols))
+    scm_i_rehash (scm_i_symbols, scm_i_hash_symbol, 0, "intern_symbol",
+		  &symbols_mutex);
+
+  scm_i_pthread_mutex_unlock (&symbols_mutex);
+
+  return symbol;
 }
 
 static SCM
@@ -149,7 +192,7 @@ scm_i_c_mem2symbol (const char *name, size_t len)
       /* The symbol was not found, create it.  */
       symbol = scm_i_c_make_symbol (name, len, 0, raw_hash,
 				    scm_cons (SCM_BOOL_F, SCM_EOL));
-      intern_symbol (symbol);
+      symbol = intern_symbol (symbol, name, len, raw_hash);
     }
 
   return symbol;
@@ -169,12 +212,22 @@ scm_i_mem2symbol (SCM str)
       /* The symbol was not found, create it.  */
       symbol = scm_i_make_symbol (str, 0, raw_hash,
 				  scm_cons (SCM_BOOL_F, SCM_EOL));
-      intern_symbol (symbol);
+      symbol = intern_symbol (symbol, name, len, raw_hash);
     }
 
   return symbol;
 }
 
+void
+scm_i_rehash_symbols_after_gc ()
+{
+  scm_i_pthread_mutex_lock (&symbols_mutex);
+
+  scm_i_rehash (scm_i_symbols, scm_i_hash_symbol, 0, "rehash_after_gc",
+		&symbols_mutex);
+
+  scm_i_pthread_mutex_unlock (&symbols_mutex);
+}
 
 static SCM
 scm_i_mem2uninterned_symbol (SCM str)
@@ -417,7 +470,7 @@ scm_take_locale_symboln (char *sym, size_t len)
     {
       res = scm_i_c_take_symbol (sym, len, 0, raw_hash,
 				 scm_cons (SCM_BOOL_F, SCM_EOL));
-      intern_symbol (res);
+      res = intern_symbol (res, sym, len, raw_hash);
     }
   else
     free (sym);
@@ -434,8 +487,9 @@ scm_take_locale_symbol (char *sym)
 void
 scm_symbols_prehistory ()
 {
-  symbols = scm_make_weak_key_hash_table (scm_from_int (2139));
-  scm_permanent_object (symbols);
+  scm_i_symbols = scm_make_weak_key_hash_table (scm_from_int (2139));
+  scm_permanent_object (scm_i_symbols);
+  scm_i_pthread_mutex_init (&symbols_mutex, NULL);
 }
 
 

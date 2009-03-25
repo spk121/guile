@@ -34,6 +34,7 @@
 #define SCM_I_F_SYMBOL_UNINTERNED   0x100
 
 
+extern SCM scm_i_symbols;
 
 #ifdef GUILE_DEBUG
 SCM_API SCM scm_sys_symbols (void);
@@ -63,6 +64,7 @@ SCM_API SCM scm_take_locale_symboln (char *sym, size_t len);
 
 SCM_API unsigned long scm_i_hash_symbol (SCM obj, unsigned long n,
 					 void *closure);
+void scm_i_rehash_symbols_after_gc (void);
 
 SCM_API void scm_symbols_prehistory (void);
 SCM_API void scm_init_symbols (void);
