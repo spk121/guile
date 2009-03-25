@@ -145,6 +145,11 @@ test_scm_with_guile_LDADD = ${top_builddir}/libguile/libguile.la
 check_PROGRAMS += test-scm-with-guile
 TESTS += test-scm-with-guile
 
+test_define_race_CFLAGS = ${test_cflags}
+test_define_race_LDADD = ${top_builddir}/libguile/libguile.la
+check_PROGRAMS += test-define-race
+TESTS += test-define-race
+
 else
 
 EXTRA_DIST += test-with-guile-module.c test-scm-with-guile.c
