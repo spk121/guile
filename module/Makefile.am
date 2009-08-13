@@ -51,6 +51,7 @@ SOURCES =								\
   $(OOP_SOURCES)							\
   $(SYSTEM_SOURCES)                                                     \
   $(SCRIPTS_SOURCES)                                                    \
+  $(SASSY_LANG_SOURCES)                                                 \
   $(GHIL_LANG_SOURCES)                                                  \
   $(ECMASCRIPT_LANG_SOURCES)						\
   $(BRAINFUCK_LANG_SOURCES)
@@ -105,6 +106,9 @@ OBJCODE_LANG_SOURCES =				\
 
 VALUE_LANG_SOURCES =				\
   language/value/spec.scm
+
+SASSY_LANG_SOURCES =				\
+  language/sassy.scm
 
 ECMASCRIPT_LANG_SOURCES =			\
   language/ecmascript/parse-lalr.scm		\

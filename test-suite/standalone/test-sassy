@@ -1,0 +1,47 @@
+#!/bin/sh
+exec guile -e main -s $0 "$@"
+!#
+;;;; test-sassy --- sassy's unit tests
+;;;; Copyright (C) 2009 Free Software Foundation, Inc.
+;;;; 
+;;;; This library is free software; you can redistribute it and/or
+;;;; modify it under the terms of the GNU Lesser General Public
+;;;; License as published by the Free Software Foundation; either
+;;;; version 3 of the License, or (at your option) any later version.
+;;;; 
+;;;; This library is distributed in the hope that it will be useful,
+;;;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;;;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+;;;; Lesser General Public License for more details.
+;;;; 
+;;;; You should have received a copy of the GNU Lesser General Public
+;;;; License along with this library; if not, write to the Free
+;;;; Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+;;;; Boston, MA 02110-1301 USA
+
+(use-modules (language sassy)
+             (rnrs bytevector)
+             (rnrs io ports))
+
+(define (write-byte b . port)
+  (put-u8 (if (null? port) (current-output-port) (car port))
+          b))
+(define (read-byte . port)
+  (get-u8 (if (null? port) (current-input-port) (car port))))
+(define (hash-table-ref t k . th)
+  (cond ((hash-ref t k))
+	(else (if (null? t) #f ((car th))))))
+(define hash-table-set! hash-set!)
+(define (alist->hash-table lst)
+  (let ((t (make-hash-table)))
+    (for-each (lambda (itm)
+		(hash-table-set! t (car itm) (cdr itm)))
+	      lst)
+    t))
+(define (hash-table-values t)
+  (hash-map->list (lambda (k v) v) t))
+
+(define (main args)
+  (chdir (if (null? (cdr args)) "sassy" (cadr args)))
+  (load "tests/run-tests.scm")
+  (sassy-run-tests 'all))

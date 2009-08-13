@@ -154,4 +154,7 @@ EXTRA_DIST += test-with-guile-module.c test-scm-with-guile.c
 
 endif
 
+check_SCRIPTS += test-sassy
+TESTS += test-sassy
+
 EXTRA_DIST += ${check_SCRIPTS}
