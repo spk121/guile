@@ -1,6 +1,6 @@
-;;; Guile Lowlevel Intermediate Language
+;;; Guile x86-32 Machine Assembly
 
-;; Copyright (C) 2001, 2009 Free Software Foundation, Inc.
+;; Copyright (C) 2009 Free Software Foundation, Inc.
 
 ;;;; This library is free software; you can redistribute it and/or
 ;;;; modify it under the terms of the GNU Lesser General Public
@@ -18,27 +18,17 @@
 
 ;;; Code:
 
-(define-module (language glil spec)
+(define-module (language sassy spec)
   #:use-module (system base language)
-  #:use-module (language glil)
-  #:use-module (language glil compile-assembly)
-  #:use-module (language glil decompile-assembly)
-  #:use-module (language glil compile-sassy)
-  #:export (glil))
+  ;  #:use-module (language sassy compile-elf)
+  #:export (assembly))
 
-(define (write-glil exp . port)
-  (apply write (unparse-glil exp) port))
-
-(define (compile-asm x e opts)
-  (values (compile-assembly x) e e))
-
-(define-language glil
-  #:title	"Guile Lowlevel Intermediate Language (GLIL)"
-  #:version	"0.3"
+(define-language sassy
+  #:title	"Guile x86-32 Assembly Language"
+  #:version	"2.0"
   #:reader	read
-  #:printer	write-glil
-  #:parser      parse-glil
-  #:compilers   `((assembly . ,compile-asm)
-                  (sassy . ,(lambda x e opts)
-                         (values (compile-sassy x) e e)))
-  #:decompilers `((assembly . ,decompile-assembly)))
+  #:printer	write
+  #:parser      read
+;  #:compilers   `((bytecode . ,compile-bytecode))
+;  #:decompilers `((bytecode . ,decompile-bytecode))
+  )
