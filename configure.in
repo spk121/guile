@@ -1438,18 +1438,20 @@ AC_SUBST(CCLD_FOR_BUILD)
 HOST_CC="$CC_FOR_BUILD"
 AC_SUBST(HOST_CC)
 
-if test "$cross_compiling" = "yes"; then
-  AC_MSG_CHECKING(guile for build)
-  GUILE_FOR_BUILD="${GUILE_FOR_BUILD-guile}"
-else
+## For some cross builds, where it is not possible to run the Guile
+## that is being built, allow the caller to use GUILE_FOR_BUILD=...
+## to specify another Guile to use during the build.
+##
+## But not all cross builds need this.  In particular, when Wine is
+## installed, a Linux - Mingw32 cross build _can_ run the Guile that
+## is being built - and it is obviously better for it to do that.
+## Hence the default is to use $(preinstguile), even when
+## cross-compiling.
+AC_MSG_CHECKING(guile for build)
+if test -z "$GUILE_FOR_BUILD"; then
   GUILE_FOR_BUILD='$(preinstguile)'
 fi   
-
-## AC_MSG_CHECKING("if we are cross compiling")
-## AC_MSG_RESULT($cross_compiling)
-if test "$cross_compiling" = "yes"; then
-   AC_MSG_RESULT($GUILE_FOR_BUILD)
-fi
+AC_MSG_RESULT($GUILE_FOR_BUILD)
 AC_ARG_VAR(GUILE_FOR_BUILD,[guile for build system])
 AC_SUBST(GUILE_FOR_BUILD)
   			

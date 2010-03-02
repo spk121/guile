@@ -134,3 +134,5 @@
 	;; rational.
 	(quotient (* default-stack-limit top-repl-hwm-measured)
 		  top-repl-hwm-i686-pc-linux-gnu))
+
+(force-output)
