@@ -71,7 +71,7 @@ scm_size2num (size_t x)
 }
 
 SCM
-scm_ptrdiff2num (ptrdiff_t x)
+scm_ptrdiff2num (scm_t_ptrdiff x)
 {
   return scm_from_ssize_t (x);
 }
@@ -118,7 +118,7 @@ scm_num2size (SCM x, unsigned long pos, const char *s_caller)
   return scm_to_size_t (x);
 }
 
-ptrdiff_t
+scm_t_ptrdiff
 scm_num2ptrdiff (SCM x, unsigned long pos, const char *s_caller)
 {
   return scm_to_ssize_t (x);
