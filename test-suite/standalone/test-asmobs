@@ -1,5 +1,5 @@
 #!/bin/sh
-exec guile -q -s "$0" "$@"
+exec ${GUILE:-guile} -q -s "$0" "$@"
 !#
 
 (load-extension (string-append (getenv "builddir") "/libtest-asmobs")
