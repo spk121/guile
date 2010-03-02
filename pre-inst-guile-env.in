@@ -78,4 +78,8 @@ PATH="${top_builddir}/guile-config:${PATH}"
 PATH="${top_builddir}/libguile:${PATH}"
 export PATH
 
+# set GUILE (clobber)
+GUILE=${top_builddir}/libguile/guile@EXEEXT@
+export GUILE
+
 exec "$@"

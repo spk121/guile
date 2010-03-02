@@ -87,7 +87,7 @@ DYLD_LIBRARY_PATH="${dyld_prefix}${top_builddir}/libguile/.libs:$DYLD_LIBRARY_PA
 export DYLD_LIBRARY_PATH
 
 # set GUILE (clobber)
-GUILE=${top_builddir}/libguile/guile
+GUILE=${top_builddir}/libguile/guile@EXEEXT@
 export GUILE
 
 # do it
