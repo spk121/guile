@@ -69,8 +69,15 @@ SCM_DEFINE (scm_system, "system", 0, 1, 0,
   
   if (SCM_UNBNDP (cmd))
     {
+#ifdef __MINGW32__
+      /* MinGW doesn't support system (NULL), so we hardcode #t
+	 instead.  When is a command processor ever not available,
+	 anyway? */
+      return SCM_BOOL_T;
+#else
       rv = system (NULL);
       return scm_from_bool(rv);
+#endif
     }  
   SCM_VALIDATE_STRING (1, cmd);
   errno = 0;
