@@ -177,29 +177,45 @@ switches specific to Guile you may find useful in some circumstances.
 --disable-regex       ---  omit regular expression interfaces
 
 
-Cross building Guile  =====================================================
+Cross-building for Windows  ================================================
 
 Guile can be cross-compiled for Windows using the i586-mingw32msvc
 cross-compiler.  To do this, you first need to cross-build Guile's
-prerequisites - GNU MP and libtool/libltdl (as described above) - and
-then cross-build Guile itself.
+prerequisites (GNU MP and libtool/libltdl, as listed above) and then
+cross-build Guile itself.
 
-For each of these steps, configure using an invocation like this:
+For each of these builds, configure using an invocation like this:
+
+CPPFLAGS=-I/usr/local/i586-mingw32msvc/include \
+LDFLAGS=-L/usr/local/i586-mingw32msvc/lib \
+./configure --prefix=/usr/local/i586-mingw32msvc --host=i586-mingw32msvc
+
+Then run `make' - which should complete without any errors - and `sudo
+make install'.
+
+Some later steps of the build process (e.g. for preparing
+documentation) involve running Guile, and ideally these steps should
+use the Guile that has just been built.  You can arrange for this,
+even when cross-building, by having wine and binfmt installed; these
+packages allow the Linux kernel to run Windows executables and DLLs.
+In this case, you can also run `make check' after `make', to run
+Guile's test suite.
+
+Alternatively, you can use another Guile installation for these steps,
+from a normal non-cross build.  To do this, set the GUILE_FOR_BUILD
+environment variable when running ./configure; for example:
 
 CPPFLAGS=-I/usr/local/i586-mingw32msvc/include \
 LDFLAGS=-L/usr/local/i586-mingw32msvc/lib \
 GUILE_FOR_BUILD=/usr/local/bin/guile \
 ./configure --prefix=/usr/local/i586-mingw32msvc --host=i586-mingw32msvc
 
-Then run `make' - which should complete without any errors - and `sudo
-make install'.  (`make check' doesn't work when cross-compiling,
-because the built DLLs and program cannot be run on GNU/Linux.)
+In this case, note that `make check' won't work, because it can't test
+the Guile that has just been cross-built (and there would be no point
+in testing the GUILE_FOR_BUILD Guile instead).
 
-The `GUILE_FOR_BUILD=...' setting is needed because some later steps
-of the build process use Guile itself.  In the non-cross-compiling
-case this is the version of Guile that has just been built.  When
-cross-compiling, you have to set GUILE_FOR_BUILD to tell the build
-where it can find a native version of Guile, to use for these steps.
+
+Cross building for other hosts =============================================
 
 Cross-compiling for other hosts may also work, using the following
 instructions; but this has not been recently tested.
