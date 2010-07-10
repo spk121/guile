@@ -56,7 +56,7 @@
                  (compile-function . function)
                  (compile-defun . defun)
                  (compile-defmacro . defmacro)
-                 (compile-\` . \`)
+                 (#{compile-`}# . #{`}#)
                  (compile-quote . quote)))
   #:duplicates (last)
   ;; special operators
@@ -79,7 +79,7 @@
                function
                defun
                defmacro
-               \`
+               #{`}#
                quote)
   ;; macros
   #:re-export (lambda
