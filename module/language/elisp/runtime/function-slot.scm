@@ -48,7 +48,6 @@
                  (compile-let* . let*)
                  (compile-lexical-let* . lexical-let*)
                  (compile-flet* . flet*)
-                 (compile-without-void-checks . without-void-checks)
                  (compile-with-always-lexical . with-always-lexical)
                  (compile-guile-ref . guile-ref)
                  (compile-guile-primitive . guile-primitive)
@@ -71,7 +70,6 @@
                let*
                lexical-let*
                flet*
-               without-void-checks
                with-always-lexical
                guile-ref
                guile-primitive
