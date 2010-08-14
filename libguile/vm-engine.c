@@ -145,6 +145,10 @@ VM_NAME (SCM vm, SCM program, SCM *argv, int nargs)
     err_msg  = scm_from_locale_string ("VM: Unbound variable: ~s");
     goto vm_error;
 
+  vm_error_unbound_fluid:
+    err_msg = scm_from_locale_string ("VM: Unbound fluid: ~s");
+    goto vm_error;
+
   vm_error_apply_to_non_list:
     scm_error (scm_arg_type_key, "apply", "Apply to non-list: ~S",
                finish_args, finish_args);

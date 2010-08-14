@@ -1594,7 +1594,7 @@ VM_DEFINE_INSTRUCTION (91, unwind_fluids, "unwind-fluids", 0, 0, 0)
 VM_DEFINE_INSTRUCTION (92, fluid_ref, "fluid-ref", 0, 1, 1)
 {
   size_t num;
-  SCM fluids;
+  SCM fluids, val;
   
   CHECK_UNDERFLOW ();
   fluids = SCM_I_DYNAMIC_STATE_FLUIDS (dynstate);
@@ -1606,7 +1606,15 @@ VM_DEFINE_INSTRUCTION (92, fluid_ref, "fluid-ref", 0, 1, 1)
       *sp = scm_fluid_ref (*sp);
     }
   else
-    *sp = SCM_SIMPLE_VECTOR_REF (fluids, num);
+    {
+      val = SCM_SIMPLE_VECTOR_REF (fluids, num);
+      if (val == SCM_UNDEFINED)
+        {
+          finish_args = scm_list_1 (*sp);
+          goto vm_error_unbound_fluid;
+        }
+      *sp = val;
+    }
   
   NEXT;
 }
