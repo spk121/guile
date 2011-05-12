@@ -284,6 +284,14 @@ main (int argc, char *argv[])
   pf ("#define SCM_SIZEOF_UINTPTR_T %d\n", SIZEOF_UINTPTR_T);
 
   pf ("\n");
+  pf ("/* Byte order */\n");
+#ifdef WORDS_BIGENDIAN
+  pf ("#define SCM_IS_BIG_ENDIAN 1\n");
+#else
+  pf ("#define SCM_IS_BIG_ENDIAN 0\n");
+#endif
+
+  pf ("\n");
   pf ("/* same as POSIX \"struct timespec\" -- always defined */\n");
 #ifdef HAVE_STRUCT_TIMESPEC
   pf ("typedef struct timespec scm_t_timespec;\n");
