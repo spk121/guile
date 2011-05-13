@@ -70,48 +70,18 @@ typedef scm_t_uintptr scm_t_bits;
 #define SCM_T_BITS_MAX        SCM_T_UINTPTR_MAX
 
 
-/* But as external interface, we define SCM, which may, according to the
- * desired level of type checking, be defined in several ways:
+/* But as external interface, we define SCM.
  */
-#if (SCM_DEBUG_TYPING_STRICTNESS == 2)
-typedef union SCM { scm_t_bits n; } SCM;
-#   define SCM_UNPACK(x) ((x).n)
-#   define SCM_PACK(x) ((SCM) { (scm_t_bits) (x) })
-#elif (SCM_DEBUG_TYPING_STRICTNESS == 1)
-/* This is the default, which provides an intermediate level of compile time
- * type checking while still resulting in very efficient code.
- */
-    typedef struct scm_unused_struct { char scm_unused_field; } *SCM;
+union SCM
+{
+  scm_t_bits as_bits;
+};
 
-/*
-  The 0?: constructions makes sure that the code is never executed,
-  and that there is no performance hit.  However, the alternative is
-  compiled, and does generate a warning when used with the wrong
-  pointer type.
+typedef union SCM SCM;
 
-  The Tru64 and ia64-hp-hpux11.23 compilers fail on `case (0?0=0:x)'
-  statements, so for them type-checking is disabled.  */
-#if defined __DECC || defined __HP_cc
-#   define SCM_UNPACK(x) ((scm_t_bits) (x))
-#else
-#   define SCM_UNPACK(x) ((scm_t_bits) (0? (*(SCM*)0=(x)): x))
-#endif
 
-/*
-  There is no typechecking on SCM_PACK, since all kinds of types
-  (unsigned long, void*) go in SCM_PACK
- */
-#   define SCM_PACK(x) ((SCM) (x))
-
-#else
-/* This should be used as a fall back solution for machines on which casting
- * to a pointer may lead to loss of bit information, e. g. in the three least
- * significant bits.
- */
-    typedef scm_t_bits SCM;
-#   define SCM_UNPACK(x) (x)
-#   define SCM_PACK(x) ((SCM) (x))
-#endif
+#define SCM_UNPACK(x) ((x).as_bits)
+#define SCM_PACK(x) ((SCM) { (scm_t_bits) (x) })
 
 
 /* SCM values can not be compared by using the operator ==.  Use the following
