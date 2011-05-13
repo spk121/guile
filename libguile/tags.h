@@ -62,12 +62,12 @@
  * scm_t_bits:
  */
 
-typedef scm_t_intptr  scm_t_signed_bits;
-typedef scm_t_uintptr scm_t_bits;
+typedef scm_t_int64  scm_t_signed_bits;
+typedef scm_t_uint64 scm_t_bits;
 
-#define SCM_T_SIGNED_BITS_MAX SCM_T_INTPTR_MAX
-#define SCM_T_SIGNED_BITS_MIN SCM_T_INTPTR_MIN
-#define SCM_T_BITS_MAX        SCM_T_UINTPTR_MAX
+#define SCM_T_SIGNED_BITS_MAX SCM_T_INT64_MAX
+#define SCM_T_SIGNED_BITS_MIN SCM_T_INT64_MIN
+#define SCM_T_BITS_MAX        SCM_T_UINT64_MAX
 
 
 /* But as external interface, we define SCM.
@@ -75,6 +75,17 @@ typedef scm_t_uintptr scm_t_bits;
 union SCM
 {
   scm_t_bits as_bits;
+
+  /* If you set a field of the SCM union, it needs to set all the bits.
+     The following types are not guaranteed to do so, so we put them in
+     a sub-union, to indicate that they are for read access only.  */
+  union SCM_read_only {
+#if SCM_IS_BIG_ENDIAN
+  struct { scm_t_uint32 high, low; } as_uint32;
+#else
+  struct { scm_t_uint32 low, high; } as_uint32;
+#endif
+  } read;
 };
 
 typedef union SCM SCM;
@@ -110,29 +121,61 @@ typedef union SCM SCM;
  *   being pointed to consists of at least two scm_t_bits variables and thus
  *   can be used to hold pointers to malloc'ed memory of any size.
  *
- * The 'heap' is the memory area that is under control of Guile's garbage
- * collector.  It holds 'single-cells' or 'double-cells', which consist of
- * either two or four scm_t_bits variables, respectively.  It is guaranteed
- * that the address of a cell on the heap is 8-byte aligned.  That is, since
- * non-immediates hold a cell address, the three least significant bits of a
- * non-immediate can be used to store additional information.  The bits are
- * used to store information about the object's type and thus are called
- * tc3-bits, where tc stands for type-code.  
+ * The 'heap' is the memory area that is under control of Guile's
+ * garbage collector.  The size of the pointed-to memory will be at
+ * least 8 bytes, and its address will be 8-byte aligned.
  *
- * For a given SCM value, the distinction whether it holds an immediate or
- * non-immediate object is based on the tc3-bits (see above) of its scm_t_bits
+ * This eight-byte alignment means that for a non-immediate -- a heap
+ * object -- that the three least significant bits of its address will
+ * be zero.  Guile can then use these bits as type tags.  These lowest
+ * three bits are called tc3-bits, where tc stands for type-code.
+ *
+ * For a given SCM value, the distinction whether it holds an immediate
+ * or non-immediate object is based on the tc3-bits of its scm_t_bits
  * equivalent: If the tc3-bits equal #b000, then the SCM value holds a
- * non-immediate, and the scm_t_bits variable's value is just the pointer to
- * the heap cell.
+ * non-immediate, and the scm_t_bits variable's value is just the
+ * pointer to the heap cell.
  *
  * Summarized, the data of a scheme object that is represented by a SCM
  * variable consists of a) the SCM variable itself, b) in case of
- * non-immediates the data of the single-cell or double-cell the SCM object
- * points to, c) in case of non-immediates potentially additional data outside
- * of the heap (like for example malloc'ed data), and d) in case of
- * non-immediates potentially additional data inside of the heap, since data
- * stored in b) and c) may hold references to other cells.
- *
+ * non-immediates the heap data that the SCM object points to, c) in
+ * case of non-immediates potentially additional data outside of the
+ * heap (like for example malloc'ed data), and d) in case of
+ * non-immediates potentially additional data inside of the heap, since
+ * data stored in b) and c) may hold references to other cells.
+ */
+
+
+/* Let's take a breather and define some helpers to access Scheme values
+   from the heap.
+
+   Though C99 doesn't specify whether pointers are represented the same
+   way in memory as integers are, it seems to be universal, besides
+   UNICOS.  We make that assumption, having checked at configure-time
+   that it does indeed hold true on this platform.  */
+
+#if SCM_SIZEOF_VOID_P == 4
+#define SCM_TO_POINTER(x) ((void *)((x).read.as_uint32.low))
+#elif SCM_SIZEOF_VOID_P == 8
+#define SCM_TO_POINTER(x) ((void *)((x).as_bits))
+#else
+#error Unhandled word size.
+#endif
+
+#define SCM_FROM_POINTER(x) SCM_PACK ((scm_t_bits)x)
+
+#define SCM_HEAP_POINTER(x) ((SCM *) SCM_TO_POINTER (x))
+#define SCM_HEAP_OBJECT(x, n)                   \
+  (SCM_HEAP_POINTER (x) [(n)])
+#define SCM_SET_HEAP_OBJECT(x, n, o)            \
+  SCM_HEAP_OBJECT (x, n) = (o)
+
+#define SCM_HEAP_DATA(x, n)                     \
+  (SCM_HEAP_OBJECT (x, n).as_bits)
+#define SCM_SET_HEAP_DATA(x, n, b)              \
+  SCM_HEAP_DATA (x, n) = (b)
+
+/*
  *
  * Immediates
  *

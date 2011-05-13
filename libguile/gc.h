@@ -35,21 +35,9 @@ typedef struct scm_t_cell
   SCM word_1;
 } scm_t_cell;
 
-/* Cray machines have pointers that are incremented once for each
- * word, rather than each byte, the 3 most significant bits encode the
- * byte within the word.  The following macros deal with this by
- * storing the native Cray pointers like the ones that looks like scm
- * expects.  This is done for any pointers that point to a cell,
- * pointers to scm_vector elts, functions, &c are not munged.
- */
-#ifdef _UNICOS
-#  define SCM2PTR(x) ((scm_t_cell *) (SCM_UNPACK (x) >> 3))
-#  define PTR2SCM(x) (SCM_PACK (((scm_t_bits) (x)) << 3))
-#else
-#  define SCM2PTR(x) ((scm_t_cell *) (SCM_UNPACK (x)))
-#  define PTR2SCM(x) (SCM_PACK ((scm_t_bits) (x)))
-#endif /* def _UNICOS */
 
+#define SCM2PTR(x) SCM_TO_POINTER (x)
+#define PTR2SCM(x) SCM_FROM_POINTER (x)
 
 
 /* Low level cell data accessing macros.  These macros should only be used
@@ -58,12 +46,11 @@ typedef struct scm_t_cell
  * in debug mode.  In particular these macros will even work for free cells,
  * which should never be encountered by user code.  */
 
-#define SCM_GC_CELL_OBJECT(x, n) (((SCM *)SCM2PTR (x)) [n])
-#define SCM_GC_CELL_WORD(x, n)   (SCM_UNPACK (SCM_GC_CELL_OBJECT ((x), (n))))
+#define SCM_GC_CELL_OBJECT(x, n) SCM_HEAP_OBJECT (x, n)
+#define SCM_GC_CELL_WORD(x, n)   SCM_HEAP_DATA (x, n)
 
-#define SCM_GC_SET_CELL_OBJECT(x, n, v) ((((SCM *)SCM2PTR (x)) [n]) = (v))
-#define SCM_GC_SET_CELL_WORD(x, n, v)  \
-  (SCM_GC_SET_CELL_OBJECT ((x), (n), SCM_PACK (v)))
+#define SCM_GC_SET_CELL_OBJECT(x, n, v) SCM_SET_HEAP_OBJECT (x, n, v)
+#define SCM_GC_SET_CELL_WORD(x, n, v) SCM_SET_HEAP_DATA (x, n, v)
 
 #define SCM_GC_CELL_TYPE(x) (SCM_GC_CELL_OBJECT ((x), 0))
 
