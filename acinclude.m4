@@ -534,3 +534,54 @@ AC_DEFUN([gl_CLOCK_TIME],
     AC_CHECK_FUNCS([clock_gettime clock_settime])
   LIBS=$gl_saved_libs
 ])
+
+dnl GUILE_POINTERS_AS_INTEGERS
+dnl
+dnl Check whether the representation of pointers is the same as that of
+dnl integers.  This behavior is essentially compiler-dependent, and is
+dnl not specified in the standard, but libguile/tags.h makes assumptions
+dnl that we need to test here.
+AC_DEFUN([GUILE_POINTERS_AS_INTEGERS], [
+  GUILE_UINT64=`eval echo $SCM_I_GSC_T_UINT64`
+  GUILE_UINTPTR=`eval echo $SCM_I_GSC_T_UINTPTR`
+  AC_CACHE_CHECK([whether pointers have the same bit representation as integers],
+    [guile_cv_pointers_as_integers], [
+     AC_RUN_IFELSE([AC_LANG_SOURCE([[
+       #if HAVE_STDINT_H
+       #include <stdint.h>
+       #endif
+       #if HAVE_INTTYPES_H
+       #include <inttypes.h>
+       #endif
+       #include <malloc.h>
+
+       union ptr_and_int
+       {
+         $GUILE_UINT64 integer;
+         void *pointer;
+       };
+
+       int
+       main (int argc, char *argv[])
+       {
+         union ptr_and_int u;
+
+         if (sizeof (union ptr_and_int) != sizeof ($GUILE_UINT64))
+           return 1;
+
+         if (sizeof ($GUILE_UINTPTR) > sizeof ($GUILE_UINT64))
+           return 2;
+
+         u.pointer = malloc (10);           
+
+         if (u.integer != ($GUILE_UINTPTR)u.pointer)
+           return 3;
+
+         return 0;
+       }
+     ]])],
+	 [guile_cv_pointers_as_integers=yes],
+	 [guile_cv_pointers_as_integers=no],
+	 [guile_cv_pointers_as_integers=yes])
+   ])
+])

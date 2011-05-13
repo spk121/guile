@@ -605,6 +605,12 @@ AC_SUBST([SCM_I_GSC_T_UINTPTR])
 AC_SUBST([SCM_I_GSC_NEEDS_STDINT_H])
 AC_SUBST([SCM_I_GSC_NEEDS_INTTYPES_H])
 
+GUILE_POINTERS_AS_INTEGERS
+if test "$guile_cv_pointers_as_integers" != "yes"; then
+  AC_MSG_ERROR([This system's representation of pointers is incompatible with Guile.
+Please contact guile-devel@gnu.org for more information.])
+fi
+
 AC_HEADER_STDC
 AC_HEADER_TIME
 AC_HEADER_SYS_WAIT
