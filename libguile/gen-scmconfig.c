@@ -233,6 +233,7 @@ main (int argc, char *argv[])
   pf ("#define SCM_SIZEOF_INT %d\n", SIZEOF_INT);
   pf ("#define SCM_SIZEOF_UNSIGNED_INT %d\n", SIZEOF_UNSIGNED_INT);
   pf ("#define SCM_SIZEOF_SIZE_T %d\n", SIZEOF_SIZE_T);
+  pf ("#define SCM_SIZEOF_VOID_P %d\n", SIZEOF_VOID_P);
 
   pf ("\n");
   pf ("/* Size of (unsigned) long long or 0 if not available (scm_t_*64 may\n"
