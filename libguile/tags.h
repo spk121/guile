@@ -104,31 +104,126 @@ typedef union SCM SCM;
 
 /* Representation of scheme objects:
  *
- * Guile's type system is designed to work on systems where scm_t_bits and SCM
- * variables consist of at least 32 bits.  The objects that a SCM variable can
+ * Guile's type system is designed to work on systems where scm_t_bits
+ * and SCM values consist of 64 bits.  The objects that a SCM value can
  * represent belong to one of the following two major categories:
  *
- * - Immediates -- meaning that the SCM variable contains an entire Scheme
- *   object.  That means, all the object's data (including the type tagging
- *   information that is required to identify the object's type) must fit into
- *   32 bits.
+ * - Immediates -- meaning that the SCM value contains an entire Scheme
+ *   object.  That means, all the object's data (including the type
+ *   tagging information that is required to identify the object's type)
+ *   must fit into 64 bits.
  *
- * - Non-immediates -- meaning that the SCM variable holds a pointer into the
- *   heap of cells (see below).  On systems where a pointer needs more than 32
- *   bits this means that scm_t_bits and SCM variables need to be large enough
- *   to hold such pointers.  In contrast to immediates, the object's data of
- *   a non-immediate can consume arbitrary amounts of memory: The heap cell
- *   being pointed to consists of at least two scm_t_bits variables and thus
- *   can be used to hold pointers to malloc'ed memory of any size.
+ * - Non-immediates -- meaning that the SCM value contains a pointer
+ *   into the heap, where additional information is stored.
  *
  * The 'heap' is the memory area that is under control of Guile's
  * garbage collector.  The size of the pointed-to memory will be at
- * least 8 bytes, and its address will be 8-byte aligned.
+ * least 8 bytes, and its address will be 8-byte aligned.  Thus, on a
+ * 32-bit system, a pointer only has 29 significant bits.  On a 64-bit
+ * system, Guile restricts the address range of the heap to the lower 48
+ * bits of memory, so a pointer has 45 significant bits.
  *
- * This eight-byte alignment means that for a non-immediate -- a heap
+ * Guile uses the remaining 19 bits of a SCM value to encode whether the
+ * object is immediate or non-immediate, and, if it is immediate, to
+ * encode the payload.  For example, in a Scheme character, some of the
+ * bits of the SCM indicate that the value is a character, and the other
+ * bits indicate which character it is.
+ *
+ * The precise encoding of an SCM uses a technique known as
+ * "NaN-boxing".  The basic idea is that of the (2^53 - 2) possible bit
+ * patterns for a double-precision IEEE-754 floating point NaN
+ * (not-a-number), current hardware and software only produces one
+ * representation.  Guile takes advantage of this situation to encode
+ * values in the remaining NaN representations.
+ *
+ * The primary advantage of this scheme is that floating-point numbers
+ * can be represented as immediate values.  
+ *
+ * Recall the IEEE-754 double representation:
+ *
+ *   <- most significant bit (MSB)       least significant bit (LSB) ->
+ *
+ *   sign: 1 bit
+ *   | exponent: 11 bits
+ *   | |           mantissa: 52 bits
+ *   ------------------------------------------------------------------
+ *   0 00000000000 0000000000000000000000000000000000000000000000000000
+ * #x0    0   0    0   0   0   0   0   0   0   0   0   0   0   0   0
+ * 
+ * Positive and negative infinity are encoded like this:
+ * 
+ *   +inf.0
+ *   0 11111111111 0000000000000000000000000000000000000000000000000000
+ * #x7    F   F    0   0   0   0   0   0   0   0   0   0   0   0   0
+ *
+ *   -inf.0
+ *   1 11111111111 0000000000000000000000000000000000000000000000000000
+ * #xF    F   F    0   0   0   0   0   0   0   0   0   0   0   0   0
+ *
+ * And the canonical NaN value is like this:
+ *
+ *   +nan.0
+ *   0 11111111111 100000000000000000000000000000000000000000000000000
+ * #x7    F   F    8   0   0   0   0   0   0   0   0   0   0   0   0
+ *
+ * Any other bit pattern with all exponent bits set is a non-canonical
+ * NaN.  For simplicity, Guile uses NaN values with the top 13 bits set,
+ * then uses the next 3 bits as a tag, and the following 48 bits as a
+ * payload.
+ *
+ *   1 11111111111 1TTTPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP
+ *
+ * Some tag bits will indicate immediate values, some will indicate
+ * non-immediate values, and some will indicate invalid values.  If any
+ * of the top 13 bits is unset, then the value is a double.
+ *
+ * At this point we need to talk about garbage collection.  There are
+ * two cases to consider: 32-bit pointers and 64-bit pointers.  They
+ * present different challenges.
+ *
+ * In the 32-bit case, the low 32 bits of the payload may represent a
+ * pointer directly, and the entire upper 32 bits may be taken as the
+ * tag.  The GC will see the low half of the SCM as a potential pointer,
+ * and can trace it.  However we need to take care that non-pointer bit
+ * patterns 
+ *
+ * Guile does one more trick here, which is to rotate the whole tag
+ * space, subtracting off 0xfff800000000000 from the bit
+ * representation.  This will leave the top 13 bits set to zero, if the
+ * SCM value is not a double
+At this point you have a choice: whether to prefer doubles or pointers
+ * representation or the 
+And then subtract off a constant from the tag, so that for pointers,
+ * the first bits can be zero:
+ * 
+ *   000000000000000000PPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP
+ *
+ * Then, if the tag indicates that the value is a 
+ *
+ * The eight-byte alignment means that for a non-immediate -- a heap
  * object -- that the three least significant bits of its address will
  * be zero.  Guile can then use these bits as type tags.  These lowest
  * three bits are called tc3-bits, where tc stands for type-code.
+ *
+ *
+
+  The heap is the part of memory that is managed by
+ *   the garbage collector.  Guile restricts the heap to a 48-bit
+ *   address range, so this means that some bit representations of SCM
+ *   values encode a 48-bit pointer to the heap.
+ *
+ *   Most non-immediates use the first word of the heap memory pointed
+ *   to be a non-immediate for extra type information.  The notable
+ *   exception to this scheme are pairs, which has space for at least one scm_t_bits value,
+ *   which Guile uses to SCM value pointing to the heap
+ *
+On systems where a pointer needs more than
+ *   32 bits this means that scm_t_bits and SCM variables need to be
+ *   large enough to hold such pointers.  In contrast to immediates, the
+ *   object's data of a non-immediate can consume arbitrary amounts of
+ *   memory: The heap cell being pointed to consists of at least two
+ *   scm_t_bits variables and thus can be used to hold pointers to
+ *   malloc'ed memory of any size.
  *
  * For a given SCM value, the distinction whether it holds an immediate
  * or non-immediate object is based on the tc3-bits of its scm_t_bits
