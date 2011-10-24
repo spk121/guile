@@ -307,13 +307,13 @@ smob_mark (GC_word *addr, struct GC_ms_entry *mark_stack_ptr,
     /* The first word looks corrupt.  */
     abort ();
 
-  mark_stack_ptr = GC_MARK_AND_PUSH (SCM2PTR (SCM_CELL_OBJECT_1 (cell)),
+  mark_stack_ptr = GC_MARK_AND_PUSH (SCM_UNPACK_POINTER (SCM_CELL_OBJECT_1 (cell)),
 				     mark_stack_ptr,
 				     mark_stack_limit, NULL);
-  mark_stack_ptr = GC_MARK_AND_PUSH (SCM2PTR (SCM_CELL_OBJECT_2 (cell)),
+  mark_stack_ptr = GC_MARK_AND_PUSH (SCM_UNPACK_POINTER (SCM_CELL_OBJECT_2 (cell)),
 				     mark_stack_ptr,
 				     mark_stack_limit, NULL);
-  mark_stack_ptr = GC_MARK_AND_PUSH (SCM2PTR (SCM_CELL_OBJECT_3 (cell)),
+  mark_stack_ptr = GC_MARK_AND_PUSH (SCM_UNPACK_POINTER (SCM_CELL_OBJECT_3 (cell)),
 				     mark_stack_ptr,
 				     mark_stack_limit, NULL);
 
@@ -332,7 +332,7 @@ smob_mark (GC_word *addr, struct GC_ms_entry *mark_stack_ptr,
 
       if (SCM_HEAP_OBJECT_P (obj))
 	/* Mark the returned object.  */
-	mark_stack_ptr = GC_MARK_AND_PUSH (SCM2PTR (obj),
+	mark_stack_ptr = GC_MARK_AND_PUSH (SCM_UNPACK_POINTER (obj),
 					   mark_stack_ptr,
 					   mark_stack_limit, NULL);
 
@@ -365,7 +365,7 @@ scm_gc_mark (SCM o)
 	/* The function was not called from a mark procedure.  */
 	abort ();
 
-      mark_stack_ptr = GC_MARK_AND_PUSH (SCM2PTR (o),
+      mark_stack_ptr = GC_MARK_AND_PUSH (SCM_UNPACK_POINTER (o),
 					 CURRENT_MARK_PTR, CURRENT_MARK_LIMIT,
 					 NULL);
       SCM_I_CURRENT_THREAD->current_mark_stack_ptr = mark_stack_ptr;
