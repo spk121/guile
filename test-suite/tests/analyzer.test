@@ -1,0 +1,43 @@
+(use-modules (test-suite lib)
+             (analyzer set-queue))
+
+;; test the set queue functions
+
+(define sq (make-set-queue))
+
+(pass-if "set-queue-insert!"
+         (begin
+           (set-queue-insert! sq 1)
+           (set-queue-insert! sq 2)
+           (set-queue-insert! sq 3)
+           #t)) ;; pass if you get here without an exception
+
+(pass-if "set-queue-remove"
+         (equal? (set-queue-remove! sq) 1))
+
+(pass-if "set-queue-remove"
+         (equal? (set-queue-remove! sq) 2))
+
+(pass-if "set-queue-empty?"
+         (not (set-queue-empty? sq)))
+
+(pass-if "set-queue-remove"
+         (equal? (set-queue-remove! sq) 3))
+
+(pass-if "set-queue-empty?"
+         (set-queue-empty? sq))
+
+(pass-if "set-queue-insert!"
+         (begin
+           (set-queue-insert! sq 1)
+           (set-queue-insert! sq 2)
+           (set-queue-insert! sq 3)
+           
+           (set-queue-insert! sq 1)
+           #t))
+
+(define lst '())
+(pass-if "emptying-set-queue"
+         (begin
+           (emptying-set-queue! sq (lambda (x) (set! lst (cons x lst))))
+           (equal? lst '(3 2 1))))
