@@ -1,5 +1,6 @@
 (use-modules (test-suite lib)
-             (analyzer set-queue))
+             (analyzer set-queue)
+             (analyzer value-sets))
 
 ;; test the set queue functions
 
@@ -41,3 +42,25 @@
          (begin
            (emptying-set-queue! sq (lambda (x) (set! lst (cons x lst))))
            (equal? lst '(3 2 1))))
+
+;; test the value set functions
+
+(define nothing (value-set-nothing))
+(define anything (value-set-anything))
+(define simple (value-set-with-values 1 2 3))
+
+(pass-if "value-set-can-be-anything?"
+         (value-set-can-be-anything? anything))
+
+(pass-if "value-set-value-satisfying"
+         (not (not (value-set-value-satisfying simple number?))))
+
+(pass-if "value-set-value-satisfying"
+         (not (value-set-value-satisfying nothing number?)))
+
+(pass-if "value-set-has-values?"
+         (not (value-set-has-values? nothing)))
+(pass-if "value-set-has-values?"
+         (value-set-has-values? anything))
+(pass-if "value-set-has-values?"
+         (value-set-has-values? simple))
