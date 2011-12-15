@@ -1,5 +1,6 @@
 (define-module (analyzer value-sets)
   #:use-module (srfi srfi-9)
+  #:use-module (srfi srfi-1)
   #:export (value-set value-set-type
                       make-value-set value-set?
                       value-set-values set-value-set-values!
@@ -7,8 +8,13 @@
 
             value-set-nothing value-set-anything
             value-set-can-be-anything? value-set-has-values?
+            value-set-has-value? value-set-has-property?
             value-set-with-values
-            value-set-value-satisfying))
+            value-set-value-satisfying
+            
+            value-set-union!
+            value-set-add-value!
+            value-set-add-property!))
 
 #|
 
@@ -48,7 +54,7 @@
   (values value-set-values set-value-set-values!)
   (properties value-set-properties set-value-set-properties!))
 
-; convenience constructors
+;; convenience constructors
 (define (value-set-anything)
   (value-set '() '((anything))))
 (define (value-set-nothing)
@@ -56,7 +62,7 @@
 (define (value-set-with-values . vals)
   (value-set vals '()))
 
-; and predicates
+;; and predicates
 (define (value-set-has-values? vs)
   (or (not (null? (value-set-values vs)))
       (not (null? (value-set-properties vs)))))
@@ -67,12 +73,53 @@
           ((eq? (caar props) 'anything) #t)
           (else (loop (cdr props))))))
 
-; and a selector
+(define (value-set-has-value? vs v)
+  (memq v (value-set-values vs)))
+
+(define (value-set-has-property? vs p)
+  (assq p (value-set-properties vs)))
+
+;; and a selector
 (define (value-set-value-satisfying vs pred)
   (let loop ((vals (value-set-values vs)))
     (cond ((null? vals) #f)
           ((pred (car vals)) (car vals))
           (else (loop (cdr vals))))))
+
+;; and three modifiers. these are really three cases of the same thing -
+;; a general case and two special ones. they are the basic operation on
+;; value sets.
+
+;; this function sets t to the union of t and x.
+;; it uses a recursive merge if one of the values is a pair.
+(define (value-set-union! t x)
+  (cond ((value-set-can-be-anything? x)
+         (set-value-set-values! t '())
+         (set-value-set-properties! t '((anything))))
+        (else
+         (for-each (value-set-values x)
+                   (lambda (v) (value-set-add-value! t v)))
+         (for-each (value-set-properties x)
+                   (lambda (p) (value-set-add-property! t p))))))
+
+(define (value-set-add-value! t v)
+  (if (pair? v)
+      (let ((old-pair (value-set-value-satisfying t pair?)))
+        (if old-pair
+            (begin (value-set-union! (car old-pair) (car v))
+                   (value-set-union! (cdr old-pair) (cdr v)))
+            (set-value-set-values! t (cons v (value-set-values t)))))
+      (if (not (memv v (value-set-values t)))
+          (set-value-set-values! t (cons v (value-set-values t))))))
+
+(define (value-set-add-property! t p)
+  (cond ((equal? p '(anything))
+         (set-value-set-properties! t '((anything)))
+         (set-value-set-values! t '()))
+        ((equal? p '(number?))
+         (set-value-set-properties! t '((number?))))
+        (else
+         (error "Don't know how to add property" p))))
 
 (define-record-type primitive-procedure-type
   ;; this type holds the value-set version of a primitive procedure
@@ -80,24 +127,23 @@
   primitive-procedure?
   (evaluator primitive-procedure-evaluator))
 
-(define (vs-cons a b)
-  (values
-   (value-set (list (cons a b))
-              '())
-   '()))
+;; all procedures take an extra first argument, the "target", which is
+;; the value set of their return value.
+(define (vs-cons t a b)
+  (value-set-add-value! t
+                        (cons a b)))
 
-(define (vs-car p)
+(define (vs-car t p)
   (if (value-set-can-be-anything? p)
-      (value-set-anything)
+      (value-set-union! t (value-set-anything))
       (let ((pair (value-set-value-satisfying p pair?)))
         (if pair
-            (car pair)
-            (value-set-nothing)))))
+            (value-set-union! t (car pair))))))
 
-(define (vs-cdr p)
+(define (vs-cdr t p)
   (if (value-set-can-be-anything? p)
-      (value-set-anything)
+      (value-set-union! t (value-set-anything))
       (let ((pair (value-set-value-satisfying p pair?)))
         (if pair
-            (car pair)
-            (value-set-nothing)))))
+            (value-set-union! t (car pair))))))
+

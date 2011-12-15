@@ -49,11 +49,13 @@
 (define anything (value-set-anything))
 (define simple (value-set-with-values 1 2 3))
 
+(define (true? x) (not (not x)))
+
 (pass-if "value-set-can-be-anything?"
          (value-set-can-be-anything? anything))
 
 (pass-if "value-set-value-satisfying"
-         (not (not (value-set-value-satisfying simple number?))))
+         (true? (value-set-value-satisfying simple number?)))
 
 (pass-if "value-set-value-satisfying"
          (not (value-set-value-satisfying nothing number?)))
@@ -64,3 +66,32 @@
          (value-set-has-values? anything))
 (pass-if "value-set-has-values?"
          (value-set-has-values? simple))
+
+(pass-if "value-set-has-value?"
+         (true? (value-set-has-value? simple 3)))
+
+(pass-if "value-set-has-value?"
+         (not (value-set-has-value? nothing 4)))
+
+(pass-if "value-set-has-property?"
+         (true? (value-set-has-property? anything 'anything)))
+(pass-if "value-set-has-property?"
+         (not (value-set-has-property? simple 'anything)))
+
+(pass-if "union value 4 onto other numbers"
+         (begin (value-set-add-value! simple 4)
+                (true? (value-set-has-value? simple 4))))
+
+(pass-if "add property (number?)"
+         (begin (value-set-add-property! nothing '(number?))
+                (true? (value-set-has-property? nothing 'number?))))
+
+(pass-if "add property (anything), no other properties"
+         (begin (value-set-add-property! nothing '(anything))
+                (not (value-set-has-property? nothing 'number?))))
+
+(pass-if "add property (anything), no values"
+         (begin (value-set-add-property! simple '(anything))
+                (not (value-set-has-value? simple 3))))
+
+
