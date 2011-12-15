@@ -105,9 +105,9 @@ points to the value-set of this expression's return value.
          (environment-lookup (cdr env) name))))
 
 (define default-environment
-  `( (cons . ,(value-set-with-values 'cons))
-     (car  . ,(value-set-with-values 'car))
-     (cdr  . ,(value-set-with-values 'cdr))
+  `( (cons . ,(value-set-with-values prim-cons))
+     (car  . ,(value-set-with-values prim-car ))
+     (cdr  . ,(value-set-with-values prim-cdr ))
    ))
 
 (define (primitive-lookup name)
@@ -287,12 +287,22 @@ points to the value-set of this expression's return value.
                      proc args)
          (if (and (value-set-has-values?
                    (annotated-tree-il-return-value-set proc))
+                  (value-set-has-no-properties?
+                   (annotated-tree-il-return-value-set proc))
                   (every (lambda (x) (value-set-has-values?
                                  (annotated-tree-il-return-value-set x)))
                          args))
-             (begin
-               ))))
-)))
+             (let loop ((procs (value-set-values
+                                (annotated-tree-il-return-value-set proc))))
+               (if (not (null? procs))
+                   (begin
+                     (let ((eval (primitive-procedure-evaluator (car procs))))
+                       (apply eval return-value-set
+                              (map annotated-tree-il-return-value-set
+                                   args)))
+                     (loop (cdr procs)))))
+             )))
+      )))
 
 (define (go sexp)
   (set! *values-need-inference* (make-set-queue))
