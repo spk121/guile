@@ -94,4 +94,42 @@
          (begin (value-set-add-property! simple '(anything))
                 (not (value-set-has-value? simple 3))))
 
+(define vs-one (value-set-with-values 1))
+(define vs-two (value-set-with-values 2))
+(define vs-three (value-set-with-values 3))
+(define vs-four (value-set-with-values 4))
+(define vs-pair (value-set-nothing))
+
+(pass-if "union a pair value onto something without a pair value"
+         (begin (vs-cons vs-pair vs-one vs-two)
+                (true? (value-set-has-value?
+                        (car (value-set-value-satisfying vs-pair pair?))
+                        1))))
+
+(pass-if "union a pair value onto another pair value"
+         (begin (vs-cons vs-pair vs-three vs-four)
+                (true? (value-set-has-value?
+                        (car (value-set-value-satisfying vs-pair pair?))
+                        1))))
+
+(define vs-t1 (value-set-nothing))
+(define vs-t2 (value-set-nothing))
+(define vs-t3 (value-set-nothing))
+(define vs-t4 (value-set-nothing))
+
+(pass-if "take a vs-car of a pair"
+         (begin (vs-car vs-t1 vs-pair)
+                (true? (value-set-has-value? vs-t1 3))))
+
+(pass-if "take a vs-car of nothing"
+         (begin (vs-car vs-t2 (value-set-nothing))
+                (true? (value-set-nothing? vs-t2))))
+
+(pass-if "take a vs-cdr of a pair"
+         (begin (vs-cdr vs-t3 vs-pair)
+                (true? (value-set-has-value? vs-t3 4))))
+
+(pass-if "take a vs-cdr of nothing"
+         (begin (vs-cdr vs-t4 (value-set-nothing))
+                (true? (value-set-nothing? vs-t4))))
 

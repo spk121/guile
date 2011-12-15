@@ -9,12 +9,24 @@
             value-set-nothing value-set-anything
             value-set-can-be-anything? value-set-has-values?
             value-set-has-value? value-set-has-property?
+            value-set-nothing? value-set-has-no-properties?
             value-set-with-values
             value-set-value-satisfying
             
             value-set-union!
             value-set-add-value!
-            value-set-add-property!))
+            value-set-add-property!
+
+            vs-cons
+            vs-car
+            vs-cdr
+
+            primitive-procedure-type
+            primitive-procedure
+            primitive-procedure?
+            primitive-procedure-evaluator
+
+            prim-cons prim-car prim-cdr))
 
 #|
 
@@ -73,11 +85,18 @@
           ((eq? (caar props) 'anything) #t)
           (else (loop (cdr props))))))
 
+(define (value-set-nothing? vs)
+  (and (null? (value-set-values vs))
+       (null? (value-set-properties vs))))
+
 (define (value-set-has-value? vs v)
   (memq v (value-set-values vs)))
 
 (define (value-set-has-property? vs p)
   (assq p (value-set-properties vs)))
+
+(define (value-set-has-no-properties? vs)
+  (null? (value-set-properties vs)))
 
 ;; and a selector
 (define (value-set-value-satisfying vs pred)
@@ -97,10 +116,10 @@
          (set-value-set-values! t '())
          (set-value-set-properties! t '((anything))))
         (else
-         (for-each (value-set-values x)
-                   (lambda (v) (value-set-add-value! t v)))
-         (for-each (value-set-properties x)
-                   (lambda (p) (value-set-add-property! t p))))))
+         (for-each (lambda (v) (value-set-add-value! t v))
+                   (value-set-values x))
+         (for-each (lambda (p) (value-set-add-property! t p))
+                   (value-set-properties x)))))
 
 (define (value-set-add-value! t v)
   (if (pair? v)
@@ -145,5 +164,8 @@
       (value-set-union! t (value-set-anything))
       (let ((pair (value-set-value-satisfying p pair?)))
         (if pair
-            (value-set-union! t (car pair))))))
+            (value-set-union! t (cdr pair))))))
 
+(define prim-cons (primitive-procedure vs-cons))
+(define prim-car  (primitive-procedure vs-car))
+(define prim-cdr  (primitive-procedure vs-cdr))
