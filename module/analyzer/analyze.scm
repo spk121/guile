@@ -72,7 +72,8 @@ points to the value-set of this expression's return value.
   (<a-prompt> tag body handler)
   (<a-abort> tag args tail)
   (<a-fix> names gensyms vals body)
-  (<a-let-values> exp body))
+  (<a-let-values> exp body)
+  (<a-verify> exps))
 
 ;; this returns a value-set for its tree's return value and a new
 ;; environment to replace entry-environment (in case it's a set form)
@@ -204,6 +205,14 @@ points to the value-set of this expression's return value.
               (set! (a-conditional-test ret) (rec ret test env))
               (set! (a-conditional-consequent ret) (rec ret consequent env))
               (set! (a-conditional-alternate ret) (rec ret alternate env))
+              ret))
+           (($ <call> src ($ <toplevel-ref> tsrc 'verify) args)
+            (let ((ret (make-a-verify src parent
+                                      #f ; can-return?
+                                      (value-set-nothing) ; return-value-se
+                                      '())))
+              (set! (a-verify-exps ret)
+                    (map (lambda (x) (rec ret x env)) args))
               ret))
            (($ <call> src proc args)
             (let ((ret (make-a-call src parent
