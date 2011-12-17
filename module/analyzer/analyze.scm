@@ -98,6 +98,20 @@ points to the value-set of this expression's return value.
                (loop (cddr args)
                      (cons (cons (car args) (cadr args)) frame)))))))
 
+(define (environment-append-names-values env names values)
+  (let loop ((frame '())
+             (names names)
+             (values values))
+    (cond ((null? names)
+           (if (null? values)
+               (cons frame env)
+               (error "environment-append-names-values: got different-length lists!")))
+          ((null? values)
+           (error "environment-append-names-values: got different-length lists!"))
+          (else (loop (cons (cons (car names) (car values)) frame)
+                      (cdr names)
+                      (cdr values))))))
+
 (define (environment-lookup env name)
   (cond ((null? env) #f)
         ((assq-ref (car env) name)
@@ -171,7 +185,8 @@ points to the value-set of this expression's return value.
            (($ <lexical-ref> src name gensym)
             (make-a-lexical-ref src parent
                                 #t ; can-return?
-                                (environment-lookup env gensym) ; return-value-set
+                                (annotated-tree-il-return-value-set
+                                 (environment-lookup env gensym)) ; return-value-set
                                 name gensym))
            (($ <lexical-set> src name gensym exp)
             (let ((ret (make-a-lexical-set src parent
@@ -256,11 +271,17 @@ points to the value-set of this expression's return value.
            (($ <let> src names gensyms vals body)
             (let ((ret (make-a-let src parent
                                    #t ; can-return?
-                                   (value-set-nothing) ; return-value-set
+                                   #f ; return-value-set
                                    names gensyms
                                    '() '())))
               (set! (a-let-vals ret) (map (lambda (x) (rec ret x env)) vals))
-              (set! (a-let-body ret) (rec ret body env))
+              (set! (a-let-body ret)
+                    (rec ret body
+                         (environment-append-names-values env
+                                                          gensyms
+                                                          (a-let-vals ret))))
+              (set! (annotated-tree-il-return-value-set ret)
+                    (annotated-tree-il-return-value-set (a-let-body ret)))
               ret))
            (($ <letrec> src in-order? names gensyms vals body)
             (let ((ret (make-a-letrec src parent

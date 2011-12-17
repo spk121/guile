@@ -147,3 +147,10 @@
 
 (pass-if "(verify #t #f #t)"
          (not (go '(verify #t #f #t))))
+
+(pass-if "verify outside a let"
+         (go '(verify (let ((x #t)) x))))
+
+(pass-if "verify inside a let"
+         (go '(let ((x #t))
+                (verify x))))
