@@ -141,3 +141,9 @@
 
 (pass-if "(verify #t)"
          (true? (go '(verify #t))))
+
+(pass-if "(verify #t #t #t)"
+         (true? (go '(verify #t #t #t))))
+
+(pass-if "(verify #t #f #t)"
+         (not (go '(verify #t #f #t))))
