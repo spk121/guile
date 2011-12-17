@@ -115,9 +115,22 @@ points to the value-set of this expression's return value.
   (environment-lookup default-environment name))
 
 (define-syntax-rule (push! list obj)
-  (set! list (cons list obj)))
+  (set! list (cons obj list)))
 
 (define *values-need-inference* (make-set-queue))
+
+(define *verifies* '())
+
+
+;; this procedure is called on a node whose child node gained a
+;; value. it decides what to do about this. the parent can be #f, which
+;; means the child is at the top level
+(define (child-gained-value! parent)
+  (match parent
+         (#f #t)
+         (($ <a-call> _ _ _ _ _ _)
+          (set-queue-insert! *values-need-inference* parent))
+         (else #t)))
 
 ;; this procedure
 ;; - converts tree-il to annotated tree-il.
@@ -136,8 +149,7 @@ points to the value-set of this expression's return value.
                                 #t ; can-return?
                                 (value-set-nothing) ; return-value-set
                                 )))
-              (if parent
-                  (set-queue-insert! *values-need-inference* parent))
+              (child-gained-value! parent)
               ret))
            (($ <const> src exp)
             (let ((ret
@@ -146,8 +158,7 @@ points to the value-set of this expression's return value.
                                  (value-set-with-values exp) ; return-value-set
                                  exp
                                  )))
-              (if parent
-                  (set-queue-insert! *values-need-inference* parent))
+              (child-gained-value! parent)
               ret))
            (($ <primitive-ref> src name)
             (let ((ret
@@ -155,8 +166,7 @@ points to the value-set of this expression's return value.
                                          #t ; can-return?
                                          (primitive-lookup name) ; return-value-set
                                          name)))
-              (if parent
-                  (set-queue-insert! *values-need-inference* parent))
+              (child-gained-value! parent)
               ret))
            (($ <lexical-ref> src name gensym)
             (make-a-lexical-ref src parent
@@ -213,6 +223,7 @@ points to the value-set of this expression's return value.
                                       '())))
               (set! (a-verify-exps ret)
                     (map (lambda (x) (rec ret x env)) args))
+              (push! *verifies* ret)
               ret))
            (($ <call> src proc args)
             (let ((ret (make-a-call src parent
@@ -278,6 +289,20 @@ points to the value-set of this expression's return value.
             (error "No fix yet!"))
 )))
 
+(define (all-verifies-pass?)
+  (let outer ((v *verifies*))
+    (if (null? v)
+        #t
+        (let inner ((exps (a-verify-exps (car v))))
+          (cond ((null? exps) (outer (cdr v)))
+                ((and (value-set-has-values?
+                       (annotated-tree-il-return-value-set (car exps)))
+                      (not (value-set-has-value?
+                            (annotated-tree-il-return-value-set (car exps))
+                            #f)))
+                 (inner (cdr exps)))
+                (else #f))))))
+
 (define *tree* '())
 
 ;; This function starts with the annotated tree-il nodes in
@@ -315,10 +340,12 @@ points to the value-set of this expression's return value.
 
 (define (go sexp)
   (set! *values-need-inference* (make-set-queue))
+  (set! *verifies* '())
   (set! *tree*
    (tree-il->annotated-tree-il!
     (compile sexp #:to 'tree-il)))
-  (pretty-print *tree*))
+  (infer-value-sets!)
+  (all-verifies-pass?))
 
 #|
 

@@ -1,6 +1,7 @@
 (use-modules (test-suite lib)
              (analyzer set-queue)
-             (analyzer value-sets))
+             (analyzer value-sets)
+             (analyzer analyze))
 
 ;; test the set queue functions
 
@@ -133,3 +134,10 @@
          (begin (vs-cdr vs-t4 (value-set-nothing))
                 (true? (value-set-nothing? vs-t4))))
 
+;; test the actual analyzer!
+
+(pass-if "(verify #f)"
+         (not (go '(verify #f))))
+
+(pass-if "(verify #t)"
+         (true? (go '(verify #t))))
