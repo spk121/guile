@@ -1,6 +1,7 @@
 (define-module (analyzer analyze)
   #:use-module (analyzer value-sets)
   #:use-module (analyzer set-queue)
+  #:use-module (analyzer lexical-envs)
   #:use-module (ice-9 match)
   #:use-module (ice-9 receive)
   #:use-module (srfi srfi-9)
@@ -75,55 +76,11 @@ points to the value-set of this expression's return value.
   (<a-let-values> exp body)
   (<a-verify> exps))
 
-;; this returns a value-set for its tree's return value and a new
-;; environment to replace entry-environment (in case it's a set form)
-;; entry-environment should include an entry for all of the top-level
-;; defines in the program, and any module defines that it will use.
-
-(define (make-environment)
-  '())
-
-;; append some name-value pairs to an environment
-;; environments match names to value-sets.
-(define (environment-append-pairs env . args)
-  (if (null? args)
-      env
-      (let loop ((args args)
-                 (frame '()))
-        (cond ((null? args)
-               (cons frame env))
-              ((null? (cdr args))
-               (error "environment-append-pairs" (car args)))
-              (else
-               (loop (cddr args)
-                     (cons (cons (car args) (cadr args)) frame)))))))
-
-(define (environment-append-names-values env names values)
-  (let loop ((frame '())
-             (names names)
-             (values values))
-    (cond ((null? names)
-           (if (null? values)
-               (cons frame env)
-               (error "environment-append-names-values: got different-length lists!")))
-          ((null? values)
-           (error "environment-append-names-values: got different-length lists!"))
-          (else (loop (cons (cons (car names) (car values)) frame)
-                      (cdr names)
-                      (cdr values))))))
-
-(define (environment-lookup env name)
-  (cond ((null? env) #f)
-        ((assq-ref (car env) name)
-         => (lambda (k) k))
-        (else
-         (environment-lookup (cdr env) name))))
-
 (define default-environment
-  `( (cons . ,(value-set-with-values prim-cons))
-     (car  . ,(value-set-with-values prim-car ))
-     (cdr  . ,(value-set-with-values prim-cdr ))
-   ))
+  (environment-append-pairs (make-environment)
+    (cons 'cons (value-set-with-values prim-cons))
+    (cons 'car  (value-set-with-values prim-car))
+    (cons 'cdr  (value-set-with-values prim-cdr))))
 
 (define (primitive-lookup name)
   (environment-lookup default-environment name))

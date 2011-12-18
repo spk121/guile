@@ -1,5 +1,6 @@
 (use-modules (test-suite lib)
              (analyzer set-queue)
+             (analyzer lexical-envs)
              (analyzer value-sets)
              (analyzer analyze))
 
@@ -43,6 +44,34 @@
          (begin
            (emptying-set-queue! sq (lambda (x) (set! lst (cons x lst))))
            (equal? lst '(3 2 1))))
+
+;; test the environment functions
+
+(define env (make-environment))
+
+(pass-if "lookup in empty environment"
+         (not (environment-lookup env 'foo)))
+
+(define env-a
+  (environment-append-pairs env
+                            (cons 'a 'b)
+                            (cons 'c 'd)
+                            (cons 'e 'f)))
+
+(pass-if "basic environment lookup"
+         (and (eq? (environment-lookup env-a 'a) 'b)
+              (eq? (environment-lookup env-a 'c) 'd)
+              (eq? (environment-lookup env-a 'e) 'f)))
+
+(define env-b
+  (environment-append-names-values env-a
+                                   '(a c e)
+                                   '(g h i)))
+
+(pass-if "shadowed bindings in environment"
+         (and (eq? (environment-lookup env-b 'a) 'g)
+              (eq? (environment-lookup env-b 'c) 'h)
+              (eq? (environment-lookup env-b 'e) 'i)))
 
 ;; test the value set functions
 
