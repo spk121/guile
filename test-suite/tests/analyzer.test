@@ -9,48 +9,48 @@
 (define sq (make-set-queue))
 
 (pass-if "set-queue-insert!"
-         (begin
-           (set-queue-insert! sq 1)
-           (set-queue-insert! sq 2)
-           (set-queue-insert! sq 3)
-           #t)) ;; pass if you get here without an exception
+  (begin
+    (set-queue-insert! sq 1)
+    (set-queue-insert! sq 2)
+    (set-queue-insert! sq 3)
+    #t)) ;; pass if you get here without an exception
 
 (pass-if "set-queue-remove"
-         (equal? (set-queue-remove! sq) 1))
+  (equal? (set-queue-remove! sq) 1))
 
 (pass-if "set-queue-remove"
-         (equal? (set-queue-remove! sq) 2))
+  (equal? (set-queue-remove! sq) 2))
 
 (pass-if "set-queue-empty?"
-         (not (set-queue-empty? sq)))
+  (not (set-queue-empty? sq)))
 
 (pass-if "set-queue-remove"
-         (equal? (set-queue-remove! sq) 3))
+  (equal? (set-queue-remove! sq) 3))
 
 (pass-if "set-queue-empty?"
-         (set-queue-empty? sq))
+  (set-queue-empty? sq))
 
 (pass-if "set-queue-insert!"
-         (begin
-           (set-queue-insert! sq 1)
-           (set-queue-insert! sq 2)
-           (set-queue-insert! sq 3)
-           
-           (set-queue-insert! sq 1)
-           #t))
+  (begin
+    (set-queue-insert! sq 1)
+    (set-queue-insert! sq 2)
+    (set-queue-insert! sq 3)
+    
+    (set-queue-insert! sq 1)
+    #t))
 
 (define lst '())
 (pass-if "emptying-set-queue"
-         (begin
-           (emptying-set-queue! sq (lambda (x) (set! lst (cons x lst))))
-           (equal? lst '(3 2 1))))
+  (begin
+    (emptying-set-queue! sq (lambda (x) (set! lst (cons x lst))))
+    (equal? lst '(3 2 1))))
 
 ;; test the environment functions
 
 (define env (make-environment))
 
 (pass-if "lookup in empty environment"
-         (not (environment-lookup env 'foo)))
+  (not (environment-lookup env 'foo)))
 
 (define env-a
   (environment-append-pairs env
@@ -59,9 +59,9 @@
                             (cons 'e 'f)))
 
 (pass-if "basic environment lookup"
-         (and (eq? (environment-lookup env-a 'a) 'b)
-              (eq? (environment-lookup env-a 'c) 'd)
-              (eq? (environment-lookup env-a 'e) 'f)))
+  (and (eq? (environment-lookup env-a 'a) 'b)
+       (eq? (environment-lookup env-a 'c) 'd)
+       (eq? (environment-lookup env-a 'e) 'f)))
 
 (define env-b
   (environment-append-names-values env-a
@@ -69,9 +69,9 @@
                                    '(g h i)))
 
 (pass-if "shadowed bindings in environment"
-         (and (eq? (environment-lookup env-b 'a) 'g)
-              (eq? (environment-lookup env-b 'c) 'h)
-              (eq? (environment-lookup env-b 'e) 'i)))
+  (and (eq? (environment-lookup env-b 'a) 'g)
+       (eq? (environment-lookup env-b 'c) 'h)
+       (eq? (environment-lookup env-b 'e) 'i)))
 
 ;; test the value set functions
 
@@ -82,47 +82,47 @@
 (define (true? x) (not (not x)))
 
 (pass-if "value-set-can-be-anything?"
-         (value-set-can-be-anything? anything))
+  (value-set-can-be-anything? anything))
 
 (pass-if "value-set-value-satisfying"
-         (true? (value-set-value-satisfying simple number?)))
+  (true? (value-set-value-satisfying simple number?)))
 
 (pass-if "value-set-value-satisfying"
-         (not (value-set-value-satisfying nothing number?)))
+  (not (value-set-value-satisfying nothing number?)))
 
 (pass-if "value-set-has-values?"
-         (not (value-set-has-values? nothing)))
+  (not (value-set-has-values? nothing)))
 (pass-if "value-set-has-values?"
-         (value-set-has-values? anything))
+  (value-set-has-values? anything))
 (pass-if "value-set-has-values?"
-         (value-set-has-values? simple))
+  (value-set-has-values? simple))
 
 (pass-if "value-set-has-value?"
-         (true? (value-set-has-value? simple 3)))
+  (true? (value-set-has-value? simple 3)))
 
 (pass-if "value-set-has-value?"
-         (not (value-set-has-value? nothing 4)))
+  (not (value-set-has-value? nothing 4)))
 
 (pass-if "value-set-has-property?"
-         (true? (value-set-has-property? anything 'anything)))
+  (true? (value-set-has-property? anything 'anything)))
 (pass-if "value-set-has-property?"
-         (not (value-set-has-property? simple 'anything)))
+  (not (value-set-has-property? simple 'anything)))
 
 (pass-if "union value 4 onto other numbers"
-         (begin (value-set-add-value! simple 4)
-                (true? (value-set-has-value? simple 4))))
+  (begin (value-set-add-value! simple 4)
+         (true? (value-set-has-value? simple 4))))
 
 (pass-if "add property (number?)"
-         (begin (value-set-add-property! nothing '(number?))
-                (true? (value-set-has-property? nothing 'number?))))
+  (begin (value-set-add-property! nothing '(number?))
+         (true? (value-set-has-property? nothing 'number?))))
 
 (pass-if "add property (anything), no other properties"
-         (begin (value-set-add-property! nothing '(anything))
-                (not (value-set-has-property? nothing 'number?))))
+  (begin (value-set-add-property! nothing '(anything))
+         (not (value-set-has-property? nothing 'number?))))
 
 (pass-if "add property (anything), no values"
-         (begin (value-set-add-property! simple '(anything))
-                (not (value-set-has-value? simple 3))))
+  (begin (value-set-add-property! simple '(anything))
+         (not (value-set-has-value? simple 3))))
 
 (define vs-one (value-set-with-values 1))
 (define vs-two (value-set-with-values 2))
@@ -131,16 +131,16 @@
 (define vs-pair (value-set-nothing))
 
 (pass-if "union a pair value onto something without a pair value"
-         (begin (vs-cons vs-pair vs-one vs-two)
-                (true? (value-set-has-value?
-                        (car (value-set-value-satisfying vs-pair pair?))
-                        1))))
+  (begin (vs-cons vs-pair vs-one vs-two)
+         (true? (value-set-has-value?
+                 (car (value-set-value-satisfying vs-pair pair?))
+                 1))))
 
 (pass-if "union a pair value onto another pair value"
-         (begin (vs-cons vs-pair vs-three vs-four)
-                (true? (value-set-has-value?
-                        (car (value-set-value-satisfying vs-pair pair?))
-                        1))))
+  (begin (vs-cons vs-pair vs-three vs-four)
+         (true? (value-set-has-value?
+                 (car (value-set-value-satisfying vs-pair pair?))
+                 1))))
 
 (define vs-t1 (value-set-nothing))
 (define vs-t2 (value-set-nothing))
@@ -148,38 +148,38 @@
 (define vs-t4 (value-set-nothing))
 
 (pass-if "take a vs-car of a pair"
-         (begin (vs-car vs-t1 vs-pair)
-                (true? (value-set-has-value? vs-t1 3))))
+  (begin (vs-car vs-t1 vs-pair)
+         (true? (value-set-has-value? vs-t1 3))))
 
 (pass-if "take a vs-car of nothing"
-         (begin (vs-car vs-t2 (value-set-nothing))
-                (true? (value-set-nothing? vs-t2))))
+  (begin (vs-car vs-t2 (value-set-nothing))
+         (true? (value-set-nothing? vs-t2))))
 
 (pass-if "take a vs-cdr of a pair"
-         (begin (vs-cdr vs-t3 vs-pair)
-                (true? (value-set-has-value? vs-t3 4))))
+  (begin (vs-cdr vs-t3 vs-pair)
+         (true? (value-set-has-value? vs-t3 4))))
 
 (pass-if "take a vs-cdr of nothing"
-         (begin (vs-cdr vs-t4 (value-set-nothing))
-                (true? (value-set-nothing? vs-t4))))
+  (begin (vs-cdr vs-t4 (value-set-nothing))
+         (true? (value-set-nothing? vs-t4))))
 
 ;; test the actual analyzer!
 
 (pass-if "(verify #f)"
-         (not (go '(verify #f))))
+  (not (go '(verify #f))))
 
 (pass-if "(verify #t)"
-         (true? (go '(verify #t))))
+  (true? (go '(verify #t))))
 
 (pass-if "(verify #t #t #t)"
-         (true? (go '(verify #t #t #t))))
+  (true? (go '(verify #t #t #t))))
 
 (pass-if "(verify #t #f #t)"
-         (not (go '(verify #t #f #t))))
+  (not (go '(verify #t #f #t))))
 
 (pass-if "verify outside a let"
-         (go '(verify (let ((x #t)) x))))
+  (go '(verify (let ((x #t)) x))))
 
 (pass-if "verify inside a let"
-         (go '(let ((x #t))
-                (verify x))))
+  (go '(let ((x #t))
+         (verify x))))
