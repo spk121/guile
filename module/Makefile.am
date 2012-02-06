@@ -186,6 +186,7 @@ ICE_9_SOURCES = \
   ice-9/r5rs.scm \
   ice-9/deprecated.scm \
   ice-9/and-let-star.scm \
+  ice-9/async-queue.scm \
   ice-9/binary-ports.scm \
   ice-9/calling.scm \
   ice-9/command-line.scm \
