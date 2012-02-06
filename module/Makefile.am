@@ -231,6 +231,7 @@ ICE_9_SOURCES = \
   ice-9/string-fun.scm \
   ice-9/syncase.scm \
   ice-9/threads.scm \
+  ice-9/thread-pool.scm \
   ice-9/top-repl.scm \
   ice-9/buffered-input.scm \
   ice-9/time.scm \
