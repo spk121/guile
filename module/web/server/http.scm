@@ -30,6 +30,7 @@
 (define-module (web server http)
   #:use-module ((srfi srfi-1) #:select (fold))
   #:use-module (srfi srfi-9)
+  #:use-module (ice-9 binary-ports)
   #:use-module (rnrs bytevectors)
   #:use-module (web request)
   #:use-module (web response)
@@ -43,12 +44,31 @@
     (bind sock family addr port)
     sock))
 
+(define (make-waker)
+  (let ((wakeup (socketpair AF_UNIX SOCK_STREAM 0)))
+    (fcntl (car wakeup) F_SETFL O_NONBLOCK)
+    (fcntl (cdr wakeup) F_SETFL O_NONBLOCK)
+    #;
+    (if (defined? 'O_CLOEXEC)
+        (begin
+          ;; FIXME: currently it's not defined...
+          (fcntl (car wakeup) F_SETFD O_CLOEXEC)
+          (fcntl (cdr wakeup) F_SETFD O_CLOEXEC)))
+    (values (lambda () (put-u8 (car wakeup) 0))
+            (cdr wakeup))))
+
+(define flush-wake-port
+  ;; FIXME: need a bytevector-get-n! that understands nonblocking ports.
+  (lambda (port)
+    (get-u8 port)))
+
 (define-record-type <http-server>
-  (make-http-server socket poll-idx poll-set)
+  (make-http-server socket poll-idx poll-set wake-thunk)
   http-server?
   (socket http-socket)
   (poll-idx http-poll-idx set-http-poll-idx!)
-  (poll-set http-poll-set))
+  (poll-set http-poll-set)
+  (wake-thunk http-wake-thunk))
 
 (define *error-events* (logior POLLHUP POLLERR))
 (define *read-events* POLLIN)
@@ -66,8 +86,11 @@
   (listen socket 128)
   (sigaction SIGPIPE SIG_IGN)
   (let ((poll-set (make-empty-poll-set)))
-    (poll-set-add! poll-set socket *events*)
-    (make-http-server socket 0 poll-set)))
+    (call-with-values make-waker
+      (lambda (wake-thunk wake-port)
+        (poll-set-add! poll-set socket *events*)
+        (poll-set-add! poll-set wake-port *read-events*)
+        (make-http-server socket 0 poll-set wake-thunk)))))
 
 (define (bad-request port)
   (write-response (build-response #:version '(1 . 0) #:code 400
@@ -105,6 +128,10 @@
               (lp (1- (poll-set-nfds poll-set)))))))
          ((zero? revents)
           ;; Nothing on this port.
+          (lp (1- idx)))
+         ((= idx 1)
+          ;; The wakeup socket.
+          (flush-wake-port (poll-set-port poll-set idx))
           (lp (1- idx)))
          ;; Otherwise, a client socket with some activity on
          ;; it. Remove it from the poll set.
