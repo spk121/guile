@@ -90,7 +90,7 @@
             ;; A new client. Add to set, poll, and loop.
             ;;
             ;; FIXME: preserve meta-info.
-            (let ((client (accept (poll-set-port poll-set idx))))
+            (let ((client (accept (poll-set-port poll-set idx) SOCK_CLOEXEC)))
               ;; Buffer input and output on this port.
               (setvbuf (car client) _IOFBF)
               ;; From "HOP, A Fast Server for the Diffuse Web", Serrano.
