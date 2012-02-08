@@ -1,4 +1,4 @@
-/* 	Copyright (C) 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2003, 2006, 2011 Free Software Foundation, Inc.
+/* 	Copyright (C) 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2003, 2006, 2011, 2012 Free Software Foundation, Inc.
  * 
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public License
@@ -254,12 +254,10 @@ SCM_DEFINE (scm_primitive_move_to_fdes, "primitive-move->fdes", 2, 0, 0,
   stream = SCM_FSTREAM (port);
   old_fd = stream->fdes;
   new_fd = scm_to_int (fd);
-  if  (old_fd == new_fd)
-    {
-      return SCM_BOOL_F;
-    }
+  if (old_fd == new_fd)
+    return SCM_BOOL_F;
   scm_evict_ports (new_fd);
-  rv = dup2 (old_fd, new_fd);
+  rv = dup3 (old_fd, new_fd, stream->cloexec_p ? O_CLOEXEC : 0);
   if (rv == -1)
     SCM_SYSERROR;
   stream->fdes = new_fd;
