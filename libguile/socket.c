@@ -1,5 +1,5 @@
 /* Copyright (C) 1996, 1997, 1998, 2000, 2001, 2002, 2003, 2004, 2005,
- *   2006, 2007, 2009, 2011 Free Software Foundation, Inc.
+ *   2006, 2007, 2009, 2011, 2012 Free Software Foundation, Inc.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public License
@@ -19,6 +19,8 @@
 
 
 
+
+#define _GNU_SOURCE /* accept4 */
 
 #ifdef HAVE_CONFIG_H
 #  include <config.h>
@@ -1299,8 +1301,8 @@ SCM_DEFINE (scm_make_socket_address, "make-socket-address", 2, 0, 1,
 #undef FUNC_NAME
 
 
-SCM_DEFINE (scm_accept, "accept", 1, 0, 0, 
-            (SCM sock),
+SCM_DEFINE (scm_accept, "accept", 1, 1, 0,
+            (SCM sock, SCM flags),
 	    "Accept a connection on a bound, listening socket.\n"
 	    "If there\n"
 	    "are no pending connections in the queue, wait until\n"
@@ -1316,6 +1318,7 @@ SCM_DEFINE (scm_accept, "accept", 1, 0, 0,
 #define FUNC_NAME s_scm_accept
 {
   int fd;
+  int fd_flags;
   int newfd;
   SCM address;
   SCM newsock;
@@ -1325,7 +1328,8 @@ SCM_DEFINE (scm_accept, "accept", 1, 0, 0,
   sock = SCM_COERCE_OUTPORT (sock);
   SCM_VALIDATE_OPFPORT (1, sock);
   fd = SCM_FPORT_FDES (sock);
-  newfd = accept (fd, (struct sockaddr *) &addr, &addr_size);
+  fd_flags = SCM_UNBNDP (flags) ? 0 : scm_to_int (flags);
+  newfd = accept4 (fd, (struct sockaddr *) &addr, &addr_size, fd_flags);
   if (newfd == -1)
     SCM_SYSERROR;
   newsock = SCM_SOCK_FD_TO_PORT (newfd);
@@ -1695,6 +1699,12 @@ scm_init_socket ()
 #endif
 #ifdef SOCK_RDM
   scm_c_define ("SOCK_RDM", scm_from_int (SOCK_RDM));
+#endif
+#ifdef SOCK_RDM
+  scm_c_define ("SOCK_NONBLOCK", scm_from_int (SOCK_NONBLOCK));
+#endif
+#ifdef SOCK_CLOEXEC
+  scm_c_define ("SOCK_CLOEXEC", scm_from_int (SOCK_CLOEXEC));
 #endif
 
   /* setsockopt level.

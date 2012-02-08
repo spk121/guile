@@ -3,7 +3,7 @@
 #ifndef SCM_SOCKET_H
 #define SCM_SOCKET_H
 
-/* Copyright (C) 1995,1996,1997,2000,2001, 2004, 2005, 2006, 2008 Free Software Foundation, Inc.
+/* Copyright (C) 1995,1996,1997,2000,2001, 2004, 2005, 2006, 2008, 2012 Free Software Foundation, Inc.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public License
@@ -46,7 +46,7 @@ SCM_API SCM scm_shutdown (SCM sfd, SCM how);
 SCM_API SCM scm_connect (SCM sockfd, SCM fam, SCM address, SCM args);
 SCM_API SCM scm_bind (SCM sockfd, SCM fam, SCM address, SCM args);
 SCM_API SCM scm_listen (SCM sfd, SCM backlog);
-SCM_API SCM scm_accept (SCM sockfd);
+SCM_API SCM scm_accept (SCM sockfd, SCM flags);
 SCM_API SCM scm_getsockname (SCM sockfd);
 SCM_API SCM scm_getpeername (SCM sockfd);
 SCM_API SCM scm_recv (SCM sockfd, SCM buff_or_size, SCM flags);
