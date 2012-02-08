@@ -4,7 +4,7 @@
 #define SCM_POSIX_H
 
 /* Copyright (C) 1995, 1996, 1997, 1998, 2000, 2001, 2003, 2006, 2008,
- *   2009, 2010, 2011 Free Software Foundation, Inc.
+ *   2009, 2010, 2011, 2012 Free Software Foundation, Inc.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public License
@@ -64,7 +64,13 @@ SCM_API SCM scm_ttyname (SCM port);
 SCM_API SCM scm_execl (SCM filename, SCM args);
 SCM_API SCM scm_execlp (SCM filename, SCM args);
 SCM_API SCM scm_execle (SCM filename, SCM env, SCM args);
+
+typedef void (*scm_t_atfork_callback) (void *data);
+SCM_API void scm_c_atfork (scm_t_atfork_callback pre,
+                           scm_t_atfork_callback post,
+                           void *data);
 SCM_API SCM scm_fork (void);
+
 SCM_API SCM scm_uname (void);
 SCM_API SCM scm_environ (SCM env);
 SCM_API SCM scm_tmpnam (void);

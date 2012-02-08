@@ -1,4 +1,4 @@
-/* Copyright (C) 1995,1996,1997,1998,1999,2000,2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011 Free Software Foundation, Inc.
+/* Copyright (C) 1995,1996,1997,1998,1999,2000,2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012 Free Software Foundation, Inc.
  * 
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public License
@@ -1238,6 +1238,65 @@ SCM_DEFINE (scm_execle, "execle", 2, 0, 1,
 #undef FUNC_NAME
 
 #ifdef HAVE_FORK
+struct scm_t_atfork_entry {
+  struct scm_t_atfork_entry *next;
+  struct scm_t_atfork_entry *prev;
+  scm_t_atfork_callback pre;
+  scm_t_atfork_callback post;
+  void *data;
+};
+
+static scm_i_pthread_mutex_t atfork_lock = SCM_I_PTHREAD_MUTEX_INITIALIZER;
+static struct scm_t_atfork_entry *atfork_entries;
+
+void
+scm_c_atfork (scm_t_atfork_callback pre, scm_t_atfork_callback post, void *data)
+{
+  struct scm_t_atfork_entry *new_entry;
+
+  new_entry = scm_gc_malloc (sizeof (*new_entry), "atfork entry");
+
+  scm_i_pthread_mutex_lock (&atfork_lock);
+  new_entry->next = atfork_entries;
+  new_entry->prev = NULL;
+  if (atfork_entries)
+    atfork_entries->prev = new_entry;
+  new_entry->pre = pre;
+  new_entry->post = post;
+  new_entry->data = data;
+  atfork_entries = new_entry;
+  scm_i_pthread_mutex_unlock (&atfork_lock);
+}
+
+static void
+before_fork (void)
+{
+  struct scm_t_atfork_entry *ent;
+
+  scm_i_pthread_mutex_lock (&atfork_lock);
+  for (ent = atfork_entries; ent; ent = ent->next)
+    ent->pre (ent->data);
+}
+
+static void
+after_fork (void)
+{
+  struct scm_t_atfork_entry *ent;
+
+  for (ent = atfork_entries; ent && ent->next; ent = ent->next);
+  for (; ent; ent = ent->prev)
+    ent->post (ent->data);
+  scm_i_pthread_mutex_unlock (&atfork_lock);
+}
+
+static void*
+do_fork (void *data)
+{
+  int *pid = data;
+  *pid = fork();
+  return NULL;
+}
+
 SCM_DEFINE (scm_fork, "primitive-fork", 0, 0, 0,
             (),
 	    "Creates a new \"child\" process by duplicating the current \"parent\" process.\n"
@@ -1248,7 +1307,11 @@ SCM_DEFINE (scm_fork, "primitive-fork", 0, 0, 0,
 #define FUNC_NAME s_scm_fork
 {
   int pid;
-  pid = fork ();
+
+  before_fork ();
+  GC_call_with_alloc_lock (do_fork, &pid);
+  after_fork ();
+
   if (pid == -1)
     SCM_SYSERROR;
   return scm_from_int (pid);
