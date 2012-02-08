@@ -2252,6 +2252,8 @@ scm_init_posix ()
 
 #include "libguile/cpp-SIG.c"
 #include "libguile/posix.x"
+
+  scm_c_atfork_lock_static_mutex (&scm_i_locale_mutex);
 }
 
 /*

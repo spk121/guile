@@ -1,4 +1,4 @@
-/* Copyright (C) 2001, 2009, 2010, 2011 Free Software Foundation, Inc.
+/* Copyright (C) 2001, 2009, 2010, 2011, 2012 Free Software Foundation, Inc.
  * 
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public License
@@ -208,6 +208,7 @@ scm_bootstrap_instructions (void)
                             "scm_init_instructions",
                             (scm_t_extension_init_func)scm_init_instructions,
                             NULL);
+  scm_c_atfork_lock_static_mutex (&itable_lock);
 }
 
 void

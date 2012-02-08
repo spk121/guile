@@ -2906,6 +2906,7 @@ scm_init_ports ()
   cur_loadport_fluid = scm_make_fluid ();
 
   scm_i_port_weak_set = scm_c_make_weak_set (31);
+  scm_c_atfork_lock_static_mutex (&scm_ptobs_lock);
 
 #include "libguile/ports.x"
 

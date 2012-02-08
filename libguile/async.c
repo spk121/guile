@@ -1,4 +1,4 @@
-/* Copyright (C) 1995,1996,1997,1998,2000,2001, 2002, 2004, 2006, 2008, 2009, 2010, 2011 Free Software Foundation, Inc.
+/* Copyright (C) 1995,1996,1997,1998,2000,2001, 2002, 2004, 2006, 2008, 2009, 2010, 2011, 2012 Free Software Foundation, Inc.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public License
@@ -450,6 +450,8 @@ void
 scm_init_async ()
 {
   tc16_async = scm_make_smob_type ("async", 0);
+
+  scm_c_atfork_lock_static_mutex (&async_mutex);
 
 #include "libguile/async.x"
 }

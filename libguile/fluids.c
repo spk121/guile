@@ -590,6 +590,7 @@ void
 scm_init_fluids ()
 {
 #include "libguile/fluids.x"
+  scm_c_atfork_lock_static_mutex (&fluid_admin_mutex);
 }
 
 /*

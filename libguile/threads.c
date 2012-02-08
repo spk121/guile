@@ -2194,6 +2194,10 @@ scm_init_threads ()
   threads_initialized_p = 1;
 
   dynwind_critical_section_mutex = scm_make_recursive_mutex ();
+
+  scm_c_atfork_lock_static_mutex (&scm_i_critical_section_mutex);
+  scm_c_atfork_lock_static_mutex (&scm_i_misc_mutex);
+  scm_c_atfork_lock_static_mutex (&thread_admin_mutex);
 }
 
 void

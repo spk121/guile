@@ -2333,6 +2333,8 @@ scm_init_strings ()
 {
   scm_nullstr = scm_i_make_string (0, NULL, 0);
 
+  scm_c_atfork_lock_static_mutex (&stringbuf_write_mutex);
+
 #include "libguile/strings.x"
 }
 
