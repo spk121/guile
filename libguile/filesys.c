@@ -948,7 +948,9 @@ SCM_DEFINE (scm_fcntl, "fcntl", 2, 1, 0,
 	    "Values for @var{cmd} are:\n\n"
 	    "@table @code\n"
 	    "@item F_DUPFD\n"
-	    "Duplicate a file descriptor\n"
+	    "Duplicate a file descriptor.\n"
+	    "@item F_DUPFD_CLOEXEC\n"
+	    "Duplicate a file descriptor, setting the @code{FD_CLOEXEC} flag.\n"
 	    "@item F_GETFD\n"
 	    "Get flags associated with the file descriptor.\n"
 	    "@item F_SETFD\n"
@@ -1844,10 +1846,16 @@ scm_init_filesys ()
 #ifdef O_NOTRANS
   scm_c_define ("O_NOTRANS", scm_from_int (O_NOTRANS));
 #endif
+#ifdef O_CLOEXEC
+  scm_c_define ("O_CLOEXEC", scm_from_int (O_CLOEXEC));
+#endif
 
 #ifdef F_DUPFD  
   scm_c_define ("F_DUPFD", scm_from_int (F_DUPFD));
 #endif 
+#ifdef F_DUPFD_CLOEXEC
+  scm_c_define ("F_DUPFD_CLOEXEC", scm_from_int (F_DUPFD_CLOEXEC));
+#endif
 #ifdef F_GETFD  
   scm_c_define ("F_GETFD", scm_from_int (F_GETFD));
 #endif 
