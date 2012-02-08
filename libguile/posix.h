@@ -69,6 +69,7 @@ typedef void (*scm_t_atfork_callback) (void *data);
 SCM_API void scm_c_atfork (scm_t_atfork_callback pre,
                            scm_t_atfork_callback post,
                            void *data);
+SCM_API void scm_c_atfork_lock_static_mutex (scm_i_pthread_mutex_t *mutex);
 SCM_API SCM scm_fork (void);
 
 SCM_API SCM scm_uname (void);

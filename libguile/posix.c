@@ -1269,6 +1269,24 @@ scm_c_atfork (scm_t_atfork_callback pre, scm_t_atfork_callback post, void *data)
 }
 
 static void
+lock_mutex (void *mutex)
+{
+  scm_i_pthread_mutex_lock (mutex);
+}
+
+static void
+unlock_mutex (void *mutex)
+{
+  scm_i_pthread_mutex_unlock (mutex);
+}
+
+void
+scm_c_atfork_lock_static_mutex (scm_i_pthread_mutex_t *mutex)
+{
+  scm_c_atfork (lock_mutex, unlock_mutex, mutex);
+}
+
+static void
 before_fork (void)
 {
   struct scm_t_atfork_entry *ent;
