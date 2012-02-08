@@ -1,5 +1,5 @@
 /* Copyright (C) 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003,
- *   2004, 2006, 2007, 2008, 2009, 2010, 2011 Free Software Foundation, Inc.
+ *   2004, 2006, 2007, 2008, 2009, 2010, 2011, 2012 Free Software Foundation, Inc.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public License
@@ -21,6 +21,7 @@
 
 #define _LARGEFILE64_SOURCE      /* ask for stat64 etc */
 #define _GNU_SOURCE              /* ask for LONG_LONG_MAX/LONG_LONG_MIN */
+#define _POSIX_C_SOURCE 200809L  /* F_DUPFD_CLOEXEC */
 
 #ifdef HAVE_CONFIG_H
 #  include <config.h>
@@ -259,7 +260,13 @@ scm_i_evict_port (void *closure, SCM port)
 
       if ((fp != NULL) && (fp->fdes == fd))
 	{
-	  fp->fdes = dup (fd);
+          if (fp->cloexec_p)
+            /* The result will be 3 or more.  Presumably we don't want
+               to accidentally end on 0, 1, or 2.  */
+            fp->fdes = fcntl (fd, F_DUPFD_CLOEXEC, 3);
+          else
+            fp->fdes = dup (fd);
+
 	  if (fp->fdes == -1)
 	    scm_syserror ("scm_evict_ports");
 	  scm_set_port_revealed_x (port, scm_from_int (0));
@@ -280,6 +287,17 @@ SCM_DEFINE (scm_file_port_p, "file-port?", 1, 0, 0,
 #define FUNC_NAME s_scm_file_port_p
 {
   return scm_from_bool (SCM_FPORTP (obj));
+}
+#undef FUNC_NAME
+
+
+SCM_DEFINE (scm_file_port_close_on_exec_p, "file-port-close-on-exec?", 1, 0, 0,
+	    (SCM fport),
+	    "Determine whether @var{fobj} was created with the @code{FD_CLOEXEC} flag set.")
+#define FUNC_NAME s_scm_file_port_close_on_exec_p
+{
+  SCM_VALIDATE_OPFPORT (1, fport);
+  return scm_from_bool (SCM_FSTREAM (fport)->cloexec_p);
 }
 #undef FUNC_NAME
 
@@ -537,6 +555,7 @@ scm_i_fdes_to_port (int fdes, long mode_bits, SCM name)
   SCM port;
   scm_t_fport *fp;
   int flags;
+  int fd_flags;
 
   /* test that fdes is valid.  */
 #ifdef __MINGW32__
@@ -554,9 +573,19 @@ scm_i_fdes_to_port (int fdes, long mode_bits, SCM name)
       SCM_MISC_ERROR ("requested file mode not available on fdes", SCM_EOL);
     }
 
+#ifdef F_GETFD
+  fd_flags = fcntl (fdes, F_GETFD, 0);
+#else
+  fd_flags = 0;
+#endif
+  if (fd_flags == -1)
+    SCM_SYSERROR;
+
   fp = (scm_t_fport *) scm_gc_malloc_pointerless (sizeof (scm_t_fport),
                                                   "file port");
   fp->fdes = fdes;
+  fp->cloexec_p = fd_flags & FD_CLOEXEC ? 1 : 0;
+  fp->reserved = 0;
 
   port = scm_c_make_port (scm_tc16_fport, mode_bits, (scm_t_bits)fp);
   

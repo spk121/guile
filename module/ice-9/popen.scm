@@ -1,6 +1,6 @@
 ;; popen emulation, for non-stdio based ports.
 
-;;;; Copyright (C) 1998, 1999, 2000, 2001, 2003, 2006, 2010, 2011 Free Software Foundation, Inc.
+;;;; Copyright (C) 1998, 1999, 2000, 2001, 2003, 2006, 2010, 2011, 2012 Free Software Foundation, Inc.
 ;;;; 
 ;;;; This library is free software; you can redistribute it and/or
 ;;;; modify it under the terms of the GNU Lesser General Public
@@ -39,7 +39,9 @@
 (define port/pid-table (make-weak-key-hash-table 31))
 
 (define (ensure-fdes port mode)
-  (or (false-if-exception (fileno port))
+  (or (and (file-port? port)
+           (not (port-closed? port))
+           (fileno port))
       (open-fdes *null-device* mode)))
 
 ;; run a process connected to an input, an output or an
@@ -88,12 +90,15 @@
 	       ;; flushing port buffers or evicting ports.
 
 	       (port-for-each (lambda (pt-entry)
-				(false-if-exception
-				 (let ((pt-fileno (fileno pt-entry)))
-				   (if (not (or (= pt-fileno input-fdes)
-						(= pt-fileno output-fdes)
-						(= pt-fileno error-fdes)))
-				       (close-fdes pt-fileno))))))
+                                (if (and (file-port? pt-entry)
+                                         (not (port-closed? pt-entry))
+                                         (not (file-port-close-on-exec? pt-entry)))
+                                    (let ((pt-fileno (fileno pt-entry)))
+                                      (if (not (or (= pt-fileno input-fdes)
+                                                   (= pt-fileno output-fdes)
+                                                   (= pt-fileno error-fdes)))
+                                          (false-if-exception
+                                           (close-fdes pt-fileno)))))))
 
 	       ;; Copy the three selected descriptors to the standard
 	       ;; descriptors 0, 1, 2, if not already there
