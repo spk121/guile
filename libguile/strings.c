@@ -225,7 +225,22 @@ narrow_stringbuf (SCM buf)
   return new_buf;
 }
 
+
+
 scm_i_pthread_mutex_t stringbuf_write_mutex = SCM_I_PTHREAD_MUTEX_INITIALIZER;
+static scm_i_pthread_mutex_t iconv_mutex = SCM_I_PTHREAD_MUTEX_INITIALIZER;
+
+void
+scm_i_lock_iconv (void)
+{
+  scm_i_pthread_mutex_lock (&iconv_mutex);
+}
+
+void
+scm_i_unlock_iconv (void)
+{
+  scm_i_pthread_mutex_unlock (&iconv_mutex);
+}
 
 
 /* Copy-on-write strings.
@@ -1530,12 +1545,14 @@ scm_from_stringn (const char *str, size_t len, const char *encoding,
     return scm_from_utf8_stringn (str, len);
 
   u32len = 0;
+  scm_i_lock_iconv ();
   u32 = (scm_t_wchar *) u32_conv_from_encoding (encoding,
                                                 (enum iconv_ilseq_handler)
                                                 handler,
                                                 str, len,
                                                 NULL,
                                                 NULL, &u32len);
+  scm_i_unlock_iconv ();
 
   if (SCM_UNLIKELY (u32 == NULL))
     decoding_error (__func__, errno, str, len);
@@ -2070,10 +2087,12 @@ scm_to_stringn (SCM str, size_t *lenp, const char *encoding,
     enc = "ISO-8859-1";
   if (scm_i_is_narrow_string (str))
     {
+      scm_i_lock_iconv ();
       ret = mem_iconveh (scm_i_string_chars (str), ilen,
                          "ISO-8859-1", enc,
                          (enum iconv_ilseq_handler) handler, NULL,
                          &buf, &len);
+      scm_i_unlock_iconv ();
 
       if (ret != 0)
         scm_encoding_error (__func__, errno,
@@ -2084,12 +2103,14 @@ scm_to_stringn (SCM str, size_t *lenp, const char *encoding,
     }
   else
     {
+      scm_i_lock_iconv ();
       buf = u32_conv_to_encoding (enc,
                                   (enum iconv_ilseq_handler) handler,
                                   (scm_t_uint32 *) scm_i_string_wide_chars (str),
                                   ilen,
                                   NULL,
                                   NULL, &len);
+      scm_i_unlock_iconv ();
       if (buf == NULL)
         scm_encoding_error (__func__, errno,
 			    "cannot convert wide string to output locale",
@@ -2333,6 +2354,7 @@ scm_init_strings ()
 {
   scm_nullstr = scm_i_make_string (0, NULL, 0);
 
+  scm_c_atfork_lock_static_mutex (&iconv_mutex);
   scm_c_atfork_lock_static_mutex (&stringbuf_write_mutex);
 
 #include "libguile/strings.x"
