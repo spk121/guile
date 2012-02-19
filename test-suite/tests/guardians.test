@@ -321,6 +321,7 @@
 
 (with-test-prefix "guardians and weak references"
   (let ((p (make-object-property))
+        (q (make-object-property))
         (g (make-guardian))
         (x (list 100)))
     (set! (p x) 100)
@@ -329,6 +330,9 @@
     (g x)
     (pass-if "(p x) (2)"
       (equal? (p x) 100))
+    (set! (q x) 200)
+    (pass-if "(q x) (1)"
+      (equal? (q x) 200))
     (set! x #f)
     (gc) (gc) (gc) (gc)
     (set! x (g))
@@ -339,4 +343,8 @@
     (pass-if "(p x) (3)"
       (if (not x)
           (throw 'unresolved)
-          (equal? (p x) 100)))))
+          (equal? (p x) 100)))
+    (pass-if "(q x) (2)"
+      (if (not x)
+          (throw 'unresolved)
+          (equal? (q x) 200)))))
