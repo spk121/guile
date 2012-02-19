@@ -57,9 +57,8 @@
    trace the weak values.  For doubly-weak tables, this means that the
    entries are allocated as an "atomic" piece of memory.  Key-weak and
    value-weak tables use a special GC kind with a custom mark procedure.
-   When items are added weakly into table, a disappearing link is
-   registered to their locations.  If the referent is collected, then
-   that link will be zeroed out.
+   When items are added weakly into table, we attach a finalizer onto
+   them that will remove them from the table if they become unreachable.
 
    An entry in the table consists of the key and the value, together
    with the hash code of the key.  We munge hash codes so that they are
@@ -80,10 +79,10 @@
         right-shift the hash by one, divide by the size, and take the
         remainder.
 
-     2. Since the weak references are stored in an atomic region with
-        disappearing links, they need to be accessed with the GC alloc
-        lock.  `copy_weak_entry' will do that for you.  The hash code
-        itself can be read outside the lock, though.
+     2. Since the weak references are cleared using finalizers, and
+        finalizers can rnu during allocation, we need to be very careful
+        when allocating memory, because it might modify the table we are
+        working on.
   */
 
 
@@ -92,117 +91,6 @@ typedef struct {
   scm_t_bits key;
   scm_t_bits value;
 } scm_t_weak_entry;
-
-
-struct weak_entry_data {
-  scm_t_weak_entry *in;
-  scm_t_weak_entry *out;
-};
-  
-static void*
-do_copy_weak_entry (void *data)
-{
-  struct weak_entry_data *e = data;
-
-  e->out->hash = e->in->hash;
-  e->out->key = e->in->key;
-  e->out->value = e->in->value;
-
-  return NULL;
-}
-
-static void
-copy_weak_entry (scm_t_weak_entry *src, scm_t_weak_entry *dst)
-{
-  struct weak_entry_data data;
-
-  data.in = src;
-  data.out = dst;
-      
-  GC_call_with_alloc_lock (do_copy_weak_entry, &data);
-}
-  
-static void
-register_disappearing_links (scm_t_weak_entry *entry,
-                             SCM k, SCM v,
-                             scm_t_weak_table_kind kind)
-{
-  if (SCM_UNPACK (k) && SCM_HEAP_OBJECT_P (k)
-      && (kind == SCM_WEAK_TABLE_KIND_KEY
-          || kind == SCM_WEAK_TABLE_KIND_BOTH))
-    SCM_I_REGISTER_DISAPPEARING_LINK ((GC_PTR) &entry->key,
-                                      (GC_PTR) SCM2PTR (k));
-
-  if (SCM_UNPACK (v) && SCM_HEAP_OBJECT_P (v)
-      && (kind == SCM_WEAK_TABLE_KIND_VALUE
-          || kind == SCM_WEAK_TABLE_KIND_BOTH))
-    SCM_I_REGISTER_DISAPPEARING_LINK ((GC_PTR) &entry->value,
-                                      (GC_PTR) SCM2PTR (v));
-}
-
-static void
-unregister_disappearing_links (scm_t_weak_entry *entry,
-                               scm_t_weak_table_kind kind)
-{
-  if (kind == SCM_WEAK_TABLE_KIND_KEY || kind == SCM_WEAK_TABLE_KIND_BOTH)
-    GC_unregister_disappearing_link ((GC_PTR) &entry->key);
-
-  if (kind == SCM_WEAK_TABLE_KIND_VALUE || kind == SCM_WEAK_TABLE_KIND_BOTH)
-    GC_unregister_disappearing_link ((GC_PTR) &entry->value);
-}
-
-static void
-move_disappearing_links (scm_t_weak_entry *from, scm_t_weak_entry *to,
-                         SCM key, SCM value, scm_t_weak_table_kind kind)
-{
-  if ((kind == SCM_WEAK_TABLE_KIND_KEY || kind == SCM_WEAK_TABLE_KIND_BOTH)
-      && SCM_HEAP_OBJECT_P (key))
-    {
-#ifdef HAVE_GC_MOVE_DISAPPEARING_LINK
-      GC_move_disappearing_link ((GC_PTR) &from->key, (GC_PTR) &to->key);
-#else
-      GC_unregister_disappearing_link (&from->key);
-      SCM_I_REGISTER_DISAPPEARING_LINK (&to->key, SCM2PTR (key));
-#endif
-    }
-
-  if ((kind == SCM_WEAK_TABLE_KIND_VALUE || kind == SCM_WEAK_TABLE_KIND_BOTH)
-      && SCM_HEAP_OBJECT_P (value))
-    {
-#ifdef HAVE_GC_MOVE_DISAPPEARING_LINK
-      GC_move_disappearing_link ((GC_PTR) &from->value, (GC_PTR) &to->value);
-#else
-      GC_unregister_disappearing_link (&from->value);
-      SCM_I_REGISTER_DISAPPEARING_LINK (&to->value, SCM2PTR (value));
-#endif
-    }
-}
-
-static void
-move_weak_entry (scm_t_weak_entry *from, scm_t_weak_entry *to,
-                 scm_t_weak_table_kind kind)
-{
-  if (from->hash)
-    {
-      scm_t_weak_entry copy;
-      
-      copy_weak_entry (from, &copy);
-      to->hash = copy.hash;
-      to->key = copy.key;
-      to->value = copy.value;
-
-      move_disappearing_links (from, to,
-                               SCM_PACK (copy.key), SCM_PACK (copy.value),
-                               kind);
-    }
-  else
-    {
-      to->hash = 0;
-      to->key = 0;
-      to->value = 0;
-    }
-}
-
 
 typedef struct {
   scm_t_weak_entry *entries;    /* the data */
@@ -222,6 +110,117 @@ typedef struct {
   SCM_MAKE_VALIDATE_MSG (pos, arg, WEAK_TABLE_P, "weak-table")
 #define SCM_WEAK_TABLE(x) ((scm_t_weak_table *) SCM_CELL_WORD_1 (x))
 
+
+
+
+static void
+lock_weak_table (scm_t_weak_table *table)
+{
+  scm_i_pthread_mutex_lock (&table->lock);
+}
+
+static void
+unlock_weak_table (scm_t_weak_table *table)
+{
+  scm_i_pthread_mutex_unlock (&table->lock);
+}
+
+
+
+static void weak_table_remove_x (scm_t_weak_table *table, unsigned long hash,
+                                 scm_t_table_predicate_fn pred, void *closure);
+
+static int
+key_eq_predicate (SCM x, SCM y, void *closure)
+{
+  return scm_is_eq (x, SCM_PACK_POINTER (closure));
+}
+
+static int
+value_eq_predicate (SCM x, SCM y, void *closure)
+{
+  return scm_is_eq (y, SCM_PACK_POINTER (closure));
+}
+
+static void
+key_eq_finalizer (void *k, void *t)
+{
+  SCM key = SCM_PACK_POINTER (k);
+  scm_t_weak_table *table = t;
+  weak_table_remove_x (table, scm_ihashq (key, -1),
+                       key_eq_predicate, SCM_UNPACK_POINTER (key));
+}
+
+struct finalizer_data {
+  scm_t_weak_table *table;
+  unsigned long hash;
+};
+
+static struct finalizer_data *
+make_finalizer_data (scm_t_weak_table *t, unsigned long hash)
+{
+  struct finalizer_data *data;
+  data = scm_gc_malloc (sizeof (*data), "weak table finalizer");
+  data->table = t;
+  data->hash = hash >> 1;
+  return data;
+}
+
+static void
+key_finalizer (void *obj, void *data)
+{
+  struct finalizer_data *d = data;
+  weak_table_remove_x (d->table, d->hash, key_eq_predicate, obj);
+}
+
+static void
+value_finalizer (void *obj, void *data)
+{
+  struct finalizer_data *d = data;
+  weak_table_remove_x (d->table, d->hash, value_eq_predicate, obj);
+}
+
+static void
+register_finalizers_for_key (scm_t_weak_table *t, unsigned long hash,
+                             SCM key)
+{
+  if (t->kind == SCM_WEAK_TABLE_KIND_VALUE)
+    return;
+
+  if (!SCM_HEAP_OBJECT_P (key))
+    return;
+
+  if (t->kind == SCM_WEAK_TABLE_KIND_KEY
+      && hash == ((scm_ihashq (key, -1) << 1) | 0x1))
+    scm_i_add_finalizer (SCM2PTR (key), key_eq_finalizer, t);
+  else
+    scm_i_add_finalizer (SCM2PTR (key), key_finalizer,
+                         make_finalizer_data (t, hash));
+}
+
+static void
+register_finalizers_for_value (scm_t_weak_table *t, unsigned long hash,
+                               SCM value)
+{
+  if (t->kind == SCM_WEAK_TABLE_KIND_KEY)
+    return;
+
+  if (!SCM_HEAP_OBJECT_P (value))
+    return;
+
+  scm_i_add_finalizer (SCM2PTR (value), value_finalizer,
+                       make_finalizer_data (t, hash));
+}
+
+
+
+static void
+copy_weak_entry (scm_t_weak_entry *from, scm_t_weak_entry *to)
+{
+  to->hash = from->hash;
+  to->key = from->key;
+  to->value = from->value;
+}
 
 static unsigned long
 hash_to_index (unsigned long hash, unsigned long size)
@@ -259,8 +258,7 @@ rob_from_rich (scm_t_weak_table *table, unsigned long k)
   do
     {
       unsigned long last = empty ? (empty - 1) : (size - 1);
-      move_weak_entry (&table->entries[last], &table->entries[empty],
-                       table->kind);
+      copy_weak_entry (&table->entries[last], &table->entries[empty]);
       empty = last;
     }
   while (empty != k);
@@ -280,25 +278,13 @@ give_to_poor (scm_t_weak_table *table, unsigned long k)
     {
       unsigned long next = (k + 1) % size;
       unsigned long hash;
-      scm_t_weak_entry copy;
 
       hash = table->entries[next].hash;
 
       if (!hash || hash_to_index (hash, size) == next)
         break;
 
-      copy_weak_entry (&table->entries[next], &copy);
-
-      if (!copy.key || !copy.value)
-        /* Lost weak reference.  */
-        {
-          give_to_poor (table, next);
-          table->n_items--;
-          continue;
-        }
-
-      move_weak_entry (&table->entries[next], &table->entries[k],
-                       table->kind);
+      copy_weak_entry (&table->entries[next], &table->entries[k]);
 
       k = next;
     }
@@ -480,11 +466,11 @@ resize_table (scm_t_weak_table *table)
       if (new_size_index == table->size_index)
         return;
       new_size = hashtable_size[new_size_index];
-      scm_i_pthread_mutex_unlock (&table->lock);
+      unlock_weak_table (table);
       /* Allocating memory might cause finalizers to run, which could
          run anything, so drop our lock to avoid deadlocks.  */
       new_entries = allocate_entries (new_size, table->kind);
-      scm_i_pthread_mutex_unlock (&table->lock);
+      lock_weak_table (table);
     }
   while (!is_acceptable_size_index (table, new_size_index));
 
@@ -503,18 +489,12 @@ resize_table (scm_t_weak_table *table)
 
   for (old_k = 0; old_k < old_size; old_k++)
     {
-      scm_t_weak_entry copy;
       unsigned long new_k, distance;
 
       if (!old_entries[old_k].hash)
         continue;
       
-      copy_weak_entry (&old_entries[old_k], &copy);
-      
-      if (!copy.key || !copy.value)
-        continue;
-      
-      new_k = hash_to_index (copy.hash, new_size);
+      new_k = hash_to_index (old_entries[old_k].hash, new_size);
 
       for (distance = 0; ; distance++, new_k = (new_k + 1) % new_size)
         {
@@ -534,47 +514,8 @@ resize_table (scm_t_weak_table *table)
         }
           
       table->n_items++;
-      new_entries[new_k].hash = copy.hash;
-      new_entries[new_k].key = copy.key;
-      new_entries[new_k].value = copy.value;
-
-      register_disappearing_links (&new_entries[new_k],
-                                   SCM_PACK (copy.key), SCM_PACK (copy.value),
-                                   table->kind);
+      copy_weak_entry (&old_entries[old_k], &new_entries[new_k]);
     }
-}
-
-/* Run after GC via do_vacuum_weak_table, this function runs over the
-   whole table, removing lost weak references, reshuffling the table as it
-   goes.  It might resize the table if it reaps enough entries.  */
-static void
-vacuum_weak_table (scm_t_weak_table *table)
-{
-  scm_t_weak_entry *entries = table->entries;
-  unsigned long size = table->size;
-  unsigned long k;
-
-  for (k = 0; k < size; k++)
-    {
-      unsigned long hash = entries[k].hash;
-      
-      if (hash)
-        {
-          scm_t_weak_entry copy;
-
-          copy_weak_entry (&entries[k], &copy);
-
-          if (!copy.key || !copy.value)
-            /* Lost weak reference; reshuffle.  */
-            {
-              give_to_poor (table, k);
-              table->n_items--;
-            }
-        }
-    }
-
-  if (table->n_items < table->lower)
-    resize_table (table);
 }
 
 
@@ -588,49 +529,48 @@ weak_table_ref (scm_t_weak_table *table, unsigned long hash,
   unsigned long k, distance, size;
   scm_t_weak_entry *entries;
   
+  hash = (hash << 1) | 0x1;
+
+  lock_weak_table (table);
+
+ retry:
   size = table->size;
   entries = table->entries;
-
-  hash = (hash << 1) | 0x1;
   k = hash_to_index (hash, size);
   
   for (distance = 0; distance < size; distance++, k = (k + 1) % size)
     {
-      unsigned long other_hash;
-
-    retry:
-      other_hash = entries[k].hash;
+      unsigned long other_hash = entries[k].hash;
 
       if (!other_hash)
         /* Not found. */
-        return dflt;
+        break;
 
       if (hash == other_hash)
         {
-          scm_t_weak_entry copy;
-          
-          copy_weak_entry (&entries[k], &copy);
+          SCM key = SCM_PACK (entries[k].key);
+          SCM value = SCM_PACK (entries[k].value);
 
-          if (!copy.key || !copy.value)
-            /* Lost weak reference; reshuffle.  */
-            {
-              give_to_poor (table, k);
-              table->n_items--;
-              goto retry;
-            }
-
-          if (pred (SCM_PACK (copy.key), SCM_PACK (copy.value), closure))
+          unlock_weak_table (table);
+          if (pred (key, value, closure))
             /* Found. */
-            return SCM_PACK (copy.value);
+            return value;
+          lock_weak_table (table);
+
+          if (table->entries != entries || table->size != size
+              || !scm_is_eq (SCM_PACK (entries[k].key), key))
+            /* The predicate caused the table to be changed. */
+            goto retry;
+
+          continue;
         }
 
       /* If the entry's distance is less, our key is not in the table.  */
       if (entry_distance (other_hash, k, size) < distance)
-        return dflt;
+        break;
     }
 
-  /* If we got here, then we were unfortunate enough to loop through the
-     whole table.  Shouldn't happen, but hey.  */
+  unlock_weak_table (table);
   return dflt;
 }
 
@@ -643,51 +583,66 @@ weak_table_put_x (scm_t_weak_table *table, unsigned long hash,
   unsigned long k, distance, size;
   scm_t_weak_entry *entries;
   
+  hash = (hash << 1) | 0x1;
+
+  lock_weak_table (table);
+
+ retry:
   size = table->size;
   entries = table->entries;
-
-  hash = (hash << 1) | 0x1;
   k = hash_to_index (hash, size);
 
   for (distance = 0; ; distance++, k = (k + 1) % size)
     {
-      unsigned long other_hash;
-
-    retry:
-      other_hash = entries[k].hash;
+      unsigned long other_hash = entries[k].hash;
 
       if (!other_hash)
         /* Found an empty entry. */
         break;
 
-      if (other_hash == hash)
+      if (hash == other_hash)
         {
-          scm_t_weak_entry copy;
+          SCM prev_key = SCM_PACK (entries[k].key);
+          SCM prev_value = SCM_PACK (entries[k].value);
+          int have_match;
 
-          copy_weak_entry (&entries[k], &copy);
+          unlock_weak_table (table);
+          have_match = pred (prev_key, prev_value, closure);
+          lock_weak_table (table);
+
+          if (table->entries != entries || table->size != size
+              || !scm_is_eq (SCM_PACK (entries[k].key), prev_key))
+            /* The predicate caused the table to be changed. */
+            goto retry;
+
+          if (!have_match)
+            /* No match, keep looking. */
+            continue;
           
-          if (!copy.key || !copy.value)
-            /* Lost weak reference; reshuffle.  */
-            {
-              give_to_poor (table, k);
-              table->n_items--;
-              goto retry;
-            }
+          /* We have a match; update the table and add finalizers if
+             needed. */
+          entries[k].key = SCM_UNPACK (key);
+          entries[k].value = SCM_UNPACK (value);
 
-          if (pred (SCM_PACK (copy.key), SCM_PACK (copy.value), closure))
-            /* Found an entry with this key. */
-            break;
+          unlock_weak_table (table);
+
+          if (!scm_is_eq (prev_key, key))
+            register_finalizers_for_key (table, hash, key);
+          if (!scm_is_eq (prev_value, value))
+            register_finalizers_for_value (table, hash, value);
+
+          return;
         }
 
       if (table->n_items > table->upper)
         /* Full table, time to resize.  */
         {
           resize_table (table);
-          return weak_table_put_x (table, hash >> 1, pred, closure, key, value);
+          goto retry;
         }
 
       /* Displace the entry if our distance is less, otherwise keep
-         looking. */
+         looking.  */
       if (entry_distance (other_hash, k, size) < distance)
         {
           rob_from_rich (table, k);
@@ -695,16 +650,16 @@ weak_table_put_x (scm_t_weak_table *table, unsigned long hash,
         }
     }
           
-  if (entries[k].hash)
-    unregister_disappearing_links (&entries[k], table->kind);
-  else
-    table->n_items++;
-
+  /* Insert a new entry.  */
+  table->n_items++;
   entries[k].hash = hash;
   entries[k].key = SCM_UNPACK (key);
   entries[k].value = SCM_UNPACK (value);
 
-  register_disappearing_links (&entries[k], key, value, table->kind);
+  unlock_weak_table (table);
+
+  register_finalizers_for_key (table, hash, key);
+  register_finalizers_for_value (table, hash, value);
 }
 
 
@@ -715,75 +670,65 @@ weak_table_remove_x (scm_t_weak_table *table, unsigned long hash,
   unsigned long k, distance, size;
   scm_t_weak_entry *entries;
   
+  hash = (hash << 1) | 0x1;
+
+  lock_weak_table (table);
+
+ retry:
   size = table->size;
   entries = table->entries;
-
-  hash = (hash << 1) | 0x1;
   k = hash_to_index (hash, size);
 
   for (distance = 0; distance < size; distance++, k = (k + 1) % size)
     {
-      unsigned long other_hash;
-
-    retry:
-      other_hash = entries[k].hash;
+      unsigned long other_hash = entries[k].hash;
 
       if (!other_hash)
         /* Not found. */
-        return;
+        break;
 
-      if (other_hash == hash)
+      if (hash == other_hash)
         {
-          scm_t_weak_entry copy;
-      
-          copy_weak_entry (&entries[k], &copy);
+          SCM prev_key = SCM_PACK (entries[k].key);
+          SCM prev_value = SCM_PACK (entries[k].value);
+          int have_match;
+
+          unlock_weak_table (table);
+          have_match = pred (prev_key, prev_value, closure);
+          lock_weak_table (table);
+
+          if (table->entries != entries || table->size != size
+              || !scm_is_eq (SCM_PACK (entries[k].key), prev_key))
+            /* The predicate caused the table to be changed. */
+            goto retry;
+
+          if (!have_match)
+            /* No match, keep looking. */
+            continue;
           
-          if (!copy.key || !copy.value)
-            /* Lost weak reference; reshuffle.  */
-            {
-              give_to_poor (table, k);
-              table->n_items--;
-              goto retry;
-            }
+          /* We have a match; remove the entry.  */
+          entries[k].hash = 0;
+          entries[k].key = 0;
+          entries[k].value = 0;
 
-          if (pred (SCM_PACK (copy.key), SCM_PACK (copy.value), closure))
-            /* Found an entry with this key. */
-            {
-              entries[k].hash = 0;
-              entries[k].key = 0;
-              entries[k].value = 0;
+          if (--table->n_items < table->lower)
+            resize_table (table);
+          else
+            give_to_poor (table, k);
 
-              unregister_disappearing_links (&entries[k], table->kind);
-
-              if (--table->n_items < table->lower)
-                resize_table (table);
-              else
-                give_to_poor (table, k);
-
-              return;
-            }
+          break;
         }
 
       /* If the entry's distance is less, our key is not in the table.  */
       if (entry_distance (other_hash, k, size) < distance)
-        return;
+        break;
     }
+
+  unlock_weak_table (table);
 }
 
 
 
-
-static void
-lock_weak_table (scm_t_weak_table *table)
-{
-  scm_i_pthread_mutex_lock (&table->lock);
-}
-
-static void
-unlock_weak_table (scm_t_weak_table *table)
-{
-  scm_i_pthread_mutex_unlock (&table->lock);
-}
 
 /* A weak table of weak tables, for use in the pthread_atfork handler. */
 static SCM all_weak_tables = SCM_BOOL_F;
@@ -796,7 +741,6 @@ lock_all_weak_tables (void)
   scm_t_weak_table *s;
   scm_t_weak_entry *entries;
   unsigned long k, size;
-  scm_t_weak_entry copy;
 
   s = SCM_WEAK_TABLE (all_weak_tables);
   lock_weak_table (s);
@@ -805,11 +749,7 @@ lock_all_weak_tables (void)
 
   for (k = 0; k < size; k++)
     if (entries[k].hash)
-      {
-        copy_weak_entry (&entries[k], &copy);
-        if (copy.key)
-          lock_weak_table (SCM_WEAK_TABLE (SCM_PACK (copy.key)));
-      }
+      lock_weak_table (SCM_WEAK_TABLE (SCM_PACK (entries[k].key)));
 }
 
 static void
@@ -818,7 +758,6 @@ unlock_all_weak_tables (void)
   scm_t_weak_table *s;
   scm_t_weak_entry *entries;
   unsigned long k, size;
-  scm_t_weak_entry copy;
 
   s = SCM_WEAK_TABLE (all_weak_tables);
   size = s->size;
@@ -826,11 +765,7 @@ unlock_all_weak_tables (void)
 
   for (k = 0; k < size; k++)
     if (entries[k].hash)
-      {
-        copy_weak_entry (&entries[k], &copy);
-        if (copy.key)
-          unlock_weak_table (SCM_WEAK_TABLE (SCM_PACK (copy.key)));
-      }
+      unlock_weak_table (SCM_WEAK_TABLE (SCM_PACK (entries[k].key)));
 
   unlock_weak_table (s);
 }
@@ -881,82 +816,10 @@ scm_i_weak_table_print (SCM exp, SCM port, scm_print_state *pstate)
   scm_puts_unlocked (">", port);
 }
 
-static void
-do_vacuum_weak_table (SCM table)
-{
-  scm_t_weak_table *t;
-
-  t = SCM_WEAK_TABLE (table);
-
-  if (scm_i_pthread_mutex_trylock (&t->lock) == 0)
-    {
-      vacuum_weak_table (t);
-      unlock_weak_table (t);
-    }
-
-  return;
-}
-
-/* The before-gc C hook only runs if GC_table_start_callback is available,
-   so if not, fall back on a finalizer-based implementation.  */
-static int
-weak_gc_callback (void **weak)
-{
-  void *val = weak[0];
-  void (*callback) (SCM) = weak[1];
-  
-  if (!val)
-    return 0;
-  
-  callback (SCM_PACK_POINTER (val));
-
-  return 1;
-}
-
-#ifdef HAVE_GC_TABLE_START_CALLBACK
-static void*
-weak_gc_hook (void *hook_data, void *fn_data, void *data)
-{
-  if (!weak_gc_callback (fn_data))
-    scm_c_hook_remove (&scm_before_gc_c_hook, weak_gc_hook, fn_data);
-
-  return NULL;
-}
-#else
-static void
-weak_gc_finalizer (void *ptr, void *data)
-{
-  if (weak_gc_callback (ptr))
-    scm_i_set_finalizer (ptr, weak_gc_finalizer, data);
-}
-#endif
-
-static void
-scm_c_register_weak_gc_callback (SCM obj, void (*callback) (SCM))
-{
-  void **weak = GC_MALLOC_ATOMIC (sizeof (void*) * 2);
-
-  weak[0] = SCM_UNPACK_POINTER (obj);
-  weak[1] = (void*)callback;
-  GC_GENERAL_REGISTER_DISAPPEARING_LINK (weak, SCM2PTR (obj));
-
-#ifdef HAVE_GC_TABLE_START_CALLBACK
-  scm_c_hook_add (&scm_after_gc_c_hook, weak_gc_hook, weak, 0);
-#else
-  scm_i_set_finalizer (weak, weak_gc_finalizer, NULL);
-#endif
-}
-
 SCM
 scm_c_make_weak_table (unsigned long k, scm_t_weak_table_kind kind)
 {
-  SCM ret;
-
-  ret = make_weak_table (k, kind);
-
-  scm_c_register_weak_gc_callback (ret, do_vacuum_weak_table);
-
-  return ret;
+  return make_weak_table (k, kind);
 }
 
 SCM
@@ -971,20 +834,13 @@ scm_c_weak_table_ref (SCM table, unsigned long raw_hash,
                       void *closure, SCM dflt)
 #define FUNC_NAME "weak-table-ref"
 {
-  SCM ret;
   scm_t_weak_table *t;
 
   SCM_VALIDATE_WEAK_TABLE (1, table);
 
   t = SCM_WEAK_TABLE (table);
 
-  lock_weak_table (t);
-
-  ret = weak_table_ref (t, raw_hash, pred, closure, dflt);
-
-  unlock_weak_table (t);
-
-  return ret;
+  return weak_table_ref (t, raw_hash, pred, closure, dflt);
 }
 #undef FUNC_NAME
 
@@ -1000,11 +856,7 @@ scm_c_weak_table_put_x (SCM table, unsigned long raw_hash,
 
   t = SCM_WEAK_TABLE (table);
 
-  lock_weak_table (t);
-
   weak_table_put_x (t, raw_hash, pred, closure, key, value);
-
-  unlock_weak_table (t);
 }
 #undef FUNC_NAME
 
@@ -1020,19 +872,9 @@ scm_c_weak_table_remove_x (SCM table, unsigned long raw_hash,
 
   t = SCM_WEAK_TABLE (table);
 
-  lock_weak_table (t);
-
   weak_table_remove_x (t, raw_hash, pred, closure);
-
-  unlock_weak_table (t);
 }
 #undef FUNC_NAME
-
-static int
-assq_predicate (SCM x, SCM y, void *closure)
-{
-  return scm_is_eq (x, SCM_PACK_POINTER (closure));
-}
 
 SCM
 scm_weak_table_refq (SCM table, SCM key, SCM dflt)
@@ -1041,7 +883,7 @@ scm_weak_table_refq (SCM table, SCM key, SCM dflt)
     dflt = SCM_BOOL_F;
   
   return scm_c_weak_table_ref (table, scm_ihashq (key, -1),
-                               assq_predicate, SCM_UNPACK_POINTER (key),
+                               key_eq_predicate, SCM_UNPACK_POINTER (key),
                                dflt);
 }
 
@@ -1049,7 +891,7 @@ SCM
 scm_weak_table_putq_x (SCM table, SCM key, SCM value)
 {
   scm_c_weak_table_put_x (table, scm_ihashq (key, -1),
-                          assq_predicate, SCM_UNPACK_POINTER (key),
+                          key_eq_predicate, SCM_UNPACK_POINTER (key),
                           key, value);
   return SCM_UNSPECIFIED;
 }
@@ -1058,7 +900,7 @@ SCM
 scm_weak_table_remq_x (SCM table, SCM key)
 {
   scm_c_weak_table_remove_x (table, scm_ihashq (key, -1),
-                             assq_predicate, SCM_UNPACK_POINTER (key));
+                             key_eq_predicate, SCM_UNPACK_POINTER (key));
   return SCM_UNSPECIFIED;
 }
 
@@ -1102,19 +944,18 @@ scm_c_weak_table_fold (scm_t_table_fold_fn proc, void *closure,
     {
       if (entries[k].hash)
         {
-          scm_t_weak_entry copy;
+          SCM key, value;
+
+          key = SCM_PACK (entries[k].key);
+          value = SCM_PACK (entries[k].value);
           
-          copy_weak_entry (&entries[k], &copy);
-      
-          if (copy.key && copy.value)
-            {
-              /* Release table lock while we call the function.  */
-              unlock_weak_table (t);
-              init = proc (closure,
-                           SCM_PACK (copy.key), SCM_PACK (copy.value),
-                           init);
-              lock_weak_table (t);
-            }
+          /* Release table lock while we call the function.  */
+          unlock_weak_table (t);
+          init = proc (closure, key, value, init);
+          lock_weak_table (t);
+          if (entries != t->entries)
+            /* Nothing sensible to do here; just break out.  */
+            break;
         }
     }
   
