@@ -60,8 +60,8 @@
 
    The vector of entries is allocated as an "atomic" piece of memory, so
    that the GC doesn't trace it.  When an item is added to the set, a
-   disappearing link is registered to its location.  If the item is
-   collected, then that link will be zeroed out.
+   finalizer is added linking the item and the set.  If the item becomes
+   unreachable, then the finalizer will remove it from the table.
 
    An entry is not just an item, though; the hash code is also stored in
    the entry.  We munge hash codes so that they are never 0.  In this
@@ -82,11 +82,10 @@
         right-shift the hash by one, divide by the size, and take the
         remainder.
 
-     2. Since the "keys" (the objects in the set) are stored in an
-        atomic region with disappearing links, they need to be accessed
-        with the GC alloc lock.  `copy_weak_entry' will do that for
-        you.  The hash code itself can be read outside the lock,
-        though.
+     2. Since the weak references are cleared using finalizers, and
+        finalizers can run during allocation, we need to be very careful
+        when allocating memory, because it might modify the set we are
+        working on.
 */
 
 
@@ -94,35 +93,6 @@ typedef struct {
   unsigned long hash;
   scm_t_bits key;
 } scm_t_weak_entry;
-
-
-struct weak_entry_data {
-  scm_t_weak_entry *in;
-  scm_t_weak_entry *out;
-};
-  
-static void*
-do_copy_weak_entry (void *data)
-{
-  struct weak_entry_data *e = data;
-
-  e->out->hash = e->in->hash;
-  e->out->key = e->in->key;
-
-  return NULL;
-}
-
-static void
-copy_weak_entry (scm_t_weak_entry *src, scm_t_weak_entry *dst)
-{
-  struct weak_entry_data data;
-
-  data.in = src;
-  data.out = dst;
-      
-  GC_call_with_alloc_lock (do_copy_weak_entry, &data);
-}
-  
 
 typedef struct {
   scm_t_weak_entry *entries;    /* the data */
@@ -142,6 +112,83 @@ typedef struct {
 #define SCM_WEAK_SET(x) ((scm_t_weak_set *) SCM_CELL_WORD_1 (x))
 
 
+
+
+static void
+lock_weak_set (scm_t_weak_set *set)
+{
+  scm_i_pthread_mutex_lock (&set->lock);
+}
+
+static void
+unlock_weak_set (scm_t_weak_set *set)
+{
+  scm_i_pthread_mutex_unlock (&set->lock);
+}
+
+
+
+static void weak_set_remove_x (scm_t_weak_set *set, unsigned long hash,
+                               scm_t_set_predicate_fn pred, void *closure);
+
+static int
+eq_predicate (SCM x, void *closure)
+{
+  return scm_is_eq (x, SCM_PACK_POINTER (closure));
+}
+
+static void
+eq_finalizer (void *k, void *s)
+{
+  SCM key = SCM_PACK_POINTER (k);
+  scm_t_weak_set *set = s;
+  weak_set_remove_x (set, scm_ihashq (key, -1), eq_predicate, k);
+}
+
+struct finalizer_data {
+  scm_t_weak_set *set;
+  unsigned long hash;
+};
+
+static struct finalizer_data *
+make_finalizer_data (scm_t_weak_set *s, unsigned long hash)
+{
+  struct finalizer_data *data;
+  data = scm_gc_malloc (sizeof (*data), "weak set finalizer");
+  data->set = s;
+  data->hash = hash >> 1;
+  return data;
+}
+
+static void
+equal_finalizer (void *obj, void *data)
+{
+  struct finalizer_data *d = data;
+  weak_set_remove_x (d->set, d->hash, eq_predicate, obj);
+}
+
+static void
+register_finalizer (scm_t_weak_set *s, unsigned long hash, SCM key)
+{
+  if (!SCM_HEAP_OBJECT_P (key))
+    return;
+
+  if (hash == ((scm_ihashq (key, -1) << 1) | 0x1))
+    scm_i_add_finalizer (SCM2PTR (key), eq_finalizer, s);
+  else
+    scm_i_add_finalizer (SCM2PTR (key), equal_finalizer,
+                         make_finalizer_data (s, hash));
+}
+
+
+
+static void
+copy_weak_entry (scm_t_weak_entry *src, scm_t_weak_entry *dst)
+{
+  dst->hash = src->hash;
+  dst->key = src->key;
+}
+  
 static unsigned long
 hash_to_index (unsigned long hash, unsigned long size)
 {
@@ -161,35 +208,6 @@ entry_distance (unsigned long hash, unsigned long k, unsigned long size)
 }
 
 static void
-move_weak_entry (scm_t_weak_entry *from, scm_t_weak_entry *to)
-{
-  if (from->hash)
-    {
-      scm_t_weak_entry copy;
-      
-      copy_weak_entry (from, &copy);
-      to->hash = copy.hash;
-      to->key = copy.key;
-
-      if (copy.key && SCM_HEAP_OBJECT_P (SCM_PACK (copy.key)))
-        {
-#ifdef HAVE_GC_MOVE_DISAPPEARING_LINK
-          GC_move_disappearing_link ((GC_PTR) &from->key, (GC_PTR) &to->key);
-#else
-          GC_unregister_disappearing_link ((GC_PTR) &from->key);
-          SCM_I_REGISTER_DISAPPEARING_LINK ((GC_PTR) &to->key,
-                                            (GC_PTR) to->key);
-#endif
-        }
-    }
-  else
-    {
-      to->hash = 0;
-      to->key = 0;
-    }
-}
-
-static void
 rob_from_rich (scm_t_weak_set *set, unsigned long k)
 {
   unsigned long empty, size;
@@ -202,14 +220,12 @@ rob_from_rich (scm_t_weak_set *set, unsigned long k)
   empty = k;
   do 
     empty = (empty + 1) % size;
-  /* Here we access key outside the lock.  Is this a problem?  At first
-     glance, I wouldn't think so.  */
   while (set->entries[empty].key);
 
   do
     {
       unsigned long last = empty ? (empty - 1) : (size - 1);
-      move_weak_entry (&set->entries[last], &set->entries[empty]);
+      copy_weak_entry (&set->entries[last], &set->entries[empty]);
       empty = last;
     }
   while (empty != k);
@@ -229,24 +245,13 @@ give_to_poor (scm_t_weak_set *set, unsigned long k)
     {
       unsigned long next = (k + 1) % size;
       unsigned long hash;
-      scm_t_weak_entry copy;
 
       hash = set->entries[next].hash;
 
       if (!hash || hash_to_index (hash, size) == next)
         break;
 
-      copy_weak_entry (&set->entries[next], &copy);
-
-      if (!copy.key)
-        /* Lost weak reference.  */
-        {
-          give_to_poor (set, next);
-          set->n_items--;
-          continue;
-        }
-
-      move_weak_entry (&set->entries[next], &set->entries[k]);
+      copy_weak_entry (&set->entries[next], &set->entries[k]);
 
       k = next;
     }
@@ -357,12 +362,12 @@ resize_set (scm_t_weak_set *set)
       if (new_size_index == set->size_index)
         return;
       new_size = hashset_size[new_size_index];
-      scm_i_pthread_mutex_unlock (&set->lock);
+      unlock_weak_set (set);
       /* Allocating memory might cause finalizers to run, which could
          run anything, so drop our lock to avoid deadlocks.  */
       new_entries = scm_gc_malloc_pointerless (new_size * sizeof(scm_t_weak_entry),
                                                "weak set");
-      scm_i_pthread_mutex_unlock (&set->lock);
+      lock_weak_set (set);
     }
   while (!is_acceptable_size_index (set, new_size_index));
 
@@ -383,18 +388,12 @@ resize_set (scm_t_weak_set *set)
 
   for (old_k = 0; old_k < old_size; old_k++)
     {
-      scm_t_weak_entry copy;
       unsigned long new_k, distance;
 
       if (!old_entries[old_k].hash)
         continue;
       
-      copy_weak_entry (&old_entries[old_k], &copy);
-      
-      if (!copy.key)
-        continue;
-      
-      new_k = hash_to_index (copy.hash, new_size);
+      new_k = hash_to_index (old_entries[old_k].hash, new_size);
 
       for (distance = 0; ; distance++, new_k = (new_k + 1) % new_size)
         {
@@ -414,48 +413,9 @@ resize_set (scm_t_weak_set *set)
         }
           
       set->n_items++;
-      new_entries[new_k].hash = copy.hash;
-      new_entries[new_k].key = copy.key;
-
-      if (SCM_HEAP_OBJECT_P (SCM_PACK (copy.key)))
-        SCM_I_REGISTER_DISAPPEARING_LINK ((GC_PTR) &new_entries[new_k].key,
-                                          (GC_PTR) new_entries[new_k].key);
+      copy_weak_entry (&old_entries[old_k], &new_entries[new_k]);
     }
 }
-
-/* Run after GC via do_vacuum_weak_set, this function runs over the
-   whole table, removing lost weak references, reshuffling the set as it
-   goes.  It might resize the set if it reaps enough entries.  */
-static void
-vacuum_weak_set (scm_t_weak_set *set)
-{
-  scm_t_weak_entry *entries = set->entries;
-  unsigned long size = set->size;
-  unsigned long k;
-
-  for (k = 0; k < size; k++)
-    {
-      unsigned long hash = entries[k].hash;
-      
-      if (hash)
-        {
-          scm_t_weak_entry copy;
-
-          copy_weak_entry (&entries[k], &copy);
-
-          if (!copy.key)
-            /* Lost weak reference; reshuffle.  */
-            {
-              give_to_poor (set, k);
-              set->n_items--;
-            }
-        }
-    }
-
-  if (set->n_items < set->lower)
-    resize_set (set);
-}
-
 
 
 
@@ -467,6 +427,8 @@ weak_set_lookup (scm_t_weak_set *set, unsigned long hash,
   unsigned long k, distance, size;
   scm_t_weak_entry *entries;
   
+  lock_weak_set (set);
+
   size = set->size;
   entries = set->entries;
 
@@ -475,41 +437,27 @@ weak_set_lookup (scm_t_weak_set *set, unsigned long hash,
   
   for (distance = 0; distance < size; distance++, k = (k + 1) % size)
     {
-      unsigned long other_hash;
-
-    retry:
-      other_hash = entries[k].hash;
+      unsigned long other_hash = entries[k].hash;
 
       if (!other_hash)
         /* Not found. */
-        return dflt;
+        break;
 
-      if (hash == other_hash)
+      if (hash == other_hash
+          && pred (SCM_PACK (entries[k].key), closure))
+        /* Found. */
         {
-          scm_t_weak_entry copy;
-          
-          copy_weak_entry (&entries[k], &copy);
-
-          if (!copy.key)
-            /* Lost weak reference; reshuffle.  */
-            {
-              give_to_poor (set, k);
-              set->n_items--;
-              goto retry;
-            }
-
-          if (pred (SCM_PACK (copy.key), closure))
-            /* Found. */
-            return SCM_PACK (copy.key);
+          SCM ret = SCM_PACK (entries[k].key);
+          unlock_weak_set (set);
+          return ret;
         }
 
       /* If the entry's distance is less, our key is not in the set.  */
       if (entry_distance (other_hash, k, size) < distance)
-        return dflt;
+        break;
     }
 
-  /* If we got here, then we were unfortunate enough to loop through the
-     whole set.  Shouldn't happen, but hey.  */
+  unlock_weak_set (set);
   return dflt;
 }
 
@@ -522,47 +470,37 @@ weak_set_add_x (scm_t_weak_set *set, unsigned long hash,
   unsigned long k, distance, size;
   scm_t_weak_entry *entries;
   
-  size = set->size;
-  entries = set->entries;
+  lock_weak_set (set);
 
   hash = (hash << 1) | 0x1;
+
+ retry:
+  size = set->size;
+  entries = set->entries;
   k = hash_to_index (hash, size);
 
   for (distance = 0; ; distance++, k = (k + 1) % size)
     {
-      unsigned long other_hash;
-
-    retry:
-      other_hash = entries[k].hash;
+      unsigned long other_hash = entries[k].hash;
 
       if (!other_hash)
         /* Found an empty entry. */
         break;
 
-      if (other_hash == hash)
+      if (other_hash == hash
+          && pred (SCM_PACK (entries[k].key), closure))
+        /* Found an entry with this key. */
         {
-          scm_t_weak_entry copy;
-
-          copy_weak_entry (&entries[k], &copy);
-          
-          if (!copy.key)
-            /* Lost weak reference; reshuffle.  */
-            {
-              give_to_poor (set, k);
-              set->n_items--;
-              goto retry;
-            }
-
-          if (pred (SCM_PACK (copy.key), closure))
-            /* Found an entry with this key. */
-            return SCM_PACK (copy.key);
+          SCM ret = SCM_PACK (entries[k].key);
+          unlock_weak_set (set);
+          return ret;
         }
 
       if (set->n_items > set->upper)
         /* Full set, time to resize.  */
         {
           resize_set (set);
-          return weak_set_add_x (set, hash >> 1, pred, closure, obj);
+          goto retry;
         }
 
       /* Displace the entry if our distance is less, otherwise keep
@@ -578,9 +516,8 @@ weak_set_add_x (scm_t_weak_set *set, unsigned long hash,
   entries[k].hash = hash;
   entries[k].key = SCM_UNPACK (obj);
 
-  if (SCM_HEAP_OBJECT_P (obj))
-    SCM_I_REGISTER_DISAPPEARING_LINK ((GC_PTR) &entries[k].key,
-                                      (GC_PTR) SCM2PTR (obj));
+  unlock_weak_set (set);
+  register_finalizer (set, hash, obj);
 
   return obj;
 }
@@ -593,6 +530,8 @@ weak_set_remove_x (scm_t_weak_set *set, unsigned long hash,
   unsigned long k, distance, size;
   scm_t_weak_entry *entries;
   
+  lock_weak_set (set);
+
   size = set->size;
   entries = set->entries;
 
@@ -601,67 +540,37 @@ weak_set_remove_x (scm_t_weak_set *set, unsigned long hash,
 
   for (distance = 0; distance < size; distance++, k = (k + 1) % size)
     {
-      unsigned long other_hash;
-
-    retry:
-      other_hash = entries[k].hash;
+      unsigned long other_hash = entries[k].hash;
 
       if (!other_hash)
         /* Not found. */
-        return;
+        break;
 
-      if (other_hash == hash)
+      if (other_hash == hash
+          && pred (SCM_PACK (entries[k].key), closure))
+        /* Found an entry with this key. */
         {
-          scm_t_weak_entry copy;
-      
-          copy_weak_entry (&entries[k], &copy);
-          
-          if (!copy.key)
-            /* Lost weak reference; reshuffle.  */
-            {
-              give_to_poor (set, k);
-              set->n_items--;
-              goto retry;
-            }
+          entries[k].hash = 0;
+          entries[k].key = 0;
 
-          if (pred (SCM_PACK (copy.key), closure))
-            /* Found an entry with this key. */
-            {
-              entries[k].hash = 0;
-              entries[k].key = 0;
+          if (--set->n_items < set->lower)
+            resize_set (set);
+          else
+            give_to_poor (set, k);
 
-              if (SCM_HEAP_OBJECT_P (SCM_PACK (copy.key)))
-                GC_unregister_disappearing_link ((GC_PTR) &entries[k].key);
-
-              if (--set->n_items < set->lower)
-                resize_set (set);
-              else
-                give_to_poor (set, k);
-
-              return;
-            }
+          break;
         }
 
       /* If the entry's distance is less, our key is not in the set.  */
       if (entry_distance (other_hash, k, size) < distance)
-        return;
+        break;
     }
+
+  unlock_weak_set (set);
 }
 
 
 
-
-static void
-lock_weak_set (scm_t_weak_set *set)
-{
-  scm_i_pthread_mutex_lock (&set->lock);
-}
-
-static void
-unlock_weak_set (scm_t_weak_set *set)
-{
-  scm_i_pthread_mutex_unlock (&set->lock);
-}
 
 /* A weak set of weak sets, for use in the pthread_atfork handler. */
 static SCM all_weak_sets = SCM_BOOL_F;
@@ -674,7 +583,6 @@ lock_all_weak_sets (void)
   scm_t_weak_set *s;
   scm_t_weak_entry *entries;
   unsigned long k, size;
-  scm_t_weak_entry copy;
 
   s = SCM_WEAK_SET (all_weak_sets);
   lock_weak_set (s);
@@ -683,11 +591,7 @@ lock_all_weak_sets (void)
 
   for (k = 0; k < size; k++)
     if (entries[k].hash)
-      {
-        copy_weak_entry (&entries[k], &copy);
-        if (copy.key)
-          lock_weak_set (SCM_WEAK_SET (SCM_PACK (copy.key)));
-      }
+      lock_weak_set (SCM_WEAK_SET (SCM_PACK (entries[k].key)));
 }
 
 static void
@@ -696,7 +600,6 @@ unlock_all_weak_sets (void)
   scm_t_weak_set *s;
   scm_t_weak_entry *entries;
   unsigned long k, size;
-  scm_t_weak_entry copy;
 
   s = SCM_WEAK_SET (all_weak_sets);
   size = s->size;
@@ -704,11 +607,7 @@ unlock_all_weak_sets (void)
 
   for (k = 0; k < size; k++)
     if (entries[k].hash)
-      {
-        copy_weak_entry (&entries[k], &copy);
-        if (copy.key)
-          unlock_weak_set (SCM_WEAK_SET (SCM_PACK (copy.key)));
-      }
+      unlock_weak_set (SCM_WEAK_SET (SCM_PACK (entries[k].key)));
   
   unlock_weak_set (s);
 }
@@ -754,80 +653,12 @@ scm_i_weak_set_print (SCM exp, SCM port, scm_print_state *pstate)
   scm_puts_unlocked (">", port);
 }
 
-static void
-do_vacuum_weak_set (SCM set)
-{
-  scm_t_weak_set *s;
-
-  s = SCM_WEAK_SET (set);
-
-  if (scm_i_pthread_mutex_trylock (&s->lock) == 0)
-    {
-      vacuum_weak_set (s);
-      unlock_weak_set (s);
-    }
-
-  return;
-}
-
-/* The before-gc C hook only runs if GC_set_start_callback is available,
-   so if not, fall back on a finalizer-based implementation.  */
-static int
-weak_gc_callback (void **weak)
-{
-  void *val = weak[0];
-  void (*callback) (SCM) = weak[1];
-  
-  if (!val)
-    return 0;
-  
-  callback (SCM_PACK_POINTER (val));
-
-  return 1;
-}
-
-#ifdef HAVE_GC_SET_START_CALLBACK
-static void*
-weak_gc_hook (void *hook_data, void *fn_data, void *data)
-{
-  if (!weak_gc_callback (fn_data))
-    scm_c_hook_remove (&scm_before_gc_c_hook, weak_gc_hook, fn_data);
-
-  return NULL;
-}
-#else
-static void
-weak_gc_finalizer (void *ptr, void *data)
-{
-  if (weak_gc_callback (ptr))
-    scm_i_set_finalizer (ptr, weak_gc_finalizer, data);
-}
-#endif
-
-static void
-scm_c_register_weak_gc_callback (SCM obj, void (*callback) (SCM))
-{
-  void **weak = GC_MALLOC_ATOMIC (sizeof (void*) * 2);
-
-  weak[0] = SCM_UNPACK_POINTER (obj);
-  weak[1] = (void*)callback;
-  GC_GENERAL_REGISTER_DISAPPEARING_LINK (weak, SCM2PTR (obj));
-
-#ifdef HAVE_GC_SET_START_CALLBACK
-  scm_c_hook_add (&scm_after_gc_c_hook, weak_gc_hook, weak, 0);
-#else
-  scm_i_set_finalizer (weak, weak_gc_finalizer, NULL);
-#endif
-}
-
 SCM
 scm_c_make_weak_set (unsigned long k)
 {
   SCM ret;
 
   ret = make_weak_set (k);
-
-  scm_c_register_weak_gc_callback (ret, do_vacuum_weak_set);
 
   if (scm_is_true (all_weak_sets))
     scm_weak_set_add_x (all_weak_sets, ret);
@@ -861,16 +692,9 @@ scm_c_weak_set_lookup (SCM set, unsigned long raw_hash,
                        scm_t_set_predicate_fn pred,
                        void *closure, SCM dflt)
 {
-  SCM ret;
   scm_t_weak_set *s = SCM_WEAK_SET (set);
 
-  lock_weak_set (s);
-
-  ret = weak_set_lookup (s, raw_hash, pred, closure, dflt);
-
-  unlock_weak_set (s);
-
-  return ret;
+  return weak_set_lookup (s, raw_hash, pred, closure, dflt);
 }
 
 SCM
@@ -878,16 +702,9 @@ scm_c_weak_set_add_x (SCM set, unsigned long raw_hash,
                       scm_t_set_predicate_fn pred,
                       void *closure, SCM obj)
 {
-  SCM ret;
   scm_t_weak_set *s = SCM_WEAK_SET (set);
 
-  lock_weak_set (s);
-
-  ret = weak_set_add_x (s, raw_hash, pred, closure, obj);
-
-  unlock_weak_set (s);
-
-  return ret;
+  return weak_set_add_x (s, raw_hash, pred, closure, obj);
 }
 
 void
@@ -897,17 +714,7 @@ scm_c_weak_set_remove_x (SCM set, unsigned long raw_hash,
 {
   scm_t_weak_set *s = SCM_WEAK_SET (set);
 
-  lock_weak_set (s);
-
   weak_set_remove_x (s, raw_hash, pred, closure);
-
-  unlock_weak_set (s);
-}
-
-static int
-eq_predicate (SCM x, void *closure)
-{
-  return scm_is_eq (x, SCM_PACK_POINTER (closure));
 }
 
 SCM
@@ -945,17 +752,14 @@ scm_c_weak_set_fold (scm_t_set_fold_fn proc, void *closure,
     {
       if (entries[k].hash)
         {
-          scm_t_weak_entry copy;
-          
-          copy_weak_entry (&entries[k], &copy);
-      
-          if (copy.key)
-            {
-              /* Release set lock while we call the function.  */
-              unlock_weak_set (s);
-              init = proc (closure, SCM_PACK (copy.key), init);
-              lock_weak_set (s);
-            }
+          /* Release set lock while we call the function.  */
+          SCM key = SCM_PACK (entries[k].key);
+          unlock_weak_set (s);
+          init = proc (closure, key, init);
+          lock_weak_set (s);
+          if (entries != s->entries)
+            /* Nothing sensible to do here; just break out.  */
+            break;
         }
     }
   
