@@ -145,6 +145,14 @@ eq_finalizer (void *k, void *s)
   weak_set_remove_x (set, scm_ihashq (key, -1), eq_predicate, k);
 }
 
+static void
+symbol_finalizer (void *k, void *s)
+{
+  SCM key = SCM_PACK_POINTER (k);
+  scm_t_weak_set *set = s;
+  weak_set_remove_x (set, scm_i_symbol_hash (key), eq_predicate, k);
+}
+
 struct finalizer_data {
   scm_t_weak_set *set;
   unsigned long hash;
@@ -175,6 +183,9 @@ register_finalizer (scm_t_weak_set *s, unsigned long hash, SCM key)
 
   if (hash == ((scm_ihashq (key, -1) << 1) | 0x1))
     scm_i_add_finalizer (SCM2PTR (key), eq_finalizer, s);
+  else if (scm_is_symbol (key) && hash == ((scm_i_symbol_hash (key) << 1) | 0x1))
+    /* Hack for the symbol table, whose hashes are the string hashes.  */
+    scm_i_add_finalizer (SCM2PTR (key), symbol_finalizer, s);
   else
     scm_i_add_finalizer (SCM2PTR (key), equal_finalizer,
                          make_finalizer_data (s, hash));
