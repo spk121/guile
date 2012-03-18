@@ -361,6 +361,7 @@ SOURCES =					\
   web/response.scm				\
   web/server.scm				\
   web/server/http.scm				\
+  web/server/ethreads.scm			\
   web/uri.scm
 
 ELISP_SOURCES =					\
