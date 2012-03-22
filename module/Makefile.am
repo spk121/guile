@@ -57,6 +57,7 @@ SOURCES =					\
   ice-9/deprecated.scm				\
   ice-9/documentation.scm			\
   ice-9/epoll.scm				\
+  ice-9/ethreads.scm				\
   ice-9/eval-string.scm				\
   ice-9/eval.scm				\
   ice-9/expect.scm				\
