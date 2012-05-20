@@ -99,6 +99,10 @@ exec guile -q -s "$0" "$@"
   (pointer->procedure int16 (dynamic-func "test_ffi_s16_u8" lib) (list uint8)))
 (test (f-s16-u8 10) -19990)
 
+(define f-s16-s8
+  (pointer->procedure int16 (dynamic-func "test_ffi_s16_s8" lib) (list int8)))
+(test (f-s16-s8 -10) -20010)
+
 (define f-u16-u8
   (pointer->procedure uint16 (dynamic-func "test_ffi_u16_u8" lib) (list uint8)))
 (test (f-u16-u8 10) 40010)
@@ -166,8 +170,12 @@ exec guile -q -s "$0" "$@"
 (define f-sum
   (pointer->procedure int64 (dynamic-func "test_ffi_sum" lib)
                       (list int8 int16 int32 int64)))
-(test (f-sum -1 2000 -30000 40000000000)
-      (+ -1 2000 -30000 40000000000))
+; test sign-extension of narrow arguments
+(test (f-sum -1 -2000 -30000 40000000000)
+      (+ -1 -2000 -30000 40000000000))
+; test zero-extension of narrow arguments
+(test (f-sum 1 2000 30000 40000000000)
+      (+ 1 2000 30000 40000000000))
 
 ;;
 ;; Structs

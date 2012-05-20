@@ -87,6 +87,12 @@ scm_t_int16 test_ffi_s16_u8 (scm_t_uint8 a)
   return -20000 + a;
 }
 
+scm_t_int16 test_ffi_s16_s8 (scm_t_int8 a);
+scm_t_int16 test_ffi_s16_s8 (scm_t_int8 a)
+{
+  return -20000 + a;
+}
+
 scm_t_int16 test_ffi_s16_s64 (scm_t_int64 a);
 scm_t_int16 test_ffi_s16_s64 (scm_t_int64 a)
 {
