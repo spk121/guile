@@ -27,7 +27,7 @@ AM_V_GUILEC_0 = @echo "  GUILEC" $@;
 SUFFIXES = .scm .el .go
 
 .scm.go:
-	$(AM_V_GUILEC)GUILE_AUTO_COMPILE=0			\
+	$(AM_V_GUILEC)time env GUILE_AUTO_COMPILE=0		\
 	$(top_builddir)/meta/uninstalled-env			\
 	guild compile --target="$(host)" $(GUILE_WARNINGS)	\
 	  -L "$(abs_srcdir)" -L "$(abs_builddir)"		\
@@ -35,7 +35,7 @@ SUFFIXES = .scm .el .go
 	  -o "$@" "$<"
 
 .el.go:
-	$(AM_V_GUILEC)GUILE_AUTO_COMPILE=0			\
+	$(AM_V_GUILEC)time env GUILE_AUTO_COMPILE=0		\
 	$(top_builddir)/meta/uninstalled-env			\
 	guild compile --target="$(host)" $(GUILE_WARNINGS)	\
 	  -L "$(abs_srcdir)" -L "$(abs_builddir)"		\
