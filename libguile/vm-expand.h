@@ -16,6 +16,18 @@
  * 02110-1301 USA
  */
 
+/*
+ * As of "gcc version 4.2.1 (Based on Apple Inc. build 5658) (LLVM build
+ * 2336.1.00)" it appears that llvm-gcc doesn't handle labels-as-values
+ * as efficiently as the basic switch statement, so we want to switch
+ * them off.
+ *
+ * (See also vm-engine.h.)
+ */
+#ifdef __llvm__
+# undef HAVE_LABELS_AS_VALUES
+#endif
+
 #ifndef VM_LABEL
 #define VM_LABEL(tag) l_##tag
 #define VM_OPCODE(tag) scm_op_##tag

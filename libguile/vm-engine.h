@@ -100,6 +100,18 @@
 
 
 /*
+ * As of "gcc version 4.2.1 (Based on Apple Inc. build 5658) (LLVM build
+ * 2336.1.00)" it appears that llvm-gcc doesn't handle labels-as-values
+ * as efficiently as the basic switch statement, so we want to switch
+ * them off.
+ *
+ * (See also vm-expand.h.)
+ */
+#ifdef __llvm__
+# undef HAVE_LABELS_AS_VALUES
+#endif
+
+/*
  * Cache/Sync
  */
 
