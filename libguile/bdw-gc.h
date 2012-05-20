@@ -41,9 +41,9 @@
 
 #include <gc/gc.h>
 
-#if (! ((defined GC_VERSION_MAJOR) && (GC_VERSION_MAJOR >= 7)))
-/* This was needed with `libgc' 6.x.  */
-# include <gc/gc_local_alloc.h>
+/* Looks like we want 7.2 or better.  */
+#if (GC_VERSION_MAJOR < 7) || ((GC_VERSION_MAJOR == 7) && (GC_VERSION_MINOR < 2))
+# error Boehm-GC version 7.2 or better is needed
 #endif
 
 #if (defined GC_VERSION_MAJOR) && (GC_VERSION_MAJOR >= 7)
