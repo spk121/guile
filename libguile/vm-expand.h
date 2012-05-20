@@ -24,7 +24,7 @@
 #define VM_TAG(tag) VM_LABEL(tag):
 #define VM_ADDR(tag) &&VM_LABEL(tag)
 #else /* not HAVE_LABELS_AS_VALUES */
-#define VM_TAG(tag) case VM_OPCODE(tag):
+#define VM_TAG(tag) case VM_OPCODE(tag): VM_LABEL(tag):
 #define VM_ADDR(tag) NULL
 #endif /* not HAVE_LABELS_AS_VALUES */
 #endif /* VM_LABEL */
