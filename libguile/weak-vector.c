@@ -171,13 +171,12 @@ scm_c_weak_vector_set_x (SCM wv, size_t k, SCM x)
   elts = SCM_I_VECTOR_WELTS (wv);
 
   if (prev && SCM_HEAP_OBJECT_P (SCM_PACK_POINTER (prev)))
-    GC_unregister_disappearing_link ((GC_PTR) &elts[k]);
+    GC_unregister_disappearing_link ((void **) &elts[k]);
   
   elts[k] = x;
 
   if (SCM_HEAP_OBJECT_P (x))
-    SCM_I_REGISTER_DISAPPEARING_LINK ((GC_PTR) &elts[k],
-                                      (GC_PTR) SCM2PTR (x));
+    SCM_I_REGISTER_DISAPPEARING_LINK ((void **) &elts[k], SCM2PTR (x));
 }
 
 

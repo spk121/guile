@@ -46,10 +46,7 @@
 # error Boehm-GC version 7.2 or better is needed
 #endif
 
-#if (defined GC_VERSION_MAJOR) && (GC_VERSION_MAJOR >= 7)
-/* This type was provided by `libgc' 6.x.  */
-typedef void *GC_PTR;
-#endif
+#define GC_PTR  do_not_use_GC_PTR do_not_use_GC_PTR do_not_use_GC_PTR
 
 
 /* Return true if PTR points to the heap.  */
