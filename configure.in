@@ -1446,11 +1446,18 @@ int main ()
 #endif
 ]])],
 [works=yes
-AC_DEFINE(PTHREAD_ATTR_GETSTACK_WORKS, [1], [Define when pthread_att_get_stack works for the main thread])],
-[works=no],
-[])
+ AC_MSG_RESULT([yes])],
+[works=no
+ AC_MSG_RESULT([no])],
+[works=yes
+ AC_MSG_RESULT([assuming it does])])
+
+if test "x$works" = "xyes"; then
+   AC_DEFINE(PTHREAD_ATTR_GETSTACK_WORKS, [1],
+     [Define when pthread_att_get_stack works for the main thread])
+fi
+
 CFLAGS="$old_CFLAGS"
-AC_MSG_RESULT($works)
 
 fi # with_threads=pthreads
 
