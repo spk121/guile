@@ -1,6 +1,6 @@
 /* srfi-4.c --- Uniform numeric vector datatypes.
  *
- * 	Copyright (C) 2001, 2004, 2006, 2010 Free Software Foundation, Inc.
+ * 	Copyright (C) 2001, 2004, 2006, 2010, 2012 Free Software Foundation, Inc.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -396,10 +396,9 @@ uvec_to_list (int type, SCM uvec)
   scm_t_array_handle handle;
   size_t len;
   ssize_t i, inc;
-  const void *elts;
   SCM res = SCM_EOL;
 
-  elts = uvec_elements (type, uvec, &handle, &len, &inc);
+  (void) uvec_elements (type, uvec, &handle, &len, &inc);
   for (i = len*inc; i > 0;)
     {
       i -= inc;

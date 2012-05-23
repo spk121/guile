@@ -1,4 +1,5 @@
-/* Copyright (C) 1995,1996,1997,1998,1999,2000,2001, 2002, 2004, 2006, 2007 Free Software Foundation, Inc.
+/* Copyright (C) 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2004, 2006,
+ *   2007, 2012 Free Software Foundation, Inc.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -137,10 +138,9 @@ static int signal_pipe[2];
 static SIGRETTYPE
 take_signal (int signum)
 {
-  size_t count;
   char sigbyte = signum;
 
-  count = write (signal_pipe[1], &sigbyte, 1);
+  (void) write (signal_pipe[1], &sigbyte, 1);
 
 #ifndef HAVE_SIGACTION
   signal (signum, take_signal);

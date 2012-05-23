@@ -1,5 +1,6 @@
-/* Copyright (C) 1995,1996,1997,1998,1999,2000,2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
- * 
+/* Copyright (C) 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004,
+ *   2005, 2006, 2007, 2008, 2009, 2012 Free Software Foundation, Inc.
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
@@ -1543,12 +1544,10 @@ SCM_DEFINE (scm_nice, "nice", 1, 0, 0,
 	    "The return value is unspecified.")
 #define FUNC_NAME s_scm_nice
 {
-  int nice_value;
-
   /* nice() returns "prio-NZERO" on success or -1 on error, but -1 can arise
      from "prio-NZERO", so an error must be detected from errno changed */
   errno = 0;
-  nice_value = nice (scm_to_int (incr));
+  (void) nice (scm_to_int (incr));
   if (errno != 0)
     SCM_SYSERROR;
 

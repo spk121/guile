@@ -1,5 +1,6 @@
-/* Copyright (C) 1995,1996,1997,1998,2000,2001, 2003, 2004, 2006, 2008 Free Software Foundation, Inc.
- * 
+/* Copyright (C) 1995, 1996, 1997, 1998, 2000, 2001, 2003, 2004, 2006, 2008,
+ *   2012 Free Software Foundation, Inc.
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
@@ -752,7 +753,7 @@ scm_ithrow (SCM key, SCM args, int noreturn SCM_UNUSED)
     {
       struct pre_unwind_data *c =
 	(struct pre_unwind_data *) SCM_CELL_WORD_1 (jmpbuf);
-      SCM handle, answer;
+      SCM handle;
 
       /* For old-style lazy-catch behaviour, we unwind the dynamic
 	 context before invoking the handler. */
@@ -776,7 +777,7 @@ scm_ithrow (SCM key, SCM args, int noreturn SCM_UNUSED)
 				  c,
 				  SCM_F_WIND_EXPLICITLY);
       scm_dynwind_unwind_handler (toggle_pre_unwind_running, c, 0);
-      answer = (c->handler) (c->handler_data, key, args);
+      (c->handler) (c->handler_data, key, args);
 
       /* There is deliberately no scm_dynwind_end call here.  This
 	 means that the unwind handler (toggle_pre_unwind_running)

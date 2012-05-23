@@ -1,4 +1,5 @@
-/* Copyright (C) 1995,1996,1997,1998,1999,2000,2001, 2002, 2006, 2008 Free Software Foundation, Inc.
+/* Copyright (C) 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2006, 2008,
+ *   2012 Free Software Foundation, Inc.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -89,7 +90,6 @@ scm_i_initialize_heap_segment_data (scm_t_heap_segment * segment, size_t request
   size_t mem_needed = (1+card_count) * SCM_GC_SIZEOF_CARD
     + SCM_GC_CARD_BVEC_SIZE_IN_LONGS * card_count * SCM_SIZEOF_LONG
     ;
-  scm_t_c_bvec_long * bvec_ptr = 0;
   scm_t_cell *  memory = 0;
 
   /*
@@ -106,8 +106,6 @@ scm_i_initialize_heap_segment_data (scm_t_heap_segment * segment, size_t request
   segment->bounds[1] = segment->bounds[0] + card_count * SCM_GC_CARD_N_CELLS;
 
   segment->freelist->heap_size += scm_i_segment_cell_count (segment);
-  
-  bvec_ptr = (scm_t_c_bvec_long*) segment->bounds[1];
 
   /*
     Don't init the mem or the bitvector. This is handled by lazy

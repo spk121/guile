@@ -1,5 +1,5 @@
 /* Representation of stack frame debug information
- * Copyright (C) 1996,1997,2000,2001, 2006, 2007, 2008 Free Software Foundation
+ * Copyright (C) 1996,1997,2000,2001, 2006, 2007, 2008, 2012 Free Software Foundation
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -552,10 +552,8 @@ SCM_DEFINE (scm_stack_ref, "stack-ref", 2, 0, 0,
 	    "Return the @var{index}'th frame from @var{stack}.")
 #define FUNC_NAME s_scm_stack_ref
 {
-  unsigned long int c_index;
-
   SCM_VALIDATE_STACK (1, stack);
-  c_index = scm_to_unsigned_integer (index, 0, SCM_STACK_LENGTH(stack)-1);
+  (void) scm_to_unsigned_integer (index, 0, SCM_STACK_LENGTH (stack) - 1);
   return scm_cons (stack, index);
 }
 #undef FUNC_NAME
