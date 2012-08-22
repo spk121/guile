@@ -1627,23 +1627,20 @@ AC_CONFIG_FILES([
 ])
 
 AC_CONFIG_FILES([guile-1.8.pc])
-AC_CONFIG_FILES([check-guile], [chmod +x check-guile])
-AC_CONFIG_FILES([benchmark-guile], [chmod +x benchmark-guile])
-AC_CONFIG_FILES([guile-tools], [chmod +x guile-tools])
-AC_CONFIG_FILES([pre-inst-guile], [chmod +x pre-inst-guile])
-AC_CONFIG_FILES([pre-inst-guile-env], [chmod +x pre-inst-guile-env])
-AC_CONFIG_FILES([libguile/guile-snarf],
-                [chmod +x libguile/guile-snarf])
-AC_CONFIG_FILES([libguile/guile-doc-snarf],
-                [chmod +x libguile/guile-doc-snarf])
-AC_CONFIG_FILES([libguile/guile-func-name-check],
-                [chmod +x libguile/guile-func-name-check])
-AC_CONFIG_FILES([libguile/guile-snarf-docs],
-                [chmod +x libguile/guile-snarf-docs])
-AC_CONFIG_FILES([test-suite/standalone/test-use-srfi],
-                [chmod +x test-suite/standalone/test-use-srfi])
-AC_CONFIG_FILES([test-suite/standalone/test-fast-slot-ref],
-                [chmod +x test-suite/standalone/test-fast-slot-ref])
+
+AC_DEFUN([CONFIG_SCRIPT],[AC_CONFIG_FILES([$1],[chmod +x $1])])
+
+CONFIG_SCRIPT([check-guile])
+CONFIG_SCRIPT([benchmark-guile])
+CONFIG_SCRIPT([guile-tools])
+CONFIG_SCRIPT([pre-inst-guile])
+CONFIG_SCRIPT([pre-inst-guile-env])
+CONFIG_SCRIPT([libguile/guile-snarf])
+CONFIG_SCRIPT([libguile/guile-doc-snarf])
+CONFIG_SCRIPT([libguile/guile-func-name-check])
+CONFIG_SCRIPT([libguile/guile-snarf-docs])
+CONFIG_SCRIPT([test-suite/standalone/test-use-srfi])
+CONFIG_SCRIPT([test-suite/standalone/test-fast-slot-ref])
 
 AC_OUTPUT
 
