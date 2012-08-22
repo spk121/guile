@@ -184,7 +184,7 @@ most lenient compiler they can find.  :)
 - If you add code which uses functions or other features that are not
 entirely portable, please make sure the rest of Guile will still
 function properly on systems where they are missing.  This usually
-entails adding a test to configure.in, and then adding #ifdefs to your
+entails adding a test to configure.ac, and then adding #ifdefs to your
 code to disable it if the system's features are missing.
 
 - The normal way of removing a function, macro or variable is to mark
