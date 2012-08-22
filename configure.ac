@@ -1643,9 +1643,3 @@ CONFIG_SCRIPT([test-suite/standalone/test-use-srfi])
 CONFIG_SCRIPT([test-suite/standalone/test-fast-slot-ref])
 
 AC_OUTPUT
-
-dnl Local Variables:
-dnl comment-start: "dnl "
-dnl comment-end: ""
-dnl comment-start-skip: "\\bdnl\\b\\s *"
-dnl End:
