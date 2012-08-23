@@ -1482,7 +1482,7 @@ SCM_DEFINE (scm_send, "send", 2, 1, 0,
   fd = SCM_FPORT_FDES (sock);
 
   len = scm_i_string_length (message);
-  src = scm_i_string_writable_chars (message);
+  src = scm_i_string_chars (message);
   SCM_SYSCALL (rv = send (fd, src, len, flg));
   scm_i_string_stop_writing ();
 
