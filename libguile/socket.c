@@ -1,5 +1,5 @@
 /* Copyright (C) 1996,1997,1998,2000,2001, 2002, 2003, 2004, 2005, 2006, 2007 Free Software Foundation, Inc.
- * 
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
@@ -91,7 +91,7 @@ typedef union
 
 
 
-SCM_DEFINE (scm_htons, "htons", 1, 0, 0, 
+SCM_DEFINE (scm_htons, "htons", 1, 0, 0,
             (SCM value),
 	    "Convert a 16 bit quantity from host to network byte ordering.\n"
 	    "@var{value} is packed into 2 bytes, which are then converted\n"
@@ -102,7 +102,7 @@ SCM_DEFINE (scm_htons, "htons", 1, 0, 0,
 }
 #undef FUNC_NAME
 
-SCM_DEFINE (scm_ntohs, "ntohs", 1, 0, 0, 
+SCM_DEFINE (scm_ntohs, "ntohs", 1, 0, 0,
             (SCM value),
 	    "Convert a 16 bit quantity from network to host byte ordering.\n"
 	    "@var{value} is packed into 2 bytes, which are then converted\n"
@@ -113,7 +113,7 @@ SCM_DEFINE (scm_ntohs, "ntohs", 1, 0, 0,
 }
 #undef FUNC_NAME
 
-SCM_DEFINE (scm_htonl, "htonl", 1, 0, 0, 
+SCM_DEFINE (scm_htonl, "htonl", 1, 0, 0,
             (SCM value),
 	    "Convert a 32 bit quantity from host to network byte ordering.\n"
 	    "@var{value} is packed into 4 bytes, which are then converted\n"
@@ -124,7 +124,7 @@ SCM_DEFINE (scm_htonl, "htonl", 1, 0, 0,
 }
 #undef FUNC_NAME
 
-SCM_DEFINE (scm_ntohl, "ntohl", 1, 0, 0, 
+SCM_DEFINE (scm_ntohl, "ntohl", 1, 0, 0,
             (SCM value),
 	    "Convert a 32 bit quantity from network to host byte ordering.\n"
 	    "@var{value} is packed into 4 bytes, which are then converted\n"
@@ -140,7 +140,7 @@ SCM_DEFINE (scm_ntohl, "ntohl", 1, 0, 0,
 extern int inet_aton ();
 #endif
 
-SCM_DEFINE (scm_inet_aton, "inet-aton", 1, 0, 0, 
+SCM_DEFINE (scm_inet_aton, "inet-aton", 1, 0, 0,
             (SCM address),
 	    "Convert an IPv4 Internet address from printable string\n"
 	    "(dotted decimal notation) to an integer.  E.g.,\n\n"
@@ -163,7 +163,7 @@ SCM_DEFINE (scm_inet_aton, "inet-aton", 1, 0, 0,
 #undef FUNC_NAME
 
 
-SCM_DEFINE (scm_inet_ntoa, "inet-ntoa", 1, 0, 0, 
+SCM_DEFINE (scm_inet_ntoa, "inet-ntoa", 1, 0, 0,
             (SCM inetid),
 	    "Convert an IPv4 Internet address to a printable\n"
 	    "(dotted decimal notation) string.  E.g.,\n\n"
@@ -183,7 +183,7 @@ SCM_DEFINE (scm_inet_ntoa, "inet-ntoa", 1, 0, 0,
 #undef FUNC_NAME
 
 #ifdef HAVE_INET_NETOF
-SCM_DEFINE (scm_inet_netof, "inet-netof", 1, 0, 0, 
+SCM_DEFINE (scm_inet_netof, "inet-netof", 1, 0, 0,
             (SCM address),
 	    "Return the network number part of the given IPv4\n"
 	    "Internet address.  E.g.,\n\n"
@@ -200,7 +200,7 @@ SCM_DEFINE (scm_inet_netof, "inet-netof", 1, 0, 0,
 #endif
 
 #ifdef HAVE_INET_LNAOF
-SCM_DEFINE (scm_lnaof, "inet-lnaof", 1, 0, 0, 
+SCM_DEFINE (scm_lnaof, "inet-lnaof", 1, 0, 0,
             (SCM address),
 	    "Return the local-address-with-network part of the given\n"
 	    "IPv4 Internet address, using the obsolete class A/B/C system.\n"
@@ -331,11 +331,11 @@ scm_to_ipv6 (scm_t_uint8 dst[16], SCM src)
   else if (SCM_BIGP (src))
     {
       size_t count;
-      
+
       if ((mpz_sgn (SCM_I_BIG_MPZ (src)) < 0)
 	  || mpz_sizeinbase (SCM_I_BIG_MPZ (src), 2) > 128)
 	scm_out_of_range (NULL, src);
-      
+
       memset (dst, 0, 16);
       mpz_export (dst,
                   &count,
@@ -689,7 +689,7 @@ SCM_DEFINE (scm_setsockopt, "setsockopt", 4, 0, 0,
   ioptname = scm_to_int (optname);
 
   fd = SCM_FPORT_FDES (sock);
-  
+
   if (ilevel == SOL_SOCKET)
     {
 #ifdef SO_LINGER
@@ -1308,7 +1308,7 @@ SCM_DEFINE (scm_make_socket_address, "make-socket-address", 2, 0, 1,
 #undef FUNC_NAME
 
 
-SCM_DEFINE (scm_accept, "accept", 1, 0, 0, 
+SCM_DEFINE (scm_accept, "accept", 1, 0, 0,
             (SCM sock),
 	    "Accept a connection on a bound, listening socket.\n"
 	    "If there\n"
@@ -1359,7 +1359,7 @@ SCM_DEFINE (scm_accept, "accept", 1, 0, 0,
 }
 #undef FUNC_NAME
 
-SCM_DEFINE (scm_getsockname, "getsockname", 1, 0, 0, 
+SCM_DEFINE (scm_getsockname, "getsockname", 1, 0, 0,
             (SCM sock),
 	    "Return the address of @var{sock}, in the same form as the\n"
 	    "object returned by @code{accept}.  On many systems the address\n"
@@ -1380,7 +1380,7 @@ SCM_DEFINE (scm_getsockname, "getsockname", 1, 0, 0,
 }
 #undef FUNC_NAME
 
-SCM_DEFINE (scm_getpeername, "getpeername", 1, 0, 0, 
+SCM_DEFINE (scm_getpeername, "getpeername", 1, 0, 0,
             (SCM sock),
 	    "Return the address that @var{sock}\n"
 	    "is connected to, in the same form as the object returned by\n"
@@ -1538,7 +1538,7 @@ SCM_DEFINE (scm_recvfrom, "recvfrom!", 2, 3, 0,
 
   SCM_VALIDATE_OPFPORT (1, sock);
   fd = SCM_FPORT_FDES (sock);
-  
+
   SCM_VALIDATE_STRING (2, str);
   scm_i_get_substring_spec (scm_i_string_length (str),
 			    start, &offset, end, &cend);
