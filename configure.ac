@@ -2,7 +2,7 @@ dnl   configuration script for Guile
 dnl   Process this file with autoconf to produce configure.
 dnl
 
-define(GUILE_CONFIGURE_COPYRIGHT,[[
+define([GUILE_CONFIGURE_COPYRIGHT],[[
 
 Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005,
   2006, 2007, 2008, 2009, 2011, 2012 Free Software Foundation, Inc.
@@ -40,17 +40,17 @@ AC_INIT(patsubst(m4_esyscmd(. ./GUILE-VERSION && echo ${PACKAGE}),[
         [bug-guile@gnu.org])
 AC_CONFIG_AUX_DIR([build-aux])
 AC_CONFIG_MACRO_DIR([m4])
-AC_CONFIG_SRCDIR(GUILE-VERSION)
+AC_CONFIG_SRCDIR([GUILE-VERSION])
 
 AM_INIT_AUTOMAKE([gnu no-define check-news -Wall -Wno-override])
 
-AC_COPYRIGHT(GUILE_CONFIGURE_COPYRIGHT)
+AC_COPYRIGHT(GUILE_CONFIGURE_COPYRIGHT)dnl Do not m4-quote.
 AC_CONFIG_SRCDIR([GUILE-VERSION])
 
 . $srcdir/GUILE-VERSION
 
 AC_CONFIG_HEADERS([config.h])
-AH_TOP(/*GUILE_CONFIGURE_COPYRIGHT*/)
+AH_TOP([/*]GUILE_CONFIGURE_COPYRIGHT[*/])
 
 #--------------------------------------------------------------------
 #
@@ -58,7 +58,7 @@ AH_TOP(/*GUILE_CONFIGURE_COPYRIGHT*/)
 #
 #--------------------------------------------------------------------
 
-AC_CONFIG_SUBDIRS(guile-readline)
+AC_CONFIG_SUBDIRS([guile-readline])
 
 #--------------------------------------------------------------------
 
@@ -90,8 +90,8 @@ AC_CHECK_LIB([ltdl], [lt_dlinit], ,
 AC_CHECK_HEADER([ltdl.h], [],
   [AC_MSG_ERROR([<ltdl.h> not found.  See README.])])
 
-AC_CHECK_PROG(have_makeinfo, makeinfo, yes, no)
-AM_CONDITIONAL(HAVE_MAKEINFO, test "$have_makeinfo" = yes)
+AC_CHECK_PROG([have_makeinfo], [makeinfo], [yes], [no])
+AM_CONDITIONAL([HAVE_MAKEINFO], [test "$have_makeinfo" = yes])
 
 AM_PATH_LISPDIR
 
@@ -103,7 +103,7 @@ AM_PATH_LISPDIR
 
 GUILE_ERROR_ON_WARNING="no"
 
-AC_ARG_ENABLE(error-on-warning,
+AC_ARG_ENABLE([error-on-warning],
   [  --enable-error-on-warning    treat compile warnings as errors],
   [case "${enableval}" in
      yes | y) GUILE_ERROR_ON_WARNING="yes" ;;
@@ -112,39 +112,39 @@ AC_ARG_ENABLE(error-on-warning,
    esac])
 
 SCM_I_GSC_GUILE_DEBUG_FREELIST=0
-AC_ARG_ENABLE(debug-freelist,
-  [  --enable-debug-freelist include garbage collector freelist debugging code],
+AC_ARG_ENABLE([debug-freelist],
+  [  --enable-debug-freelist include garbage collector freelist debugging code],[
   if test "$enable_debug_freelist" = y \
      || test "$enable_debug_freelist" = yes; then
     SCM_I_GSC_GUILE_DEBUG_FREELIST=1
-  fi)
+  fi])
 
-AC_ARG_ENABLE(debug-malloc,
-  [  --enable-debug-malloc   include malloc debugging code],
+AC_ARG_ENABLE([debug-malloc],
+  [  --enable-debug-malloc   include malloc debugging code],[
   if test "$enable_debug_malloc" = y || test "$enable_debug_malloc" = yes; then
-    AC_DEFINE(GUILE_DEBUG_MALLOC, 1,
+    AC_DEFINE([GUILE_DEBUG_MALLOC], 1,
       [Define this if you want to debug scm_must_malloc/realloc/free calls.])
-  fi)
+  fi])
 
 SCM_I_GSC_GUILE_DEBUG=0
-AC_ARG_ENABLE(guile-debug,
+AC_ARG_ENABLE([guile-debug],
   [AS_HELP_STRING([--enable-guile-debug],
-                  [include internal debugging functions])],
+                  [include internal debugging functions])],[
   if test "$enable_guile_debug" = y || test "$enable_guile_debug" = yes; then
     SCM_I_GSC_GUILE_DEBUG=1
-  fi)
+  fi])
 
-AC_ARG_ENABLE(posix,
+AC_ARG_ENABLE([posix],
   [  --disable-posix         omit posix interfaces],,
-  enable_posix=yes)
+  [enable_posix=yes])
 
-AC_ARG_ENABLE(networking,
+AC_ARG_ENABLE([networking],
   [  --disable-networking    omit networking interfaces],,
-  enable_networking=yes)
+  [enable_networking=yes])
 
-AC_ARG_ENABLE(regex,
+AC_ARG_ENABLE([regex],
   [  --disable-regex         omit regular expression interfaces],,
-  enable_regex=yes)
+  [enable_regex=yes])
 
 AC_ARG_ENABLE([discouraged],
   AS_HELP_STRING([--disable-discouraged],[omit discouraged features]))
@@ -171,12 +171,12 @@ else
   fi
   SCM_I_GSC_ENABLE_DEPRECATED=1
 fi
-AC_DEFINE_UNQUOTED(SCM_WARN_DEPRECATED_DEFAULT, "$warn_default",
+AC_DEFINE_UNQUOTED([SCM_WARN_DEPRECATED_DEFAULT], ["$warn_default"],
 [Define this to control the default warning level for deprecated features.])
 
 AC_ARG_ENABLE(elisp,
   [  --disable-elisp         omit Emacs Lisp support],,
-  enable_elisp=yes)
+  [enable_elisp=yes])
 
 dnl  Added the following configure option in January 2008 following
 dnl  investigation of problems with "64" system and library calls on
@@ -215,10 +215,10 @@ AC_ARG_WITH([64-calls],
        use_64_calls=no
        ;;
    esac])
-AC_MSG_RESULT($use_64_calls)
+AC_MSG_RESULT([$use_64_calls])
 case "$use_64_calls" in
   y* )
-    AC_DEFINE(GUILE_USE_64_CALLS, 1,
+    AC_DEFINE([GUILE_USE_64_CALLS], 1,
       [Define to 1 in order to try to use "64" versions of system and library calls.])
     ;;
 esac
@@ -262,9 +262,9 @@ esac
 dnl Check for dynamic linking
 
 use_modules=yes
-AC_ARG_WITH(modules,
+AC_ARG_WITH([modules],
 [  --with-modules[=FILES]  Add support for dynamic modules],
-use_modules="$withval")
+[use_modules="$withval"])
 test -z "$use_modules" && use_modules=yes
 DLPREOPEN=
 if test "$use_modules" != no; then
@@ -287,14 +287,14 @@ fi
 if test "$enable_posix" = yes; then
    AC_LIBOBJ([filesys])
    AC_LIBOBJ([posix])
-   AC_DEFINE(HAVE_POSIX, 1,
+   AC_DEFINE([HAVE_POSIX], 1,
      [Define this if you want support for POSIX system calls in Guile.])
 fi
 
 if test "$enable_networking" = yes; then
    AC_LIBOBJ([net_db])
    AC_LIBOBJ([socket])
-   AC_DEFINE(HAVE_NETWORKING, 1,
+   AC_DEFINE([HAVE_NETWORKING], 1,
      [Define this if you want support for networking in Guile.])
 fi
 
@@ -307,7 +307,7 @@ if test "$enable_elisp" = yes; then
 else
   SCM_I_GSC_ENABLE_ELISP=0
 fi
-AC_CHECK_LIB(uca, __uc_get_ar_bsp)
+AC_CHECK_LIB([uca], [__uc_get_ar_bsp])
 
 AC_C_CONST
 
@@ -320,32 +320,32 @@ if test "$ac_cv_c_inline" != no; then
 else
   SCM_I_GSC_C_INLINE=NULL
 fi
-AC_CHECK_LIB(uca, __uc_get_ar_bsp)
+AC_CHECK_LIB([uca], [__uc_get_ar_bsp])
 
 AC_C_BIGENDIAN
 
-AC_CHECK_SIZEOF(char)
-AC_CHECK_SIZEOF(unsigned char)
-AC_CHECK_SIZEOF(short)
-AC_CHECK_SIZEOF(unsigned short)
-AC_CHECK_SIZEOF(int)
-AC_CHECK_SIZEOF(unsigned int)
-AC_CHECK_SIZEOF(long)
-AC_CHECK_SIZEOF(unsigned long)
-AC_CHECK_SIZEOF(size_t)
-AC_CHECK_SIZEOF(long long)
-AC_CHECK_SIZEOF(unsigned long long)
-AC_CHECK_SIZEOF(__int64)
-AC_CHECK_SIZEOF(unsigned __int64)
-AC_CHECK_SIZEOF(void *)
-AC_CHECK_SIZEOF(intptr_t)
-AC_CHECK_SIZEOF(uintptr_t)
-AC_CHECK_SIZEOF(ptrdiff_t)
-AC_CHECK_SIZEOF(size_t)
-AC_CHECK_SIZEOF(off_t)
+AC_CHECK_SIZEOF([char])
+AC_CHECK_SIZEOF([unsigned char])
+AC_CHECK_SIZEOF([short])
+AC_CHECK_SIZEOF([unsigned short])
+AC_CHECK_SIZEOF([int])
+AC_CHECK_SIZEOF([unsigned int])
+AC_CHECK_SIZEOF([long])
+AC_CHECK_SIZEOF([unsigned long])
+AC_CHECK_SIZEOF([size_t])
+AC_CHECK_SIZEOF([long long])
+AC_CHECK_SIZEOF([unsigned long long])
+AC_CHECK_SIZEOF([__int64])
+AC_CHECK_SIZEOF([unsigned __int64])
+AC_CHECK_SIZEOF([void *])
+AC_CHECK_SIZEOF([intptr_t])
+AC_CHECK_SIZEOF([uintptr_t])
+AC_CHECK_SIZEOF([ptrdiff_t])
+AC_CHECK_SIZEOF([size_t])
+AC_CHECK_SIZEOF([off_t])
 
 if test "$ac_cv_sizeof_long" -ne "$ac_cv_sizeof_void_p"; then
-  AC_MSG_ERROR(sizes of long and void* are not identical)
+  AC_MSG_ERROR([sizes of long and void* are not identical])
 fi
 
 if test "$ac_cv_sizeof_ptrdiff_t" -ne 0; then
@@ -358,7 +358,7 @@ AC_SUBST([SCM_I_GSC_T_PTRDIFF])
 AC_CHECK_HEADERS([stdint.h])
 AC_CHECK_HEADERS([inttypes.h])
 
-AC_CHECK_SIZEOF(intmax_t)
+AC_CHECK_SIZEOF([intmax_t])
 
 SCM_I_GSC_NEEDS_STDINT_H=0
 SCM_I_GSC_NEEDS_INTTYPES_H=0
@@ -710,22 +710,22 @@ direct.h strings.h machine/fpu.h poll.h])
 
 # "complex double" is new in C99, and "complex" is only a keyword if
 # <complex.h> is included
-AC_CHECK_TYPES(complex double,,,
+AC_CHECK_TYPES([complex double],,,
 [#if HAVE_COMPLEX_H
 #include <complex.h>
 #endif])
 
 # On MacOS X <sys/socklen.h> contains socklen_t, so must include that
 # when testing.
-AC_CHECK_TYPE(socklen_t, ,
-  [AC_DEFINE_UNQUOTED(socklen_t, int,
+AC_CHECK_TYPE([socklen_t], ,
+  [AC_DEFINE_UNQUOTED([socklen_t], [int],
                       [Define to `int' if <sys/socket.h> does not define.])],
   [#if HAVE_SYS_TYPES_H
 #include <sys/types.h>
 #endif
 #include <sys/socket.h>
 ])
-AC_CHECK_TYPE(struct ip_mreq)
+AC_CHECK_TYPE([struct ip_mreq])
 
 GUILE_HEADER_LIBC_WITH_UNISTD
 
@@ -736,16 +736,16 @@ AC_TYPE_MODE_T
 # On mingw -lm is empty, so this test is unnecessary, but it's
 # harmless so we don't hard-code to suppress it.
 #
-AC_CHECK_LIB(m, cos)
+AC_CHECK_LIB([m], [cos])
 
-AC_CHECK_FUNCS(gethostbyname)
+AC_CHECK_FUNCS([gethostbyname])
 if test $ac_cv_func_gethostbyname = no; then
-    AC_CHECK_LIB(nsl, gethostbyname)
+    AC_CHECK_LIB([nsl], [gethostbyname])
 fi
 
-AC_CHECK_FUNCS(connect)
+AC_CHECK_FUNCS([connect])
 if test $ac_cv_func_connect = no; then
-    AC_CHECK_LIB(socket, connect)
+    AC_CHECK_LIB([socket], [connect])
 fi
 
 dnl
@@ -754,9 +754,9 @@ dnl
 EXTRA_DEFS=""
 case $host in
   *-*-mingw*)
-    AC_CHECK_HEADER(winsock2.h, [AC_DEFINE([HAVE_WINSOCK2_H], 1,
+    AC_CHECK_HEADER([winsock2.h], [AC_DEFINE([HAVE_WINSOCK2_H], 1,
       [Define if you have the <winsock2.h> header file.])])
-    AC_CHECK_LIB(ws2_32, main)
+    AC_CHECK_LIB([ws2_32], [main])
     AC_LIBOBJ([win32-uname])
     AC_LIBOBJ([win32-dirent])
     if test "$enable_networking" = yes ; then
@@ -764,12 +764,12 @@ case $host in
     fi
     if test "$enable_shared" = yes ; then
       EXTRA_DEFS="-DSCM_IMPORT"
-      AC_DEFINE(USE_DLL_IMPORT, 1,
+      AC_DEFINE([USE_DLL_IMPORT], 1,
         [Define if you need additional CPP macros on Win32 platforms.])
     fi
     ;;
 esac
-AC_SUBST(EXTRA_DEFS)
+AC_SUBST([EXTRA_DEFS])
 
 # Reasons for testing:
 #   crt_externs.h - Darwin specific
@@ -824,8 +824,8 @@ AC_CHECK_FUNCS([DINFINITY DQNAN cexp chsize clog clog10 ctermid fesetround ftime
 #   vsnprintf - on AIX 5.3, the declaration is only visible with
 #       `_XOPEN_SOURCE >= 500' or `_ISOC99_SOURCE'.
 #
-AC_CHECK_HEADERS(crypt.h netdb.h pthread.h sys/param.h sys/resource.h sys/file.h)
-AC_CHECK_FUNCS(chroot flock getlogin cuserid getpriority setpriority getpass sethostname gethostname)
+AC_CHECK_HEADERS([crypt.h netdb.h pthread.h sys/param.h sys/resource.h sys/file.h])
+AC_CHECK_FUNCS([chroot flock getlogin cuserid getpriority setpriority getpass sethostname gethostname])
 AC_CHECK_DECLS([sethostname, strncasecmp, unsetenv, hstrerror, cuserid, flock, vsnprintf])
 
 # crypt() may or may not be available, for instance in some countries there
@@ -841,8 +841,8 @@ AC_CHECK_DECLS([sethostname, strncasecmp, unsetenv, hstrerror, cuserid, flock, v
 # AC_SEARCH_LIBS lets us add -lcrypt to LIBS only if crypt() is not in the
 # libraries already in that list.
 #
-AC_SEARCH_LIBS(crypt, crypt,
-  [AC_DEFINE(HAVE_CRYPT,1,
+AC_SEARCH_LIBS([crypt], [crypt],
+  [AC_DEFINE([HAVE_CRYPT],1,
              [Define to 1 if you have the `crypt' function.])])
 
 # When compiling with GCC on some OSs (Solaris, AIX), _Complex_I doesn't
@@ -860,7 +860,7 @@ complex double z;
 ]], [[
 z = _Complex_I;
 ]])],
-    [AC_DEFINE(GUILE_I,_Complex_I,[The imaginary unit (positive square root of -1).])
+    [AC_DEFINE([GUILE_I],[_Complex_I],[The imaginary unit (positive square root of -1).])
      AC_MSG_RESULT([_Complex_I])],
     [AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
 #if HAVE_COMPLEX_H
@@ -870,7 +870,7 @@ complex double z;
 ]],[[
 z = 1.0fi;
 ]])],
-  [AC_DEFINE(GUILE_I,1.0fi)
+  [AC_DEFINE([GUILE_I],[1.0fi])
    AC_MSG_RESULT([1.0fi])],
   [ac_cv_type_complex_double=no
    AC_MSG_RESULT([not available])])])
@@ -882,7 +882,7 @@ fi
 #
 if test "$ac_cv_type_complex_double" = yes; then
   AC_CACHE_CHECK([whether csqrt is usable],
-    guile_cv_use_csqrt,
+    [guile_cv_use_csqrt],
     [AC_RUN_IFELSE([AC_LANG_SOURCE([[
 #include <complex.h>
 /* "volatile" is meant to prevent gcc from calculating the sqrt as a
@@ -902,7 +902,7 @@ main (void)
     [guile_cv_use_csqrt="yes, hopefully (cross-compiling)"])])
   case $guile_cv_use_csqrt in
     yes*)
-      AC_DEFINE(HAVE_USABLE_CSQRT, 1, [Define to 1 if csqrt is bug-free])
+      AC_DEFINE([HAVE_USABLE_CSQRT], 1, [Define to 1 if csqrt is bug-free])
       ;;
   esac
 fi
@@ -920,9 +920,9 @@ AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <gmp.h>]],
 
 dnl i18n tests
 #AC_CHECK_HEADERS([libintl.h])
-#AC_CHECK_FUNCS(gettext)
+#AC_CHECK_FUNCS([gettext])
 #if test $ac_cv_func_gettext = no; then
-#   AC_CHECK_LIB(intl, gettext)
+#   AC_CHECK_LIB([intl], [gettext])
 #fi
 #AC_CHECK_FUNCS([bindtextdomain textdomain])
 AM_GNU_GETTEXT([external], [need-ngettext])
@@ -930,23 +930,23 @@ AM_GNU_GETTEXT([external], [need-ngettext])
 ### Some systems don't declare some functions.  On such systems, we
 ### need to at least provide our own K&R-style declarations.
 
-### GUILE_FUNC_DECLARED(function, headerfile)
+### GUILE_FUNC_DECLARED([function], [headerfile])
 
 ### Check for a declaration of FUNCTION in HEADERFILE; if it is
 ### not there, #define MISSING_FUNCTION_DECL.
 AC_DEFUN([GUILE_FUNC_DECLARED], [
-  AC_CACHE_CHECK(for $1 declaration, guile_cv_func_$1_declared,
-    AC_EGREP_HEADER($1, $2,
-		    guile_cv_func_$1_declared=yes,
-		    guile_cv_func_$1_declared=no))
+  AC_CACHE_CHECK([for $1 declaration], [guile_cv_func_$1_declared],
+    AC_EGREP_HEADER([$1], [$2],
+		    [guile_cv_func_$1_declared=yes],
+		    [guile_cv_func_$1_declared=no]))
   if test [x$guile_cv_func_]$1[_declared] = xno; then
     AC_DEFINE([MISSING_]translit($1, [a-z], [A-Z])[_DECL], 1,
       [Define if the operating system supplies $1 without declaring it.])
   fi
 ])
 
-GUILE_FUNC_DECLARED(sleep, unistd.h)
-GUILE_FUNC_DECLARED(usleep, unistd.h)
+GUILE_FUNC_DECLARED([sleep], [unistd.h])
+GUILE_FUNC_DECLARED([usleep], [unistd.h])
 
 AC_CHECK_DECLS([strptime],,,
 [#define _GNU_SOURCE /* ask glibc to give strptime prototype */
@@ -954,33 +954,33 @@ AC_CHECK_DECLS([strptime],,,
 
 ### On some systems usleep has no return value.  If it does have one,
 ### we'd like to return it; otherwise, we'll fake it.
-AC_CACHE_CHECK([return type of usleep], guile_cv_func_usleep_return_type,
+AC_CACHE_CHECK([return type of usleep], [guile_cv_func_usleep_return_type],
   [AC_EGREP_HEADER(changequote(<, >)<void[ 	]+usleep>changequote([, ]),
-                   unistd.h,
+                   [unistd.h],
 		   [guile_cv_func_usleep_return_type=void],
 		   [guile_cv_func_usleep_return_type=int])])
 case "$guile_cv_func_usleep_return_type" in
   "void" )
-    AC_DEFINE(USLEEP_RETURNS_VOID, 1,
+    AC_DEFINE([USLEEP_RETURNS_VOID], 1,
       [Define if the system headers declare usleep to return void.])
   ;;
 esac
 
-AC_CHECK_HEADER(sys/un.h, have_sys_un_h=1)
+AC_CHECK_HEADER([sys/un.h], [have_sys_un_h=1])
 if test -n "$have_sys_un_h" ; then
-  AC_DEFINE(HAVE_UNIX_DOMAIN_SOCKETS, 1,
+  AC_DEFINE([HAVE_UNIX_DOMAIN_SOCKETS], 1,
     [Define if the system supports Unix-domain (file-domain) sockets.])
 fi
 
-AC_CHECK_FUNCS(socketpair getgroups setgroups setpwent pause tzset)
+AC_CHECK_FUNCS([socketpair getgroups setgroups setpwent pause tzset])
 
-AC_CHECK_FUNCS(sethostent   gethostent   endhostent   dnl
+AC_CHECK_FUNCS([sethostent   gethostent   endhostent   dnl
                setnetent    getnetent    endnetent    dnl
                setprotoent  getprotoent  endprotoent  dnl
                setservent   getservent   endservent   dnl
                getnetbyaddr getnetbyname dnl
 	       inet_lnaof inet_makeaddr inet_netof hstrerror dnl
-	       inet_pton inet_ntop)
+	       inet_pton inet_ntop])
 
 # struct sockaddr field sin_len is only present on BSD systems.
 # On 4.4BSD apparently a #define SIN_LEN exists, but on other BSD systems
@@ -991,36 +991,36 @@ AC_CHECK_MEMBERS([struct sockaddr.sin_len],,,
 #endif
 #include <netinet/in.h>])
 
-AC_MSG_CHECKING(for __libc_stack_end)
-AC_CACHE_VAL(guile_cv_have_libc_stack_end,
+AC_MSG_CHECKING([for __libc_stack_end])
+AC_CACHE_VAL([guile_cv_have_libc_stack_end],
 [AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <stdio.h>
 extern char *__libc_stack_end;]],
    [[printf("%p", (char*) __libc_stack_end);]])],
    [guile_cv_have_libc_stack_end=yes],
    [guile_cv_have_libc_stack_end=no])])
-AC_MSG_RESULT($guile_cv_have_libc_stack_end)
+AC_MSG_RESULT([$guile_cv_have_libc_stack_end])
 
 if test $guile_cv_have_libc_stack_end = yes; then
-  AC_DEFINE(HAVE_LIBC_STACK_END, 1,
+  AC_DEFINE([HAVE_LIBC_STACK_END], 1,
            [Define if you have the __libc_stack_end variable.])
 fi
 
 dnl Some systems do not declare this.  Some systems do declare it, as a
 dnl macro.  With cygwin it may be in a DLL.
 
-AC_MSG_CHECKING(whether netdb.h declares h_errno)
-AC_CACHE_VAL(guile_cv_have_h_errno,
+AC_MSG_CHECKING([whether netdb.h declares h_errno])
+AC_CACHE_VAL([guile_cv_have_h_errno],
   [AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <netdb.h>]],
                                       [[int a = h_errno;]])],
   [guile_cv_have_h_errno=yes],
   [guile_cv_have_h_errno=no])])
-AC_MSG_RESULT($guile_cv_have_h_errno)
+AC_MSG_RESULT([$guile_cv_have_h_errno])
 if test $guile_cv_have_h_errno = yes; then
-  AC_DEFINE(HAVE_H_ERRNO, 1, [Define if h_errno is declared in netdb.h.])
+  AC_DEFINE([HAVE_H_ERRNO], 1, [Define if h_errno is declared in netdb.h.])
 fi
 
-AC_MSG_CHECKING(whether uint32_t is defined)
-AC_CACHE_VAL(guile_cv_have_uint32_t,
+AC_MSG_CHECKING([whether uint32_t is defined])
+AC_CACHE_VAL([guile_cv_have_uint32_t],
   [AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <sys/types.h>
 		   #if HAVE_STDINT_H
 		   #include <stdint.h>
@@ -1031,14 +1031,14 @@ AC_CACHE_VAL(guile_cv_have_uint32_t,
 		   [[uint32_t a;]])],
 		   [guile_cv_have_uint32_t=yes],
 		   [guile_cv_have_uint32_t=no])])
-AC_MSG_RESULT($guile_cv_have_uint32_t)
+AC_MSG_RESULT([$guile_cv_have_uint32_t])
 if test $guile_cv_have_uint32_t = yes; then
-  AC_DEFINE(HAVE_UINT32_T, 1,
+  AC_DEFINE([HAVE_UINT32_T], 1,
     [Define if uint32_t typedef is defined when netdb.h is include.])
 fi
 
-AC_MSG_CHECKING(for working IPv6 support)
-AC_CACHE_VAL(guile_cv_have_ipv6,
+AC_MSG_CHECKING([for working IPv6 support])
+AC_CACHE_VAL([guile_cv_have_ipv6],
 [AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
 #ifdef HAVE_SYS_TYPES_H
 #include <sys/types.h>
@@ -1048,14 +1048,14 @@ AC_CACHE_VAL(guile_cv_have_ipv6,
 [[struct sockaddr_in6 a;  a.sin6_family = AF_INET6;]])],
 [guile_cv_have_ipv6=yes],
 [guile_cv_have_ipv6=no])])
-AC_MSG_RESULT($guile_cv_have_ipv6)
+AC_MSG_RESULT([$guile_cv_have_ipv6])
 if test $guile_cv_have_ipv6 = yes; then
-  AC_DEFINE(HAVE_IPV6, 1, [Define if you want support for IPv6.])
+  AC_DEFINE([HAVE_IPV6], 1, [Define if you want support for IPv6.])
 fi
 
 # included in rfc2553 but not in older implementations, e.g., glibc 2.1.3.
-AC_MSG_CHECKING(whether sockaddr_in6 has sin6_scope_id)
-AC_CACHE_VAL(guile_cv_have_sin6_scope_id,
+AC_MSG_CHECKING([whether sockaddr_in6 has sin6_scope_id])
+AC_CACHE_VAL([guile_cv_have_sin6_scope_id],
 [AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
 #ifdef HAVE_SYS_TYPES_H
 #include <sys/types.h>
@@ -1064,9 +1064,9 @@ AC_CACHE_VAL(guile_cv_have_sin6_scope_id,
 [[struct sockaddr_in6 sok;  sok.sin6_scope_id = 0;]])],
 [guile_cv_have_sin6_scope_id=yes],
 [guile_cv_have_sin6_scope_id=no])])
-AC_MSG_RESULT($guile_cv_have_sin6_scope_id)
+AC_MSG_RESULT([$guile_cv_have_sin6_scope_id])
 if test $guile_cv_have_sin6_scope_id = yes; then
-  AC_DEFINE(HAVE_SIN6_SCOPE_ID, 1,
+  AC_DEFINE([HAVE_SIN6_SCOPE_ID], 1,
     [Define this if your IPv6 has sin6_scope_id in sockaddr_in6 struct.])
 fi
 
@@ -1077,8 +1077,8 @@ AC_CHECK_MEMBERS([struct sockaddr_in6.sin6_len],,,
 #endif
 #include <netinet/in.h>])
 
-AC_MSG_CHECKING(whether localtime caches TZ)
-AC_CACHE_VAL(guile_cv_localtime_cache,
+AC_MSG_CHECKING([whether localtime caches TZ])
+AC_CACHE_VAL([guile_cv_localtime_cache],
 [if test x$ac_cv_func_tzset = xyes; then
 AC_RUN_IFELSE([AC_LANG_SOURCE([[#include <time.h>
 #if STDC_HEADERS
@@ -1121,42 +1121,42 @@ else
         # since we can't invalidate the cache if we don't have tzset.
         guile_cv_localtime_cache=no
 fi])dnl
-AC_MSG_RESULT($guile_cv_localtime_cache)
+AC_MSG_RESULT([$guile_cv_localtime_cache])
 if test $guile_cv_localtime_cache = yes; then
-  AC_DEFINE(LOCALTIME_CACHE, 1, [Define if localtime caches the TZ setting.])
+  AC_DEFINE([LOCALTIME_CACHE], 1, [Define if localtime caches the TZ setting.])
 fi
 
 if test "$enable_regex" = yes; then
    if test "$ac_cv_header_regex_h" = yes ||
       test "$ac_cv_header_rxposix_h" = yes ||
       test "$ac_cv_header_rx_rxposix_h" = yes; then
-     GUILE_NAMED_CHECK_FUNC(regcomp, norx, [AC_LIBOBJ([regex-posix])],
-     [AC_CHECK_LIB(rx, main)
-      GUILE_NAMED_CHECK_FUNC(regcomp, rx, [AC_LIBOBJ([regex-posix])],
-     [AC_CHECK_LIB(regex, main)
-      GUILE_NAMED_CHECK_FUNC(regcomp, regex, [AC_LIBOBJ([regex-posix])])])]
+     GUILE_NAMED_CHECK_FUNC([regcomp], [norx], [AC_LIBOBJ([regex-posix])],
+     [AC_CHECK_LIB([rx], [main])
+      GUILE_NAMED_CHECK_FUNC([regcomp], [rx], [AC_LIBOBJ([regex-posix])],
+     [AC_CHECK_LIB([regex], [main])
+      GUILE_NAMED_CHECK_FUNC([regcomp], [regex], [AC_LIBOBJ([regex-posix])])])]
      )
      dnl The following should not be necessary, but for some reason
      dnl autoheader misses it if we don't include it!
      if test "$ac_cv_func_regcomp_norx" = yes ||
         test "$ac_cv_func_regcomp_regex" = yes ||
         test "$ac_cv_func_regcomp_rx" = yes; then
-       AC_DEFINE(HAVE_REGCOMP, 1,
+       AC_DEFINE([HAVE_REGCOMP], 1,
          [This is included as part of a workaround for a autoheader bug.])
      fi
    fi
 fi
 
-AC_REPLACE_FUNCS(inet_aton putenv strerror memmove mkstemp)
+AC_REPLACE_FUNCS([inet_aton putenv strerror memmove mkstemp])
 
-AC_CHECK_HEADERS(floatingpoint.h ieeefp.h nan.h)
+AC_CHECK_HEADERS([floatingpoint.h ieeefp.h nan.h])
 
 # Reasons for testing:
 #   asinh, acosh, atanh, trunc - C99 standard, generally not available on
 #                                older systems
 #   sincos - GLIBC extension
 #
-AC_CHECK_FUNCS(asinh acosh atanh copysign finite sincos trunc)
+AC_CHECK_FUNCS([asinh acosh atanh copysign finite sincos trunc])
 
 # C99 specifies isinf and isnan as macros.
 # HP-UX provides only macros, no functions.
@@ -1168,21 +1168,21 @@ AC_CHECK_FUNCS(asinh acosh atanh copysign finite sincos trunc)
 # use <math.h> so doesn't detect on macro-only systems like HP-UX.
 #
 AC_MSG_CHECKING([for isinf])
-AC_LINK_IFELSE(AC_LANG_SOURCE(
+AC_LINK_IFELSE([AC_LANG_SOURCE(
 [[#include <math.h>
 volatile double x = 0.0;
-int main () { return (isinf(x) != 0); }]]),
+int main () { return (isinf(x) != 0); }]])],
   [AC_MSG_RESULT([yes])
-   AC_DEFINE(HAVE_ISINF, 1,
+   AC_DEFINE([HAVE_ISINF], 1,
              [Define to 1 if you have the `isinf' macro or function.])],
   [AC_MSG_RESULT([no])])
 AC_MSG_CHECKING([for isnan])
-AC_LINK_IFELSE(AC_LANG_SOURCE(
+AC_LINK_IFELSE([AC_LANG_SOURCE(
 [[#include <math.h>
 volatile double x = 0.0;
-int main () { return (isnan(x) != 0); }]]),
+int main () { return (isnan(x) != 0); }]])],
   [AC_MSG_RESULT([yes])
-   AC_DEFINE(HAVE_ISNAN, 1,
+   AC_DEFINE([HAVE_ISNAN], 1,
              [Define to 1 if you have the `isnan' macro or function.])],
   [AC_MSG_RESULT([no])])
 
@@ -1261,25 +1261,25 @@ main (int argc, char **argv)
 }])],
 	       [SCM_I_GSC_STACK_GROWS_UP=1],
 	       [],
-	       [AC_MSG_WARN(Guessing that stack grows down -- see scmconfig.h)])
+	       [AC_MSG_WARN([Guessing that stack grows down -- see scmconfig.h])])
 
-AC_CHECK_SIZEOF(float)
+AC_CHECK_SIZEOF([float])
 if test "$ac_cv_sizeof_float" -le "$ac_cv_sizeof_long"; then
-    AC_DEFINE(SCM_SINGLES, 1,
+    AC_DEFINE([SCM_SINGLES], 1,
               [Define this if floats are the same size as longs.])
 fi
 
-AC_MSG_CHECKING(for struct linger)
-AC_CACHE_VAL(scm_cv_struct_linger,
-	AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+AC_MSG_CHECKING([for struct linger])
+AC_CACHE_VAL([scm_cv_struct_linger],
+[AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
 #include <sys/types.h>
 #include <sys/socket.h>]],
 	                  [[struct linger lgr;  lgr.l_linger = 100]])],
 			  [scm_cv_struct_linger="yes"],
-			  [scm_cv_struct_linger="no"]))
-AC_MSG_RESULT($scm_cv_struct_linger)
+			  [scm_cv_struct_linger="no"])])
+AC_MSG_RESULT([$scm_cv_struct_linger])
 if test $scm_cv_struct_linger = yes; then
-	AC_DEFINE(HAVE_STRUCT_LINGER, 1,
+	AC_DEFINE([HAVE_STRUCT_LINGER], 1,
           [Define this if your system defines struct linger, for use with the
            getsockopt and setsockopt system calls.])
 fi
@@ -1287,18 +1287,18 @@ fi
 
 # On mingw, struct timespec is in <pthread.h>.
 #
-AC_MSG_CHECKING(for struct timespec)
-AC_CACHE_VAL(scm_cv_struct_timespec,
-	AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+AC_MSG_CHECKING([for struct timespec])
+AC_CACHE_VAL([scm_cv_struct_timespec],
+[AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
 #include <time.h>
 #if HAVE_PTHREAD_H
 #include <pthread.h>
 #endif]], [[struct timespec t;  t.tv_nsec = 100]])],
           [scm_cv_struct_timespec="yes"],
-          [scm_cv_struct_timespec="no"]))
-AC_MSG_RESULT($scm_cv_struct_timespec)
+          [scm_cv_struct_timespec="no"])])
+AC_MSG_RESULT([$scm_cv_struct_timespec])
 if test $scm_cv_struct_timespec = yes; then
-  AC_DEFINE(HAVE_STRUCT_TIMESPEC, 1,
+  AC_DEFINE([HAVE_STRUCT_TIMESPEC], 1,
     [Define this if your system defines struct timespec via either <time.h> or <pthread.h>.])
 fi
 
@@ -1314,11 +1314,11 @@ AC_SUBST([SCM_I_GSC_USE_PTHREAD_THREADS])
 AC_SUBST([SCM_I_GSC_USE_NULL_THREADS])
 
 ### What thread package has the user asked for?
-AC_ARG_WITH(threads, [  --with-threads          thread interface],
-            , with_threads=yes)
+AC_ARG_WITH([threads], [  --with-threads          thread interface],
+            , [with_threads=yes])
 
-AC_SUBST(SCM_I_GSC_NEED_BRACES_ON_PTHREAD_ONCE_INIT, 0)
-AC_SUBST(SCM_I_GSC_NEED_BRACES_ON_PTHREAD_MUTEX_INITIALIZER, 0)
+AC_SUBST([SCM_I_GSC_NEED_BRACES_ON_PTHREAD_ONCE_INIT], 0)
+AC_SUBST([SCM_I_GSC_NEED_BRACES_ON_PTHREAD_MUTEX_INITIALIZER], 0)
 
 case "$with_threads" in
   "yes" | "pthread" | "pthreads" | "pthread-threads" | "")
@@ -1342,7 +1342,7 @@ case "$with_threads" in
     #         all; specific to MacOS X
     #     pthread_sigmask - not available on mingw
     #
-    AC_CHECK_FUNCS(pthread_attr_getstack pthread_getattr_np pthread_get_stackaddr_np pthread_sigmask)
+    AC_CHECK_FUNCS([pthread_attr_getstack pthread_getattr_np pthread_get_stackaddr_np pthread_sigmask])
 
     # On past versions of Solaris, believe 8 through 10 at least, you
     # had to write "pthread_once_t foo = { PTHREAD_ONCE_INIT };".
@@ -1361,7 +1361,7 @@ case "$with_threads" in
     fi
 
     AC_CACHE_CHECK([whether PTHREAD_ONCE_INIT needs braces],
-      guile_cv_need_braces_on_pthread_once_init,
+      [guile_cv_need_braces_on_pthread_once_init],
       [AC_COMPILE_IFELSE([#include <pthread.h>
          pthread_once_t foo = PTHREAD_ONCE_INIT;],
         [guile_cv_need_braces_on_pthread_once_init=no],
@@ -1373,7 +1373,7 @@ case "$with_threads" in
     # Same problem with `PTHREAD_MUTEX_INITIALIZER', e.g., on IRIX
     # 6.5.30m with GCC 3.3.
     AC_CACHE_CHECK([whether PTHREAD_MUTEX_INITIALIZER needs braces],
-      guile_cv_need_braces_on_pthread_mutex_initializer,
+      [guile_cv_need_braces_on_pthread_mutex_initializer],
       [AC_COMPILE_IFELSE([#include <pthread.h>
          pthread_mutex_t foo = PTHREAD_MUTEX_INITIALIZER;],
         [guile_cv_need_braces_on_pthread_mutex_initializer=no],
@@ -1385,7 +1385,7 @@ case "$with_threads" in
     CFLAGS="$old_CFLAGS"
 
     # On Solaris, sched_yield lives in -lrt.
-    AC_SEARCH_LIBS(sched_yield, rt)
+    AC_SEARCH_LIBS([sched_yield], [rt])
 
   ;;
 esac
@@ -1398,12 +1398,12 @@ case "$with_threads" in
     with_threads="null-threads"
   ;;
   * )
-    AC_MSG_ERROR(invalid value for --with-threads: $with_threads)
+    AC_MSG_ERROR([invalid value for --with-threads: $with_threads])
   ;;
 esac
 
-AC_MSG_CHECKING(what kind of threads to support)
-AC_MSG_RESULT($with_threads)
+AC_MSG_CHECKING([what kind of threads to support])
+AC_MSG_RESULT([$with_threads])
 
 AM_CONDITIONAL([BUILD_PTHREAD_SUPPORT],
   [test "x$build_pthread_support" = "xyes"])
@@ -1413,7 +1413,7 @@ AM_CONDITIONAL([BUILD_PTHREAD_SUPPORT],
 
 if test "$with_threads" = pthreads; then
 
-AC_MSG_CHECKING(whether pthread_attr_getstack works for the main thread)
+AC_MSG_CHECKING([whether pthread_attr_getstack works for the main thread])
 old_CFLAGS="$CFLAGS"
 CFLAGS="$PTHREAD_CFLAGS $CFLAGS"
 AC_RUN_IFELSE([AC_LANG_SOURCE([[
@@ -1450,7 +1450,7 @@ int main ()
  AC_MSG_RESULT([assuming it does])])
 
 if test "x$works" = "xyes"; then
-   AC_DEFINE(PTHREAD_ATTR_GETSTACK_WORKS, [1],
+   AC_DEFINE([PTHREAD_ATTR_GETSTACK_WORKS], [1],
      [Define when pthread_att_get_stack works for the main thread])
 fi
 
@@ -1461,7 +1461,7 @@ fi # with_threads=pthreads
 
 ## Cross building
 if test "$cross_compiling" = "yes"; then
-  AC_MSG_CHECKING(cc for build)
+  AC_MSG_CHECKING([cc for build])
   ## /usr/bin/cc still uses wrong assembler
   ## CC_FOR_BUILD="${CC_FOR_BUILD-/usr/bincc}"
   CC_FOR_BUILD="${CC_FOR_BUILD-PATH=/usr/bin:$PATH cc}"
@@ -1472,23 +1472,23 @@ fi
 ## AC_MSG_CHECKING("if we are cross compiling")
 ## AC_MSG_RESULT($cross_compiling)
 if test "$cross_compiling" = "yes"; then
-   AC_MSG_RESULT($CC_FOR_BUILD)
+   AC_MSG_RESULT([$CC_FOR_BUILD])
 fi
 
 ## No need as yet to be more elaborate
 CCLD_FOR_BUILD="$CC_FOR_BUILD"
 
-AC_SUBST(cross_compiling)
-AC_ARG_VAR(CC_FOR_BUILD,[build system C compiler])
-AC_SUBST(CCLD_FOR_BUILD)
+AC_SUBST([cross_compiling])
+AC_ARG_VAR([CC_FOR_BUILD],[build system C compiler])
+AC_SUBST([CCLD_FOR_BUILD])
 
 ## libtool erroneously calls CC_FOR_BUILD HOST_CC;
 ## --HOST is the platform that PACKAGE is compiled for.
 HOST_CC="$CC_FOR_BUILD"
-AC_SUBST(HOST_CC)
+AC_SUBST([HOST_CC])
 
 if test "$cross_compiling" = "yes"; then
-  AC_MSG_CHECKING(guile for build)
+  AC_MSG_CHECKING([guile for build])
   GUILE_FOR_BUILD="${GUILE_FOR_BUILD-guile}"
 else
   GUILE_FOR_BUILD='$(preinstguile)'
@@ -1497,10 +1497,10 @@ fi
 ## AC_MSG_CHECKING("if we are cross compiling")
 ## AC_MSG_RESULT($cross_compiling)
 if test "$cross_compiling" = "yes"; then
-   AC_MSG_RESULT($GUILE_FOR_BUILD)
+   AC_MSG_RESULT([$GUILE_FOR_BUILD])
 fi
-AC_ARG_VAR(GUILE_FOR_BUILD,[guile for build system])
-AC_SUBST(GUILE_FOR_BUILD)
+AC_ARG_VAR([GUILE_FOR_BUILD],[guile for build system])
+AC_SUBST([GUILE_FOR_BUILD])
 
 ## If we're using GCC, ask for aggressive warnings.
 case "$GCC" in
@@ -1530,62 +1530,62 @@ LIBLOBJS="`echo ${LIB@&t@OBJS} | sed 's,\.[[^.]]* ,.lo ,g;s,\.[[^.]]*$,.lo,'`"
 EXTRA_DOT_DOC_FILES="`echo ${LIB@&t@OBJS} | sed 's,\.[[^.]]* ,.doc ,g;s,\.[[^.]]*$,.doc,'`"
 EXTRA_DOT_X_FILES="`echo ${LIB@&t@OBJS} | sed 's,\.[[^.]]* ,.x ,g;s,\.[[^.]]*$,.x,'`"
 
-AC_SUBST(GUILE_MAJOR_VERSION)
-AC_SUBST(GUILE_MINOR_VERSION)
-AC_SUBST(GUILE_MICRO_VERSION)
-AC_SUBST(GUILE_EFFECTIVE_VERSION)
-AC_SUBST(GUILE_VERSION)
+AC_SUBST([GUILE_MAJOR_VERSION])
+AC_SUBST([GUILE_MINOR_VERSION])
+AC_SUBST([GUILE_MICRO_VERSION])
+AC_SUBST([GUILE_EFFECTIVE_VERSION])
+AC_SUBST([GUILE_VERSION])
 
 #######################################################################
 # library versioning
 
-AC_SUBST(LIBGUILE_INTERFACE_CURRENT)
-AC_SUBST(LIBGUILE_INTERFACE_REVISION)
-AC_SUBST(LIBGUILE_INTERFACE_AGE)
-AC_SUBST(LIBGUILE_INTERFACE)
+AC_SUBST([LIBGUILE_INTERFACE_CURRENT])
+AC_SUBST([LIBGUILE_INTERFACE_REVISION])
+AC_SUBST([LIBGUILE_INTERFACE_AGE])
+AC_SUBST([LIBGUILE_INTERFACE])
 
-AC_SUBST(LIBGUILE_SRFI_SRFI_1_MAJOR)
-AC_SUBST(LIBGUILE_SRFI_SRFI_1_INTERFACE_CURRENT)
-AC_SUBST(LIBGUILE_SRFI_SRFI_1_INTERFACE_REVISION)
-AC_SUBST(LIBGUILE_SRFI_SRFI_1_INTERFACE_AGE)
-AC_SUBST(LIBGUILE_SRFI_SRFI_1_INTERFACE)
+AC_SUBST([LIBGUILE_SRFI_SRFI_1_MAJOR])
+AC_SUBST([LIBGUILE_SRFI_SRFI_1_INTERFACE_CURRENT])
+AC_SUBST([LIBGUILE_SRFI_SRFI_1_INTERFACE_REVISION])
+AC_SUBST([LIBGUILE_SRFI_SRFI_1_INTERFACE_AGE])
+AC_SUBST([LIBGUILE_SRFI_SRFI_1_INTERFACE])
 
-AC_SUBST(LIBGUILE_SRFI_SRFI_4_MAJOR)
-AC_SUBST(LIBGUILE_SRFI_SRFI_4_INTERFACE_CURRENT)
-AC_SUBST(LIBGUILE_SRFI_SRFI_4_INTERFACE_REVISION)
-AC_SUBST(LIBGUILE_SRFI_SRFI_4_INTERFACE_AGE)
-AC_SUBST(LIBGUILE_SRFI_SRFI_4_INTERFACE)
+AC_SUBST([LIBGUILE_SRFI_SRFI_4_MAJOR])
+AC_SUBST([LIBGUILE_SRFI_SRFI_4_INTERFACE_CURRENT])
+AC_SUBST([LIBGUILE_SRFI_SRFI_4_INTERFACE_REVISION])
+AC_SUBST([LIBGUILE_SRFI_SRFI_4_INTERFACE_AGE])
+AC_SUBST([LIBGUILE_SRFI_SRFI_4_INTERFACE])
 
-AC_SUBST(LIBGUILE_SRFI_SRFI_13_14_MAJOR)
-AC_SUBST(LIBGUILE_SRFI_SRFI_13_14_INTERFACE_CURRENT)
-AC_SUBST(LIBGUILE_SRFI_SRFI_13_14_INTERFACE_REVISION)
-AC_SUBST(LIBGUILE_SRFI_SRFI_13_14_INTERFACE_AGE)
-AC_SUBST(LIBGUILE_SRFI_SRFI_13_14_INTERFACE)
+AC_SUBST([LIBGUILE_SRFI_SRFI_13_14_MAJOR])
+AC_SUBST([LIBGUILE_SRFI_SRFI_13_14_INTERFACE_CURRENT])
+AC_SUBST([LIBGUILE_SRFI_SRFI_13_14_INTERFACE_REVISION])
+AC_SUBST([LIBGUILE_SRFI_SRFI_13_14_INTERFACE_AGE])
+AC_SUBST([LIBGUILE_SRFI_SRFI_13_14_INTERFACE])
 
-AC_SUBST(LIBGUILE_SRFI_SRFI_60_MAJOR)
-AC_SUBST(LIBGUILE_SRFI_SRFI_60_INTERFACE_CURRENT)
-AC_SUBST(LIBGUILE_SRFI_SRFI_60_INTERFACE_REVISION)
-AC_SUBST(LIBGUILE_SRFI_SRFI_60_INTERFACE_AGE)
-AC_SUBST(LIBGUILE_SRFI_SRFI_60_INTERFACE)
+AC_SUBST([LIBGUILE_SRFI_SRFI_60_MAJOR])
+AC_SUBST([LIBGUILE_SRFI_SRFI_60_INTERFACE_CURRENT])
+AC_SUBST([LIBGUILE_SRFI_SRFI_60_INTERFACE_REVISION])
+AC_SUBST([LIBGUILE_SRFI_SRFI_60_INTERFACE_AGE])
+AC_SUBST([LIBGUILE_SRFI_SRFI_60_INTERFACE])
 
 #######################################################################
 
 dnl Tell guile-config what flags guile users should compile and link with.
 GUILE_LIBS="$LDFLAGS $LIBS"
 GUILE_CFLAGS="$CPPFLAGS $PTHREAD_CFLAGS"
-AC_SUBST(GUILE_LIBS)
-AC_SUBST(GUILE_CFLAGS)
+AC_SUBST([GUILE_LIBS])
+AC_SUBST([GUILE_CFLAGS])
 
-AC_SUBST(AWK)
-AC_SUBST(LIBLOBJS)
-AC_SUBST(EXTRA_DOT_DOC_FILES)
-AC_SUBST(EXTRA_DOT_X_FILES)
+AC_SUBST([AWK])
+AC_SUBST([LIBLOBJS])
+AC_SUBST([EXTRA_DOT_DOC_FILES])
+AC_SUBST([EXTRA_DOT_X_FILES])
 
 dnl See also top_builddir in info node: (libtool)AC_PROG_LIBTOOL
 top_builddir_absolute=`pwd`
-AC_SUBST(top_builddir_absolute)
+AC_SUBST([top_builddir_absolute])
 top_srcdir_absolute=`(cd $srcdir && pwd)`
-AC_SUBST(top_srcdir_absolute)
+AC_SUBST([top_srcdir_absolute])
 
 dnl We need `sitedir' in `guile-1.8.pc'.
 dnl Note: `sitedir' must be kept in sync with `GUILE_SITE_DIR' in `guile.m4'.
