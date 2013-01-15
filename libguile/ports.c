@@ -676,7 +676,7 @@ scm_c_make_port_with_encoding (scm_t_bits tag, unsigned long mode_bits,
   entry->alist = SCM_EOL;
 
   if (SCM_PORT_DESCRIPTOR (ret)->free)
-    scm_i_set_finalizer (SCM2PTR (ret), finalize_port, NULL);
+    scm_i_set_finalizer (SCM_HEAP_OBJECT_BASE (ret), finalize_port, NULL);
 
   if (SCM_PORT_DESCRIPTOR (ret)->flags & SCM_PORT_TYPE_HAS_FLUSH)
     scm_weak_set_add_x (scm_i_port_weak_set, ret);

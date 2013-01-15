@@ -1,4 +1,4 @@
-/* Copyright (C) 2010, 2011, 2012  Free Software Foundation, Inc.
+/* Copyright (C) 2010, 2011, 2012, 2013  Free Software Foundation, Inc.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public License
@@ -157,7 +157,8 @@ scm_from_pointer (void *ptr, scm_t_pointer_finalizer finalizer)
       ret = scm_cell (scm_tc7_pointer, (scm_t_bits) ptr);
 
       if (finalizer)
-        scm_i_set_finalizer (SCM2PTR (ret), pointer_finalizer_trampoline,
+        scm_i_set_finalizer (SCM_HEAP_OBJECT_BASE (ret),
+                             pointer_finalizer_trampoline,
                              finalizer);
     }
 
@@ -311,7 +312,7 @@ SCM_DEFINE (scm_set_pointer_finalizer_x, "set-pointer-finalizer!", 2, 0, 0,
   SCM_VALIDATE_POINTER (1, pointer);
   SCM_VALIDATE_POINTER (2, finalizer);
 
-  scm_i_add_finalizer (SCM2PTR (pointer), pointer_finalizer_trampoline,
+  scm_i_add_finalizer (SCM_HEAP_OBJECT_BASE (pointer), pointer_finalizer_trampoline,
                        SCM_POINTER_VALUE (finalizer));
 
   return SCM_UNSPECIFIED;

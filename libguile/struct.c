@@ -1,4 +1,4 @@
-/* Copyright (C) 1996,1997,1998,1999,2000,2001, 2003, 2004, 2006, 2007, 2008, 2009, 2010, 2011, 2012 Free Software Foundation, Inc.
+/* Copyright (C) 1996,1997,1998,1999,2000,2001, 2003, 2004, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013 Free Software Foundation, Inc.
  * 
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public License
@@ -445,7 +445,8 @@ scm_i_alloc_struct (scm_t_bits *vtable_data, int n_words)
   /* vtable_data can be null when making a vtable vtable */
   if (vtable_data && vtable_data[scm_vtable_index_instance_finalize])
     /* Register a finalizer for the newly created instance.  */
-    scm_i_set_finalizer (SCM2PTR (ret), struct_finalizer_trampoline, NULL);
+    scm_i_set_finalizer (SCM_HEAP_OBJECT_BASE (ret),
+                         struct_finalizer_trampoline, NULL);
 
   return ret;
 }

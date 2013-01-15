@@ -1,4 +1,4 @@
-/* Copyright (C) 2011, 2012 Free Software Foundation, Inc.
+/* Copyright (C) 2011, 2012, 2013 Free Software Foundation, Inc.
  * 
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public License
@@ -580,7 +580,7 @@ weak_set_add_x (scm_t_weak_set *set, unsigned long hash,
 
   if (SCM_HEAP_OBJECT_P (obj))
     SCM_I_REGISTER_DISAPPEARING_LINK ((void **) &entries[k].key,
-                                      (void *) SCM2PTR (obj));
+                                      (void *) SCM_HEAP_OBJECT_BASE (obj));
 
   return obj;
 }
@@ -743,7 +743,7 @@ scm_c_register_weak_gc_callback (SCM obj, void (*callback) (SCM))
 
   weak[0] = SCM_UNPACK_POINTER (obj);
   weak[1] = (void*)callback;
-  GC_GENERAL_REGISTER_DISAPPEARING_LINK (weak, SCM2PTR (obj));
+  GC_GENERAL_REGISTER_DISAPPEARING_LINK (weak, SCM_HEAP_OBJECT_BASE (obj));
 
 #ifdef HAVE_GC_SET_START_CALLBACK
   scm_c_hook_add (&scm_after_gc_c_hook, weak_gc_hook, weak, 0);
