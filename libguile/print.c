@@ -522,8 +522,8 @@ iprin1 (SCM exp, SCM port, scm_print_state *pstate)
 {
   switch (SCM_ITAG3 (exp))
     {
-    case scm_tc3_tc7_1:
-    case scm_tc3_tc7_2:
+    case scm_tc3_unused_1:
+    case scm_tc3_unused_2:
       /* These tc3 tags should never occur in an immediate value.  They are
        * only used in cell types of non-immediates, i. e. the value returned
        * by SCM_CELL_TYPE (exp) can use these tags.
@@ -559,53 +559,50 @@ iprin1 (SCM exp, SCM port, scm_print_state *pstate)
 	  scm_ipruk ("immediate", exp, port);
 	}
       break;
+
     case scm_tc3_cons:
+      ENTER_NESTED_DATA (pstate, exp, circref);
+      scm_iprlist ("(", exp, ')', port, pstate);
+      EXIT_NESTED_DATA (pstate);
+      break;
+
+    case scm_tc3_struct:
+      ENTER_NESTED_DATA (pstate, exp, circref);
+      if (SCM_OBJ_CLASS_FLAGS (exp) & SCM_CLASSF_GOOPS)
+        {
+          SCM pwps, print = pstate->writingp ? g_write : g_display;
+          if (SCM_UNPACK (print) == 0)
+            goto print_struct;
+          pwps = scm_i_port_with_print_state (port, pstate->handle);
+          pstate->revealed = 1;
+          scm_call_2 (print, exp, pwps);
+        }
+      else
+        {
+        print_struct:
+          scm_print_struct (exp, port, pstate);
+        }
+      EXIT_NESTED_DATA (pstate);
+      break;
+      
+    case scm_tc3_heap:
       switch (SCM_TYP7 (exp))
 	{
-	case scm_tcs_struct:
-	  {
-	    ENTER_NESTED_DATA (pstate, exp, circref);
-	    if (SCM_OBJ_CLASS_FLAGS (exp) & SCM_CLASSF_GOOPS)
-	      {
-		SCM pwps, print = pstate->writingp ? g_write : g_display;
-		if (SCM_UNPACK (print) == 0)
-		  goto print_struct;
-		pwps = scm_i_port_with_print_state (port, pstate->handle);
-		pstate->revealed = 1;
-		scm_call_2 (print, exp, pwps);
-	      }
-	    else
-	      {
-	      print_struct:
-		scm_print_struct (exp, port, pstate);
-	      }
-	    EXIT_NESTED_DATA (pstate);
-	  }
-	  break;
-	case scm_tcs_cons_imcar:
-	case scm_tcs_cons_nimcar:
-	  ENTER_NESTED_DATA (pstate, exp, circref);
-	  scm_iprlist ("(", exp, ')', port, pstate);
-	  EXIT_NESTED_DATA (pstate);
-	  break;
-	circref:
-	  print_circref (port, pstate, exp);
-	  break;
 	case scm_tc7_number:
           switch SCM_TYP16 (exp) {
-          case scm_tc16_big:
-            scm_bigprint (exp, port, pstate);
-            break;
-          case scm_tc16_real:
-            scm_print_real (exp, port, pstate);
-            break;
-          case scm_tc16_complex:
-            scm_print_complex (exp, port, pstate);
-            break;
-          case scm_tc16_fraction:
-            scm_i_print_fraction (exp, port, pstate);
-            break;
-          }
+            case scm_tc16_big:
+              scm_bigprint (exp, port, pstate);
+              break;
+            case scm_tc16_real:
+              scm_print_real (exp, port, pstate);
+              break;
+            case scm_tc16_complex:
+              scm_print_complex (exp, port, pstate);
+              break;
+            case scm_tc16_fraction:
+              scm_i_print_fraction (exp, port, pstate);
+              break;
+            }
 	  break;
         case scm_tc7_string:
           if (SCM_WRITINGP (pstate))
@@ -746,10 +743,18 @@ iprin1 (SCM exp, SCM port, scm_print_state *pstate)
 	  EXIT_NESTED_DATA (pstate);
 	  break;
 	default:
-          /* case scm_tcs_closures: */
 	punk:
 	  scm_ipruk ("type", exp, port);
 	}
+      break;
+
+    default:
+      scm_ipruk ("unknown!", exp, port);
+      break;
+
+    circref:
+      print_circref (port, pstate, exp);
+      break;
     }
 }
 

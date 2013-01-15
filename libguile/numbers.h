@@ -56,7 +56,7 @@ typedef scm_t_int32 scm_t_wchar;
 #endif /* (-1 == (((-1) << 2) + 2) >> 2) */
 
 
-#define SCM_I_INUMP(x)	(2 & SCM_UNPACK (x))
+#define SCM_I_INUMP(x)	((SCM_UNPACK (x) & 0x3) == scm_tc2_int)
 #define SCM_I_NINUMP(x) (!SCM_I_INUMP (x))
 #define SCM_I_MAKINUM(x) \
   (SCM_PACK ((((scm_t_signed_bits) (x)) << 2) + scm_tc2_int))
@@ -123,8 +123,9 @@ typedef scm_t_int32 scm_t_wchar;
 #define scm_tc16_complex        (scm_tc7_number + 3 * 256L)
 #define scm_tc16_fraction       (scm_tc7_number + 4 * 256L)
 
-#define SCM_INEXACTP(x) \
-  (!SCM_IMP (x) && (0xfeff & SCM_CELL_TYPE (x)) == scm_tc16_real)
+#define SCM_INEXACTP(x)                                 \
+  (SCM_HAS_TYP3 (x, scm_tc3_heap)                       \
+   && (0xfeff & SCM_CELL_TYPE (x)) == scm_tc16_real)
 #define SCM_REALP(x) (SCM_HAS_TYP16 (x, scm_tc16_real))
 #define SCM_COMPLEXP(x) (SCM_HAS_TYP16 (x, scm_tc16_complex))
 

@@ -308,7 +308,7 @@
 #define CONS(x,y,z)					\
 {							\
   SYNC_BEFORE_GC ();					\
-  x = scm_cell (SCM_UNPACK (y), SCM_UNPACK (z));	\
+  x = SCM_PACK (SCM_UNPACK (scm_cell (SCM_UNPACK (y), SCM_UNPACK (z))) | scm_tc3_cons); \
 }
 
 /* Pop the N objects on top of the stack and push a list that contains

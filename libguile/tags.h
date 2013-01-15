@@ -3,7 +3,7 @@
 #ifndef SCM_TAGS_H
 #define SCM_TAGS_H
 
-/* Copyright (C) 1995,1996,1997,1998,1999,2000,2001,2002,2003,2004,2008,2009,2010,2011,2012
+/* Copyright (C) 1995,1996,1997,1998,1999,2000,2001,2002,2003,2004,2008,2009,2010,2011,2012,2013
  * Free Software Foundation, Inc.
  *
  * This library is free software; you can redistribute it and/or
@@ -277,63 +277,41 @@ typedef union SCM { struct { scm_t_bits n; } n; } SCM;
  * section with the summary of the type codes on the heap.
  *
  * tc1:
- *   0:  For scheme objects, tc1==0 must be fulfilled.
- *  (1:  This can never be the case for a scheme object.)
+ *   0:  A heap object.
+ *   1:  An immediate object.
  *
  * tc2:
- *   00:  Either a heap object or some non-integer immediate
- *  (01:  This can never be the case for a scheme object.)
- *   10:  Small integer
- *  (11:  This can never be the case for a scheme object.)
+ *   00:  A heap object with a tag word on the heap
+ *   10:  A pair or a struct
+ *   11:  Small integer
+ *   01:  Some other immediate
  *
  * tc3:
- *   000:  a heap object (pair, closure, class instance etc.)
- *  (001:  This can never be the case for a scheme object.)
- *   010:  an even small integer (least significant bit is 0).
- *  (011:  This can never be the case for a scheme object.)
- *   100:  Non-integer immediate
- *  (101:  This can never be the case for a scheme object.)
- *   110:  an odd small integer (least significant bit is 1).
- *  (111:  This can never be the case for a scheme object.)
+ *   000:  A heap object with a tag word on the heap
+ *   001:  Some other immediate
+ *   010:  A pair
+ *   011:  Small integer (odd)
+ *   100:  (Unallocated tc3.)
+ *   101:  (Unallocated tc3.)
+ *   110:  A struct
+ *   111:  Small integer (even)
  *
  * The remaining bits of the heap objects form the pointer to the heap
  * cell.  The remaining bits of the small integers form the integer's
  * value and sign.  Thus, the only scheme objects for which a further
- * subdivision is of interest are the ones with tc3==100.
+ * subdivision is of interest are the ones with tc3==001.
  *
- * tc8 (for objects with tc3==100):
- *   00000-100:  special objects ('flags')
- *   00001-100:  characters
- *   00010-100:  unused
- *   00011-100:  unused
+ * tc8 (for objects with tc3==001):
+ *   00000-001:  special objects ('flags')
+ *   00001-001:  characters
+ *   00010-001:  unused
+ *   00011-001:  unused
  *
+ * For heap objects with tc3==000, the remaining tag bits are to be
+ * found in the first word of the object, on the heap.  That tag word
+ * will have a tc3 of 000.
  *
- * Summary of type codes on the heap
- *
- * Here is a summary of tagging in scm_t_bits values as they might occur in
- * the first scm_t_bits variable of a heap cell.
- *
- * tc1:
- *   0:  the cell belongs to a pair.
- *   1:  the cell belongs to a non-pair.
- *
- * tc2:
- *   00:  the cell belongs to a pair with no short integer in its car.
- *   01:  the cell belongs to a non-pair (struct or some other heap object).
- *   10:  the cell belongs to a pair with a short integer in its car.
- *   11:  the cell belongs to a non-pair (closure or some other heap object).
- *
- * tc3:
- *   000:  the cell belongs to a pair with a heap object in its car.
- *   001:  the cell belongs to a struct
- *   010:  the cell belongs to a pair with an even short integer in its car.
- *   011:  the cell belongs to a closure
- *   100:  the cell belongs to a pair with a non-integer immediate in its car.
- *   101:  the cell belongs to some other heap object.
- *   110:  the cell belongs to a pair with an odd short integer in its car.
- *   111:  the cell belongs to some other heap object.
- *
- * tc7 (for tc3==1x1):
+ * tc7 (for tc3==000):
  *   See below for the list of types.  Note the special case of scm_tc7_vector
  *   and scm_tc7_wvect:  vectors and weak vectors are treated the same in many
  *   cases.  Thus, their tc7-codes are chosen to only differ in one bit.  This
@@ -348,18 +326,53 @@ typedef union SCM { struct { scm_t_bits n; } n; } SCM;
  *   predefined way, since smobs can be added arbitrarily by user C code.
  */
 
+
 
 
-/* Checking if a SCM variable holds an immediate or a heap object:
- * This check can either be performed by checking for tc3==000 or tc3==00x,
- * since for a SCM variable it is known that tc1==0.  */
-#define SCM_IMP(x) 		(6 & SCM_UNPACK (x))
+/* Checking if a SCM variable holds an immediate or a heap object:  This
+ * check can either be performed by checking for values with 1 as their
+ * least significant bit.  */
+#define SCM_IMP(x) 		(1 & SCM_UNPACK (x))
 #define SCM_NIMP(x) 		(!SCM_IMP (x))
 #define SCM_HEAP_OBJECT_P(x)    (SCM_NIMP (x))
 
+
+
+
+/* Definitions for tc2: */
+
+#define scm_tc2_int              3
+
+
+/* Definitions for tc3: */
+
+#define SCM_TYP3(x) 		 (7 & SCM_UNPACK (x))
+#define SCM_ITAG3(x) 		 (SCM_TYP3 (x))
+#define SCM_HAS_TYP3(x, tag)     (SCM_TYP3 (x) == (tag))
+
+#define scm_tc3_heap	 	 0
+#define scm_tc3_imm24		 1
+#define scm_tc3_cons	 	 2
+#define scm_tc3_int_1		 (scm_tc2_int + 0)
+#define scm_tc3_unused_1	 4
+#define scm_tc3_unused_2	 5
+#define scm_tc3_struct    	 6
+#define scm_tc3_int_2		 (scm_tc2_int + 4)
+
+
 /* Checking if a SCM variable holds an immediate integer: See numbers.h for
- * the definition of the following macros: SCM_I_FIXNUM_BIT,
- * SCM_MOST_POSITIVE_FIXNUM, SCM_I_INUMP, SCM_I_MAKINUM, SCM_I_INUM.  */
+   the definition of the following macros: SCM_I_FIXNUM_BIT,
+   SCM_MOST_POSITIVE_FIXNUM, SCM_I_INUMP, SCM_I_MAKINUM, SCM_I_INUM.  */
+
+/* As we have seen, heap objects can have 0, 2, or 6 in their three
+   lowest bits.  If you have a heap object and want the pointer to the
+   start of the object, perhaps for GC purposes, you need to mask off
+   the low bits, which is what SCM_HEAP_OBJECT_BASE does.
+
+   Note that you can avoid this macro if you know the specific type of
+   the object (pair, struct, or other).
+ */
+#define SCM_HEAP_OBJECT_BASE(x) ((scm_t_bits*)((SCM_UNPACK (x)) & ~7))
 
 /* Checking if a SCM variable holds a pair (for historical reasons, in Guile
  * also known as a cons-cell): This is done by first checking that the SCM
@@ -367,39 +380,7 @@ typedef union SCM { struct { scm_t_bits n; } n; } SCM;
  * for the SCM_CELL_TYPE of the SCM variable.  
 */
 
-#define SCM_I_CONSP(x)  (!SCM_IMP (x) && ((1 & SCM_CELL_TYPE (x)) == 0))
-
-
-
-/* Definitions for tc2: */
-
-#define scm_tc2_int              2
-
-
-/* Definitions for tc3: */
-
-#define SCM_ITAG3(x) 		 (7 & SCM_UNPACK (x))
-#define SCM_TYP3(x) 		 (7 & SCM_CELL_TYPE (x))
-
-#define scm_tc3_cons	 	 0
-#define scm_tc3_struct    	 1
-#define scm_tc3_int_1		 (scm_tc2_int + 0)
-#define scm_tc3_unused		 3
-#define scm_tc3_imm24		 4
-#define scm_tc3_tc7_1		 5
-#define scm_tc3_int_2		 (scm_tc2_int + 4)
-#define scm_tc3_tc7_2		 7
-
-
-/* As we have seen, heap objects have a tag in their three lowest bits.
-   If you have a heap object and want the pointer to the start of the
-   object, perhaps for GC purposes, you need to mask off the low bits,
-   which is what SCM_HEAP_OBJECT_BASE does.
-
-   Note that you can avoid this macro if you know the specific type of
-   the object (pair, struct, or other).
- */
-#define SCM_HEAP_OBJECT_BASE(x) ((scm_t_bits*)((SCM_UNPACK (x)) & ~7))
+#define SCM_I_CONSP(x)  (SCM_HAS_TYP3 (x, scm_tc3_cons))
 
 
 /* Definitions for tc7: */
@@ -408,7 +389,7 @@ typedef union SCM { struct { scm_t_bits n; } n; } SCM;
 #define SCM_TYP7(x) 		(0x7f &        SCM_CELL_TYPE (x))
 #define SCM_TYP7S(x) 		((0x7f & ~2) & SCM_CELL_TYPE (x))
 #define SCM_HAS_HEAP_TYPE(x, type, tag)                         \
-  (SCM_NIMP (x) && type (x) == (tag))
+  (SCM_HAS_TYP3 (x, scm_tc3_heap) && type (x) == (tag))
 #define SCM_HAS_TYP7(x, tag)    (SCM_HAS_HEAP_TYPE (x, SCM_TYP7, tag))
 #define SCM_HAS_TYP7S(x, tag)   (SCM_HAS_HEAP_TYPE (x, SCM_TYP7S, tag))
 
@@ -608,74 +589,6 @@ enum scm_tc8_tags
                                  ((b) ^ (c)) |                          \
                                  ((c) ^ (d))))
 #endif /* BUILDING_LIBGUILE */
-
-
-/* Dispatching aids:
-
-   When switching on SCM_TYP7 of a SCM value, use these fake case
-   labels to catch types that use fewer than 7 bits for tagging.  */
-
-/* For cons pairs with immediate values in the CAR
- */
-
-#define scm_tcs_cons_imcar \
-       scm_tc2_int + 0:   case scm_tc2_int + 4:   case scm_tc3_imm24 + 0:\
-  case scm_tc2_int + 8:   case scm_tc2_int + 12:  case scm_tc3_imm24 + 8:\
-  case scm_tc2_int + 16:  case scm_tc2_int + 20:  case scm_tc3_imm24 + 16:\
-  case scm_tc2_int + 24:  case scm_tc2_int + 28:  case scm_tc3_imm24 + 24:\
-  case scm_tc2_int + 32:  case scm_tc2_int + 36:  case scm_tc3_imm24 + 32:\
-  case scm_tc2_int + 40:  case scm_tc2_int + 44:  case scm_tc3_imm24 + 40:\
-  case scm_tc2_int + 48:  case scm_tc2_int + 52:  case scm_tc3_imm24 + 48:\
-  case scm_tc2_int + 56:  case scm_tc2_int + 60:  case scm_tc3_imm24 + 56:\
-  case scm_tc2_int + 64:  case scm_tc2_int + 68:  case scm_tc3_imm24 + 64:\
-  case scm_tc2_int + 72:  case scm_tc2_int + 76:  case scm_tc3_imm24 + 72:\
-  case scm_tc2_int + 80:  case scm_tc2_int + 84:  case scm_tc3_imm24 + 80:\
-  case scm_tc2_int + 88:  case scm_tc2_int + 92:  case scm_tc3_imm24 + 88:\
-  case scm_tc2_int + 96:  case scm_tc2_int + 100: case scm_tc3_imm24 + 96:\
-  case scm_tc2_int + 104: case scm_tc2_int + 108: case scm_tc3_imm24 + 104:\
-  case scm_tc2_int + 112: case scm_tc2_int + 116: case scm_tc3_imm24 + 112:\
-  case scm_tc2_int + 120: case scm_tc2_int + 124: case scm_tc3_imm24 + 120
-
-/* For cons pairs with heap objects in the SCM_CAR
- */
-#define scm_tcs_cons_nimcar \
-       scm_tc3_cons + 0:\
-  case scm_tc3_cons + 8:\
-  case scm_tc3_cons + 16:\
-  case scm_tc3_cons + 24:\
-  case scm_tc3_cons + 32:\
-  case scm_tc3_cons + 40:\
-  case scm_tc3_cons + 48:\
-  case scm_tc3_cons + 56:\
-  case scm_tc3_cons + 64:\
-  case scm_tc3_cons + 72:\
-  case scm_tc3_cons + 80:\
-  case scm_tc3_cons + 88:\
-  case scm_tc3_cons + 96:\
-  case scm_tc3_cons + 104:\
-  case scm_tc3_cons + 112:\
-  case scm_tc3_cons + 120
-
-/* For structs
- */
-#define scm_tcs_struct \
-       scm_tc3_struct + 0:\
-  case scm_tc3_struct + 8:\
-  case scm_tc3_struct + 16:\
-  case scm_tc3_struct + 24:\
-  case scm_tc3_struct + 32:\
-  case scm_tc3_struct + 40:\
-  case scm_tc3_struct + 48:\
-  case scm_tc3_struct + 56:\
-  case scm_tc3_struct + 64:\
-  case scm_tc3_struct + 72:\
-  case scm_tc3_struct + 80:\
-  case scm_tc3_struct + 88:\
-  case scm_tc3_struct + 96:\
-  case scm_tc3_struct + 104:\
-  case scm_tc3_struct + 112:\
-  case scm_tc3_struct + 120
-
 
 
 #endif  /* SCM_TAGS_H */

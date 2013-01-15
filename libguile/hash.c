@@ -1,5 +1,5 @@
 /* Copyright (C) 1995, 1996, 1997, 2000, 2001, 2003, 2004, 2006, 2008,
- *   2009, 2010, 2011, 2012 Free Software Foundation, Inc.
+ *   2009, 2010, 2011, 2012, 2013 Free Software Foundation, Inc.
  * 
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public License
@@ -306,53 +306,60 @@ scm_raw_ihash (SCM obj, size_t depth)
   if (SCM_IMP (obj))
     return scm_raw_ihashq (SCM_UNPACK (obj));
 
-  switch (SCM_TYP7(obj))
+  switch (SCM_TYP3 (obj))
     {
-      /* FIXME: do better for structs, variables, ...  Also the hashes
-         are currently associative, which ain't the right thing.  */
-    case scm_tc7_smob:
-      return scm_raw_ihashq (SCM_TYP16 (obj));
-    case scm_tc7_number:
-      if (scm_is_integer (obj))
-        {
-          SCM n = SCM_I_MAKINUM (SCM_MOST_POSITIVE_FIXNUM);
-          if (scm_is_inexact (obj))
-            obj = scm_inexact_to_exact (obj);
-          return scm_raw_ihashq (scm_to_ulong (scm_modulo (obj, n)));
-        }
-      else
-        return scm_i_string_hash (scm_number_to_string (obj, scm_from_int (10)));
-    case scm_tc7_string:
-      return scm_i_string_hash (obj);
-    case scm_tc7_symbol:
-      return scm_i_symbol_hash (obj);
-    case scm_tc7_pointer:
-      return scm_raw_ihashq ((scm_t_uintptr) SCM_POINTER_VALUE (obj));
-    case scm_tc7_wvect:
-    case scm_tc7_vector:
-      {
-	size_t len = SCM_SIMPLE_VECTOR_LENGTH (obj);
-        size_t i = depth / 2;
-        unsigned long h = scm_raw_ihashq (SCM_CELL_WORD_0 (obj));
-        if (len)
-          while (i--)
-            h ^= scm_raw_ihash (scm_c_vector_ref (obj, h % len), i);
-        return h;
-      }
-    case scm_tcs_cons_imcar: 
-    case scm_tcs_cons_nimcar:
+    case scm_tc3_cons:
       if (depth)
         return (scm_raw_ihash (SCM_CAR (obj), depth / 2)
                 ^ scm_raw_ihash (SCM_CDR (obj), depth / 2));
       else
         return scm_raw_ihashq (scm_tc3_cons);
-    case scm_tcs_struct:
+
+    case scm_tc3_struct:
       return scm_i_struct_hash (obj, depth);
+
+    case scm_tc3_heap:
+      switch SCM_TYP7(obj)
+        {
+        case scm_tc7_smob:
+          return scm_raw_ihashq (SCM_TYP16 (obj));
+        case scm_tc7_number:
+          if (scm_is_integer (obj))
+            {
+              SCM n = SCM_I_MAKINUM (SCM_MOST_POSITIVE_FIXNUM);
+              if (scm_is_inexact (obj))
+                obj = scm_inexact_to_exact (obj);
+              return scm_raw_ihashq (scm_to_ulong (scm_modulo (obj, n)));
+            }
+          else
+            return scm_i_string_hash (scm_number_to_string (obj,
+                                                            scm_from_int (10)));
+        case scm_tc7_string:
+          return scm_i_string_hash (obj);
+        case scm_tc7_symbol:
+          return scm_i_symbol_hash (obj);
+        case scm_tc7_pointer:
+          return scm_raw_ihashq ((scm_t_uintptr) SCM_POINTER_VALUE (obj));
+        case scm_tc7_wvect:
+        case scm_tc7_vector:
+          {
+            size_t len = SCM_SIMPLE_VECTOR_LENGTH (obj);
+            size_t i = depth / 2;
+            unsigned long h = scm_raw_ihashq (SCM_CELL_WORD_0 (obj));
+            if (len)
+              while (i--)
+                h ^= scm_raw_ihash (scm_c_vector_ref (obj, h % len), i);
+            return h;
+          }
+        default:
+          return scm_raw_ihashq (SCM_CELL_WORD_0 (obj));
+        }
+
     default:
-      return scm_raw_ihashq (SCM_CELL_WORD_0 (obj));
+      /* Invalid object.  */
+      abort ();
     }
 }
-
 
 
 

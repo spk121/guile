@@ -413,7 +413,7 @@ SCM_DEFINE (scm_struct_vtable_p, "struct-vtable?", 1, 0, 0,
 static void
 struct_finalizer_trampoline (void *ptr, void *unused_data)
 {
-  SCM obj = PTR2SCM (ptr);
+  SCM obj = SCM_PACK (((scm_t_bits)ptr) | scm_tc3_struct);
   scm_t_struct_finalize finalize = SCM_STRUCT_FINALIZER (obj);
 
   if (finalize)
@@ -439,7 +439,8 @@ scm_i_alloc_struct (scm_t_bits *vtable_data, int n_words)
 {
   SCM ret;
 
-  ret = scm_words ((scm_t_bits)vtable_data | scm_tc3_struct, n_words + 2);
+  ret = scm_words ((scm_t_bits)vtable_data, n_words + 2);
+  ret = SCM_PACK (SCM_UNPACK (ret) | scm_tc3_struct);
   SCM_SET_CELL_WORD_1 (ret, (scm_t_bits)SCM_CELL_OBJECT_LOC (ret, 2));
 
   /* vtable_data can be null when making a vtable vtable */
@@ -582,7 +583,7 @@ scm_i_make_vtable_vtable (SCM user_fields)
 
   obj = scm_i_alloc_struct (NULL, basic_size);
   /* Make it so that the vtable of OBJ is itself.  */
-  SCM_SET_CELL_WORD_0 (obj, (scm_t_bits) SCM_STRUCT_DATA (obj) | scm_tc3_struct);
+  SCM_SET_CELL_WORD_0 (obj, (scm_t_bits) SCM_STRUCT_DATA (obj));
 
   v = SCM_UNPACK (layout);
   scm_struct_init (obj, layout, 0, 1, &v);
@@ -947,16 +948,6 @@ void
 scm_init_struct ()
 {
   SCM name;
-
-  /* The first word of a struct is equal to `SCM_STRUCT_DATA (vtable) +
-     scm_tc3_struct', and `SCM_STRUCT_DATA (vtable)' is 2 words after VTABLE by
-     default.  */
-  GC_REGISTER_DISPLACEMENT (2 * sizeof (scm_t_bits) + scm_tc3_struct);
-
-  /* In the general case, `SCM_STRUCT_DATA (obj)' points 2 words after the
-     beginning of a GC-allocated region; that region is different from that of
-     OBJ once OBJ has undergone class redefinition.  */
-  GC_REGISTER_DISPLACEMENT (2 * sizeof (scm_t_bits));
 
   required_vtable_fields = scm_from_locale_string (SCM_VTABLE_BASE_LAYOUT);
   scm_c_define ("standard-vtable-fields", required_vtable_fields);

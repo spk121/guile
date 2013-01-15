@@ -3,7 +3,7 @@
 #ifndef SCM_PAIRS_H
 #define SCM_PAIRS_H
 
-/* Copyright (C) 1995,1996,2000,2001, 2004, 2006, 2008, 2009, 2010, 2012 Free Software Foundation, Inc.
+/* Copyright (C) 1995,1996,2000,2001, 2004, 2006, 2008, 2009, 2010, 2012, 2013 Free Software Foundation, Inc.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public License
@@ -129,7 +129,8 @@ SCM_INLINE SCM scm_cdr (SCM x);
 SCM_INLINE_IMPLEMENTATION SCM
 scm_cons (SCM x, SCM y)
 {
-  return scm_cell (SCM_UNPACK (x), SCM_UNPACK (y));
+  return SCM_PACK (SCM_UNPACK (scm_cell (SCM_UNPACK (x), SCM_UNPACK (y)))
+                   | scm_tc3_cons);
 }
 
 SCM_INLINE_IMPLEMENTATION int

@@ -1,4 +1,4 @@
-/* Copyright (C) 2001, 2009, 2010, 2011, 2012 Free Software Foundation, Inc.
+/* Copyright (C) 2001, 2009, 2010, 2011, 2012, 2013 Free Software Foundation, Inc.
  * 
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public License
@@ -592,8 +592,8 @@ VM_DEFINE_INSTRUCTION (173, make_struct, "make-struct", 2, -1, 1)
     {
       /* Verily, we are making a simple struct with the right number of
          initializers, and no finalizer. */
-      ret = scm_words ((scm_t_bits)SCM_STRUCT_DATA (vtable) | scm_tc3_struct,
-                       n + 1);
+      ret = scm_words ((scm_t_bits) SCM_STRUCT_DATA (vtable), n + 1);
+      ret = SCM_PACK (SCM_UNPACK (ret) | scm_tc3_struct);
       SCM_SET_CELL_WORD_1 (ret, (scm_t_bits)SCM_CELL_OBJECT_LOC (ret, 2));
       memcpy (SCM_STRUCT_DATA (ret), inits, (n - 1) * sizeof (SCM));
     }

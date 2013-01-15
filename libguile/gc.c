@@ -640,12 +640,17 @@ scm_storage_prehistory ()
 
   GC_expand_hp (SCM_DEFAULT_INIT_HEAP_SIZE_2);
 
-  /* We only need to register a displacement for those types for which the
-     higher bits of the type tag are used to store a pointer (that is, a
-     pointer to an 8-octet aligned region).  For `scm_tc3_struct', this is
-     handled in `scm_alloc_struct ()'.  */
+  /* SCM values pointing to pairs and structs are tagged.  */
   GC_REGISTER_DISPLACEMENT (scm_tc3_cons);
-  /* GC_REGISTER_DISPLACEMENT (scm_tc3_unused); */
+  GC_REGISTER_DISPLACEMENT (scm_tc3_struct);
+
+  /* The first word of a struct points to `SCM_STRUCT_DATA (vtable)',
+     and `SCM_STRUCT_DATA (vtable)' is 2 words after VTABLE by default.
+     Also, in the general case, `SCM_STRUCT_DATA (obj)' points 2 words
+     after the beginning of a GC-allocated region; that region is
+     different from that of OBJ once OBJ has undergone class
+     redefinition.  */
+  GC_REGISTER_DISPLACEMENT (2 * sizeof (scm_t_bits));
 
   /* Sanity check.  */
   if (!GC_is_visible (&scm_protects))
@@ -950,12 +955,6 @@ scm_i_tag_name (scm_t_bits tag)
 {
   switch (tag & 0x7f) /* 7 bits */
     {
-    case scm_tcs_struct:
-      return "struct";
-    case scm_tcs_cons_imcar:
-      return "cons (immediate car)";
-    case scm_tcs_cons_nimcar:
-      return "cons (non-immediate car)";
     case scm_tc7_pointer:
       return "foreign";
     case scm_tc7_hashtable:

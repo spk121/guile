@@ -247,10 +247,26 @@ SCM_DEFINE (scm_class_of, "class-of", 1, 0, 0,
         return scm_class_unknown;
 
     case scm_tc3_cons:
+      return scm_class_pair;
+
+    case scm_tc3_struct:
+      if (SCM_OBJ_CLASS_FLAGS (x) & SCM_CLASSF_GOOPS_VALID)
+        return SCM_CLASS_OF (x);
+      else if (SCM_OBJ_CLASS_FLAGS (x) & SCM_CLASSF_GOOPS)
+        {
+          /* Goops object */
+          if (! scm_is_false (SCM_OBJ_CLASS_REDEF (x)))
+            scm_change_object_class (x,
+                                     SCM_CLASS_OF (x),         /* old */
+                                     SCM_OBJ_CLASS_REDEF (x)); /* new */
+          return SCM_CLASS_OF (x);
+        }
+      else
+        return scm_i_define_class_for_vtable (SCM_CLASS_OF (x));
+
+    case scm_tc3_heap:
       switch (SCM_TYP7 (x))
 	{
-	case scm_tcs_cons_nimcar:
-	  return scm_class_pair;
 	case scm_tc7_symbol:
 	  return scm_class_symbol;
 	case scm_tc7_vector:
@@ -315,30 +331,12 @@ SCM_DEFINE (scm_class_of, "class-of", 1, 0, 0,
 				    ? SCM_INOUT_PCLASS_INDEX | SCM_PTOBNUM (x)
 				    : SCM_OUT_PCLASS_INDEX | SCM_PTOBNUM (x))
 				 : SCM_IN_PCLASS_INDEX | SCM_PTOBNUM (x))];
-	case scm_tcs_struct:
-	  if (SCM_OBJ_CLASS_FLAGS (x) & SCM_CLASSF_GOOPS_VALID)
-	    return SCM_CLASS_OF (x);
-	  else if (SCM_OBJ_CLASS_FLAGS (x) & SCM_CLASSF_GOOPS)
-	    {
-	      /* Goops object */
-	      if (! scm_is_false (SCM_OBJ_CLASS_REDEF (x)))
-		scm_change_object_class (x,
-					 SCM_CLASS_OF (x),         /* old */
-					 SCM_OBJ_CLASS_REDEF (x)); /* new */
-	      return SCM_CLASS_OF (x);
-	    }
-	  else
-            return scm_i_define_class_for_vtable (SCM_CLASS_OF (x));
 	default:
-	  if (scm_is_pair (x))
-	    return scm_class_pair;
-	  else
-	    return scm_class_unknown;
+          return scm_class_unknown;
 	}
 
-    case scm_tc3_struct:
-    case scm_tc3_tc7_1:
-    case scm_tc3_tc7_2:
+    case scm_tc3_unused_1:
+    case scm_tc3_unused_2:
       /* case scm_tc3_unused: */
       /* Never reached */
       break;

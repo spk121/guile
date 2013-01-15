@@ -37,7 +37,7 @@
 
 #define SCM_I_CONS(cell, x, y)                          \
   do {                                                  \
-    cell = scm_cell (SCM_UNPACK (x), SCM_UNPACK (y));   \
+    cell = SCM_PACK (SCM_UNPACK (scm_cell (SCM_UNPACK (x), SCM_UNPACK (y))) | scm_tc3_cons); \
   } while (0)
 
 SCM

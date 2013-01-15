@@ -103,10 +103,10 @@
   (define (least-fixnum) most-negative-fixnum)
 
   (define (fixnum? obj)
-    (not (= 0 (logand 2 (object-address obj)))))
+    (eqv? #b11 (logand #b11 (object-address obj))))
 
   (define-inlinable (inline-fixnum? obj)
-    (not (= 0 (logand 2 (object-address obj)))))
+    (eqv? #b11 (logand #b11 (object-address obj))))
 
   (define-syntax assert-fixnum
     (syntax-rules ()

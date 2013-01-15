@@ -51,9 +51,13 @@ scm_t_array_implementation*
 scm_i_array_implementation_for_obj (SCM obj)
 {
   int i;
+
+  if (!(SCM_HAS_TYP3 (obj, scm_tc3_heap)
+        || SCM_HAS_TYP3 (obj, scm_tc3_struct)))
+    return NULL;
+
   for (i = 0; i < num_array_impls_registered; i++)
-    if (SCM_NIMP (obj)
-        && (SCM_CELL_TYPE (obj) & array_impls[i].mask) == array_impls[i].tag)
+    if ((SCM_CELL_TYPE (obj) & array_impls[i].mask) == array_impls[i].tag)
       return &array_impls[i];
   return NULL;
 }

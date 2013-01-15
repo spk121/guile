@@ -875,7 +875,7 @@ static void
 scm_post_boot_init_modules ()
 {
   SCM module_type = SCM_VARIABLE_REF (scm_c_lookup ("module-type"));
-  scm_module_tag = (SCM_CELL_WORD_1 (module_type) + scm_tc3_struct);
+  scm_module_tag = SCM_CELL_WORD_1 (module_type);
 
   resolve_module_var = scm_c_lookup ("resolve-module");
   define_module_star_var = scm_c_lookup ("define-module*");

@@ -1,4 +1,4 @@
-/* Copyright (C) 1998,1999,2000,2001,2002,2003, 2006, 2008, 2009, 2010, 2011 Free Software Foundation, Inc.
+/* Copyright (C) 1998,1999,2000,2001,2002,2003, 2006, 2008, 2009, 2010, 2011, 2013 Free Software Foundation, Inc.
  * 
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public License
@@ -69,7 +69,11 @@ SCM_DEFINE (scm_self_evaluating_p, "self-evaluating?", 1, 0, 0,
     case scm_tc3_imm24:
 	/* characters, booleans, other immediates */
       return scm_from_bool (!scm_is_null_and_not_nil (obj));
+    case scm_tc3_struct:
+      return SCM_BOOL_T;
     case scm_tc3_cons:
+      return SCM_BOOL_F;
+    case scm_tc3_heap:
       switch (SCM_TYP7 (obj))
 	{
 	case scm_tc7_vector:
@@ -91,15 +95,15 @@ SCM_DEFINE (scm_self_evaluating_p, "self-evaluating?", 1, 0, 0,
 	case scm_tc7_bytevector:
 	case scm_tc7_array:
 	case scm_tc7_bitvector:
-	case scm_tcs_struct:
 	  return SCM_BOOL_T;
 	default:
 	  return SCM_BOOL_F;
 	}
+    default:
+      SCM_MISC_ERROR ("Internal error: Object ~S has unknown type",
+                      scm_list_1 (obj));
+      return SCM_UNSPECIFIED; /* never reached */
     }
-  SCM_MISC_ERROR ("Internal error: Object ~S has unknown type",
-		  scm_list_1 (obj));
-  return SCM_UNSPECIFIED; /* never reached */
 }
 #undef FUNC_NAME
 
