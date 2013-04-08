@@ -48,9 +48,28 @@
 /* The WHAT argument for `scm_gc_malloc ()' et al.  */
 static const char indices_gc_hint[] = "array-indices";
 
+/* FIXME Versions of array_handle_ref/set in arrays.c */
+static SCM
+AREF (SCM v, size_t pos)
+{
+  scm_t_array_handle h;
+  SCM ret;
+  scm_array_get_handle (v, &h);
+  pos = h.base + h.dims[0].lbnd + pos * h.dims[0].inc;
+  ret = h.impl->vref (&h, pos);
+  scm_array_handle_release (&h);
+  return ret;
+}
 
-#define GVREF scm_c_generalized_vector_ref
-#define GVSET scm_c_generalized_vector_set_x
+static void
+ASET (SCM v, size_t pos, SCM val)
+{
+  scm_t_array_handle h;
+  scm_array_get_handle (v, &h);
+  pos = h.base + h.dims[0].lbnd + pos * h.dims[0].inc;
+  h.impl->vset (&h, pos, val);
+  scm_array_handle_release (&h);
+}
 
 static unsigned long
 cind (SCM ra, long *ve)
@@ -407,7 +426,7 @@ scm_array_fill_int (SCM ra, SCM fill, SCM ignore SCM_UNUSED)
   ra = SCM_I_ARRAY_V (ra);
 
   for (i = base; n--; i += inc)
-    GVSET (ra, i, fill);
+    ASET (ra, i, fill);
 
   return 1;
 }
@@ -437,7 +456,7 @@ scm_ra_eqp (SCM ra0, SCM ras)
   {
     for (; n-- > 0; i0 += inc0, i1 += inc1, i2 += inc2)
       if (scm_is_true (scm_array_handle_ref (&ra0_handle, i0)))
-	if (!scm_is_eq (GVREF (ra1, i1), GVREF (ra2, i2)))
+	if (!scm_is_eq (AREF (ra1, i1), AREF (ra2, i2)))
 	  scm_array_handle_set (&ra0_handle, i0, SCM_BOOL_F);
   }
 
@@ -470,8 +489,8 @@ ra_compare (SCM ra0, SCM ra1, SCM ra2, int opt)
     for (; n-- > 0; i0 += inc0, i1 += inc1, i2 += inc2)
       if (scm_is_true (scm_array_handle_ref (&ra0_handle, i0)))
 	if (opt ?
-	    scm_is_true (scm_less_p (GVREF (ra1, i1), GVREF (ra2, i2))) :
-	    scm_is_false (scm_less_p (GVREF (ra1, i1), GVREF (ra2, i2))))
+	    scm_is_true (scm_less_p (AREF (ra1, i1), AREF (ra2, i2))) :
+	    scm_is_false (scm_less_p (AREF (ra1, i1), AREF (ra2, i2))))
 	  scm_array_handle_set (&ra0_handle, i0, SCM_BOOL_F);
   }
 
@@ -527,7 +546,7 @@ scm_ra_sum (SCM ra0, SCM ras)
 	default:
 	  {
 	    for (; n-- > 0; i0 += inc0, i1 += inc1)
-	      GVSET (ra0, i0, scm_sum (GVREF(ra0, i0), GVREF(ra1, i1)));
+	      ASET (ra0, i0, scm_sum (AREF(ra0, i0), AREF(ra1, i1)));
 	    break;
 	  }
 	}
@@ -551,7 +570,7 @@ scm_ra_difference (SCM ra0, SCM ras)
 	default:
 	  {
 	    for (; n-- > 0; i0 += inc0)
-	      GVSET (ra0, i0, scm_difference (GVREF(ra0, i0), SCM_UNDEFINED));
+	      ASET (ra0, i0, scm_difference (AREF(ra0, i0), SCM_UNDEFINED));
 	    break;
 	  }
 	}
@@ -567,8 +586,7 @@ scm_ra_difference (SCM ra0, SCM ras)
 	default:
 	  {
 	    for (; n-- > 0; i0 += inc0, i1 += inc1)
-	      GVSET (ra0, i0, scm_difference (GVREF (ra0, i0),
-					      GVREF (ra1, i1)));
+	      ASET (ra0, i0, scm_difference (AREF (ra0, i0), AREF (ra1, i1)));
 	    break;
 	  }
 	}
@@ -596,8 +614,7 @@ scm_ra_product (SCM ra0, SCM ras)
 	default:
 	  {
 	    for (; n-- > 0; i0 += inc0, i1 += inc1)
-	      GVSET (ra0, i0, scm_product (GVREF (ra0, i0),
-					   GVREF (ra1, i1)));
+	      ASET (ra0, i0, scm_product (AREF (ra0, i0), AREF (ra1, i1)));
 	  }
 	}
     }
@@ -619,7 +636,7 @@ scm_ra_divide (SCM ra0, SCM ras)
 	default:
 	  {
 	    for (; n-- > 0; i0 += inc0)
-	      GVSET (ra0, i0, scm_divide (GVREF (ra0, i0), SCM_UNDEFINED));
+	      ASET (ra0, i0, scm_divide (AREF (ra0, i0), SCM_UNDEFINED));
 	    break;
 	  }
 	}
@@ -636,9 +653,8 @@ scm_ra_divide (SCM ra0, SCM ras)
 	  {
 	    for (; n-- > 0; i0 += inc0, i1 += inc1)
 	      {
-		SCM res =  scm_divide (GVREF (ra0, i0),
-				       GVREF (ra1, i1));
-		GVSET (ra0, i0, res);
+		SCM res =  scm_divide (AREF (ra0, i0), AREF (ra1, i1));
+		ASET (ra0, i0, res);
 	      }
 	    break;
 	  }
@@ -693,7 +709,7 @@ ramap (SCM ra0, SCM proc, SCM ras)
               SCM args = SCM_EOL;
               unsigned long k;
               for (k = scm_c_vector_length (ras); k--;)
-                args = scm_cons (GVREF (scm_c_vector_ref (ras, k), i), args);
+                args = scm_cons (AREF (scm_c_vector_ref (ras, k), i), args);
               h0.impl->vset (&h0, i0, scm_apply_1 (proc, h1.impl->vref (&h1, i1), args));
             }
         }
@@ -753,7 +769,7 @@ rafe (SCM ra0, SCM proc, SCM ras)
           SCM args = SCM_EOL;
           unsigned long k;
           for (k = scm_c_vector_length (ras); k--;)
-            args = scm_cons (GVREF (scm_c_vector_ref (ras, k), i), args);
+            args = scm_cons (AREF (scm_c_vector_ref (ras, k), i), args);
           scm_apply_1 (proc, h0.impl->vref (&h0, i0), args);
         }
     }
@@ -823,7 +839,7 @@ SCM_DEFINE (scm_array_index_map_x, "array-index-map!", 2, 0, 0,
 		{
 		  for (j = kmax + 1, args = SCM_EOL; j--;)
 		    args = scm_cons (scm_from_long (vinds[j]), args);
-		  GVSET (SCM_I_ARRAY_V (ra), i, scm_apply_0 (proc, args));
+		  ASET (SCM_I_ARRAY_V (ra), i, scm_apply_0 (proc, args));
 		  i += SCM_I_ARRAY_DIMS (ra)[k].inc;
 		}
 	      k--;
@@ -846,10 +862,10 @@ SCM_DEFINE (scm_array_index_map_x, "array-index-map!", 2, 0, 0,
     {
       size_t length = scm_c_generalized_vector_length (ra);
       for (i = 0; i < length; i++)
-	GVSET (ra, i, scm_call_1 (proc, scm_from_ulong (i)));
+	ASET (ra, i, scm_call_1 (proc, scm_from_ulong (i)));
       return SCM_UNSPECIFIED;
     }
-  else 
+  else
     scm_wrong_type_arg_msg (NULL, 0, ra, "array");
 }
 #undef FUNC_NAME
