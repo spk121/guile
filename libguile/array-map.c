@@ -54,7 +54,7 @@ AREF (SCM v, size_t pos)
   scm_t_array_handle h;
   SCM ret;
   scm_array_get_handle (v, &h);
-  pos = h.base + h.dims[0].lbnd + pos * h.dims[0].inc;
+  pos = h.base + (pos - h.dims[0].lbnd) * h.dims[0].inc;
   ret = h.impl->vref (&h, pos);
   scm_array_handle_release (&h);
   return ret;
@@ -65,7 +65,7 @@ ASET (SCM v, size_t pos, SCM val)
 {
   scm_t_array_handle h;
   scm_array_get_handle (v, &h);
-  pos = h.base + h.dims[0].lbnd + pos * h.dims[0].inc;
+  pos = h.base + (pos - h.dims[0].lbnd) * h.dims[0].inc;
   h.impl->vset (&h, pos, val);
   scm_array_handle_release (&h);
 }
