@@ -87,11 +87,10 @@ scm_is_uniform_vector (SCM obj)
   scm_t_array_handle h;
   int ret = 0;
 
-  if (scm_is_array (obj))
+  if (scm_is_array (obj) && !SCM_I_ARRAYP (obj))
     {
       scm_array_get_handle (obj, &h);
-      ret = 1 == scm_array_handle_rank (&h)
-            && SCM_ARRAY_ELEMENT_TYPE_IS_UNBOXED (h.element_type);
+      ret = SCM_ARRAY_ELEMENT_TYPE_IS_UNBOXED (h.element_type);
       scm_array_handle_release (&h);
     }
   return ret;
@@ -107,7 +106,7 @@ scm_c_uniform_vector_length (SCM uvec)
                             "uniform vector");
 
   scm_array_get_handle (uvec, &h);
-  ret = h.dims[0].ubnd - h.dims[0].lbnd + 1;
+  ret = h.dims[0].ubnd + 1;
   scm_array_handle_release (&h);
   return ret;
 }
@@ -184,7 +183,6 @@ scm_c_uniform_vector_ref (SCM v, size_t pos)
     scm_wrong_type_arg_msg (NULL, 0, v, "uniform vector");
 
   scm_array_get_handle (v, &h);
-  pos = h.base + h.dims[0].lbnd + pos * h.dims[0].inc;
   ret = h.impl->vref (&h, pos);
   scm_array_handle_release (&h);
   return ret;
@@ -210,7 +208,6 @@ scm_c_uniform_vector_set_x (SCM v, size_t pos, SCM val)
     scm_wrong_type_arg_msg (NULL, 0, v, "uniform vector");
 
   scm_array_get_handle (v, &h);
-  pos = h.base + h.dims[0].lbnd + pos * h.dims[0].inc;
   h.impl->vset (&h, pos, val);
   scm_array_handle_release (&h);
 }
@@ -251,6 +248,8 @@ scm_uniform_vector_writable_elements (SCM uvec,
 				      size_t *lenp, ssize_t *incp)
 {
   void *ret;
+  if (!scm_is_uniform_vector (uvec))
+    scm_wrong_type_arg_msg (NULL, 0, uvec, "uniform vector");
   scm_array_get_handle (uvec, h);
   /* FIXME nonlocal exit */
   ret = scm_array_handle_uniform_writable_elements (h);
