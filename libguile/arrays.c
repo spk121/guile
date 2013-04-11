@@ -824,7 +824,6 @@ array_handle_ref (scm_t_array_handle *hh, size_t pos)
   scm_t_array_handle h;
   SCM ret;
   scm_array_get_handle (SCM_I_ARRAY_V (hh->array), &h);
-  pos = h.base + h.dims[0].lbnd + pos * h.dims[0].inc;
   ret = h.impl->vref (&h, pos);
   scm_array_handle_release (&h);
   return ret;
@@ -835,7 +834,6 @@ array_handle_set (scm_t_array_handle *hh, size_t pos, SCM val)
 {
   scm_t_array_handle h;
   scm_array_get_handle (SCM_I_ARRAY_V (hh->array), &h);
-  pos = h.base + h.dims[0].lbnd + pos * h.dims[0].inc;
   h.impl->vset (&h, pos, val);
   scm_array_handle_release (&h);
 }
@@ -846,6 +844,12 @@ array_get_handle (SCM array, scm_t_array_handle *h)
 {
   scm_t_array_handle vh;
   scm_array_get_handle (SCM_I_ARRAY_V (array), &vh);
+  if (vh.dims[0].inc != 1 || vh.dims[0].lbnd != 0 || vh.base != 0)
+    {
+      fprintf(stderr, "INC %ld, %ld", vh.dims[0].inc, vh.dims[0].lbnd);
+      fflush(stderr);
+      abort();
+    }
   h->element_type = vh.element_type;
   h->elements = vh.elements;
   h->writable_elements = vh.writable_elements;
