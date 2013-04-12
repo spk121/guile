@@ -234,22 +234,14 @@ SCM_DEFINE (scm_uniform_vector_to_list, "uniform-vector->list", 1, 0, 0,
 }
 #undef FUNC_NAME
 
-const void *
-scm_uniform_vector_elements (SCM uvec, 
-			     scm_t_array_handle *h,
-			     size_t *lenp, ssize_t *incp)
-{
-  return scm_uniform_vector_writable_elements (uvec, h, lenp, incp);
-}
-
 void *
 scm_uniform_vector_writable_elements (SCM uvec,
 				      scm_t_array_handle *h,
 				      size_t *lenp, ssize_t *incp)
 {
-  void *ret;
-  if (!scm_is_uniform_vector (uvec))
-    scm_wrong_type_arg_msg (NULL, 0, uvec, "uniform vector");
+  void * ret;
+  if (!scm_is_array (uvec) || 1 != scm_c_array_rank (uvec))
+    scm_wrong_type_arg_msg (NULL, 0, uvec, "rank 1 uniform array");
   scm_array_get_handle (uvec, h);
   /* FIXME nonlocal exit */
   ret = scm_array_handle_uniform_writable_elements (h);
@@ -262,7 +254,15 @@ scm_uniform_vector_writable_elements (SCM uvec,
   return ret;
 }
 
-SCM_DEFINE (scm_uniform_vector_length, "uniform-vector-length", 1, 0, 0, 
+const void *
+scm_uniform_vector_elements (SCM uvec,
+			     scm_t_array_handle *h,
+			     size_t *lenp, ssize_t *incp)
+{
+  return scm_uniform_vector_writable_elements (uvec, h, lenp, incp);
+}
+
+SCM_DEFINE (scm_uniform_vector_length, "uniform-vector-length", 1, 0, 0,
 	    (SCM v),
 	    "Return the number of elements in the uniform vector @var{v}.")
 #define FUNC_NAME s_scm_uniform_vector_length
