@@ -90,10 +90,10 @@
      (list
       (make-const src 'lua-break)
       (make-argless-lambda src
-        (make-let
+        (make-letrec #f
          src
          parameters parameters
-         (list (make-lambda src '() (get-body name)))
+         (list (make-argless-lambda src (get-body name)))
          (make-call src (make-lexical-ref src name name) '())))
       (make-arg-ignoring-lambda src
        (make-void src))))))
