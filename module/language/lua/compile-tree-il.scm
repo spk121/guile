@@ -41,7 +41,7 @@
 
 (define (make-runtime-application src name arguments)
   "Shorthand for creating an application of a function in the (language lua runtime) module"
-  (make-application src (ref-runtime src name) arguments))
+  (make-call src (ref-runtime src name) arguments))
 
 (define (make-table-ref src table index)
   "Shorthand for calling the index function in (language lua runtime)"
@@ -79,7 +79,7 @@
 (define (apply-named-lua-function src name get-body)
   (let* ((name (gensym (string-append " " name)))
          (parameters (list name)))
-    (make-application
+    (make-call
      src
      (make-module-ref src '(guile) 'catch #t)
      (list
@@ -89,7 +89,7 @@
          src
          parameters parameters
          (list (make-lambda src '() (get-body name)))
-         (make-application src (make-lexical-ref src name name) '())))
+         (make-call src (make-lexical-ref src name name) '())))
       (make-arg-ignoring-lambda src
        (make-void src))))))
 
@@ -104,7 +104,7 @@
       (make-sequence
        src
        (list body
-             (make-application src (make-lexical-ref src loop loop) '())))
+             (make-call src (make-lexical-ref src loop loop) '())))
       (make-void src)))))
 
 (define (could-result-in-multiple-values? x)
@@ -149,10 +149,10 @@ dropped silently"
     ((ast-return src exp)
      (if tail?
          (if (and (list? exp) (not (= (length exp) 1)))
-             (make-application src (make-primitive-ref src 'values)
+             (make-call src (make-primitive-ref src 'values)
                                (map-compile exp))
              (compile (if (list? exp) (car exp) exp) #t))
-         (make-application
+         (make-call
           src (make-primitive-ref src 'return/values)
           (if (list? exp) (map-compile exp #t) (list (compile exp))))))
 
@@ -183,23 +183,23 @@ dropped silently"
              ;; and a function that takes variable arguments. Then
              ;; append those variable arguments to the rest of the
              ;; expression, and apply the first function to it)
-             (make-application src
+             (make-call src
                (make-primitive-ref src 'call-with-values)
                (list
                  (make-argless-lambda src (make-sequence src (last-pair args)))
                  (let ((rest-gensym (gensym "rest")))
                    (make-catch-all-lambda src
-                     (make-application src (make-primitive-ref src 'apply)
+                     (make-call src (make-primitive-ref src 'apply)
                        (list
                          proc
-                         (make-application src
+                         (make-call src
                            (make-module-ref src '(srfi srfi-1) 'append! #t)
                            (list
-                             (make-application src (make-primitive-ref src 'list) (drop-right args 1))
+                             (make-call src (make-primitive-ref src 'list) (drop-right args 1))
                              (make-lexical-ref src 'rest rest-gensym)))))
                        rest-gensym))))
 
-             (make-application src proc args)))
+             (make-call src proc args)))
 
        ;; If this is function is a global variable, prepend a call to
        ;; check-global-function to make sure it's defined before
@@ -208,7 +208,7 @@ dropped silently"
            (make-sequence
             src (list
                  ;; FIXME: use module binders instead
-                 (make-application
+                 (make-call
                   src (make-module-ref src '(language lua runtime)
                                        'check-global-function #t)
                   (list (make-const src (ast-global-ref-name operator))
@@ -252,7 +252,7 @@ dropped silently"
      (unless (memq (context) '(while-loop list-for-loop numeric-for-loop))
        (syntax-error src "no loop to break"))
      ;; FIXME: use abort instead of throw
-     (make-application src (make-module-ref src '(guile) 'throw #t)
+     (make-call src (make-module-ref src '(guile) 'throw #t)
                        (list (make-const src 'lua-break))))
 
     ;; FIXME: use prompt and abort instead of throw and catch
@@ -278,32 +278,32 @@ dropped silently"
                    (begin
                      ;; even more complicated, assigning the values to
                      ;; the loop variables
-                     (apply (primitive call-with-values)
-                            (lambda ()
-                              (lambda-case
-                               (,no-arguments
-                                (apply (lexical iterator ,gs-iterator)
-                                       (lexical state ,gs-state)
-                                       (lexical variable ,gs-variable)))))
-                            (lambda ()
-                              (lambda-case
-                               ((,names #f #f #f () ,gs-names)
-                                ;; almost to the actual loop body, hang
-                                ;; in there
-                                (begin
-                                  (set! (lexical variable ,gs-variable)
-                                        (lexical ,(car names) ,(car gs-names)))
-                                  (if (apply (primitive eq?)
-                                             (lexical variable ,gs-variable)
-                                             (const #nil))
-                                      (apply (@ (guile) throw) (const lua-break))
-                                      (void))
-                                  ,(parameterize ((context 'list-for-loop))
-                                     (unparse-tree-il (compile body)))
-                                  (apply (lexical loop ,gs-loop))))))))))))
+                     (call (primitive call-with-values)
+                           (lambda ()
+                             (lambda-case
+                              (,no-arguments
+                               (call (lexical iterator ,gs-iterator)
+                                     (lexical state ,gs-state)
+                                     (lexical variable ,gs-variable)))))
+                           (lambda ()
+                             (lambda-case
+                              ((,names #f #f #f () ,gs-names)
+                               ;; almost to the actual loop body, hang
+                               ;; in there
+                               (begin
+                                 (set! (lexical variable ,gs-variable)
+                                       (lexical ,(car names) ,(car gs-names)))
+                                 (if (call (primitive eq?)
+                                           (lexical variable ,gs-variable)
+                                           (const #nil))
+                                     (call (@ (guile) throw) (const lua-break))
+                                     (void))
+                                 ,(parameterize ((context 'list-for-loop))
+                                    (unparse-tree-il (compile body)))
+                                 (call (lexical loop ,gs-loop))))))))))))
            ;; initialize variables and start loop
            (begin
-             (apply (primitive call-with-values)
+             (call (primitive call-with-values)
                     (lambda ()
                       (lambda-case
                        (,no-arguments
@@ -320,12 +320,12 @@ dropped silently"
                                 (lexical state ,gs-state2))
                           (set! (lexical variable ,gs-variable)
                                 (lexical variable ,gs-variable2)))))))
-             (apply (@ (guile) catch)
+             (call (@ (guile) catch)
                     (const lua-break)
                     (lambda ()
                       (lambda-case
                        (,no-arguments
-                        (apply (lexical loop ,gs-loop)))))
+                        (call (lexical loop ,gs-loop)))))
                     (lambda ()
                       (lambda-case
                        (((key) #f #f #f () (,(gensym "key")))
@@ -348,11 +348,11 @@ dropped silently"
             (gs-step (gensym "step"))
             (gs-loop (gensym "loop"))
             (while-condition
-             `(if (apply (primitive >) (lexical step ,gs-step) (const 0))
-                 (if (apply (primitive <=)
+             `(if (call (primitive >) (lexical step ,gs-step) (const 0))
+                 (if (call (primitive <=)
                             (lexical variable ,gs-variable)
                             (lexical limit ,gs-limit))
-                     (apply (lexical loop ,gs-loop))
+                     (call (lexical loop ,gs-loop))
                      (void))
                  (void))))
        (parse-tree-il
@@ -366,8 +366,8 @@ dropped silently"
               '(const #f)
               (append
                (map (lambda (x)
-                      `(apply (@ (language lua runtime) tonumber)
-                              ,(unparse-tree-il (compile x))))
+                      `(call (@ (language lua runtime) tonumber)
+                             ,(unparse-tree-il (compile x))))
                     (list initial limit step))
                ;; loop body
                (list
@@ -382,14 +382,14 @@ dropped silently"
                        ,(parameterize ((context 'numeric-for-loop))
                           (unparse-tree-il (compile body)))
                        (set! (lexical variable ,gs-variable)
-                             (apply (primitive +)
-                                    (lexical variable ,gs-variable)
-                                    (lexical step ,gs-step)))
+                             (call (primitive +)
+                                   (lexical variable ,gs-variable)
+                                   (lexical step ,gs-step)))
                        ,while-condition)))))))
            ;; body
            (begin
              ;; if not (var and limit and step) then error() end
-             (if (apply (primitive not)
+             (if (call (primitive not)
                         (if (lexical variable ,gs-variable)
                             (if (lexical limit ,gs-limit)
                                 (if (lexical step ,gs-step)
@@ -397,7 +397,7 @@ dropped silently"
                                     (const #f))
                                 (const #f))
                             (const #f)))
-                 (apply (@ (guile) error))
+                 (call (@ (guile) error))
                  (void))
              ,while-condition
              )))))
@@ -437,7 +437,7 @@ dropped silently"
      (if (and (eq? operator #\-) (ast-literal? right)
               (number? (ast-literal-exp right)))
          (make-const src (- (ast-literal-exp right)))
-         (make-application
+         (make-call
           src
           (case operator
             ((#\-) (ref-runtime src 'unm))
@@ -478,7 +478,7 @@ dropped silently"
                 (make-lexical-ref src 'and-tmp tmp)))))
          (else (error #:COMPILE "unknown binary operator" operator)))))
     ((ast-variable-arguments src gensym)
-     (make-application src
+     (make-call src
                        (make-primitive-ref src 'apply)
                        (list (make-primitive-ref src 'values)
                              (make-lexical-ref src '... gensym))))))
