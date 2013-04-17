@@ -53,6 +53,11 @@
   (make-runtime-application src 'new-index!
     (list table (if (symbol? index) (make-const src (symbol->string index)) index) exp)))
 
+(define (make-sequence src body)
+  (if (null? (cdr body))
+      (car body)
+      (make-seq src (car body) (make-sequence #f (cdr body)))))
+
 ;; Calling conventions
 (define* (make-plain-lambda-case src args gensyms body #:optional alternate)
   (make-lambda-case src args #f #f #f '() (or gensyms args) body alternate))
