@@ -377,9 +377,9 @@ configure @emph{reading}, @emph{printing}, @emph{debugging} or
 * User level options interfaces::
 * Reader options::
 * Printing options::
-* Debugger options::
 * Evaluator options::
 * Evaluator trap options::
+* Debugger options::
 * Examples of option use::
 @end menu
 

@@ -657,7 +657,7 @@ Return 1 if @var{x} is a Scheme-level hook, 0 otherwise.
 @end deftypefn
 
 
-@subsubsection Handling Scheme-level hooks from C code
+@subsubheading Handling Scheme-level hooks from C code
 
 Here is an example of how to handle Scheme-level hooks from C code using
 the above functions.
