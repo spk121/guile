@@ -47,7 +47,9 @@
 /* The WHAT argument for `scm_gc_malloc ()' et al.  */
 static const char indices_gc_hint[] = "array-indices";
 
-/* FIXME Versions of array_handle_ref/set in arrays.c */
+/* FIXME Versions of array_handle_ref/set in arrays.c. This is called
+   sometimes with SCM_I_ARRAY_V, sometimes with the array itself. Should
+   make up our mind. */
 static SCM
 AREF (SCM v, size_t pos)
 {
@@ -835,7 +837,11 @@ SCM_DEFINE (scm_array_index_map_x, "array-index-map!", 2, 0, 0,
 					 indices_gc_hint);
 
       for (k = 0; k <= kmax; k++)
-	vinds[k] = SCM_I_ARRAY_DIMS (ra)[k].lbnd;
+        {
+          vinds[k] = SCM_I_ARRAY_DIMS (ra)[k].lbnd;
+          if (vinds[k] > SCM_I_ARRAY_DIMS (ra)[k].ubnd)
+            return SCM_UNSPECIFIED;
+        }
       k = kmax;
       do
 	{
@@ -851,16 +857,17 @@ SCM_DEFINE (scm_array_index_map_x, "array-index-map!", 2, 0, 0,
 		  i += SCM_I_ARRAY_DIMS (ra)[k].inc;
 		}
 	      k--;
-	      continue;
-	    }
-	  if (vinds[k] < SCM_I_ARRAY_DIMS (ra)[k].ubnd)
+            }
+          else if (vinds[k] < SCM_I_ARRAY_DIMS (ra)[k].ubnd)
 	    {
 	      vinds[k]++;
 	      k++;
-	      continue;
 	    }
-	  vinds[k] = SCM_I_ARRAY_DIMS (ra)[k].lbnd - 1;
-	  k--;
+          else
+            {
+              vinds[k] = SCM_I_ARRAY_DIMS (ra)[k].lbnd - 1;
+              k--;
+            }
 	}
       while (k >= 0);
 
