@@ -182,8 +182,9 @@ scm_c_uniform_vector_ref (SCM v, size_t pos)
   if (!scm_is_uniform_vector (v))
     scm_wrong_type_arg_msg (NULL, 0, v, "uniform vector");
 
+  /* need the handle for bitvectors only */
   scm_array_get_handle (v, &h);
-  ret = h.impl->vref (&h, pos);
+  ret = h.impl->vref (h.array, pos);
   scm_array_handle_release (&h);
   return ret;
 
@@ -207,8 +208,9 @@ scm_c_uniform_vector_set_x (SCM v, size_t pos, SCM val)
   if (!scm_is_uniform_vector (v))
     scm_wrong_type_arg_msg (NULL, 0, v, "uniform vector");
 
+  /* need the handle for bitvectors only */
   scm_array_get_handle (v, &h);
-  h.impl->vset (&h, pos, val);
+  h.impl->vset (h.array, pos, val);
   scm_array_handle_release (&h);
 }
 
