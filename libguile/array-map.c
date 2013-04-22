@@ -793,20 +793,27 @@ SCM_DEFINE (scm_array_index_map_x, "array-index-map!", 2, 0, 0,
 	    "@end lisp")
 #define FUNC_NAME s_scm_array_index_map_x
 {
-  unsigned long i;
   SCM_VALIDATE_PROC (2, proc);
 
   if (!scm_is_array (ra))
     scm_wrong_type_arg_msg (NULL, 0, ra, "array");
-  else if (!SCM_I_ARRAYP (ra))
+  /* This also covers the not-SCM_I_ARRAYP case */
+  else if (1 == scm_c_array_rank(ra))
     {
-      size_t length = scm_c_array_length (ra);
-      for (i = 0; i < length; ++i)
-	ASET (ra, i, scm_call_1 (proc, scm_from_ulong (i)));
-      return SCM_UNSPECIFIED;
+      scm_t_array_handle h;
+      ssize_t i, inc;
+      size_t p;
+      SCM v;
+      scm_array_get_handle (ra, &h);
+      v = h.array;
+      inc = h.dims[0].inc;
+      for (i = h.dims[0].lbnd, p = h.base; i <= h.dims[0].ubnd; ++i, p += inc)
+        h.impl->vset (v, p, scm_call_1 (proc, scm_from_ulong (i)));
+      scm_array_handle_release (&h);
     }
   else
     {
+      size_t i;
       SCM args = SCM_EOL;
       int j, k, kmax = SCM_I_ARRAY_NDIM (ra) - 1;
       long *vinds;
@@ -851,9 +858,8 @@ SCM_DEFINE (scm_array_index_map_x, "array-index-map!", 2, 0, 0,
             }
 	}
       while (k >= 0);
-
-      return SCM_UNSPECIFIED;
     }
+  return SCM_UNSPECIFIED;
 }
 #undef FUNC_NAME
 
