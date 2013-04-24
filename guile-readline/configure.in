@@ -9,14 +9,13 @@ AC_INIT(guile-readline,
 
 AC_CONFIG_AUX_DIR([.])
 AC_CONFIG_SRCDIR(readline.c)
-AM_CONFIG_HEADER([guile-readline-config.h])
+AC_CONFIG_HEADERS([guile-readline-config.h])
 AM_INIT_AUTOMAKE([foreign no-define])
 
 . $srcdir/../GUILE-VERSION
 
 AC_PROG_INSTALL
 AC_PROG_CC
-AM_PROG_CC_STDC
 AC_LIBTOOL_WIN32_DLL
 AC_PROG_LIBTOOL
 
