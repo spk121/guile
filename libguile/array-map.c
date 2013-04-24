@@ -62,12 +62,12 @@ AREF (SCM v, size_t pos)
   return ret;
 }
 
+/* This is only ever used with v = SCM_I_ARRAY_V () */
 static void
 ASET (SCM v, size_t pos, SCM val)
 {
   scm_t_array_handle h;
   scm_array_get_handle (v, &h);
-  pos = h.base + (pos - h.dims[0].lbnd) * h.dims[0].inc;
   h.impl->vset (h.array, pos, val);
   scm_array_handle_release (&h);
 }
