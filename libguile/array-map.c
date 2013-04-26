@@ -715,6 +715,7 @@ SCM_DEFINE (scm_array_index_map_x, "array-index-map!", 2, 0, 0,
 	    "@end lisp")
 #define FUNC_NAME s_scm_array_index_map_x
 {
+  scm_t_array_handle h;
   SCM_VALIDATE_PROC (2, proc);
 
   if (!scm_is_array (ra))
@@ -722,15 +723,12 @@ SCM_DEFINE (scm_array_index_map_x, "array-index-map!", 2, 0, 0,
   /* This also covers the not-SCM_I_ARRAYP case */
   else if (1 == scm_c_array_rank(ra))
     {
-      scm_t_array_handle h;
       ssize_t i, inc;
       size_t p;
-      SCM v;
       scm_array_get_handle (ra, &h);
-      v = h.array;
       inc = h.dims[0].inc;
       for (i = h.dims[0].lbnd, p = h.base; i <= h.dims[0].ubnd; ++i, p += inc)
-        h.impl->vset (v, p, scm_call_1 (proc, scm_from_ssize_t (i)));
+        h.impl->vset (h.array, p, scm_call_1 (proc, scm_from_ssize_t (i)));
       scm_array_handle_release (&h);
     }
   else
@@ -751,6 +749,7 @@ SCM_DEFINE (scm_array_index_map_x, "array-index-map!", 2, 0, 0,
             return SCM_UNSPECIFIED;
         }
 
+      scm_array_get_handle (ra, &h);
       k = kmax;
       do
 	{
@@ -769,7 +768,7 @@ SCM_DEFINE (scm_array_index_map_x, "array-index-map!", 2, 0, 0,
 	      for (; vi[kmax] <= SCM_I_ARRAY_DIMS (ra)[kmax].ubnd;
                    *q = scm_from_ssize_t (++vi[kmax]))
 		{
-		  ASET (SCM_I_ARRAY_V (ra), i, scm_apply_0 (proc, args));
+		  h.impl->vset (h.array, i, scm_apply_0 (proc, args));
 		  i += SCM_I_ARRAY_DIMS (ra)[kmax].inc;
 		}
 	      k--;
@@ -786,6 +785,7 @@ SCM_DEFINE (scm_array_index_map_x, "array-index-map!", 2, 0, 0,
             }
 	}
       while (k >= 0);
+      scm_array_handle_release (&h);
     }
   return SCM_UNSPECIFIED;
 }
