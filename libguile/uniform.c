@@ -49,9 +49,9 @@ scm_array_handle_uniform_element_size (scm_t_array_handle *h)
   if (ret && ret % 8 == 0)
     return ret / 8;
   else if (ret)
-    scm_wrong_type_arg_msg (NULL, 0, h->array, "byte-aligned uniform array");
+    scm_wrong_type_arg_msg (NULL, 0, h->root, "byte-aligned uniform array");
   else
-    scm_wrong_type_arg_msg (NULL, 0, h->array, "uniform array");
+    scm_wrong_type_arg_msg (NULL, 0, h->root, "uniform array");
 }
 
 size_t
@@ -61,7 +61,7 @@ scm_array_handle_uniform_element_bit_size (scm_t_array_handle *h)
   if (ret)
     return ret;
   else
-    scm_wrong_type_arg_msg (NULL, 0, h->array, "uniform array");
+    scm_wrong_type_arg_msg (NULL, 0, h->root, "uniform array");
 }
 
 const void *
@@ -184,7 +184,7 @@ scm_c_uniform_vector_ref (SCM v, size_t pos)
 
   /* need the handle for bitvectors only */
   scm_array_get_handle (v, &h);
-  ret = h.impl->vref (h.array, pos);
+  ret = h.impl->vref (h.root, pos);
   scm_array_handle_release (&h);
   return ret;
 
@@ -210,7 +210,7 @@ scm_c_uniform_vector_set_x (SCM v, size_t pos, SCM val)
 
   /* need the handle for bitvectors only */
   scm_array_get_handle (v, &h);
-  h.impl->vset (h.array, pos, val);
+  h.impl->vset (h.root, pos, val);
   scm_array_handle_release (&h);
 }
 

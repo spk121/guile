@@ -55,7 +55,7 @@ AREF (SCM v, size_t pos)
   scm_t_array_handle h;
   SCM ret;
   scm_array_get_handle (v, &h);
-  ret = h.impl->vref (h.array, h.base + pos * h.dims[0].inc);
+  ret = h.impl->vref (h.root, h.base + pos * h.dims[0].inc);
   scm_array_handle_release (&h);
   return ret;
 }
@@ -66,7 +66,7 @@ ASET (SCM v, size_t pos, SCM val)
 {
   scm_t_array_handle h;
   scm_array_get_handle (v, &h);
-  h.impl->vset (h.array, pos, val);
+  h.impl->vset (h.root, pos, val);
   scm_array_handle_release (&h);
 }
 
@@ -728,7 +728,7 @@ SCM_DEFINE (scm_array_index_map_x, "array-index-map!", 2, 0, 0,
       scm_array_get_handle (ra, &h);
       inc = h.dims[0].inc;
       for (i = h.dims[0].lbnd, p = h.base; i <= h.dims[0].ubnd; ++i, p += inc)
-        h.impl->vset (h.array, p, scm_call_1 (proc, scm_from_ssize_t (i)));
+        h.impl->vset (h.root, p, scm_call_1 (proc, scm_from_ssize_t (i)));
       scm_array_handle_release (&h);
     }
   else
@@ -768,7 +768,7 @@ SCM_DEFINE (scm_array_index_map_x, "array-index-map!", 2, 0, 0,
 	      for (; vi[kmax] <= SCM_I_ARRAY_DIMS (ra)[kmax].ubnd;
                    *q = scm_from_ssize_t (++vi[kmax]))
 		{
-		  h.impl->vset (h.array, i, scm_apply_0 (proc, args));
+		  h.impl->vset (h.root, i, scm_apply_0 (proc, args));
 		  i += SCM_I_ARRAY_DIMS (ra)[kmax].inc;
 		}
 	      k--;
