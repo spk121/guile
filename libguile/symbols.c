@@ -101,14 +101,14 @@ string_lookup_predicate_fn (SCM sym, void *closure)
 }
 
 static SCM
-lookup_interned_symbol (SCM name, unsigned long raw_hash)
+lookup_interned_symbol (SCM name, unsigned long raw_hash, SCM obarray)
 {
   struct string_lookup_data data;
 
   data.string = name;
   data.string_hash = raw_hash;
   
-  return scm_c_weak_set_lookup (symbols, raw_hash,
+  return scm_c_weak_set_lookup (obarray, raw_hash,
                                 string_lookup_predicate_fn,
                                 &data, SCM_BOOL_F);
 }
@@ -133,7 +133,8 @@ latin1_lookup_predicate_fn (SCM sym, void *closure)
 
 static SCM
 lookup_interned_latin1_symbol (const char *str, size_t len,
-                               unsigned long raw_hash)
+                               unsigned long raw_hash,
+                               SCM obarray)
 {
   struct latin1_lookup_data data;
 
@@ -141,7 +142,7 @@ lookup_interned_latin1_symbol (const char *str, size_t len,
   data.len = len;
   data.string_hash = raw_hash;
   
-  return scm_c_weak_set_lookup (symbols, raw_hash,
+  return scm_c_weak_set_lookup (obarray, raw_hash,
                                 latin1_lookup_predicate_fn,
                                 &data, SCM_BOOL_F);
 }
@@ -200,7 +201,8 @@ utf8_lookup_predicate_fn (SCM sym, void *closure)
 
 static SCM
 lookup_interned_utf8_symbol (const char *str, size_t len,
-                             unsigned long raw_hash)
+                             unsigned long raw_hash,
+                             SCM obarray)
 {
   struct utf8_lookup_data data;
 
@@ -208,7 +210,7 @@ lookup_interned_utf8_symbol (const char *str, size_t len,
   data.len = len;
   data.string_hash = raw_hash;
   
-  return scm_c_weak_set_lookup (symbols, raw_hash,
+  return scm_c_weak_set_lookup (obarray, raw_hash,
                                 utf8_lookup_predicate_fn,
                                 &data, SCM_BOOL_F);
 }
@@ -235,12 +237,12 @@ symbol_lookup_predicate_fn (SCM sym, void *closure)
 }
  
 static SCM
-scm_i_str2symbol (SCM str)
+scm_i_str2symbol (SCM str, SCM obarray)
 {
   SCM symbol;
   size_t raw_hash = scm_i_string_hash (str);
 
-  symbol = lookup_interned_symbol (str, raw_hash);
+  symbol = lookup_interned_symbol (str, raw_hash, obarray);
   if (scm_is_true (symbol))
     return symbol;
   else
@@ -251,7 +253,7 @@ scm_i_str2symbol (SCM str)
 
       /* Might return a different symbol, if another one was interned at
          the same time.  */
-      return scm_c_weak_set_add_x (symbols, raw_hash,
+      return scm_c_weak_set_add_x (obarray, raw_hash,
                                    symbol_lookup_predicate_fn,
                                    SCM_UNPACK_POINTER (symbol), symbol);
     }
@@ -358,7 +360,7 @@ SCM_DEFINE (scm_string_to_symbol, "string->symbol", 1, 0, 0,
 #define FUNC_NAME s_scm_string_to_symbol
 {
   SCM_VALIDATE_STRING (1, string);
-  return scm_i_str2symbol (string);
+  return scm_i_str2symbol (string, symbols);
 }
 #undef FUNC_NAME
 
@@ -372,6 +374,69 @@ SCM_DEFINE (scm_string_ci_to_symbol, "string-ci->symbol", 1, 0, 0,
   return scm_string_to_symbol (SCM_CASE_INSENSITIVE_P
 			       ? scm_string_downcase(str)
 			       : str);
+}
+#undef FUNC_NAME
+
+SCM_DEFINE (scm_make_obarray, "make-obarray", 0, 0, 0,
+            (void),
+            "Return a fresh obarray.")
+#define FUNC_NAME s_scm_make_obarray
+{
+  return scm_c_make_weak_set (0);
+}
+#undef FUNC_NAME
+
+SCM_DEFINE (scm_find_symbol, "find-symbol", 1, 1, 0,
+            (SCM string, SCM obarray),
+            "Return the symbol named @var{string} if it is present in\n"
+            "@var{obarray}. Return false otherwise.")
+#define FUNC_NAME s_scm_find_symbol
+{
+  if (SCM_UNBNDP (obarray))
+    obarray = symbols;
+
+  return lookup_interned_symbol (string,
+                                 scm_i_string_hash (string),
+                                 obarray);
+}
+#undef FUNC_NAME
+
+SCM_DEFINE (scm_intern, "intern", 1, 1, 0,
+            (SCM string, SCM obarray),
+            "Intern @var{string} in @var{obarray}.")
+#define FUNC_NAME s_scm_intern
+{
+  if (SCM_UNBNDP (obarray))
+    obarray = symbols;
+
+  SCM_VALIDATE_STRING (1, string);
+  return scm_i_str2symbol (string, obarray);
+}
+#undef FUNC_NAME
+
+SCM_DEFINE (scm_unintern, "unintern", 1, 1, 0,
+            (SCM symbol, SCM obarray),
+            "Unintern @var{symbol} from @var{obarray}.")
+#define FUNC_NAME s_scm_unintern
+{
+  if (SCM_UNBNDP (obarray))
+    obarray = symbols;
+
+  scm_weak_set_remove_x (obarray, symbol);
+  return SCM_UNSPECIFIED;
+}
+#undef FUNC_NAME
+
+SCM_DEFINE (scm_obarray_for_each, "obarray-for-each", 1, 1, 0,
+            (SCM proc, SCM obarray),
+            "")
+#define FUNC_NAME s_scm_obarray_for_each
+{
+  if (SCM_UNBNDP (obarray))
+    obarray = symbols;
+
+  scm_weak_set_for_each (proc, obarray);
+  return SCM_UNSPECIFIED;
 }
 #undef FUNC_NAME
 
@@ -476,7 +541,7 @@ SCM
 scm_from_locale_symboln (const char *sym, size_t len)
 {
   SCM str = scm_from_locale_stringn (sym, len);
-  return scm_i_str2symbol (str);
+  return scm_i_str2symbol (str, symbols);
 }
 
 SCM
@@ -485,7 +550,7 @@ scm_take_locale_symboln (char *sym, size_t len)
   SCM str;
 
   str = scm_take_locale_stringn (sym, len);
-  return scm_i_str2symbol (str);
+  return scm_i_str2symbol (str, symbols);
 }
 
 SCM
@@ -510,11 +575,11 @@ scm_from_latin1_symboln (const char *sym, size_t len)
     len = strlen (sym);
   hash = scm_i_latin1_string_hash (sym, len);
 
-  ret = lookup_interned_latin1_symbol (sym, len, hash);
+  ret = lookup_interned_latin1_symbol (sym, len, hash, symbols);
   if (scm_is_false (ret))
     {
       SCM str = scm_from_latin1_stringn (sym, len);
-      ret = scm_i_str2symbol (str);
+      ret = scm_i_str2symbol (str, symbols);
     }
 
   return ret;
@@ -536,11 +601,11 @@ scm_from_utf8_symboln (const char *sym, size_t len)
     len = strlen (sym);
   hash = scm_i_utf8_string_hash (sym, len);
 
-  ret = lookup_interned_utf8_symbol (sym, len, hash);
+  ret = lookup_interned_utf8_symbol (sym, len, hash, symbols);
   if (scm_is_false (ret))
     {
       SCM str = scm_from_utf8_stringn (sym, len);
-      ret = scm_i_str2symbol (str);
+      ret = scm_i_str2symbol (str, symbols);
     }
 
   return ret;

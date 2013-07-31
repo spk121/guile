@@ -58,6 +58,12 @@ SCM_API SCM scm_symbol_to_string (SCM s);
 SCM_API SCM scm_string_to_symbol (SCM s);
 SCM_API SCM scm_string_ci_to_symbol (SCM s);
 
+SCM_API SCM scm_make_obarray (void);
+SCM_API SCM scm_intern (SCM s, SCM obarray);
+SCM_API SCM scm_unintern (SCM s, SCM obarray);
+SCM_API SCM scm_find_symbol (SCM s, SCM obarray);
+SCM_API SCM scm_obarray_for_each (SCM proc, SCM obarray);
+
 SCM_API SCM scm_symbol_fref (SCM s);
 SCM_API SCM scm_symbol_pref (SCM s);
 SCM_API SCM scm_symbol_fset_x (SCM s, SCM val);
