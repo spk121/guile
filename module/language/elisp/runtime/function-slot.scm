@@ -30,6 +30,7 @@
                  (compile-labels . labels)
                  (compile-let* . let*)
                  (compile-guile-ref . guile-ref)
+                 (compile-guile-private-ref . guile-private-ref)
                  (compile-guile-primitive . guile-primitive)
                  (compile-function . function)
                  (compile-defun . defun)
@@ -52,6 +53,7 @@
                labels
                let*
                guile-ref
+               guile-private-ref
                guile-primitive
                function
                defun

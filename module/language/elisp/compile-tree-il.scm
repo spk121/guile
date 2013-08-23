@@ -41,6 +41,7 @@
             compile-labels
             compile-let*
             compile-guile-ref
+            compile-guile-private-ref
             compile-guile-primitive
             compile-function
             compile-defmacro
@@ -666,6 +667,11 @@
   (pmatch args
     ((,module ,sym) (guard (and (list? module) (symbol? sym)))
      (make-module-ref loc module sym #t))))
+
+(defspecial guile-private-ref (loc args)
+  (pmatch args
+    ((,module ,sym) (guard (and (list? module) (symbol? sym)))
+     (make-module-ref loc module sym #f))))
 
 ;;; guile-primitive allows to create primitive references, which are
 ;;; still a little faster.
