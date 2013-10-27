@@ -102,18 +102,18 @@
 
 ;; Helper macro: Define a procedure named NAME that maps its argument to
 ;; NL-ITEMS.  Gnulib guarantees that these items are available.
-(define-macro (define-vector-langinfo-mapping name nl-items)
-  (let* ((item-count (length nl-items))
-         (defines   `(define %nl-items (vector #f ,@nl-items)))
-         (make-body (lambda (result)
-                      `(if (and (integer? item) (exact? item))
-                           (if (and (>= item 1) (<= item ,item-count))
-                               ,result
-                               (throw 'out-of-range "out of range" item))
-                           (throw 'wrong-type-arg "wrong argument type" item)))))
-    `(define (,name item . locale)
-       ,defines
-       ,(make-body '(apply nl-langinfo (vector-ref %nl-items item) locale)))))
+(define-syntax-rule (define-vector-langinfo-mapping name (nl-item ...))
+  (define name
+    (let* ((%nl-items (vector nl-item ...))
+           (nl-item-ref (lambda (item)
+                          (cond ((not (and (integer? item) (exact? item)))
+                                 (throw 'wrong-type-arg "wrong argument type" item))
+                                ((not (<= 1 item (vector-length %nl-items)))
+                                 (throw 'out-of-range "out of range" item))
+                                (else
+                                 (vector-ref %nl-items (1- item)))))))
+      (case-lambda ((item)        (nl-langinfo (nl-item-ref item)))
+                   ((item locale) (nl-langinfo (nl-item-ref item) locale))))))
 
 
 (define-vector-langinfo-mapping locale-day-short
@@ -140,12 +140,12 @@
 ;; (for instance, `GROUPING' is lacking on Darwin and Gnulib provides no
 ;; replacement), so use DEFAULT as the default value when ITEM is not
 ;; available.
-(define-macro (define-simple-langinfo-mapping name item default)
-  (let ((body (if (defined? item)
-                  `(apply nl-langinfo ,item locale)
-                  default)))
-    `(define (,name . locale)
-       ,body)))
+(define-syntax-rule (define-simple-langinfo-mapping name item default)
+  (define name
+    (if (defined? 'item)
+        (case-lambda (()       (nl-langinfo item))
+                     ((locale) (nl-langinfo item locale)))
+        (lambda* (#:optional locale) default))))
 
 (define-simple-langinfo-mapping locale-am-string
   AM_STR "AM")
@@ -181,19 +181,22 @@
 ;; or not.  Since Gnulib's `nl_langinfo' module doesn't guarantee that
 ;; all these items are available, use DEFAULT/LOCAL and DEFAULT/INTL as
 ;; default values when the system does not support them.
-(define-macro (define-monetary-langinfo-mapping name local-item intl-item
-                                                default/local default/intl)
-  (let ((body
-         (let ((intl  (if (defined? intl-item)
-                          `(apply nl-langinfo ,intl-item locale)
-                          default/intl))
-               (local (if (defined? local-item)
-                          `(apply nl-langinfo ,local-item locale)
-                          default/local)))
-           `(if intl? ,intl ,local))))
-
-    `(define (,name intl? . locale)
-       ,body)))
+(define-syntax-rule (define-monetary-langinfo-mapping name local-item intl-item
+                                                      default/local default/intl)
+  (define name
+    (let ((intl  (if (defined? 'intl-item)
+                     (case-lambda
+                      (()       (nl-langinfo intl-item))
+                      ((locale) (nl-langinfo intl-item locale)))
+                     (lambda* (#:optional locale) default/intl)))
+          (local (if (defined? 'local-item)
+                     (case-lambda
+                      (()       (nl-langinfo local-item))
+                      ((locale) (nl-langinfo local-item locale)))
+                     (lambda* (#:optional locale) default/local))))
+      (case-lambda
+       ((intl?)        (if intl? (intl) (local)))
+       ((intl? locale) (if intl? (intl locale) (local locale)))))))
 
 ;; FIXME: How can we use ALT_DIGITS?
 (define-monetary-langinfo-mapping locale-currency-symbol
