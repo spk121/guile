@@ -78,19 +78,19 @@ handlers, potentially falling back on the normal behavior for `help'."
 
 ;;; Documentation
 ;;;
-(define-macro (help . exp)
-  "(help [NAME])
+(define-syntax help
+  (syntax-rules ()
+    "(help [NAME])
 Prints useful information.  Try `(help)'."
-  (cond ((not (= (length exp) 1))
-         (help-usage)
-         '(begin))
-        ((not (provided? 'regex))
+    ((_ name) (help-internal 'name))
+    ((_ ...) (help-usage))))
+
+(define (help-internal name)
+  (cond ((not (provided? 'regex))
          (display "`help' depends on the `regex' feature.
-You don't seem to have regular expressions installed.\n")
-         '(begin))
+You don't seem to have regular expressions installed.\n"))
         (else
-         (let ((name (car exp))
-               (not-found (lambda (type x)
+         (let ((not-found (lambda (type x)
                             (simple-format #t "No ~A found for ~A\n"
                                            type x))))
            (cond
@@ -143,8 +143,7 @@ You don't seem to have regular expressions installed.\n")
 
             ;; unrecognized
             (else
-             (help-usage)))
-           '(begin)))))
+             (help-usage)))))))
 
 (define (module-filename name)          ; fixme: better way? / done elsewhere?
   (let* ((name (map symbol->string name))
