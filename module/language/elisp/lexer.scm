@@ -20,6 +20,7 @@
 
 (define-module (language elisp lexer)
   #:use-module (ice-9 regex)
+  #:use-module (language elisp runtime)
   #:export (get-lexer get-lexer/1))
 
 ;;; This is the lexical analyzer for the elisp reader.  It is
@@ -316,7 +317,9 @@
            (let ((cur (read-char port)))
              (case cur
                ((#\")
-                (return 'string (list->string (reverse result-chars))))
+                (return 'string
+                        (make-lisp-string
+                         (list->string (reverse result-chars)))))
                ((#\\)
                 (let ((escaped (read-char port)))
                   (case escaped

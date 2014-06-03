@@ -61,12 +61,22 @@
   (let* ((lex (lexical-bindings bindings))
          (slot (hash-ref lex sym #f)))
     (if slot
-        (fluid-ref slot)
+        (cadr slot)
         #f)))
 
 (define (get-function-binding bindings symbol)
   (and=> (hash-ref (function-bindings bindings) symbol)
-         fluid-ref))
+         cadr))
+
+(define (with-fluids** fls vals proc)
+  (dynamic-wind
+    (lambda ()
+      (for-each (lambda (f v) (set-cdr! f (cons v (cdr f))))
+                fls vals))
+    proc
+    (lambda ()
+      (for-each (lambda (f) (set-cdr! f (cdr (cdr f))))
+                fls))))
 
 ;;; Establish a binding or mark a symbol as dynamically bound for the
 ;;; extent of calling proc.
@@ -78,17 +88,14 @@
   (let ((lex (lexical-bindings bindings)))
     (for-each (lambda (sym)
                 (if (not (hash-ref lex sym))
-                    (hash-set! lex sym (make-fluid))))
+                    (hash-set! lex sym (list #f #f))))
               syms)
-    (with-fluids* (map (lambda (sym) (hash-ref lex sym)) syms)
-                  targets
-                  proc)))
+    (with-fluids** (map (lambda (sym) (hash-ref lex sym)) syms)
+                   targets
+                   proc)))
 
 (define (with-lexical-bindings bindings syms targets proc)
-  (if (or (not (list? targets))
-          (not (and-map symbol? targets)))
-      (error "invalid targets for lexical binding" targets)
-      (with-symbol-bindings bindings syms targets proc)))
+  (with-symbol-bindings bindings syms targets proc))
 
 (define (with-dynamic-bindings bindings syms proc)
   (with-symbol-bindings bindings
@@ -100,8 +107,8 @@
   (let ((fb (function-bindings bindings)))
     (for-each (lambda (symbol)
                 (if (not (hash-ref fb symbol))
-                    (hash-set! fb symbol (make-fluid))))
+                    (hash-set! fb symbol (list #f #f))))
               symbols)
-    (with-fluids* (map (cut hash-ref fb <>) symbols)
-                  gensyms
-                  thunk)))
+    (with-fluids** (map (cut hash-ref fb <>) symbols)
+                   gensyms
+                   thunk)))

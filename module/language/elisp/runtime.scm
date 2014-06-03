@@ -19,22 +19,39 @@
 ;;; Code:
 
 (define-module (language elisp runtime)
+  #:use-module (ice-9 format)
+  #:use-module ((system base compile)
+                #:select (compile))
   #:export (nil-value
             t-value
             value-slot-module
             function-slot-module
             elisp-bool
-            ensure-fluid!
-            symbol-fluid
-            set-symbol-fluid!
+            ensure-dynamic!
+            symbol-name
             symbol-value
             set-symbol-value!
             symbol-function
             set-symbol-function!
+            symbol-plist
+            set-symbol-plist!
             symbol-bound?
             symbol-fbound?
+            bind-symbol
             makunbound!
-            fmakunbound!)
+            fmakunbound!
+            symbol-desc
+            proclaim-special!
+            special?
+            emacs!
+            unbound
+            lexical-binding?
+            set-lexical-binding-mode
+            log!
+            eval-elisp
+            local-eval-elisp
+            make-lisp-string
+            lisp-string?)
   #:export-syntax (defspecial prim))
 
 ;;; This module provides runtime support for the Elisp front-end.
@@ -45,13 +62,21 @@
 
 (define t-value #t)
 
+(define make-lisp-string identity)
+(define lisp-string? string?)
+
 ;;; Modules for the binding slots.
 ;;; Note: Naming those value-slot and/or function-slot clashes with the
 ;;; submodules of these names!
 
-(define value-slot-module '(language elisp runtime value-slot))
+(define value-slot-module (resolve-module '(elisp-symbols)))
 
-(define function-slot-module '(language elisp runtime function-slot))
+(define function-slot-module (resolve-module '(elisp-functions)))
+
+(define plist-slot-module (resolve-module '(elisp-plists)))
+
+(define nil_ 'nil)
+(define t_ 't)
 
 ;;; Routines for access to elisp dynamically bound symbols.  This is
 ;;; used for runtime access using functions like symbol-value or set,
@@ -59,74 +84,162 @@
 ;;; always access the dynamic binding and can not be used for the
 ;;; lexical!
 
-(define (ensure-fluid! module sym)
-  (let ((intf (resolve-interface module))
-        (resolved (resolve-module module)))
-    (if (not (module-defined? intf sym))
-        (let ((fluid (make-unbound-fluid)))
-          (module-define! resolved sym fluid)
-          (module-export! resolved `(,sym))))))
+(define lexical-binding #t)
 
-(define (symbol-fluid symbol)
-  (let ((module (resolve-module value-slot-module)))
-    (ensure-fluid! value-slot-module symbol) ;++ implicit special proclamation
-    (module-ref module symbol)))
+(define (lexical-binding?)
+  lexical-binding)
 
-(define (set-symbol-fluid! symbol fluid)
-  (let ((module (resolve-module value-slot-module)))
-    (module-define! module symbol fluid)
-    (module-export! module (list symbol)))
-  fluid)
+(define (set-lexical-binding-mode x)
+  (set! lexical-binding x))
+
+(define unbound (make-symbol "unbound"))
+
+(define dynamic? vector?)
+(define (make-dynamic)
+  (vector #f 4 0 0 unbound))
+(define (dynamic-ref x)
+  (vector-ref x 4))
+(define (dynamic-set! x v)
+  (vector-set! x 4 v))
+(define (dynamic-unset! x)
+  (vector-set! x 4 unbound))
+(define (dynamic-bound? x)
+  (not (eq? (vector-ref x 4) unbound)))
+(define (dynamic-bind x v thunk)
+  (let ((old (vector-ref x 4)))
+   (dynamic-wind
+     (lambda () (vector-set! x 4 v))
+     thunk
+     (lambda () (vector-set! x 4 old)))))
+
+(define-inlinable (ensure-present! module sym thunk)
+  (or (module-local-variable module sym)
+      (let ((variable (make-variable (thunk))))
+        (module-add! module sym variable)
+        variable)))
+
+(define-inlinable (ensure-desc! module sym)
+  (ensure-present! module
+                   sym
+                   (lambda ()
+                     (let ((x (make-dynamic)))
+                       (vector-set! x 0 sym)
+                       x))))
+
+(define-inlinable (schemify symbol)
+  (case symbol
+    ((#nil) nil_)
+    ((#t) t_)
+    (else symbol)))
+
+(define (symbol-name symbol)
+  (symbol->string (schemify symbol)))
+
+(define (symbol-desc symbol)
+  (let ((symbol (schemify symbol)))
+    (let ((module value-slot-module))
+      (variable-ref (ensure-desc! module symbol)))))
+
+(define (ensure-dynamic! sym)
+  (vector-set! (symbol-desc sym) 3 1))
+
+(define (symbol-dynamic symbol)
+  (ensure-dynamic! symbol)
+  (symbol-desc symbol))
 
 (define (symbol-value symbol)
-  (fluid-ref (symbol-fluid symbol)))
+  (dynamic-ref (symbol-desc symbol)))
 
 (define (set-symbol-value! symbol value)
-  (fluid-set! (symbol-fluid symbol) value)
+  (dynamic-set! (symbol-desc symbol) value)
   value)
 
 (define (symbol-function symbol)
-  (let ((module (resolve-module function-slot-module)))
+  (set! symbol (schemify symbol))
+  (ensure-present! function-slot-module symbol (lambda () #nil))
+  (let ((module function-slot-module))
     (module-ref module symbol)))
 
 (define (set-symbol-function! symbol value)
-  (let ((module (resolve-module function-slot-module)))
+  (set! symbol (schemify symbol))
+  (ensure-present! function-slot-module symbol (lambda () #nil))
+  (let ((module function-slot-module))
+   (module-define! module symbol value)
+   (module-export! module (list symbol)))
+  value)
+
+(define (symbol-plist symbol)
+  (set! symbol (schemify symbol))
+  (ensure-present! plist-slot-module symbol (lambda () #nil))
+  (let ((module plist-slot-module))
+    (module-ref module symbol)))
+
+(define (set-symbol-plist! symbol value)
+  (set! symbol (schemify symbol))
+  (ensure-present! plist-slot-module symbol (lambda () #nil))
+  (let ((module plist-slot-module))
    (module-define! module symbol value)
    (module-export! module (list symbol)))
   value)
 
 (define (symbol-bound? symbol)
+  (set! symbol (schemify symbol))
   (and
-   (module-bound? (resolve-interface value-slot-module) symbol)
-   (let ((var (module-variable (resolve-module value-slot-module)
+   (module-bound? value-slot-module symbol)
+   (let ((var (module-variable value-slot-module
                                symbol)))
      (and (variable-bound? var)
-          (if (fluid? (variable-ref var))
-              (fluid-bound? (variable-ref var))
+          (if (dynamic? (variable-ref var))
+              (dynamic-bound? (variable-ref var))
               #t)))))
 
 (define (symbol-fbound? symbol)
+  (set! symbol (schemify symbol))
   (and
-   (module-bound? (resolve-interface function-slot-module) symbol)
+   (module-bound? function-slot-module symbol)
    (variable-bound?
-    (module-variable (resolve-module function-slot-module)
-                     symbol))))
+    (module-variable function-slot-module symbol))
+   (variable-ref (module-variable function-slot-module symbol))))
+
+(define (bind-symbol symbol value thunk)
+  (dynamic-bind (symbol-desc symbol) value thunk))
 
 (define (makunbound! symbol)
-  (if (module-bound? (resolve-interface value-slot-module) symbol)
-      (let ((var (module-variable (resolve-module value-slot-module)
+  (if (module-bound? value-slot-module symbol)
+      (let ((var (module-variable value-slot-module
                                   symbol)))
-        (if (and (variable-bound? var) (fluid? (variable-ref var)))
-            (fluid-unset! (variable-ref var))
+        (if (and (variable-bound? var) (dynamic? (variable-ref var)))
+            (dynamic-unset! (variable-ref var))
             (variable-unset! var))))
     symbol)
 
 (define (fmakunbound! symbol)
-  (if (module-bound? (resolve-interface function-slot-module) symbol)
-      (variable-unset! (module-variable
-                        (resolve-module function-slot-module)
-                        symbol)))
+  (if (module-bound? function-slot-module symbol)
+      (variable-unset! (module-variable function-slot-module symbol)))
   symbol)
+
+(define (special? sym)
+  (eqv? (vector-ref (symbol-desc sym) 3) 1))
+
+(define (proclaim-special! sym)
+  (vector-set! (symbol-desc sym) 3 1)
+  #nil)
+
+(define (emacs! ref set boundp bind)
+  (set! symbol-value ref)
+  (set! set-symbol-value! set)
+  (set! symbol-bound? boundp)
+  (set! bind-symbol bind)
+  (set! lexical-binding? (lambda () (symbol-value 'lexical-binding)))
+  (set! set-lexical-binding-mode (lambda (x) (set-symbol-value! 'lexical-binding x))))
+
+(define (eval-elisp form)
+  (compile form #:from 'elisp #:to 'value))
+
+(set-symbol-value! nil_ #nil)
+(set-symbol-value! t_ #t)
+
+(define (make-string s) s)
 
 ;;; Define a predefined macro for use in the function-slot module.
 
