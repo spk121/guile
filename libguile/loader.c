@@ -342,7 +342,7 @@ process_dynamic_segment (char *base, Elf_Phdr *dyn_phdr,
 #define ABORT(msg) do { err_msg = msg; goto cleanup; } while (0)
 
 static SCM
-load_thunk_from_memory (char *data, size_t len, int is_read_only)
+load_thunk_from_memory (char *data, size_t len, int is_read_only, SCM constants)
 #define FUNC_NAME "load-thunk-from-memory"
 {
   Elf_Ehdr *header;
@@ -447,7 +447,12 @@ load_thunk_from_memory (char *data, size_t len, int is_read_only)
     goto cleanup;
 
   if (scm_is_true (init))
-    scm_call_0 (init);
+    {
+      if (scm_is_true (constants))
+        scm_call_1 (init, constants);
+      else
+        scm_call_0 (init);
+    }
 
   register_elf (data, len, frame_maps);
 
@@ -552,19 +557,25 @@ SCM_DEFINE (scm_load_thunk_from_file, "load-thunk-from-file", 1, 0, 0,
 
   (void) close (fd);
 
-  return load_thunk_from_memory (data, end, is_read_only);
+  return load_thunk_from_memory (data, end, is_read_only, SCM_BOOL_F);
 }
 #undef FUNC_NAME
 
 SCM_DEFINE (scm_load_thunk_from_memory, "load-thunk-from-memory", 1, 0, 0,
-	    (SCM bv),
+	    (SCM obj),
 	    "")
 #define FUNC_NAME s_scm_load_thunk_from_memory
 {
   char *data;
   size_t len;
+  SCM bv, constants;
 
-  SCM_VALIDATE_BYTEVECTOR (1, bv);
+  SCM_VALIDATE_CONS (1, obj);
+  bv = scm_car (obj);
+  constants = scm_cdr (obj);
+  SCM_ASSERT (scm_is_bytevector (bv)
+              && (scm_is_vector (constants) || scm_is_false (constants)),
+              obj, 1, FUNC_NAME);
 
   data = (char *) SCM_BYTEVECTOR_CONTENTS (bv);
   len = SCM_BYTEVECTOR_LENGTH (bv);
@@ -574,7 +585,7 @@ SCM_DEFINE (scm_load_thunk_from_memory, "load-thunk-from-memory", 1, 0, 0,
 
   data = copy_and_align_elf_data (data, len);
 
-  return load_thunk_from_memory (data, len, 0);
+  return load_thunk_from_memory (data, len, 0, constants);
 }
 #undef FUNC_NAME
 

@@ -494,7 +494,7 @@ Disassemble a compiled procedure."
     (cond
      ((program? obj)
       (disassemble-program obj))
-     ((bytevector? obj)
+     ((and (pair? obj) (bytevector? (car obj)))
       (disassemble-image (load-image obj)))
      (else
       (format #t

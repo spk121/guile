@@ -37,6 +37,7 @@
 (define-language bytecode
   #:title	"Bytecode"
   #:compilers   `((value . ,bytecode->value))
-  #:printer	(lambda (bytecode port) (put-bytevector port bytecode))
+  #:printer	(lambda (x port)
+                  (put-bytevector port (car x)))
   #:reader      get-bytevector-all
   #:for-humans? #f)
