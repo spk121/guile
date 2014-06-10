@@ -743,7 +743,7 @@ libpath.h: $(srcdir)/Makefile.in  $(top_builddir)/config.status
 	$(AM_V_GEN)mv libpath.tmp libpath.h
 
 
-snarfcppopts = $(DEFS) $(AM_CPPFLAGS) $(CPPFLAGS) $(CFLAGS)
+snarfcppopts = $(DEFS) $(AM_CPPFLAGS) $(CPPFLAGS)
 
 SUFFIXES = .x .doc
 
