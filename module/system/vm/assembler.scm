@@ -1038,7 +1038,7 @@ table, its existing label is used directly."
      ((static-procedure? obj)
       `((static-patch! ,label 1 ,(static-procedure-code obj))))
      ((cache-cell? obj) '())
-     ((symbol? obj)
+     ((and (symbol? obj) (symbol-interned? obj))
       `((make-non-immediate 1 ,(recur (symbol->string obj)))
         (string->symbol 1 1)
         (static-set! 1 ,label 0)))
@@ -1509,7 +1509,7 @@ should be .data or .rodata), and return the resulting linker object.
                 (write-constant-reference buf pos elt)
                 (lp (1+ i)))))))
 
-       ((symbol? obj)
+       ((and (symbol? obj) (symbol-interned? obj))
         (write-placeholder asm buf pos))
 
        ((keyword? obj)
