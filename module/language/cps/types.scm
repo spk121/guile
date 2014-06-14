@@ -348,8 +348,7 @@ minimum, and maximum."
    ((bitvector? val) (return &bitvector (bitvector-length val)))
    ((array? val) (return &array (array-rank val)))
    ((not (variable-bound? (make-variable val))) (return &unbound #f))
-
-   (else (error "unhandled constant" val))))
+   (else (return &all-types #f))))
 
 (define *type-checkers* (make-hash-table))
 (define *type-inferrers* (make-hash-table))
