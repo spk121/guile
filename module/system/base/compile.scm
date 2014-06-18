@@ -185,8 +185,8 @@
   (let lp ((in (reverse (or (lookup-compilation-order from to)
                             (error "no way to compile" from "to" to))))
            (lang to))
-    (cond ((null? in) to)
-          ((language-joiner lang) lang)
+    (cond ((language-joiner lang) lang)
+          ((null? in) to)
           (else
            (lp (cdr in) (caar in))))))
 
