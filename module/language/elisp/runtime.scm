@@ -37,6 +37,9 @@
             set-symbol-plist!
             symbol-bound?
             symbol-fbound?
+            symbol-default-bound?
+            symbol-default-value
+            set-symbol-default-value!
             bind-symbol
             makunbound!
             fmakunbound!
@@ -193,6 +196,12 @@
               (dynamic-bound? (variable-ref var))
               #t)))))
 
+(define symbol-default-bound? symbol-bound?)
+
+(define symbol-default-value symbol-value)
+
+(define set-symbol-default-value! set-symbol-value!)
+
 (define (symbol-fbound? symbol)
   (set! symbol (schemify symbol))
   (and
@@ -225,10 +234,13 @@
   (vector-set! (symbol-desc sym) 3 1)
   #nil)
 
-(define (emacs! ref set boundp bind)
+(define (emacs! ref set boundp dref dset dboundp bind)
   (set! symbol-value ref)
   (set! set-symbol-value! set)
   (set! symbol-bound? boundp)
+  (set! symbol-default-value dref)
+  (set! set-symbol-default-value! dset)
+  (set! symbol-default-bound? dboundp)
   (set! bind-symbol bind)
   (set! lexical-binding? (lambda () (symbol-value 'lexical-binding)))
   (set! set-lexical-binding-mode (lambda (x) (set-symbol-value! 'lexical-binding x))))
