@@ -507,10 +507,13 @@
        (make-conditional
         loc
         (make-call loc
-                   (make-module-ref loc runtime 'symbol-bound? #t)
+                   (make-module-ref loc runtime 'symbol-default-bound? #t)
                    (list (make-const loc sym)))
         (make-void loc)
-        (set-variable! loc sym (compile-expr value)))
+        (make-call loc
+                   (make-module-ref loc runtime 'set-symbol-default-value! #t)
+                   (list (make-const loc sym)
+                         (compile-expr value))))
        (make-const loc sym))))
     (else (report-error loc "Bad defvar" args))))
 
