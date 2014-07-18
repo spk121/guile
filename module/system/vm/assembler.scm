@@ -1073,7 +1073,8 @@ table, its existing label is used directly."
      (else
       (if (asm-to-file? asm)
           (error "don't know how to intern" obj)
-          `((vector-ref/immediate 1 0 ,(vlist-length (asm-constants asm)))
+          `((make-short-immediate 1 ,(vlist-length (asm-constants asm)))
+            (vector-ref 1 0 1)
             (static-set! 1 ,label 0))))))
   (cond
    ((immediate-bits asm obj) #f)
