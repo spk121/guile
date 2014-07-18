@@ -779,43 +779,18 @@
      (make-void loc))
     (else (report-error loc "bad %set-lexical-binding-mode" args))))
 
-(define special-operators (make-hash-table))
-
-(for-each
- (lambda (pair) (hashq-set! special-operators (car pair) (cddr pair)))
- `((progn . ,compile-progn)
-   (eval-when-compile . ,compile-eval-when-compile)
-   (if . ,compile-if)
-   (defconst . ,compile-defconst)
-   (defvar . ,compile-defvar)
-   (setq . ,compile-setq)
-   (let . ,compile-let)
-   (flet . ,compile-flet)
-   (labels . ,compile-labels)
-   (let* . ,compile-let*)
-   (guile-ref . ,compile-guile-ref)
-   (guile-private-ref . ,compile-guile-private-ref)
-   (guile-primitive . ,compile-guile-primitive)
-   (%function . ,compile-%function)
-   (function . ,compile-function)
-   (defmacro . ,compile-defmacro)
-   (#{`}# . ,#{compile-`}#)
-   (quote . ,compile-quote)
-   (%funcall . ,compile-%funcall)
-   (%set-lexical-binding-mode . ,compile-%set-lexical-binding-mode)))
-
 ;;; Compile a compound expression to Tree-IL.
 
 (define (compile-pair loc expr)
   (let ((operator (car expr))
         (arguments (cdr expr)))
     (cond
+     ((find-operator operator 'special-operator)
+      => (lambda (special-operator-function)
+           (special-operator-function loc arguments)))
      ((find-operator operator 'macro)
       => (lambda (macro-function)
            (compile-expr (apply macro-function arguments))))
-     ((hashq-ref special-operators operator)
-      => (lambda (special-operator-function)
-           (special-operator-function loc arguments)))
      (else
       (compile-expr `(%funcall (%function ,operator) ,@arguments))))))
 

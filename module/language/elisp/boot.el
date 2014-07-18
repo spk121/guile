@@ -742,17 +742,3 @@
 
 (defun %set-eager-macroexpansion-mode (ignore)
   nil)
-
-(defun progn (&rest args) (error "Special operator"))
-(defun eval-when-compile (&rest args) (error "Special operator"))
-(defun if (&rest args) (error "Special operator"))
-(defun defconst (&rest args) (error "Special operator"))
-(defun defvar (&rest args) (error "Special operator"))
-(defun setq (&rest args) (error "Special operator"))
-(defun let (&rest args) (error "Special operator"))
-(defun flet (&rest args) (error "Special operator"))
-(defun labels (&rest args) (error "Special operator"))
-(defun let* (&rest args) (error "Special operator"))
-(defun function (&rest args) (error "Special operator"))
-(defun defmacro (&rest args) (error "Special operator"))
-(defun quote (&rest args) (error "Special operator"))

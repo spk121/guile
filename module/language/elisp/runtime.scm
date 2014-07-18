@@ -274,5 +274,7 @@
     (syntax-case x ()
       ((_ name args body ...)
        (with-syntax ((scheme-name (make-id #'name 'compile- #'name)))
-         #'(define scheme-name
-             (cons 'special-operator (lambda args body ...))))))))
+         #'(begin
+             (define scheme-name
+               (cons 'special-operator (lambda args body ...)))
+             (set-symbol-function! 'name scheme-name)))))))
