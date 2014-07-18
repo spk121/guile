@@ -158,10 +158,10 @@
   value)
 
 (define (symbol-function symbol)
-  (set! symbol (schemify symbol))
-  (ensure-present! function-slot-module symbol (lambda () #nil))
-  (let ((module function-slot-module))
-    (module-ref module symbol)))
+  (cond
+   ((module-variable function-slot-module (schemify symbol))
+    => variable-ref)
+   (else #nil)))
 
 (define (set-symbol-function! symbol value)
   (set! symbol (schemify symbol))
