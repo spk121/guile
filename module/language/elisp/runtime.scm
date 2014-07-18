@@ -72,11 +72,11 @@
 ;;; Note: Naming those value-slot and/or function-slot clashes with the
 ;;; submodules of these names!
 
-(define value-slot-module (resolve-module '(elisp-symbols)))
+(define value-slot-module (define-module* '(elisp-symbols) #:pure #t))
 
-(define function-slot-module (resolve-module '(elisp-functions)))
+(define function-slot-module (define-module* '(elisp-functions) #:pure #t))
 
-(define plist-slot-module (resolve-module '(elisp-plists)))
+(define plist-slot-module (define-module* '(elisp-plists) #:pure #t))
 
 (define nil_ 'nil)
 (define t_ 't)
