@@ -295,6 +295,18 @@
                 (function (lambda (&rest args)
                             (apply (autoload-do-load definition symbol nil) args)))
                 definition)))
+            ((and (symbolp definition)
+                  (let ((fn (symbol-function definition)))
+                    (and (consp fn)
+                         (or (eq (car fn) 'macro)
+                             (and (eq (car fn) 'autoload)
+                                  (or (eq (nth 4 fn) 'macro)
+                                      (eq (nth 4 fn) t)))))))
+             (cons 'macro
+                   (funcall
+                    (@ (language elisp falias) make-falias)
+                    (function (lambda (&rest args) `(,definition ,@args)))
+                    definition)))
             (t
              (funcall (@ (language elisp falias) make-falias)
                       (function (lambda (&rest args) (apply definition args)))
