@@ -52,6 +52,7 @@
             set-lexical-binding-mode
             log!
             eval-elisp
+            compile-elisp
             local-eval-elisp
             make-lisp-string
             lisp-string?)
@@ -247,6 +248,10 @@
 
 (define (eval-elisp form)
   (compile form #:from 'elisp #:to 'value))
+
+(define (compile-elisp form)
+  (compile (compile form #:from 'elisp #:to 'bytecode)
+           #:from 'bytecode #:to 'value))
 
 (set-symbol-value! nil_ #nil)
 (set-symbol-value! t_ #t)
