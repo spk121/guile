@@ -53,6 +53,19 @@
        (%funcall (@ (language elisp runtime) symbol-plist) ',name)))
      ',name))
 
+(defmacro defsubst (name args &rest body)
+  `(progn
+     (defun ,name ,args ,@body)
+     (eval-and-compile
+       (%define-compiler-macro ,name (form)
+         (%funcall (@ (guile) cons*)
+                   '%funcall
+                   (%funcall
+                    (@ (guile) list)
+                    'function
+                    (%funcall (@ (guile) cons*) 'lambda ',args ',body))
+                   (%funcall (@ (guile) cdr) form))))))
+
 (eval-and-compile
   (defun eval (form)
     (%funcall (@ (language elisp runtime) eval-elisp) form)))
