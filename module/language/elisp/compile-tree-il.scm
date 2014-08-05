@@ -782,6 +782,11 @@
      (make-void loc))
     (else (report-error loc "bad %set-lexical-binding-mode" args))))
 
+(define (eget s p)
+  (if (symbol-fbound? 'get)
+      ((symbol-function 'get) s p)
+      #nil))
+
 ;;; Compile a compound expression to Tree-IL.
 
 (define (compile-pair loc expr)
@@ -794,6 +799,13 @@
      ((find-operator operator 'macro)
       => (lambda (macro-function)
            (compile-expr (apply macro-function arguments))))
+     ((and (symbol? operator)
+           (eget operator '%compiler-macro))
+      => (lambda (compiler-macro-function)
+           (let ((new (compiler-macro-function expr)))
+             (if (eq? new expr)
+                 (compile-expr `(%funcall (%function ,operator) ,@arguments))
+                 (compile-expr new)))))
      (else
       (compile-expr `(%funcall (%function ,operator) ,@arguments))))))
 

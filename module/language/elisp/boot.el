@@ -41,6 +41,18 @@
      (eval-when-compile ,@body)
      (progn ,@body)))
 
+(defmacro %define-compiler-macro (name args &rest body)
+  `(eval-and-compile
+     (%funcall
+      (@ (language elisp runtime) set-symbol-plist!)
+      ',name
+      (%funcall
+       (@ (guile) cons*)
+       '%compiler-macro
+       #'(lambda ,args ,@body)
+       (%funcall (@ (language elisp runtime) symbol-plist) ',name)))
+     ',name))
+
 (eval-and-compile
   (defun eval (form)
     (%funcall (@ (language elisp runtime) eval-elisp) form)))
