@@ -22,6 +22,9 @@
 (defmacro @ (module symbol)
   `(guile-ref ,module ,symbol))
 
+(defmacro @@ (module symbol)
+  `(guile-private-ref ,module ,symbol))
+
 (defmacro defun (name args &rest body)
   `(let ((proc (function (lambda ,args ,@body))))
      (%funcall (@ (language elisp runtime) set-symbol-function!)
