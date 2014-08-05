@@ -586,12 +586,14 @@
               loc
               (map car dynamic)
               (if (null? lexical)
-                  (make-dynlet loc
-                               (map (compose (cut make-const loc <>) car)
-                                    dynamic)
-                               (map (compose compile-expr cdr)
-                                    dynamic)
-                               (make-body))
+                  (if (null? dynamic)
+                      (make-body)
+                      (make-dynlet loc
+                                   (map (compose (cut make-const loc <>) car)
+                                        dynamic)
+                                   (map (compose compile-expr cdr)
+                                        dynamic)
+                                   (make-body)))
                   (let* ((lexical-syms (map (lambda (el) (gensym)) lexical))
                          (dynamic-syms (map (lambda (el) (gensym)) dynamic))
                          (all-syms (append lexical-syms dynamic-syms))
