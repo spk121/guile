@@ -478,6 +478,7 @@
 (defspecial defconst (loc args)
   (pmatch args
     ((,sym ,value . ,doc)
+     (proclaim-special! sym)
      (make-seq
       loc
       (make-call loc
@@ -491,12 +492,14 @@
 (defspecial defvar (loc args)
   (pmatch args
     ((,sym)
+     (proclaim-special! sym)
      (make-seq loc
                (make-call loc
                           (make-module-ref loc runtime 'proclaim-special! #t)
                           (list (make-const loc sym)))
                (make-const loc sym)))
     ((,sym ,value . ,doc)
+     (proclaim-special! sym)
      (make-seq
       loc
       (make-call loc
