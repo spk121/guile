@@ -459,10 +459,39 @@
   (list->seq loc
              (if (null? args)
                  (list (nil-value loc))
-                 (map compile-expr args))))
+                 (map compile-expr-1 args))))
 
 (defspecial eval-when-compile (loc args)
   (make-const loc (compile `(progn ,@args) #:from 'elisp #:to 'value)))
+
+(define toplevel? (make-fluid))
+
+(define compile-time-too? (make-fluid))
+
+(defspecial eval-when (loc args)
+  (pmatch args
+    ((,situations . ,forms)
+     (let ((compile? (memq ':compile-toplevel situations))
+           (load? (memq ':load-toplevel situations))
+           (execute? (memq ':execute situations)))
+       (cond
+        ((not (fluid-ref toplevel?))
+         (if execute?
+             (compile-expr `(progn ,@forms))
+             (make-const loc #nil)))
+        (load?
+         (with-fluids ((compile-time-too?
+                        (cond (compile? #t)
+                              (execute? (fluid-ref compile-time-too?))
+                              (else #f))))
+           (when (fluid-ref compile-time-too?)
+             (eval-elisp `(progn ,@forms)))
+           (compile-expr-1 `(progn ,@forms))))
+        ((or compile? (and execute? (fluid-ref compile-time-too?)))
+         (eval-elisp `(progn ,@forms))
+         (make-const loc #nil))
+        (else
+         (make-const loc #nil)))))))
 
 (defspecial if (loc args)
   (pmatch args
@@ -820,7 +849,7 @@
 
 ;;; Compile a single expression to TreeIL.
 
-(define (compile-expr expr)
+(define (compile-expr-1 expr)
   (let ((loc (location expr)))
     (cond
      ((symbol? expr)
@@ -829,9 +858,17 @@
       (compile-pair loc expr))
      (else (make-const loc expr)))))
 
+(define (compile-expr expr)
+  (if (fluid-ref toplevel?)
+      (with-fluids ((toplevel? #f))
+        (compile-expr-1 expr))
+      (compile-expr-1 expr)))
+
 (define (compile-tree-il expr env opts)
   (values
-   (with-fluids ((bindings-data (make-bindings)))
-     (compile-expr expr))
+   (with-fluids ((bindings-data (make-bindings))
+                 (toplevel? #t)
+                 (compile-time-too? #f))
+     (compile-expr-1 expr))
    env
    env))
