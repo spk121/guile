@@ -471,9 +471,12 @@
 (defspecial eval-when (loc args)
   (pmatch args
     ((,situations . ,forms)
-     (let ((compile? (memq ':compile-toplevel situations))
-           (load? (memq ':load-toplevel situations))
-           (execute? (memq ':execute situations)))
+     (let ((compile? (or (memq ':compile-toplevel situations)
+                         (memq 'compile situations)))
+           (load? (or (memq ':load-toplevel situations)
+                      (memq 'load situations)))
+           (execute? (or (memq ':execute situations)
+                         (memq 'eval situations))))
        (cond
         ((not (fluid-ref toplevel?))
          (if execute?
