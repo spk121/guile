@@ -790,3 +790,7 @@
 
 (defun %set-eager-macroexpansion-mode (ignore)
   nil)
+
+(%define-compiler-macro require (form)
+  `(eval-when (:compile-toplevel :load-toplevel :execute)
+     (funcall #'require ,@(cdr form))))
