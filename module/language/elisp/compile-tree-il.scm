@@ -830,14 +830,14 @@
            (special-operator-function loc arguments)))
      ((find-operator operator 'macro)
       => (lambda (macro-function)
-           (compile-expr (apply macro-function arguments))))
+           (compile-expr-1 (apply macro-function arguments))))
      ((and (symbol? operator)
            (eget operator '%compiler-macro))
       => (lambda (compiler-macro-function)
            (let ((new (compiler-macro-function expr)))
              (if (eq? new expr)
                  (compile-expr `(%funcall (%function ,operator) ,@arguments))
-                 (compile-expr new)))))
+                 (compile-expr-1 new)))))
      (else
       (compile-expr `(%funcall (%function ,operator) ,@arguments))))))
 
