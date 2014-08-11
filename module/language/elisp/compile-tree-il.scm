@@ -782,7 +782,8 @@
                                           args
                                           body))))
                   (make-const loc name))))
-           (compile tree-il #:from 'tree-il #:to 'value)
+           (when (fluid-ref toplevel?)
+             (compile tree-il #:from 'tree-il #:to 'value))
            tree-il)))
     (else (report-error loc "bad defmacro" args))))
 
