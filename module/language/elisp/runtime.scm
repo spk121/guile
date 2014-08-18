@@ -22,6 +22,7 @@
   #:use-module (ice-9 format)
   #:use-module ((system base compile)
                 #:select (compile))
+  #:use-module (language tree-il eval)
   #:export (nil-value
             t-value
             value-slot-module
@@ -247,7 +248,7 @@
   (set! set-lexical-binding-mode (lambda (x) (set-symbol-value! 'lexical-binding x))))
 
 (define (eval-elisp form)
-  (compile form #:from 'elisp #:to 'value))
+  (eval (compile form #:from 'elisp #:to 'tree-il) (current-module)))
 
 (define (compile-elisp form)
   (compile (compile form #:from 'elisp #:to 'bytecode)

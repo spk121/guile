@@ -209,12 +209,7 @@
       f)))
 
 (defun eval (form)
-  (%funcall (@ (system base compile) compile)
-            form
-            (%funcall (@ (guile) symbol->keyword) 'from)
-            'elisp
-            (%funcall (@ (guile) symbol->keyword) 'to)
-            'value))
+  (%funcall (@ (language elisp runtime) eval-elisp) form))
 
 (defun %indirect-function (object)
   (cond
