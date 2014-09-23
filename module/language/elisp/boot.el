@@ -767,9 +767,9 @@
          (args (funcall (@ (guile) frame-arguments) frame)))
     (cons t (cons pname args))))
 
-(defun backtrace ()
+(defun guile-backtrace (&rest args)
   (interactive)
-  (let* ((stack (funcall (@ (guile) make-stack) t))
+  (let* ((stack (apply (@ (guile) make-stack) t args))
          (frame (funcall (@ (guile) stack-ref) stack 1))
          (space (funcall (@ (guile) integer->char) 32)))
     (while frame
@@ -782,6 +782,9 @@
       (terpri)
       (setq frame (funcall (@ (guile) frame-previous) frame)))
     nil))
+
+(defun backtrace ()
+  (guile-backtrace))
 
 (defun %set-eager-macroexpansion-mode (ignore)
   nil)
