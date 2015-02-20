@@ -49,7 +49,7 @@ scm_i_register_vector_constructor (SCM type, SCM (*ctor)(SCM, SCM))
     /* need to increase VECTOR_CTORS_N_STATIC_ALLOC, buster */
     abort ();
   else
-    { 
+    {
       vector_ctors[num_vector_ctors_registered].tag = type;
       vector_ctors[num_vector_ctors_registered].ctor = ctor;
       num_vector_ctors_registered++;
@@ -69,23 +69,10 @@ SCM_DEFINE (scm_make_generalized_vector, "make-generalized-vector", 2, 1, 0,
 }
 #undef FUNC_NAME
 
-int
-scm_is_generalized_vector (SCM obj)
-{
-  int ret = 0;
-  if (scm_is_array (obj))
-    {
-      scm_t_array_handle h;
-      scm_array_get_handle (obj, &h);
-      ret = scm_array_handle_rank (&h) == 1;
-      scm_array_handle_release (&h);
-    }
-  return ret;
-}
 
 #define SCM_VALIDATE_VECTOR_WITH_HANDLE(pos, val, handle)   \
   scm_generalized_vector_get_handle (val, handle)
-   
+
 
 void
 scm_generalized_vector_get_handle (SCM vec, scm_t_array_handle *h)
@@ -96,24 +83,6 @@ scm_generalized_vector_get_handle (SCM vec, scm_t_array_handle *h)
       scm_array_handle_release (h);
       scm_wrong_type_arg_msg (NULL, 0, vec, "vector");
     }
-}
-
-size_t
-scm_c_generalized_vector_length (SCM v)
-{
-  return scm_c_array_length (v);
-}
-
-SCM
-scm_c_generalized_vector_ref (SCM v, ssize_t idx)
-{
-  return scm_c_array_ref_1 (v, idx);
-}
-
-void
-scm_c_generalized_vector_set_x (SCM v, ssize_t idx, SCM val)
-{
-  scm_c_array_set_1_x (v, val, idx);
 }
 
 void
