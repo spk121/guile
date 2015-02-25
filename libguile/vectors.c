@@ -59,26 +59,13 @@ const SCM *
 scm_vector_elements (SCM vec, scm_t_array_handle *h,
 		     size_t *lenp, ssize_t *incp)
 {
-  if (SCM_I_WVECTP (vec))
-    scm_wrong_type_arg_msg (NULL, 0, vec, "non-weak vector");
-
-  scm_generalized_vector_get_handle (vec, h);
-  if (lenp)
-    {
-      scm_t_array_dim *dim = scm_array_handle_dims (h);
-      *lenp = dim->ubnd - dim->lbnd + 1;
-      *incp = dim->inc;
-    }
-  return scm_array_handle_elements (h);
+  return scm_vector_writable_elements (vec, h, lenp, incp);
 }
 
 SCM *
 scm_vector_writable_elements (SCM vec, scm_t_array_handle *h,
 			      size_t *lenp, ssize_t *incp)
 {
-  if (SCM_I_WVECTP (vec))
-    scm_wrong_type_arg_msg (NULL, 0, vec, "non-weak vector");
-
   scm_generalized_vector_get_handle (vec, h);
   if (lenp)
     {
@@ -89,7 +76,7 @@ scm_vector_writable_elements (SCM vec, scm_t_array_handle *h,
   return scm_array_handle_writable_elements (h);
 }
 
-SCM_DEFINE (scm_vector_p, "vector?", 1, 0, 0, 
+SCM_DEFINE (scm_vector_p, "vector?", 1, 0, 0,
 	    (SCM obj),
 	    "Return @code{#t} if @var{obj} is a vector, otherwise return\n"
 	    "@code{#f}.")
@@ -99,7 +86,7 @@ SCM_DEFINE (scm_vector_p, "vector?", 1, 0, 0,
 }
 #undef FUNC_NAME
 
-SCM_DEFINE (scm_vector_length, "vector-length", 1, 0, 0, 
+SCM_DEFINE (scm_vector_length, "vector-length", 1, 0, 0,
 	    (SCM v),
             "Returns the number of elements in @var{vector} as an exact integer.")
 #define FUNC_NAME s_scm_vector_length
@@ -127,7 +114,7 @@ SCM_REGISTER_PROC (s_list_to_vector, "list->vector", 1, 0, 0, scm_vector);
 	    "(list->vector '(dididit dah)) @result{}   #(dididit dah)\n"
 	    "@end lisp")
 */
-SCM_DEFINE (scm_vector, "vector", 0, 0, 1, 
+SCM_DEFINE (scm_vector, "vector", 0, 0, 1,
 	    (SCM l),
 	    "@deffnx {Scheme Procedure} list->vector l\n"
 	    "Return a newly allocated vector composed of the\n"
@@ -141,27 +128,24 @@ SCM_DEFINE (scm_vector, "vector", 0, 0, 1,
   SCM res;
   SCM *data;
   long i, len;
-  scm_t_array_handle handle;
 
   SCM_VALIDATE_LIST_COPYLEN (1, l, len);
 
   res = scm_c_make_vector (len, SCM_UNSPECIFIED);
-  data = scm_vector_writable_elements (res, &handle, NULL, NULL);
+  data = SCM_I_VECTOR_WELTS (res);
   i = 0;
-  while (scm_is_pair (l) && i < len) 
+  while (scm_is_pair (l) && i < len)
     {
       data[i] = SCM_CAR (l);
       l = SCM_CDR (l);
       i += 1;
     }
 
-  scm_array_handle_release (&handle);
-
   return res;
 }
 #undef FUNC_NAME
 
-SCM_DEFINE (scm_vector_ref, "vector-ref", 2, 0, 0, 
+SCM_DEFINE (scm_vector_ref, "vector-ref", 2, 0, 0,
 	    (SCM vector, SCM k),
             "@var{k} must be a valid index of @var{vector}.\n"
             "@samp{Vector-ref} returns the contents of element @var{k} of\n"
@@ -193,7 +177,7 @@ scm_c_vector_ref (SCM v, size_t k)
 }
 #undef FUNC_NAME
 
-SCM_DEFINE (scm_vector_set_x, "vector-set!", 3, 0, 0, 
+SCM_DEFINE (scm_vector_set_x, "vector-set!", 3, 0, 0,
 	    (SCM vector, SCM k, SCM obj),
             "@var{k} must be a valid index of @var{vector}.\n"
             "@code{Vector-set!} stores @var{obj} in element @var{k} of @var{vector}.\n"
@@ -218,7 +202,7 @@ scm_c_vector_set_x (SCM v, size_t k, SCM obj)
   SCM_VALIDATE_VECTOR (1, v);
 
   if (k >= SCM_I_VECTOR_LENGTH (v))
-    scm_out_of_range (NULL, scm_from_size_t (k)); 
+    scm_out_of_range (NULL, scm_from_size_t (k));
 
   SCM_SIMPLE_VECTOR_SET (v, k, obj);
 }
@@ -236,7 +220,7 @@ SCM_DEFINE (scm_make_vector, "make-vector", 1, 1, 0,
 
   if (SCM_UNBNDP (fill))
     fill = SCM_UNSPECIFIED;
-  
+
   return scm_c_make_vector (l, fill);
 }
 #undef FUNC_NAME
@@ -285,7 +269,7 @@ SCM_DEFINE (scm_vector_copy, "vector-copy", 1, 0, 0,
 #undef FUNC_NAME
 
 
-SCM_DEFINE (scm_vector_to_list, "vector->list", 1, 0, 0, 
+SCM_DEFINE (scm_vector_to_list, "vector->list", 1, 0, 0,
 	    (SCM v),
 	    "Return a newly allocated list composed of the elements of @var{v}.\n"
 	    "\n"
@@ -345,7 +329,7 @@ scm_i_vector_equal_p (SCM x, SCM y)
 }
 
 
-SCM_DEFINE (scm_vector_move_left_x, "vector-move-left!", 5, 0, 0, 
+SCM_DEFINE (scm_vector_move_left_x, "vector-move-left!", 5, 0, 0,
             (SCM vec1, SCM start1, SCM end1, SCM vec2, SCM start2),
 	    "Copy elements from @var{vec1}, positions @var{start1} to @var{end1},\n"
 	    "to @var{vec2} starting at position @var{start2}.  @var{start1} and\n"
@@ -362,7 +346,7 @@ SCM_DEFINE (scm_vector_move_left_x, "vector-move-left!", 5, 0, 0,
   size_t len1, len2;
   ssize_t inc1, inc2;
   size_t i, j, e;
-  
+
   elts1 = scm_vector_elements (vec1, &handle1, &len1, &inc1);
   elts2 = scm_vector_writable_elements (vec2, &handle2, &len2, &inc2);
 
@@ -371,7 +355,7 @@ SCM_DEFINE (scm_vector_move_left_x, "vector-move-left!", 5, 0, 0,
   SCM_ASSERT_RANGE (SCM_ARG3, end1, (e-i) <= len2);
   j = scm_to_unsigned_integer (start2, 0, len2);
   SCM_ASSERT_RANGE (SCM_ARG5, start2, j <= len2 - (e - i));
-  
+
   i *= inc1;
   e *= inc1;
   j *= inc2;
@@ -385,7 +369,7 @@ SCM_DEFINE (scm_vector_move_left_x, "vector-move-left!", 5, 0, 0,
 }
 #undef FUNC_NAME
 
-SCM_DEFINE (scm_vector_move_right_x, "vector-move-right!", 5, 0, 0, 
+SCM_DEFINE (scm_vector_move_right_x, "vector-move-right!", 5, 0, 0,
             (SCM vec1, SCM start1, SCM end1, SCM vec2, SCM start2),
 	    "Copy elements from @var{vec1}, positions @var{start1} to @var{end1},\n"
 	    "to @var{vec2} starting at position @var{start2}.  @var{start1} and\n"
@@ -402,7 +386,7 @@ SCM_DEFINE (scm_vector_move_right_x, "vector-move-right!", 5, 0, 0,
   size_t len1, len2;
   ssize_t inc1, inc2;
   size_t i, j, e;
-  
+
   elts1 = scm_vector_elements (vec1, &handle1, &len1, &inc1);
   elts2 = scm_vector_writable_elements (vec2, &handle2, &len2, &inc2);
 
@@ -411,9 +395,9 @@ SCM_DEFINE (scm_vector_move_right_x, "vector-move-right!", 5, 0, 0,
   SCM_ASSERT_RANGE (SCM_ARG3, end1, (e-i) <= len2);
   j = scm_to_unsigned_integer (start2, 0, len2);
   SCM_ASSERT_RANGE (SCM_ARG5, start2, j <= len2 - (e - i));
-  
+
   j += (e - i);
-  
+
   i *= inc1;
   e *= inc1;
   j *= inc2;
