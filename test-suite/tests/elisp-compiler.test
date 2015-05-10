@@ -129,7 +129,7 @@
 
 (with-test-prefix/compile "Exceptions"
 
-  (pass-if "catch without exception"
+  (expect-fail "catch without exception"
     (and (setq a 0)
          (= (catch 'foobar
                    (setq a (1+ a))
@@ -142,14 +142,14 @@
   ;(pass-if-exception "uncaught exception" 'elisp-exception
   ;  (throw 'abc 1))
 
-  (pass-if "catch and throw"
+  (expect-fail "catch and throw"
     (and (setq mylist '(1 2))
          (= (catch 'abc (throw 'abc 2) 1) 2)
          (= (catch 'abc (catch 'def (throw 'abc (1+ 0)) 2) 3) 1)
          (= (catch 'abc (catch 'def (throw 'def 1) 2) 3) 3)
          (= (catch mylist (catch (list 1 2) (throw mylist 1) 2) 3) 1)))
 
-  (pass-if "unwind-protect"
+  (expect-fail "unwind-protect"
     (progn (setq a 0 b 1 c 1)
            (catch 'exc
                   (unwind-protect (progn (setq a 1)
