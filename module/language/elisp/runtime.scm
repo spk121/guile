@@ -22,7 +22,6 @@
   #:use-module (ice-9 format)
   #:use-module ((system base compile)
                 #:select (compile))
-  #:use-module (language tree-il eval)
   #:export (nil-value
             t-value
             value-slot-module
