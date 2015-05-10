@@ -36,7 +36,9 @@
                                 (compile 'exp #:from 'elisp #:to 'value))))
     ((_ (pass-if-exception test-name exc exp))
      (pass-if-exception test-name exc
-                        (compile 'exp #:from 'elisp #:to 'value)))))
+                        (compile 'exp #:from 'elisp #:to 'value)))
+    ((_ (expect-fail test-name exp))
+     #f)))
 
 (define-syntax with-test-prefix/compile
   (syntax-rules ()
