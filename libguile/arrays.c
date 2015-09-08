@@ -28,7 +28,6 @@
 #include <stdio.h>
 #include <errno.h>
 #include <string.h>
-#include <assert.h>
 
 #include "verify.h"
 
@@ -551,7 +550,7 @@ SCM_DEFINE (scm_array_amend_x, "array-amend!", 2, 0, 1,
         { ARRAY_FROM_GET_O }
       scm_array_handle_release(&handle);
       /* an error is still possible here if o and b don't match. */
-      /* TODO copying like this wastes the handle, and the bounds matching
+      /* FIXME copying like this wastes the handle, and the bounds matching
          behavior of array-copy! is not strict. */
       scm_array_copy_x(b, o);
     }
@@ -568,7 +567,6 @@ SCM_DEFINE (scm_array_amend_x, "array-amend!", 2, 0, 1,
   return ra;
 }
 #undef FUNC_NAME
-
 
 #undef ARRAY_FROM_POS
 #undef ARRAY_FROM_GET_O
@@ -947,6 +945,7 @@ scm_i_print_array (SCM array, SCM port, scm_print_state *pstate)
   else
     return scm_i_print_array_dimension (&h, 0, 0, port, pstate);
 }
+
 
 void
 scm_init_arrays ()
