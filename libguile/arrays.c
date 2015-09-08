@@ -546,7 +546,7 @@ SCM_DEFINE (scm_array_amend_x, "array-amend!", 2, 0, 1,
         { ARRAY_FROM_GET_O }
       scm_array_handle_release(&handle);
       /* an error is still possible here if o and b don't match. */
-      /* TODO copying like this wastes the handle, and the bounds matching
+      /* FIXME copying like this wastes the handle, and the bounds matching
          behavior of array-copy! is not strict. */
       scm_array_copy_x(b, o);
     }
@@ -564,9 +564,197 @@ SCM_DEFINE (scm_array_amend_x, "array-amend!", 2, 0, 1,
 }
 #undef FUNC_NAME
 
-
 #undef ARRAY_FROM_POS
 #undef ARRAY_FROM_GET_O
+
+
+// Copy array descriptor with different base.
+SCM
+scm_i_array_rebase (SCM a, size_t base)
+{
+    size_t ndim = SCM_I_ARRAY_NDIM(a);
+    SCM b = scm_words (((scm_t_bits) ndim << 17) + scm_tc7_array, 3 + ndim*3);
+    SCM_I_ARRAY_SET_V (b, SCM_I_ARRAY_V (a));
+// FIXME do check base
+    SCM_I_ARRAY_SET_BASE (b, base);
+    memcpy(SCM_I_ARRAY_DIMS(b), SCM_I_ARRAY_DIMS(a), sizeof(scm_t_array_dim)*ndim);
+    return b;
+}
+
+SCM_DEFINE (scm_array_for_each_cell, "array-for-each-cell", 2, 0, 1,
+            (SCM frank_, SCM op, SCM a_),
+            "Apply op to each of the rank (-frank) cells of the arguments,\n"
+            "in unspecified order. The first frank dimensions of the\n"
+            "arguments must match. Rank-0 cells are passed as such.\n\n"
+            "The value returned is unspecified.\n\n"
+            "For example:\n"
+            "@lisp\n"
+            "@end lisp")
+#define FUNC_NAME s_scm_array_for_each_cell
+{
+  // FIXME replace stack by scm_gc_malloc_pointerless()
+  int const N = scm_ilength(a_);
+  scm_t_array_handle ah[N];
+  SCM a[N];
+  scm_t_array_dim * as[N];
+  int rank[N];
+  for (int n=0; scm_is_pair(a_); a_=scm_cdr(a_), ++n)
+    {
+      a[n] = scm_car(a_);
+      scm_array_get_handle(a[n], ah+n);
+      as[n] = scm_array_handle_dims(ah+n);
+      rank[n] = scm_array_handle_rank(ah+n);
+    }
+  // checks.
+  int const frank = scm_to_int(frank_);
+  ssize_t s[frank];
+  char const * msg = NULL;
+  if (frank<0)
+    {
+      msg = "bad frame rank";
+    } else
+    {
+      for (int n=0; n!=N; ++n) {
+        if (rank[n]<frank) {
+          msg = "frame too large for arguments";
+          goto check_msg;
+        }
+        for (int k=0; k!=frank; ++k) {
+          if (as[n][k].lbnd!=0) {
+            msg = "non-zero base index is not supported";
+            goto check_msg;
+          }
+          if (as[0][k].ubnd!=as[n][k].ubnd) {
+            msg = "mismatched frames";
+            goto check_msg;
+          }
+          s[k] = as[n][k].ubnd + 1;
+        }
+      }
+    }
+ check_msg: ;
+  if (msg!=NULL)
+    {
+      for (int n=0; n!=N; ++n) {
+        scm_array_handle_release(ah+n);
+      }
+      scm_misc_error("array-for-each-cell", msg, scm_cons_star(frank_, a_));
+    }
+  // prepare moving cells.
+  SCM ai[N];
+  scm_t_array_dim * ais[N];
+  for (int n=0; n!=N; ++n)
+    {
+      ai[n] = scm_i_make_array(rank[n]-frank);
+      SCM_I_ARRAY_SET_V (ai[n], scm_shared_array_root(a[n]));
+      // FIXME scm_array_handle_base (ah+n) should be in Guile
+      SCM_I_ARRAY_SET_BASE (ai[n], ah[n].base);
+      ais[n] = SCM_I_ARRAY_DIMS(ai[n]);
+      for (int k=frank; k!=rank[n]; ++k) {
+        ais[n][k-frank] = as[n][k];
+      }
+    }
+  // prepare rest list for callee.
+  SCM dargs_ = SCM_EOL;
+  SCM * dargs[N];
+  {
+    SCM *p = &dargs_;
+    for (int n=0; n<N; ++n) {
+      *p = scm_cons (SCM_UNSPECIFIED, SCM_EOL);
+      dargs[n] = SCM_CARLOC (*p);
+      p = SCM_CDRLOC (*p);
+    }
+  }
+  // special case for rank 0.
+  if (frank==0)
+    {
+      for (int n=0; n<N; ++n)
+        {
+          *dargs[n] = ai[n];
+        }
+      scm_apply_0(op, dargs_);
+      for (int n=0; n<N; ++n)
+        {
+          scm_array_handle_release(ah+n);
+        }
+      return SCM_UNSPECIFIED;
+    }
+  // FIXME determine best looping order.
+  ssize_t i[frank];
+  int order[frank];
+  for (int k=0; k!=frank; ++k)
+    {
+      i[k] = 0;
+      order[k] = frank-1-k;
+    }
+  // find outermost compact dim.
+  ssize_t step = s[order[0]];
+  int ocd = 1;
+  for (; ocd<frank; step *= s[order[ocd]], ++ocd)
+    {
+      for (int n=0; n!=N; ++n) {
+        if (step*as[n][order[0]].inc!=as[n][order[ocd]].inc) {
+          goto ocd_reached;
+        }
+      }
+    }
+ ocd_reached: ;
+  // rank loop.
+  size_t base[N];
+  for (int n=0; n!=N; ++n)
+    {
+      base[n] = SCM_I_ARRAY_BASE(ai[n]);
+    }
+  for (;;)
+    {
+      for (ssize_t z=0; z!=step; ++z)
+        {
+          // we are forced to create fresh array descriptors for each
+          // call since we don't know whether the callee will keep them,
+          // and Guile offers no way to copy the descriptor (since
+          // descriptors are immutable). Yet another reason why this
+          // should be in Scheme.
+          for (int n=0; n<N; ++n)
+            {
+              *dargs[n] = scm_i_array_rebase(ai[n], base[n]);
+              base[n] += as[n][order[0]].inc;
+            }
+          scm_apply_0(op, dargs_);
+        }
+      for (int n=0; n<N; ++n)
+        {
+          base[n] -= step*as[n][order[0]].inc;
+        }
+      for (int k=ocd; ; ++k)
+        {
+          if (k==frank)
+            {
+              goto end;
+            } else if (i[order[k]]<s[order[k]]-1)
+            {
+              ++i[order[k]];
+              for (int n=0; n<N; ++n)
+                {
+                  base[n] += as[n][order[k]].inc;
+                }
+              break;
+            } else {
+            i[order[k]] = 0;
+            for (int n=0; n<N; ++n)
+              {
+                base[n] += as[n][order[k]].inc*(1-s[order[k]]);
+              }
+          }
+        }
+    }
+ end:;
+  for (int n=0; n<N; ++n)
+    {
+      scm_array_handle_release(ah+n);
+    }
+  return SCM_UNSPECIFIED;
+}
+#undef FUNC_NAME
 
 
 /* args are RA . DIMS */

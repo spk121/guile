@@ -52,6 +52,7 @@ SCM_API SCM scm_array_contents (SCM ra, SCM strict);
 SCM_API SCM scm_array_from_s (SCM ra, SCM indices);
 SCM_API SCM scm_array_from (SCM ra, SCM indices);
 SCM_API SCM scm_array_amend_x (SCM ra, SCM b, SCM indices);
+SCM_API SCM scm_array_for_each_cell (SCM frank, SCM op, SCM args);
 
 SCM_API SCM scm_list_to_array (SCM ndim, SCM lst);
 SCM_API SCM scm_list_to_typed_array (SCM type, SCM ndim, SCM lst);
@@ -76,6 +77,7 @@ SCM_API SCM scm_array_rank (SCM ra);
 
 SCM_INTERNAL SCM scm_i_make_array (int ndim);
 SCM_INTERNAL int scm_i_print_array (SCM array, SCM port, scm_print_state *pstate);
+SCM_INTERNAL SCM scm_i_array_rebase (SCM a, size_t base);
 
 SCM_INTERNAL void scm_init_arrays (void);
 
