@@ -20,26 +20,6 @@
 
 
 
-/* _POSIX_C_SOURCE is not defined always, because it causes problems on some
-   systems, notably
-
-       - FreeBSD loses all BSD and XOPEN defines.
-       - glibc loses some things like CLK_TCK.
-       - On MINGW it conflicts with the pthread headers.
-
-   But on HP-UX _POSIX_C_SOURCE is needed, as noted, for gmtime_r.
-
-   Perhaps a configure test could figure out what _POSIX_C_SOURCE gives and
-   what it takes away, and decide from that whether to use it, instead of
-   hard coding __hpux.  */
-
-#ifndef _REENTRANT
-# define _REENTRANT   /* ask solaris for gmtime_r prototype */
-#endif
-#ifdef __hpux
-#define _POSIX_C_SOURCE 199506L  /* for gmtime_r prototype */
-#endif
-
 #ifdef HAVE_CONFIG_H
 #  include <config.h>
 #endif
@@ -47,44 +27,29 @@
 #include <stdio.h>
 #include <errno.h>
 #include <strftime.h>
+#include <string.h>
+#include <sys/times.h>
+#include <sys/types.h>
+#include <time.h>
+#include <unistd.h>
 #include <unistr.h>
+
+#ifdef HAVE_SYS_TIMEB_H
+# include <sys/timeb.h>
+#endif
 
 #include "libguile/_scm.h"
 #include "libguile/async.h"
 #include "libguile/feature.h"
 #include "libguile/strings.h"
 #include "libguile/vectors.h"
-#include "libguile/dynwind.h"
 #include "libguile/strings.h"
 
 #include "libguile/validate.h"
 #include "libguile/stime.h"
 
-#include <unistd.h>
 
 
-#ifdef HAVE_CLOCK_GETTIME
-# include <time.h>
-#endif
-
-#include <sys/types.h>
-#include <string.h>
-#include <sys/times.h>
-
-#ifdef HAVE_SYS_TIMEB_H
-# include <sys/timeb.h>
-#endif
-
-#if ! HAVE_DECL_STRPTIME
-extern char *strptime ();
-#endif
-
-#ifdef __STDC__
-# define timet time_t
-#else
-# define timet long
-#endif
-
 
 #if SCM_SIZEOF_LONG >= 8 && defined HAVE_CLOCK_GETTIME
 /* Nanoseconds on 64-bit systems with POSIX timers.  */
@@ -172,7 +137,7 @@ get_internal_run_time_times (void)
     * TIME_UNITS_PER_SECOND / ticks_per_second;
 }
 
-static timet fallback_real_time_base;
+static time_t fallback_real_time_base;
 static long
 get_internal_real_time_fallback (void)
 {
@@ -273,7 +238,7 @@ SCM_DEFINE (scm_current_time, "current-time", 0, 0, 0,
 	    "excluding leap seconds.")
 #define FUNC_NAME s_scm_current_time
 {
-  timet timv;
+  time_t timv;
 
   SCM_CRITICAL_SECTION_START;
   timv = time (NULL);
@@ -301,7 +266,7 @@ SCM_DEFINE (scm_gettimeofday, "gettimeofday", 0, 0, 0,
   return scm_cons (scm_from_long (time.tv_sec),
 		   scm_from_long (time.tv_usec));
 #else
-  timet t = time (NULL);
+  time_t t = time (NULL);
   if (errno)
     SCM_SYSERROR;
   else
@@ -311,68 +276,89 @@ SCM_DEFINE (scm_gettimeofday, "gettimeofday", 0, 0, 0,
 #undef FUNC_NAME
 
 static SCM
-filltime (struct tm *bd_time, int zoff, const char *zname)
+scm_from_struct_tm (struct tm *tm, int zoff, SCM zone)
 {
   SCM result = scm_c_make_vector (11, SCM_UNDEFINED);
 
-  SCM_SIMPLE_VECTOR_SET (result,0, scm_from_int (bd_time->tm_sec));
-  SCM_SIMPLE_VECTOR_SET (result,1, scm_from_int (bd_time->tm_min));
-  SCM_SIMPLE_VECTOR_SET (result,2, scm_from_int (bd_time->tm_hour));
-  SCM_SIMPLE_VECTOR_SET (result,3, scm_from_int (bd_time->tm_mday));
-  SCM_SIMPLE_VECTOR_SET (result,4, scm_from_int (bd_time->tm_mon));
-  SCM_SIMPLE_VECTOR_SET (result,5, scm_from_int (bd_time->tm_year));
-  SCM_SIMPLE_VECTOR_SET (result,6, scm_from_int (bd_time->tm_wday));
-  SCM_SIMPLE_VECTOR_SET (result,7, scm_from_int (bd_time->tm_yday));
-  SCM_SIMPLE_VECTOR_SET (result,8, scm_from_int (bd_time->tm_isdst));
-  SCM_SIMPLE_VECTOR_SET (result,9, scm_from_int (zoff));
-  SCM_SIMPLE_VECTOR_SET (result,10, (zname 
-				     ? scm_from_locale_string (zname)
-				     : SCM_BOOL_F));
+  SCM_SIMPLE_VECTOR_SET (result, 0, scm_from_int (tm->tm_sec));
+  SCM_SIMPLE_VECTOR_SET (result, 1, scm_from_int (tm->tm_min));
+  SCM_SIMPLE_VECTOR_SET (result, 2, scm_from_int (tm->tm_hour));
+  SCM_SIMPLE_VECTOR_SET (result, 3, scm_from_int (tm->tm_mday));
+  SCM_SIMPLE_VECTOR_SET (result, 4, scm_from_int (tm->tm_mon));
+  SCM_SIMPLE_VECTOR_SET (result, 5, scm_from_int (tm->tm_year));
+  SCM_SIMPLE_VECTOR_SET (result, 6, scm_from_int (tm->tm_wday));
+  SCM_SIMPLE_VECTOR_SET (result, 7, scm_from_int (tm->tm_yday));
+  SCM_SIMPLE_VECTOR_SET (result, 8, scm_from_int (tm->tm_isdst));
+  SCM_SIMPLE_VECTOR_SET (result, 9, scm_from_int (zoff));
+  SCM_SIMPLE_VECTOR_SET (result, 10, zone);
+
   return result;
 }
 
-static char tzvar[3] = "TZ";
-
-/* if zone is set, create a temporary environment with only a TZ
-   string.  other threads or interrupt handlers shouldn't be allowed
-   to run until the corresponding restorezone is called.  hence the use
-   of a static variable for tmpenv is no big deal.  */
-static char **
-setzone (SCM zone, int pos, const char *subr)
+static timezone_t
+scm_to_timezone (SCM zone, const char *FUNC_NAME)
 {
-  char **oldenv = 0;
+  timezone_t tz;
 
-  if (!SCM_UNBNDP (zone))
+  if (SCM_UNBNDP (zone))
+    /* A NULL argument to tzalloc requests UTC.  */
+    tz = tzalloc (getenv ("TZ"));
+  else
     {
-      static char *tmpenv[2];
-      char *buf;
-      size_t zone_len;
-      
-      zone_len = scm_to_locale_stringbuf (zone, NULL, 0);
-      buf = scm_malloc (zone_len + sizeof (tzvar) + 1);
-      strcpy (buf, tzvar);
-      buf[sizeof(tzvar)-1] = '=';
-      scm_to_locale_stringbuf (zone, buf+sizeof(tzvar), zone_len);
-      buf[sizeof(tzvar)+zone_len] = '\0';
-      oldenv = environ;
-      tmpenv[0] = buf;
-      tmpenv[1] = 0;
-      environ = tmpenv;
+      char *zone_str = scm_to_locale_string (zone);
+      tz = tzalloc (zone_str);
+      free (zone_str);
     }
-  return oldenv;
+
+  if (!tz)
+    SCM_SYSERROR;
+
+  return tz;
 }
 
-static void
-restorezone (SCM zone, char **oldenv, const char *subr SCM_UNUSED)
+static SCM
+scm_struct_tm_zone_name (struct tm *tm)
 {
-  if (!SCM_UNBNDP (zone))
-    {
-      free (environ[0]);
-      environ = oldenv;
-#ifdef HAVE_TZSET
-      /* for the possible benefit of user code linked with libguile.  */
-      tzset();
+#if defined HAVE_STRUCT_TM_TM_ZONE
+  return scm_from_locale_string (tm->tm_zone);
+#elif defined HAVE_TZNAME
+  return scm_from_locale_string (tzname[ (tm->tm_isdst == 1) ? 1 : 0 ]);
+#else
+  return SCM_BOOL_F;
 #endif
+}
+
+/* copy time components from a Scheme object to a struct tm.  */
+static void
+scm_to_struct_tm_and_timezone (SCM sbd_time, struct tm *tm, timezone_t *tz,
+                               int pos, const char *subr)
+{
+  SCM_ASSERT (scm_is_vector (sbd_time)
+	      && SCM_SIMPLE_VECTOR_LENGTH (sbd_time) == 11,
+	      sbd_time, pos, subr);
+
+  tm->tm_sec = scm_to_int (SCM_SIMPLE_VECTOR_REF (sbd_time, 0));
+  tm->tm_min = scm_to_int (SCM_SIMPLE_VECTOR_REF (sbd_time, 1));
+  tm->tm_hour = scm_to_int (SCM_SIMPLE_VECTOR_REF (sbd_time, 2));
+  tm->tm_mday = scm_to_int (SCM_SIMPLE_VECTOR_REF (sbd_time, 3));
+  tm->tm_mon = scm_to_int (SCM_SIMPLE_VECTOR_REF (sbd_time, 4));
+  tm->tm_year = scm_to_int (SCM_SIMPLE_VECTOR_REF (sbd_time, 5));
+  tm->tm_wday = scm_to_int (SCM_SIMPLE_VECTOR_REF (sbd_time, 6));
+  tm->tm_yday = scm_to_int (SCM_SIMPLE_VECTOR_REF (sbd_time, 7));
+  tm->tm_isdst = scm_to_int (SCM_SIMPLE_VECTOR_REF (sbd_time, 8));
+#if HAVE_STRUCT_TM_TM_GMTOFF
+  tm->tm_gmtoff = - scm_to_int (SCM_SIMPLE_VECTOR_REF (sbd_time, 9));
+#endif
+#ifdef HAVE_STRUCT_TM_TM_ZONE
+  tm->tm_zone = "";
+#endif
+
+  if (tz)
+    {
+      SCM zone = SCM_SIMPLE_VECTOR_REF (sbd_time, 10);
+      /* If the time zone is false, default to the current TZ.  */
+      *tz = scm_to_timezone (scm_is_true (zone) ? zone : SCM_UNDEFINED,
+                             subr);
     }
 }
 
@@ -385,83 +371,46 @@ SCM_DEFINE (scm_localtime, "localtime", 1, 1, 0,
 	    "@code{TZ} environment variable or the system default is used.")
 #define FUNC_NAME s_scm_localtime
 {
-  timet itime;
-  struct tm *ltptr, lt, *utc;
-  SCM result;
+  time_t itime;
+  struct tm lt, utc;
+  timezone_t tz;
+  SCM zone_name, result;
   int zoff;
-  char *zname = 0;
-  char **oldenv;
-  int err;
 
   itime = SCM_NUM2LONG (1, time);
 
-  /* deferring interupts is essential since a) setzone may install a temporary
-     environment b) localtime uses a static buffer.  */
-  SCM_CRITICAL_SECTION_START;
-  oldenv = setzone (zone, SCM_ARG2, FUNC_NAME);
-#ifdef LOCALTIME_CACHE
-  tzset ();
-#endif
-  /* POSIX says localtime sets errno, but C99 doesn't say that.
-     Give a sensible default value in case localtime doesn't set it.  */
-  errno = EINVAL;
-  ltptr = localtime (&itime);
-  err = errno;
-  if (ltptr)
+  tz = scm_to_timezone (zone, FUNC_NAME);
+  if (!localtime_rz (tz, &itime, &lt))
     {
-      const char *ptr;
-
-      /* copy zone name before calling gmtime or restoring zone.  */
-#if defined (HAVE_TM_ZONE)
-      ptr = ltptr->tm_zone;
-#elif defined (HAVE_TZNAME)
-      ptr = tzname[ (ltptr->tm_isdst == 1) ? 1 : 0 ];
-#else
-      ptr = "";
-#endif
-      zname = scm_malloc (strlen (ptr) + 1);
-      strcpy (zname, ptr);
+      int saved_errno = errno;
+      tzfree (tz);
+      errno = saved_errno;
+      SCM_SYSERROR;
     }
-  /* the struct is copied in case localtime and gmtime share a buffer.  */
-  if (ltptr)
-    lt = *ltptr;
-  /* POSIX says gmtime sets errno, but C99 doesn't say that.
-     Give a sensible default value in case gmtime doesn't set it.  */
-  errno = EINVAL;
-  utc = gmtime (&itime);
-  if (utc == NULL)
-    err = errno;
-  restorezone (zone, oldenv, FUNC_NAME);
-  /* delayed until zone has been restored.  */
-  errno = err;
-  if (utc == NULL || ltptr == NULL)
+
+  zone_name = scm_struct_tm_zone_name (&lt);
+  tzfree (tz);
+
+  if (!gmtime_r (&itime, &utc))
     SCM_SYSERROR;
 
   /* calculate timezone offset in seconds west of UTC.  */
-  zoff = (utc->tm_hour - lt.tm_hour) * 3600 + (utc->tm_min - lt.tm_min) * 60
-    + utc->tm_sec - lt.tm_sec;
-  if (utc->tm_year < lt.tm_year)
+  zoff = (utc.tm_hour - lt.tm_hour) * 3600 + (utc.tm_min - lt.tm_min) * 60
+    + utc.tm_sec - lt.tm_sec;
+  if (utc.tm_year < lt.tm_year)
     zoff -= 24 * 60 * 60;
-  else if (utc->tm_year > lt.tm_year)
+  else if (utc.tm_year > lt.tm_year)
     zoff += 24 * 60 * 60;
-  else if (utc->tm_yday < lt.tm_yday)
+  else if (utc.tm_yday < lt.tm_yday)
     zoff -= 24 * 60 * 60;
-  else if (utc->tm_yday > lt.tm_yday)
+  else if (utc.tm_yday > lt.tm_yday)
     zoff += 24 * 60 * 60;
 
-  result = filltime (&lt, zoff, zname);
-  SCM_CRITICAL_SECTION_END;
+  result = scm_from_struct_tm (&lt, zoff, zone_name);
 
-  free (zname);
   return result;
 }
 #undef FUNC_NAME
-
-/* tm_zone is normally a pointer, not an array within struct tm, so we might
-   have to worry about the lifespan of what it points to.  The posix specs
-   don't seem to say anything about this, let's assume here that tm_zone
-   will be a constant and therefore no protection or anything is needed
-   until we copy it in filltime().  */
 
 SCM_DEFINE (scm_gmtime, "gmtime", 1, 0, 0,
             (SCM time),
@@ -470,64 +419,22 @@ SCM_DEFINE (scm_gmtime, "gmtime", 1, 0, 0,
 	    "@code{current-time}.  The values are calculated for UTC.")
 #define FUNC_NAME s_scm_gmtime
 {
-  timet itime;
-  struct tm bd_buf, *bd_time;
-  const char *zname;
+  time_t itime;
+  struct tm utc;
+  SCM zone_name;
 
   itime = SCM_NUM2LONG (1, time);
 
-  /* POSIX says gmtime sets errno, but C99 doesn't say that.
-     Give a sensible default value in case gmtime doesn't set it.  */
-  errno = EINVAL;
-
-#if HAVE_GMTIME_R
-  bd_time = gmtime_r (&itime, &bd_buf);
-#else
-  SCM_CRITICAL_SECTION_START;
-  bd_time = gmtime (&itime);
-  if (bd_time != NULL)
-    bd_buf = *bd_time;
-  SCM_CRITICAL_SECTION_END;
-#endif
-  if (bd_time == NULL)
+  if (!gmtime_r (&itime, &utc))
     SCM_SYSERROR;
 
-#if HAVE_STRUCT_TM_TM_ZONE
-  zname = bd_buf.tm_zone;
-#else
-  zname = "GMT";
-#endif
-  return filltime (&bd_buf, 0, zname);
+  zone_name = scm_struct_tm_zone_name (&utc);
+  if (scm_is_false (zone_name))
+    zone_name = scm_from_latin1_string ("GMT");
+
+  return scm_from_struct_tm (&utc, 0, zone_name);
 }
 #undef FUNC_NAME
-
-/* copy time components from a Scheme object to a struct tm.  */
-static void
-bdtime2c (SCM sbd_time, struct tm *lt, int pos, const char *subr)
-{
-  SCM_ASSERT (scm_is_vector (sbd_time)
-	      && SCM_SIMPLE_VECTOR_LENGTH (sbd_time) == 11,
-	      sbd_time, pos, subr);
-
-  lt->tm_sec = scm_to_int (SCM_SIMPLE_VECTOR_REF (sbd_time, 0));
-  lt->tm_min = scm_to_int (SCM_SIMPLE_VECTOR_REF (sbd_time, 1));
-  lt->tm_hour = scm_to_int (SCM_SIMPLE_VECTOR_REF (sbd_time, 2));
-  lt->tm_mday = scm_to_int (SCM_SIMPLE_VECTOR_REF (sbd_time, 3));
-  lt->tm_mon = scm_to_int (SCM_SIMPLE_VECTOR_REF (sbd_time, 4));
-  lt->tm_year = scm_to_int (SCM_SIMPLE_VECTOR_REF (sbd_time, 5));
-  lt->tm_wday = scm_to_int (SCM_SIMPLE_VECTOR_REF (sbd_time, 6));
-  lt->tm_yday = scm_to_int (SCM_SIMPLE_VECTOR_REF (sbd_time, 7));
-  lt->tm_isdst = scm_to_int (SCM_SIMPLE_VECTOR_REF (sbd_time, 8));
-#if HAVE_STRUCT_TM_TM_GMTOFF
-  lt->tm_gmtoff = - scm_to_int (SCM_SIMPLE_VECTOR_REF (sbd_time, 9));
-#endif
-#ifdef HAVE_TM_ZONE
-  if (scm_is_false (SCM_SIMPLE_VECTOR_REF (sbd_time, 10)))
-    lt->tm_zone = NULL;
-  else
-    lt->tm_zone  = scm_to_locale_string (SCM_SIMPLE_VECTOR_REF (sbd_time, 10));
-#endif
-}
 
 SCM_DEFINE (scm_mktime, "mktime", 1, 1, 0,
             (SCM sbd_time, SCM zone),
@@ -541,78 +448,46 @@ SCM_DEFINE (scm_mktime, "mktime", 1, 1, 0,
 	    "normalized values.")
 #define FUNC_NAME s_scm_mktime
 {
-  timet itime;
-  struct tm lt, *utc;
-  SCM result;
+  time_t itime;
+  struct tm lt, utc;
+  timezone_t tz;
+  SCM zone_name, result;
   int zoff;
-  char *zname = 0;
-  char **oldenv;
-  int err;
 
-  scm_dynwind_begin (0);
+  scm_to_struct_tm_and_timezone (sbd_time, &lt, NULL, SCM_ARG1, FUNC_NAME);
+  tz = scm_to_timezone (zone, FUNC_NAME);
 
-  bdtime2c (sbd_time, &lt, SCM_ARG1, FUNC_NAME);
-#if HAVE_STRUCT_TM_TM_ZONE
-  scm_dynwind_free ((char *)lt.tm_zone);
-#endif
-
-  scm_dynwind_critical_section (SCM_BOOL_F);
-
-  oldenv = setzone (zone, SCM_ARG2, FUNC_NAME);
-#ifdef LOCALTIME_CACHE
-  tzset ();
-#endif
-  itime = mktime (&lt);
-  /* POSIX doesn't say mktime sets errno, and on glibc 2.3.2 for instance it
-     doesn't.  Force a sensible value for our error message.  */
-  err = EINVAL;
-
-  if (itime != -1)
+  itime = mktime_z (tz, &lt);
+  if (itime == -1)
     {
-      const char *ptr;
-
-      /* copy zone name before calling gmtime or restoring the zone.  */
-#if defined (HAVE_TM_ZONE)
-      ptr = lt.tm_zone;
-#elif defined (HAVE_TZNAME)
-      ptr = tzname[ (lt.tm_isdst == 1) ? 1 : 0 ];
-#else
-      ptr = "";
-#endif
-      zname = scm_malloc (strlen (ptr) + 1);
-      strcpy (zname, ptr);
+      int errno_save = errno;
+      tzfree (tz);
+      errno = errno_save;
+      SCM_SYSERROR;
     }
 
-  /* get timezone offset in seconds west of UTC.  */
-  /* POSIX says gmtime sets errno, but C99 doesn't say that.
-     Give a sensible default value in case gmtime doesn't set it.  */
-  errno = EINVAL;
-  utc = gmtime (&itime);
-  if (utc == NULL)
-    err = errno;
+  zone_name = scm_struct_tm_zone_name (&lt);
+  tzfree (tz);
 
-  restorezone (zone, oldenv, FUNC_NAME);
-  /* delayed until zone has been restored.  */
-  errno = err;
-  if (utc == NULL || itime == -1)
+  /* get timezone offset in seconds west of UTC.  */
+  errno = EINVAL;
+  if (!gmtime_r (&itime, &utc))
     SCM_SYSERROR;
 
-  zoff = (utc->tm_hour - lt.tm_hour) * 3600 + (utc->tm_min - lt.tm_min) * 60
-    + utc->tm_sec - lt.tm_sec;
-  if (utc->tm_year < lt.tm_year)
+  zoff = (utc.tm_hour - lt.tm_hour) * 3600 + (utc.tm_min - lt.tm_min) * 60
+    + utc.tm_sec - lt.tm_sec;
+  if (utc.tm_year < lt.tm_year)
     zoff -= 24 * 60 * 60;
-  else if (utc->tm_year > lt.tm_year)
+  else if (utc.tm_year > lt.tm_year)
     zoff += 24 * 60 * 60;
-  else if (utc->tm_yday < lt.tm_yday)
+  else if (utc.tm_yday < lt.tm_yday)
     zoff -= 24 * 60 * 60;
-  else if (utc->tm_yday > lt.tm_yday)
+  else if (utc.tm_yday > lt.tm_yday)
     zoff += 24 * 60 * 60;
 
   result = scm_cons (scm_from_long (itime),
-		     filltime (&lt, zoff, zname));
-  free (zname);
+		     scm_from_struct_tm (&lt, zoff, zone_name));
 
-  scm_dynwind_end ();
   return result;
 }
 #undef FUNC_NAME
@@ -653,88 +528,51 @@ SCM_DEFINE (scm_strftime, "strftime", 2, 0, 0,
 #define FUNC_NAME s_scm_strftime
 {
   struct tm t;
-
-  char *tbuf;
-  int size = 50;
+  timezone_t tz;
   char *fmt;
-  char *myfmt;
-  size_t len;
+  size_t size, written;
   SCM result;
 
   SCM_VALIDATE_STRING (1, format);
-  bdtime2c (stime, &t, SCM_ARG2, FUNC_NAME);
+  scm_to_struct_tm_and_timezone (stime, &t, &tz, SCM_ARG2, FUNC_NAME);
+
+  /* Sadly, Gnulib's nstrftime can't or won't extract the zone name from
+     the timezone_t, so we have to make sure the tm_zone is set as
+     well.  */
+#ifdef HAVE_STRUCT_TM_TM_ZONE
+  {
+    SCM zone = SCM_SIMPLE_VECTOR_REF (stime, 10);
+    t.tm_zone = scm_is_true (zone) ? scm_to_locale_string (zone) : NULL;
+  }
+#endif
 
   /* Convert string to UTF-8 so that non-ASCII characters in the
      format are passed through unchanged.  */
-  fmt = scm_to_utf8_stringn (format, &len);
+  fmt = scm_to_utf8_string (format);
 
-  /* Ugly hack: strftime can return 0 if its buffer is too small,
-     but some valid time strings (e.g. "%p") can sometimes produce
-     a zero-byte output string!  Workaround is to prepend a junk
-     character to the format string, so that valid returns are always
-     nonzero. */
-  myfmt = scm_malloc (len+2);
-  *myfmt = (scm_t_uint8) 'x';
-  strncpy (myfmt + 1, fmt, len);
-  myfmt[len + 1] = 0;
-  scm_remember_upto_here_1 (format);
-  free (fmt);
-
-  tbuf = scm_malloc (size);
-  {
-#if !defined (HAVE_TM_ZONE)
-    /* it seems the only way to tell non-GNU versions of strftime what
-       zone to use (for the %Z format) is to set TZ in the
-       environment.  interrupts and thread switching must be deferred
-       until TZ is restored.  */
-    char **oldenv = NULL;
-    SCM zone_spec = SCM_SIMPLE_VECTOR_REF (stime, 10);
-    int have_zone = 0;
-
-    if (scm_is_true (zone_spec) && scm_c_string_length (zone_spec) > 0)
-      {
-	/* it's not required that the TZ setting be correct, just that
-	   it has the right name.  so try something like TZ=EST0.
-	   using only TZ=EST would be simpler but it doesn't work on
-	   some OSs, e.g., Solaris.  */
-	SCM zone =
-	  scm_string_append (scm_list_2 (zone_spec,
-					 scm_from_locale_string ("0")));
-
-	have_zone = 1;
-	SCM_CRITICAL_SECTION_START;
-	oldenv = setzone (zone, SCM_ARG2, FUNC_NAME);
-      }
-#endif
-
-#ifdef LOCALTIME_CACHE
-    tzset ();
-#endif
-
-    /* Use `nstrftime ()' from Gnulib, which supports all GNU extensions
-       supported by glibc.  */
-    while ((len = nstrftime (tbuf, size, myfmt, &t, 0, 0)) == 0)
-      {
-	free (tbuf);
-	size *= 2;
-	tbuf = scm_malloc (size);
-      }
-
-#if !defined (HAVE_TM_ZONE)
-    if (have_zone)
-      {
-	restorezone (zone_spec, oldenv, FUNC_NAME);
-	SCM_CRITICAL_SECTION_END;
-      }
-#endif
+  /* Use `nstrftime ()' from Gnulib, which supports all GNU extensions
+     supported by glibc.  The first call is to compute how many bytes
+     are needed in the buffer; the second actually writes them into the
+     buffer.  */
+  size = nstrftime (NULL, (size_t)-1, fmt, &t, NULL, 0);
+  if (size)
+    {
+      char *buf = scm_malloc (size + 1);
+      written = nstrftime (buf, size + 1, fmt, &t, NULL, 0);
+      if (written != size)
+        abort ();
+      result = scm_from_utf8_string (buf);
+      free (buf);
     }
+  else
+    result = scm_from_latin1_string ("");
 
-  result = scm_from_utf8_string (tbuf + 1);
-  free (tbuf);
-  free (myfmt);
-#if HAVE_STRUCT_TM_TM_ZONE
+  tzfree (tz);
+  free (fmt);
+#ifdef HAVE_STRUCT_TM_TM_ZONE
   free ((char *) t.tm_zone);
 #endif
+
   return result;
 }
 #undef FUNC_NAME
@@ -815,7 +653,7 @@ SCM_DEFINE (scm_strptime, "strptime", 2, 0, 0,
   free (str);
   free (fmt);
 
-  return scm_cons (filltime (&t, zoff, NULL),
+  return scm_cons (scm_from_struct_tm (&t, zoff, SCM_BOOL_F),
 		   scm_from_signed_integer (used_len));
 }
 #undef FUNC_NAME
