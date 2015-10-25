@@ -211,11 +211,14 @@ AC_DEFUN([gl_EARLY],
   # Code from module stdint:
   # Code from module stdio:
   # Code from module stdlib:
+  # Code from module strcase:
   # Code from module strdup-posix:
   # Code from module streq:
   # Code from module strftime:
   # Code from module striconveh:
   # Code from module string:
+  # Code from module strings:
+  # Code from module strptime:
   # Code from module sys_file:
   # Code from module sys_select:
   # Code from module sys_socket:
@@ -789,6 +792,15 @@ AC_SUBST([LTALLOCA])
   gl_STDINT_H
   gl_STDIO_H
   gl_STDLIB_H
+  gl_STRCASE
+  if test $HAVE_STRCASECMP = 0; then
+    AC_LIBOBJ([strcasecmp])
+    gl_PREREQ_STRCASECMP
+  fi
+  if test $HAVE_STRNCASECMP = 0; then
+    AC_LIBOBJ([strncasecmp])
+    gl_PREREQ_STRNCASECMP
+  fi
   gl_FUNC_STRDUP_POSIX
   if test $ac_cv_func_strdup = no || test $REPLACE_STRDUP = 1; then
     AC_LIBOBJ([strdup])
@@ -801,6 +813,13 @@ AC_SUBST([LTALLOCA])
     gl_libdeps="$gl_libdeps $LIBICONV"
   fi
   gl_HEADER_STRING_H
+  gl_HEADER_STRINGS_H
+  gl_FUNC_STRPTIME
+  if test $HAVE_STRPTIME = 0; then
+    AC_LIBOBJ([strptime])
+    gl_PREREQ_STRPTIME
+  fi
+  gl_TIME_MODULE_INDICATOR([strptime])
   gl_HEADER_SYS_FILE_H
   AC_PROG_MKDIR_P
   gl_HEADER_SYS_SELECT
@@ -1205,6 +1224,7 @@ AC_DEFUN([gl_FILE_LIST], [
   lib/stdint.in.h
   lib/stdio.in.h
   lib/stdlib.in.h
+  lib/strcasecmp.c
   lib/strdup.c
   lib/streq.h
   lib/strftime.c
@@ -1212,7 +1232,10 @@ AC_DEFUN([gl_FILE_LIST], [
   lib/striconveh.c
   lib/striconveh.h
   lib/string.in.h
+  lib/strings.in.h
   lib/stripslash.c
+  lib/strncasecmp.c
+  lib/strptime.c
   lib/sys_file.in.h
   lib/sys_select.in.h
   lib/sys_socket.c
@@ -1400,9 +1423,12 @@ AC_DEFUN([gl_FILE_LIST], [
   m4/stdint_h.m4
   m4/stdio_h.m4
   m4/stdlib_h.m4
+  m4/strcase.m4
   m4/strdup.m4
   m4/strftime.m4
   m4/string_h.m4
+  m4/strings_h.m4
+  m4/strptime.m4
   m4/sys_file_h.m4
   m4/sys_select_h.m4
   m4/sys_socket_h.m4
