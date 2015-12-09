@@ -53,6 +53,7 @@ SCM_API SCM scm_array_from_s (SCM ra, SCM indices);
 SCM_API SCM scm_array_from (SCM ra, SCM indices);
 SCM_API SCM scm_array_amend_x (SCM ra, SCM b, SCM indices);
 SCM_API SCM scm_array_for_each_cell (SCM frank, SCM op, SCM args);
+SCM_API SCM scm_array_for_each_cell_in_order (SCM frank, SCM op, SCM args);
 
 SCM_API SCM scm_list_to_array (SCM ndim, SCM lst);
 SCM_API SCM scm_list_to_typed_array (SCM type, SCM ndim, SCM lst);

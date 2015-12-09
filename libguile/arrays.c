@@ -594,6 +594,7 @@ SCM_DEFINE (scm_array_for_each_cell, "array-for-each-cell", 2, 0, 1,
 {
   // FIXME replace stack by scm_gc_malloc_pointerless()
   int const N = scm_ilength(a_);
+  int const frank = scm_to_int(frank_);
   scm_t_array_handle ah[N];
   SCM a[N];
   scm_t_array_dim * as[N];
@@ -606,7 +607,6 @@ SCM_DEFINE (scm_array_for_each_cell, "array-for-each-cell", 2, 0, 1,
       rank[n] = scm_array_handle_rank(ah+n);
     }
   // checks.
-  int const frank = scm_to_int(frank_);
   ssize_t s[frank];
   char const * msg = NULL;
   if (frank<0)
@@ -753,6 +753,17 @@ SCM_DEFINE (scm_array_for_each_cell, "array-for-each-cell", 2, 0, 1,
       scm_array_handle_release(ah+n);
     }
   return SCM_UNSPECIFIED;
+}
+#undef FUNC_NAME
+
+
+SCM_DEFINE (scm_array_for_each_cell_in_order, "array-for-each-cell-in-order", 2, 0, 1,
+            (SCM frank_, SCM op, SCM a_),
+            "Same as array-for-each-cell, but visit the cells sequentially\n"
+            "and in row-major order.\n")
+#define FUNC_NAME s_scm_array_for_each_cell_in_order
+{
+  return scm_array_for_each_cell (frank_, op, a_);
 }
 #undef FUNC_NAME
 
@@ -1130,6 +1141,7 @@ scm_i_print_array (SCM array, SCM port, scm_print_state *pstate)
   else
     return scm_i_print_array_dimension (&h, 0, 0, port, pstate);
 }
+
 
 void
 scm_init_arrays ()
