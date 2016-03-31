@@ -592,13 +592,46 @@ SCM_DEFINE (scm_array_for_each_cell, "array-for-each-cell", 2, 0, 1,
             "@end lisp")
 #define FUNC_NAME s_scm_array_for_each_cell
 {
-  // FIXME replace stack by scm_gc_malloc_pointerless()
-  int const N = scm_ilength(a_);
-  int const frank = scm_to_int(frank_);
-  scm_t_array_handle ah[N];
-  SCM a[N];
-  scm_t_array_dim * as[N];
-  int rank[N];
+  int const N = scm_ilength (a_);
+  int const frank = scm_to_int (frank_);
+
+  // wish C had better stack support
+
+  size_t stack_size = 0;
+  stack_size += N*sizeof (scm_t_array_handle);
+  stack_size += N*sizeof (SCM);
+  stack_size += N*sizeof (scm_t_array_dim *);
+  stack_size += N*sizeof (int);
+  stack_size += frank*sizeof (ssize_t);
+
+  stack_size += N*sizeof (SCM);
+  stack_size += N*sizeof (SCM *);
+  stack_size += frank*sizeof (ssize_t);
+  stack_size += frank*sizeof (int);
+
+  stack_size += N*sizeof(size_t);
+  char * stack = scm_gc_malloc_pointerless (stack_size, "stack");
+
+#define AFIC_ALLOC_ADVANCE(stack, count, type, name)    \
+  type * name = (void *)stack;                          \
+  stack += count*sizeof(type);
+
+  char * stack0 = stack;
+  AFIC_ALLOC_ADVANCE (stack, N, scm_t_array_handle, ah);
+  AFIC_ALLOC_ADVANCE (stack, N, SCM, a);
+  AFIC_ALLOC_ADVANCE (stack, N, scm_t_array_dim *, as);
+  AFIC_ALLOC_ADVANCE (stack, N, int, rank);
+  AFIC_ALLOC_ADVANCE (stack, frank, ssize_t, s);
+
+  AFIC_ALLOC_ADVANCE (stack, N, SCM, ai);
+  AFIC_ALLOC_ADVANCE (stack, N, SCM *, dargs);
+  AFIC_ALLOC_ADVANCE (stack, frank, ssize_t, i);
+  AFIC_ALLOC_ADVANCE (stack, frank, int, order);
+
+  AFIC_ALLOC_ADVANCE(stack, N, size_t, base);
+  assert((stack0+stack_size==stack) && "internal error");
+#undef AFIC_ALLOC_ADVANCE
+
   for (int n=0; scm_is_pair(a_); a_=scm_cdr(a_), ++n)
     {
       a[n] = scm_car(a_);
@@ -607,7 +640,6 @@ SCM_DEFINE (scm_array_for_each_cell, "array-for-each-cell", 2, 0, 1,
       rank[n] = scm_array_handle_rank(ah+n);
     }
   // checks.
-  ssize_t s[frank];
   char const * msg = NULL;
   if (frank<0)
     {
@@ -641,7 +673,6 @@ SCM_DEFINE (scm_array_for_each_cell, "array-for-each-cell", 2, 0, 1,
       scm_misc_error("array-for-each-cell", msg, scm_cons_star(frank_, a_));
     }
   // prepare moving cells.
-  SCM ai[N];
   scm_t_array_dim * ais[N];
   for (int n=0; n!=N; ++n)
     {
@@ -656,7 +687,6 @@ SCM_DEFINE (scm_array_for_each_cell, "array-for-each-cell", 2, 0, 1,
     }
   // prepare rest list for callee.
   SCM dargs_ = SCM_EOL;
-  SCM * dargs[N];
   {
     SCM *p = &dargs_;
     for (int n=0; n<N; ++n) {
@@ -680,8 +710,6 @@ SCM_DEFINE (scm_array_for_each_cell, "array-for-each-cell", 2, 0, 1,
       return SCM_UNSPECIFIED;
     }
   // FIXME determine best looping order.
-  ssize_t i[frank];
-  int order[frank];
   for (int k=0; k!=frank; ++k)
     {
       i[k] = 0;
@@ -700,7 +728,6 @@ SCM_DEFINE (scm_array_for_each_cell, "array-for-each-cell", 2, 0, 1,
     }
  ocd_reached: ;
   // rank loop.
-  size_t base[N];
   for (int n=0; n!=N; ++n)
     {
       base[n] = SCM_I_ARRAY_BASE(ai[n]);
