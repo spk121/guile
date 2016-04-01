@@ -1795,14 +1795,12 @@ of @var{idxlist} is shorter than @math{n}, then return the shared
 
 For example:
 
-@example
 @lisp
 (array-from #2((a b) (c d)) 0) @result{} #(a b)
 (array-from #2((a b) (c d)) 1) @result{} #(c d)
 (array-from #2((a b) (c d)) 1 1) @result{} d
 (array-from #2((a b) (c d))) @result{} #2((a b) (c d))
 @end lisp
-@end example
 
 @code{(apply array-from array indices)} is equivalent to
 
@@ -1827,7 +1825,6 @@ write into.
 
 Compare:
 
-@example
 @lisp
 (array-from #2((a b) (c d)) 1 1) @result{} d
 (array-from* #2((a b) (c d)) 1) @result{} #0(d)
@@ -1836,7 +1833,6 @@ Compare:
 a @result{} #2((a a) (a b)).
 (array-fill! (array-from a 1 1) 'b) @result{} error: not an array
 @end lisp
-@end example
 
 @code{(apply array-from* array indices)} is equivalent to
 
@@ -1863,12 +1859,19 @@ This function returns the modified @var{array}.
 
 For example:
 
-@example
 @lisp
 (array-amend! (make-array 'a 2 2) b 1 1) @result{} #2((a a) (a b))
 (array-amend! (make-array 'a 2 2) #(x y) 1) @result{} #2((a a) (x y))
 @end lisp
-@end example
+
+Note that @code{array-amend!} will expect elements, not arrays, when the
+destination has rank 0. One can work around this using
+@code{array-from*} instead.
+
+@lisp
+(array-amend! (make-array 'a 2 2) #0(b) 1 1) @result{} #2((a a) (a #0(b)))
+(let ((a (make-array 'a 2 2))) (array-copy! #0(b) (array-from* a 1 1)) a) @result{} #2((a a) (a b))
+@end lisp
 
 @code{(apply array-amend! array x indices)} is equivalent to
 
@@ -1886,10 +1889,10 @@ The name `amend' comes from the J language.
 
 @deffn {Scheme Procedure} array-for-each-cell frame-rank op x @dots{}
 @deffnx {C Function} scm_array_for_each_cell (array, frame_rank, op, xlist)
-Each @var{x} must be an array of rank @math{n_x} ≥ @var{frame-rank}, and
+Each @var{x} must be an array of rank ≥ @var{frame-rank}, and
 the first @var{frame-rank} dimensions of each @var{x} must all be the
 same. @var{array-for-each-cell} calls @var{op} with each set of
-(@math{n_x} - @var{frame-rank})-cells from @var{x}, in unspecified order.
+(rank(@var{x}) - @var{frame-rank})-cells from @var{x}, in unspecified order.
 
 @var{array-for-each-cell} allows you to loop over cells of any rank
 without having to carry an index list or construct slices manually. The
@@ -1898,26 +1901,20 @@ to write to them.
 
 This function returns an unspecified value.
 
-For example:
+For example, to sort the rows of rank-2 array @code{a}:
 
-@example
-Sort the rows of rank-2 array @code{a}:
 @lisp
 (array-for-each-cell 1 (lambda (x) (sort! x <)) a)
 @end lisp
-@end example
 
-@example
-Let @code{a} be a rank-2 array where each row is a 2-vector @math{x,
-y}. Compute the norms of these vectors and store them in rank-1 array
-@code{b}:
+As another example, let @code{a} be a rank-2 array where each row is a 2-vector @math{(x,y)}.
+Let's compute the arguments of these vectors and store them in rank-1 array @code{b}.
 @lisp
 (array-for-each-cell 1
   (lambda (a b)
-    (array-set! b (hypot (array-ref a 0) (array-ref a 1))))
+    (array-set! b (atan (array-ref a 1) (array-ref a 0))))
   a b)
 @end lisp
-@end example
 
 @code{(apply array-for-each-cell frame-rank op x)} is functionally
 equivalent to
@@ -1933,7 +1930,6 @@ equivalent to
     (lambda i (apply op (map (lambda (x) (apply array-from* x i)) x)))))
 @end lisp
 
-The name `amend' comes from the J language.
 @end deffn
 
 
