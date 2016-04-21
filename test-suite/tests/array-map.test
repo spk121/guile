@@ -525,4 +525,16 @@
       (let* ((x (list->typed-array 'f64 2 '((9 1) (7 8))))
              (y (f64vector 99 99)))
         (array-for-each-cell 1 (lambda (y x) (array-set! y (- (array-ref x 0) (array-ref x 1)))) y x)
-        y)))
+        y))
+
+  (pass-if-equal "regression: zero-sized frame loop without unrolling"
+      99
+    (let* ((x 99)
+           (o (make-array 0. 0 3 2)))
+      (array-for-each-cell 2
+        (lambda (o a0 a1)
+          (set! x 0))
+        o
+        (make-shared-array (make-array 1. 0 1) (const '(0 0)) 0 3)
+        (make-array 2. 0 3))
+      x)))
