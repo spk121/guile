@@ -651,7 +651,8 @@ scm_i_array_rebase (SCM a, size_t base)
     return b;
 }
 
-/*
+static inline size_t padtoptr(size_t d) { return (d + (sizeof (void *) - 1)) & ~(sizeof (void *) - 1); }
+
 SCM_DEFINE (scm_array_for_each_cell, "array-for-each-cell", 2, 0, 1,
             (SCM frame_rank, SCM op, SCM args),
             "Apply @var{op} to each of the cells of rank rank(@var{arg})-@var{frame_rank}\n"
@@ -679,23 +680,23 @@ SCM_DEFINE (scm_array_for_each_cell, "array-for-each-cell", 2, 0, 1,
   SCM dargs_ = SCM_EOL;
 
   size_t stack_size = 0;
-  stack_size += N*sizeof (scm_t_array_handle);
-  stack_size += N*sizeof (SCM);
-  stack_size += N*sizeof (scm_t_array_dim *);
-  stack_size += N*sizeof (int);
+  stack_size += padtoptr(N*sizeof (scm_t_array_handle));
+  stack_size += padtoptr(N*sizeof (SCM));
+  stack_size += padtoptr(N*sizeof (scm_t_array_dim *));
+  stack_size += padtoptr(N*sizeof (int));
 
-  stack_size += frank*sizeof (ssize_t);
-  stack_size += N*sizeof (SCM);
-  stack_size += N*sizeof (SCM *);
-  stack_size += frank*sizeof (ssize_t);
+  stack_size += padtoptr(frank*sizeof (ssize_t));
+  stack_size += padtoptr(N*sizeof (SCM));
+  stack_size += padtoptr(N*sizeof (SCM *));
+  stack_size += padtoptr(frank*sizeof (ssize_t));
 
-  stack_size += frank*sizeof (int);
-  stack_size += N*sizeof (size_t);
+  stack_size += padtoptr(frank*sizeof (int));
+  stack_size += padtoptr(N*sizeof (size_t));
   char * stack = scm_gc_malloc (stack_size, "stack");
 
 #define AFIC_ALLOC_ADVANCE(stack, count, type, name)    \
   type * name = (void *)stack;                          \
-  stack += count*sizeof (type);
+  stack += padtoptr(count*sizeof (type));
 
   char * stack0 = stack;
   AFIC_ALLOC_ADVANCE (stack, N, scm_t_array_handle, ah);
@@ -884,8 +885,8 @@ SCM_DEFINE (scm_array_for_each_cell, "array-for-each-cell", 2, 0, 1,
   return SCM_UNSPECIFIED;
 }
 #undef FUNC_NAME
-*/
 
+/*
 SCM_DEFINE (scm_array_for_each_cell, "array-for-each-cell", 2, 0, 1,
             (SCM frame_rank, SCM op, SCM args),
             "Apply @var{op} to each of the cells of rank rank(@var{arg})-@var{frame_rank}\n"
@@ -909,8 +910,8 @@ SCM_DEFINE (scm_array_for_each_cell, "array-for-each-cell", 2, 0, 1,
 #define FUNC_NAME s_scm_array_for_each_cell
 {
   // FIXME replace stack by scm_gc_malloc_pointerless()
-  int const N = scm_ilength(args);
-  int const frank = scm_to_int(frame_rank);
+  int const N = scm_ilength (args);
+  int const frank = scm_to_int (frame_rank);
   SCM dargs_ = SCM_EOL;
 
   scm_t_array_handle ah[N];
@@ -1097,6 +1098,7 @@ SCM_DEFINE (scm_array_for_each_cell, "array-for-each-cell", 2, 0, 1,
   return SCM_UNSPECIFIED;
 }
 #undef FUNC_NAME
+*/
 
 SCM_DEFINE (scm_array_for_each_cell_in_order, "array-for-each-cell-in-order", 2, 0, 1,
             (SCM frank, SCM op, SCM a),
