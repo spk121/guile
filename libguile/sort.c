@@ -51,23 +51,25 @@
 #include "libguile/validate.h"
 #include "libguile/sort.h"
 
-/* We have two quicksort variants: one for contigous vectors and one
-   for vectors with arbitrary increments between elements.  Note that
-   increments can be negative.
+/* We have two quicksort variants: one for SCM (#t) arrays and one for
+   typed arrays.
 */
-
-#define NAME        quicksort1
-#define INC_PARAM   /* empty */
-#define INC         1
-#include "libguile/quicksort.i.c"
 
 #define NAME        quicksort
 #define INC_PARAM   ssize_t inc,
-#define INC         inc
+#define VEC_PARAM   SCM * ra,
+#define GET(i)      ra[(i)*inc]
+#define SET(i, val) ra[(i)*inc] = val
 #include "libguile/quicksort.i.c"
 
+#define NAME        quicksorta
+#define INC_PARAM
+#define VEC_PARAM   scm_t_array_handle * const ra,
+#define GET(i)      scm_array_handle_ref (ra, scm_array_handle_pos_1 (ra, i))
+#define SET(i, val) scm_array_handle_set (ra, scm_array_handle_pos_1 (ra, i), val)
+#include "libguile/quicksort.i.c"
 
-SCM_DEFINE (scm_restricted_vector_sort_x, "restricted-vector-sort!", 4, 0, 0, 
+SCM_DEFINE (scm_restricted_vector_sort_x, "restricted-vector-sort!", 4, 0, 0,
             (SCM vec, SCM less, SCM startpos, SCM endpos),
 	    "Sort the vector @var{vec}, using @var{less} for comparing\n"
 	    "the vector elements.  @var{startpos} (inclusively) and\n"
@@ -76,22 +78,38 @@ SCM_DEFINE (scm_restricted_vector_sort_x, "restricted-vector-sort!", 4, 0, 0,
 	    "is not specified.")
 #define FUNC_NAME s_scm_restricted_vector_sort_x
 {
-  size_t vlen, spos, len;
-  ssize_t vinc;
+  ssize_t spos = scm_to_ssize_t (startpos);
+  size_t epos = scm_to_ssize_t (endpos);
+
   scm_t_array_handle handle;
-  SCM *velts;
+  scm_array_get_handle (vec, &handle);
+  scm_t_array_dim const * dims = scm_array_handle_dims (&handle);
 
-  velts = scm_vector_writable_elements (vec, &handle, &vlen, &vinc);
-  spos = scm_to_unsigned_integer (startpos, 0, vlen);
-  len = scm_to_unsigned_integer (endpos, spos, vlen) - spos;
+  if (scm_array_handle_rank(&handle) != 1)
+    {
+      scm_array_handle_release (&handle);
+      scm_error (scm_misc_error_key, FUNC_NAME, "rank must be 1", vec, SCM_EOL);
+    }
+  if (spos < dims[0].lbnd)
+    {
+      scm_array_handle_release (&handle);
+      scm_error (scm_out_of_range_key, FUNC_NAME, "startpos out of range",
+                 vec, scm_list_1(startpos));
+    }
+  if (epos > dims[0].ubnd+1)
+    {
+      scm_array_handle_release (&handle);
+      scm_error (scm_out_of_range_key, FUNC_NAME, "endpos out of range",
+                 vec, scm_list_1(endpos));
+    }
 
-  if (vinc == 1)
-    quicksort1 (velts + spos*vinc, len, less);
+  if (handle.element_type == SCM_ARRAY_ELEMENT_TYPE_SCM)
+      quicksort (scm_array_handle_writable_elements (&handle) + (spos-dims[0].lbnd) * dims[0].inc,
+                 epos-spos, dims[0].inc, less);
   else
-    quicksort (velts + spos*vinc, len, vinc, less);
+      quicksorta (&handle, epos-spos, less);
 
   scm_array_handle_release (&handle);
-
   return SCM_UNSPECIFIED;
 }
 #undef FUNC_NAME
@@ -140,29 +158,48 @@ SCM_DEFINE (scm_sorted_p, "sorted?", 2, 0, 0,
     }
   else
     {
-      scm_t_array_handle handle;
-      size_t i, len;
-      ssize_t inc;
-      const SCM *elts;
       SCM result = SCM_BOOL_T;
 
-      elts = scm_vector_elements (items, &handle, &len, &inc);
+      scm_t_array_handle handle;
+      scm_array_get_handle (items, &handle);
+      scm_t_array_dim const * dims = scm_array_handle_dims (&handle);
 
-      for (i = 1; i < len; i++, elts += inc)
-	{
-	  if (scm_is_true (scm_call_2 (less, elts[inc], elts[0])))
-	    {
-	      result = SCM_BOOL_F;
-	      break;
-	    }
-	}
+      if (scm_array_handle_rank(&handle) != 1)
+        {
+          scm_array_handle_release (&handle);
+          scm_error (scm_misc_error_key, FUNC_NAME, "rank must be 1", items, SCM_EOL);
+        }
+
+      if (handle.element_type == SCM_ARRAY_ELEMENT_TYPE_SCM)
+        {
+          ssize_t inc = dims[0].inc;
+          const SCM *elts = scm_array_handle_elements (&handle);
+          for (ssize_t i = dims[0].lbnd+1, end = dims[0].ubnd+1; i < end; ++i, elts += inc)
+            {
+              if (scm_is_true (scm_call_2 (less, elts[inc], elts[0])))
+                {
+                  result = SCM_BOOL_F;
+                  break;
+                }
+            }
+        }
+      else
+        {
+          for (ssize_t i = dims[0].lbnd+1, end = dims[0].ubnd+1; i < end; ++i)
+            {
+              if (scm_is_true (scm_call_2 (less,
+                                           scm_array_handle_ref (&handle, scm_array_handle_pos_1 (&handle, i)),
+                                           scm_array_handle_ref (&handle, scm_array_handle_pos_1 (&handle, i-1)))))
+                {
+                  result = SCM_BOOL_F;
+                  break;
+                }
+            }
+        }
 
       scm_array_handle_release (&handle);
-
       return result;
     }
-
-  return SCM_BOOL_F;
 }
 #undef FUNC_NAME
 
@@ -172,7 +209,7 @@ SCM_DEFINE (scm_sorted_p, "sorted?", 2, 0, 0,
    and returns a new list in which the elements of a and b have been stably
    interleaved so that (sorted? (merge a b less?) less?).
    Note:  this does _not_ accept vectors. */
-SCM_DEFINE (scm_merge, "merge", 3, 0, 0, 
+SCM_DEFINE (scm_merge, "merge", 3, 0, 0,
             (SCM alist, SCM blist, SCM less),
 	    "Merge two already sorted lists into one.\n"
 	    "Given two lists @var{alist} and @var{blist}, such that\n"
@@ -236,7 +273,7 @@ SCM_DEFINE (scm_merge, "merge", 3, 0, 0,
 #undef FUNC_NAME
 
 
-static SCM 
+static SCM
 scm_merge_list_x (SCM alist, SCM blist,
 		  long alen, long blen,
 		  SCM less)
@@ -288,7 +325,7 @@ scm_merge_list_x (SCM alist, SCM blist,
 }				/* scm_merge_list_x */
 
 
-SCM_DEFINE (scm_merge_x, "merge!", 3, 0, 0, 
+SCM_DEFINE (scm_merge_x, "merge!", 3, 0, 0,
             (SCM alist, SCM blist, SCM less),
 	    "Takes two lists @var{alist} and @var{blist} such that\n"
 	    "@code{(sorted? alist less?)} and @code{(sorted? blist less?)} and\n"
@@ -319,7 +356,7 @@ SCM_DEFINE (scm_merge_x, "merge!", 3, 0, 0,
    scsh's merge-sort but that algorithm showed to not be stable, even
    though it claimed to be.
 */
-static SCM 
+static SCM
 scm_merge_list_step (SCM * seq, SCM less, long n)
 {
   SCM a, b;
@@ -359,7 +396,7 @@ scm_merge_list_step (SCM * seq, SCM less, long n)
 }				/* scm_merge_list_step */
 
 
-SCM_DEFINE (scm_sort_x, "sort!", 2, 0, 0, 
+SCM_DEFINE (scm_sort_x, "sort!", 2, 0, 0,
             (SCM items, SCM less),
 	    "Sort the sequence @var{items}, which may be a list or a\n"
 	    "vector.  @var{less} is used for comparing the sequence\n"
@@ -391,7 +428,7 @@ SCM_DEFINE (scm_sort_x, "sort!", 2, 0, 0,
 #undef FUNC_NAME
 
 
-SCM_DEFINE (scm_sort, "sort", 2, 0, 0, 
+SCM_DEFINE (scm_sort, "sort", 2, 0, 0,
             (SCM items, SCM less),
 	    "Sort the sequence @var{items}, which may be a list or a\n"
 	    "vector.  @var{less} is used for comparing the sequence\n"
@@ -404,7 +441,13 @@ SCM_DEFINE (scm_sort, "sort", 2, 0, 0,
   if (scm_is_pair (items))
     return scm_sort_x (scm_list_copy (items), less);
   else if (scm_is_array (items) && scm_c_array_rank (items) == 1)
-    return scm_sort_x (scm_vector_copy (items), less);
+    {
+      if (scm_c_array_rank (items) != 1)
+        scm_error (scm_misc_error_key, FUNC_NAME, "rank must be 1", items, SCM_EOL);
+      SCM copy = scm_make_typed_array (scm_array_type (items), SCM_UNSPECIFIED, scm_array_dimensions (items));
+      scm_array_copy_x (items, copy);
+      return scm_sort_x (copy, less);
+    }
   else
     SCM_WRONG_TYPE_ARG (1, items);
 }
@@ -470,7 +513,7 @@ scm_merge_vector_step (SCM *vec,
 }				/* scm_merge_vector_step */
 
 
-SCM_DEFINE (scm_stable_sort_x, "stable-sort!", 2, 0, 0, 
+SCM_DEFINE (scm_stable_sort_x, "stable-sort!", 2, 0, 0,
             (SCM items, SCM less),
 	    "Sort the sequence @var{items}, which may be a list or a\n"
 	    "vector. @var{less} is used for comparing the sequence elements.\n"
@@ -495,14 +538,15 @@ SCM_DEFINE (scm_stable_sort_x, "stable-sort!", 2, 0, 0,
       SCM temp, *temp_elts, *vec_elts;
       size_t len;
       ssize_t inc;
-      
+
       vec_elts = scm_vector_writable_elements (items, &vec_handle,
 					       &len, &inc);
-      if (len == 0) {
-        scm_array_handle_release (&vec_handle);
-        return items;
-      }
-      
+      if (len == 0)
+        {
+          scm_array_handle_release (&vec_handle);
+          return items;
+        }
+
       temp = scm_c_make_vector (len, SCM_UNDEFINED);
       temp_elts = scm_vector_writable_elements (temp, &temp_handle,
 						NULL, NULL);
@@ -520,7 +564,7 @@ SCM_DEFINE (scm_stable_sort_x, "stable-sort!", 2, 0, 0,
 #undef FUNC_NAME
 
 
-SCM_DEFINE (scm_stable_sort, "stable-sort", 2, 0, 0, 
+SCM_DEFINE (scm_stable_sort, "stable-sort", 2, 0, 0,
             (SCM items, SCM less),
 	    "Sort the sequence @var{items}, which may be a list or a\n"
 	    "vector. @var{less} is used for comparing the sequence elements.\n"
@@ -554,7 +598,7 @@ SCM_DEFINE (scm_sort_list_x, "sort-list!", 2, 0, 0,
 #undef FUNC_NAME
 
 
-SCM_DEFINE (scm_sort_list, "sort-list", 2, 0, 0, 
+SCM_DEFINE (scm_sort_list, "sort-list", 2, 0, 0,
 	    (SCM items, SCM less),
 	    "Sort the list @var{items}, using @var{less} for comparing the\n"
 	    "list elements. This is a stable sort.")
