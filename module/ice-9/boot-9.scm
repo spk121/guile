@@ -325,6 +325,7 @@ If returning early, return the return value of F."
 ;; let format alias simple-format until the more complete version is loaded
 
 (define format simple-format)
+(define exception-format simple-format)
 
 ;; this is scheme wrapping the C code so the final pred call is a tail call,
 ;; per SRFI-13 spec
@@ -762,7 +763,7 @@ information is unavailable."
                        ((not (car args)) 1)
                        (else 0))))
      (else
-      (format (current-error-port) "guile: uncaught throw to ~a: ~a\n"
+      (exception-format (current-error-port) "guile: uncaught throw to ~a: ~a\n"
               key args)
       (primitive-exit 1))))
 
@@ -865,8 +866,8 @@ for key @var{k}, then invoke @var{thunk}."
           (let ((filename (or (cadr source) "<unnamed port>"))
                 (line (caddr source))
                 (col (cdddr source)))
-            (format port "~a:~a:~a: " filename (1+ line) col))
-          (format port "ERROR: "))))
+            (exception-format port "~a:~a:~a: " filename (1+ line) col))
+          (exception-format port "ERROR: "))))
 
   (set! set-exception-printer!
         (lambda (key proc)
@@ -875,7 +876,7 @@ for key @var{k}, then invoke @var{thunk}."
   (set! print-exception
         (lambda (port frame key args)
           (define (default-printer)
-            (format port "Throw to key `~a' with args `~s'." key args))
+            (exception-format port "Throw to key `~a' with args `~s'." key args))
 
           (when frame
             (print-location frame port)
@@ -884,7 +885,7 @@ for key @var{k}, then invoke @var{thunk}."
                           (lambda () (frame-procedure-name frame))
                           (lambda _ #f))))
               (when name
-                (format port "In procedure ~a:\n" name))))
+                (exception-format port "In procedure ~a:\n" name))))
 
           (catch #t
             (lambda ()
@@ -893,7 +894,9 @@ for key @var{k}, then invoke @var{thunk}."
                     (printer port key args default-printer)
                     (default-printer))))
             (lambda (k . args)
-              (format port "Error while printing exception.")))
+              (exception-format
+               port "Error while printing exception `~a`: `~a' with args [~s]"
+               key k args)))
           (newline port)
           (force-output port))))
 
@@ -907,38 +910,38 @@ for key @var{k}, then invoke @var{thunk}."
     (apply (case-lambda
              ((subr msg args . rest)
               (if subr
-                  (format port "In procedure ~a: " subr))
-              (apply format port msg (or args '())))
+                  (exception-format port "In procedure ~a: " subr))
+              (apply exception-format port msg (or args '())))
              (_ (default-printer)))
            args))
 
   (define (syntax-error-printer port key args default-printer)
     (apply (case-lambda
              ((who what where form subform . extra)
-              (format port "Syntax error:\n")
+              (exception-format port "Syntax error:\n")
               (if where
                   (let ((file (or (assq-ref where 'filename) "unknown file"))
                         (line (and=> (assq-ref where 'line) 1+))
                         (col (assq-ref where 'column)))
-                    (format port "~a:~a:~a: " file line col))
-                  (format port "unknown location: "))
+                    (exception-format port "~a:~a:~a: " file line col))
+                  (exception-format port "unknown location: "))
               (if who
-                  (format port "~a: " who))
-              (format port "~a" what)
+                  (exception-format port "~a: " who))
+              (exception-format port "~a" what)
               (if subform
-                  (format port " in subform ~s of ~s" subform form)
+                  (exception-format port " in subform ~s of ~s" subform form)
                   (if form
-                      (format port " in form ~s" form))))
+                      (exception-format port " in form ~s" form))))
              (_ (default-printer)))
            args))
 
   (define (keyword-error-printer port key args default-printer)
     (let ((message (cadr args))
           (faulty  (car (cadddr args)))) ; I won't do it again, I promise.
-      (format port "~a: ~s" message faulty)))
+      (exception-format port "~a: ~s" message faulty)))
 
   (define (getaddrinfo-error-printer port key args default-printer)
-    (format port "In procedure getaddrinfo: ~a" (gai-strerror (car args))))
+    (exception-format port "In procedure getaddrinfo: ~a" (gai-strerror (car args))))
 
   (set-exception-printer! 'goops-error scm-error-printer)
   (set-exception-printer! 'host-not-found scm-error-printer)
@@ -1066,11 +1069,11 @@ VALUE."
        (lambda (key . args)
          (for-each (lambda (s)
                      (if (not (string-null? s))
-                         (format (current-warning-port) ";;; ~a\n" s)))
+                         (exception-format (current-warning-port) ";;; ~a\n" s)))
                    (string-split
                     (call-with-output-string
                      (lambda (port)
-                       (format port template arg ...)
+                       (exception-format port template arg ...)
                        (print-exception port #f key args)))
                     #\newline))
          #f)))))
@@ -1229,7 +1232,7 @@ VALUE."
                 (if (= (length args) nfields)
                     (apply make-struct/no-tail rtd args)
                     (scm-error 'wrong-number-of-args
-                               (format #f "make-~a" type-name)
+                               (exception-format #f "make-~a" type-name)
                                "Wrong number of arguments" '() #f)))))))))
 
   (define (default-record-printer s p)
