@@ -891,6 +891,10 @@ but not specifically mentioned earlier in this file, have been removed:
     removed. Use `get-bytevector-n!' and `put-bytevector' from (rnrs io
     ports) instead.
 
+*** `scm_generalized_vector_get_handle' has been removed. Use
+    `scm_array_get_handle' to get a handle and `scm_array_handle_rank'
+    to check the rank.
+
 ** Remove miscellaneous unused interfaces
 
 We have removed accidentally public, undocumented interfaces that we
