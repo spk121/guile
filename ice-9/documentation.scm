@@ -100,7 +100,7 @@
   ;;
   (define default-in-line-re (make-regexp "^;;; Commentary:"))
   (define default-after-line-re (make-regexp "^;;; Code:"))
-  (define default-scrub (let ((dirt (make-regexp "^;+")))
+  (define default-scrub (let ((dirt (make-regexp "^;+ ?")))
 			  (lambda (line)
 			    (let ((m (regexp-exec dirt line)))
 			      (if m (match:suffix m) line)))))
