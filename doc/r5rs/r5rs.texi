@@ -106,7 +106,6 @@
 @author C. H@sc{ANSON} 
 @author K. M. P@sc{ITMAN} 
 @author M. W@sc{AND} 
-@author 
 
 
 @c  {\it Dedicated to the Memory of ALGOL 60}
@@ -116,7 +115,7 @@
 
 
 
-@unnumbered Summary
+@heading Summary
 
 
 The report gives a defining description of the programming language
@@ -760,7 +759,7 @@ conventions also imply type restrictions:
 @c \newcommand{\foo}[1]{\vr{#1}, \vri{#1}, $\ldots$ \vrj{#1}, $\ldots$}
 
 
-@center @c begin-tabular
+@c @center @c begin-tabular
 @quotation
 @table @asis
 @item @var{obj}
@@ -779,7 +778,6 @@ rational number
 integer
 @item @var{k}, @var{k1}, @dots{} @var{kj}, @dots{}
 exact non-negative integer
-@item 
 @end table
 @end quotation
 
@@ -5566,7 +5564,7 @@ For example:
 
 
 
-@center @c begin-tabular
+@c @center @c begin-tabular
 @quotation
 @table @asis
 @item @t{#\a}
@@ -5581,7 +5579,6 @@ For example:
 ; the preferred way to write a space
 @item @t{#\newline}
 ; the newline character
-@item 
 @end table
 @end quotation
 
@@ -7272,20 +7269,24 @@ The following five characters are reserved for future extensions to the
 language: @t{[ ] @{ @} |}
 
 
-@format
-@t{<token> --> <identifier> | <boolean> | <number>
+@example
+<token> --> <identifier> | <boolean> | <number>
+@end example
 @cindex @w{identifier}
+@example
      | <character> | <string>
      | ( | ) | #( | @t{'} | @t{`} | , | ,@@ | @b{.}
 <delimiter> --> <whitespace> | ( | ) | " | ;
 <whitespace> --> <space or newline>
 <comment> --> ;  <@r{all subsequent characters up to a}
                  @r{line break>}
+@end example
 @cindex @w{comment}
+@example
 <atmosphere> --> <whitespace> | <comment>
-<intertoken space> --> <atmosphere>*}
+<intertoken space> --> <atmosphere>*
 
-@end format
+@end example
 
 
 
@@ -7296,8 +7297,8 @@ language: @t{[ ] @{ @} |}
 
 
 
-@format
-@t{<identifier> --> <initial> <subsequent>*
+@example
+<identifier> --> <initial> <subsequent>*
      | <peculiar identifier>
 <initial> --> <letter> | <special initial>
 <letter> --> a | b | c | ... | z
@@ -7310,8 +7311,10 @@ language: @t{[ ] @{ @} |}
 <special subsequent> --> + | - | .@: | @@
 <peculiar identifier> --> + | - | ...
 <syntactic keyword> --> <expression keyword>
+@end example
 @cindex @w{syntactic keyword}
 @cindex @w{keyword}
+@example
      | else | => | define 
      | unquote | unquote-splicing
 <expression keyword> --> quote | lambda | if
@@ -7320,7 +7323,9 @@ language: @t{[ ] @{ @} |}
      | quasiquote
 
 @w{@samp{<variable> @result{} <}}@r{any <identifier> that isn't}
+@end example
 @cindex @w{variable}
+@example
        @w{         @r{also a <syntactic keyword>>}}
 
 <boolean> --> #t | #f
@@ -7330,9 +7335,9 @@ language: @t{[ ] @{ @} |}
 
 <string> --> " <string element>* "
 <string element> --> <any character other than " or \>
-     | \" | \\ }
+     | \" | \\
 
-@end format
+@end example
 
 
 
@@ -7385,27 +7390,35 @@ Mark Meyer and David Bartley want to fix this.  (What? -- Will)
 
 
 
-@format
-@t{<suffix> --> <empty> 
+@example
+<suffix> --> <empty> 
     | <exponent marker> <sign> <digit 10>+
 <exponent marker> --> e | s | f | d | l
 <sign> --> <empty>  | + |  -
 <exactness> --> <empty> | #i | #e
+@end example
 @vindex #e
 @vindex #i
+@example
 <radix 2> --> #b
+@end example
 @vindex #b
+@example
 <radix 8> --> #o
+@end example
 @vindex #o
+@example
 <radix 10> --> <empty> | #d
 <radix 16> --> #x
+@end example
 @vindex #x
+@example
 <digit 2> --> 0 | 1
 <digit 8> --> 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7
 <digit 10> --> <digit>
-<digit 16> --> <digit 10> | a | b | c | d | e | f }
+<digit 16> --> <digit 10> | a | b | c | d | e | f
 
-@end format
+@end example
 
 
 
@@ -8057,9 +8070,9 @@ Cromarty:
 
 The Internet Scheme Repository at
 
-@center 
+@c @center 
 @center @url{http://www.cs.indiana.edu/scheme-repository/}
-@center 
+@c @center 
 
 contains an extensive Scheme bibliography, as well as papers,
 programs, implementations, and other material related to Scheme.

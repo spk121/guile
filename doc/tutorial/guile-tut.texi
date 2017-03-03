@@ -446,7 +446,7 @@ get started, look at the books @cite{Simply Scheme} and @cite{The Little
 Schemer} from that list.}
 
 
-@subsection Hello World
+@section Hello World
 @cindex hello world
 
 Our first program is the typical Scheme "hello world" program.  Put the
@@ -483,7 +483,7 @@ is then terminated with @code{!#} on the second line so as to not
 interfere with the execution mechanism.
 
 
-@subsection A bunch of operations in Scheme
+@section A bunch of operations in Scheme
 
 Here is some code you can type at the @code{guile>} prompt to see some
 of the Scheme data types at work (mostly lists and vectors).  I have
@@ -535,12 +535,12 @@ guile> @kbd{(memq 4 ls)}
 guile> @kbd{(if (memq 4 ls)
            (display "hey, it's true!\n")
            (display "dude, it's false\n"))}
-       @print{hey, it's true!}
+       @print{} hey, it's true!
        @result{}
 guile> @kbd{(if (memq 12 ls)
            (display "hey, it's true!\n")
            (display "dude, it's false\n"))}
-       @print{dude, it's false}
+       @print{} dude, it's false
        @result{}
 guile> @kbd{(memq 4 (reverse ls))}
        @result{} (4 3 2 1)
@@ -583,7 +583,7 @@ guile> @kbd{v}
 @end smalllisp
 
 
-@subsection Using recursion to process lists
+@section Using recursion to process lists
 @cindex recursion
 @cindex list processing
 
@@ -600,7 +600,7 @@ Here are some typical examples of using recursion to process a list.
 @end smalllisp
 
 
-@subsection Processing matrices
+@section Processing matrices
 
 Suppose you have a matrix represented as a list of lists:
 
@@ -656,9 +656,9 @@ And then invoke it with
 (represent-matrix m
                   (lambda (x) (begin (display x) (display " ")))
                   (lambda (l) (begin (display "\n"))))
-@print{7 2 1 3 2 8 5 3 6}
-@print{4 1 1 1 3 8 9 8 1}
-@print{5 5 4 8 1 8 2 2 4}
+@print{} 7 2 1 3 2 8 5 3 6
+@print{} 4 1 1 1 3 8 9 8 1
+@print{} 5 5 4 8 1 8 2 2 4
 @end smalllisp
 
 @cindex objects
