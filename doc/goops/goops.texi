@@ -26,7 +26,7 @@ Guile
 @ifinfo
 This file documents GOOPS, an object oriented extension for Guile.
 
-Copyright (C) 1999, 2000, 2001, 2003, 2006 Free Software Foundation
+Copyright (C) 1999--2001, 2003, 2006, 2017 Free Software Foundation, Inc.
 
 Permission is granted to make and distribute verbatim copies of
 this manual provided the copyright notice and this permission notice

@@ -3,7 +3,7 @@
 #ifndef SCM___SCM_H
 #define SCM___SCM_H
 
-/* Copyright (C) 1995,1996,1998,1999,2000,2001,2002,2003, 2006, 2007, 2008, 2010 Free Software Foundation, Inc.
+/* Copyright (C) 1995-1996, 1998-2003, 2006-2008, 2010, 2017 Free Software Foundation, Inc.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
