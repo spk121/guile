@@ -302,9 +302,12 @@ guile-procedures.texi: $(alldotdocfiles) guile$(EXEEXT)
 
 if HAVE_MAKEINFO
 
+# Some versions of makeinfo inject whitespace between ^L and symbol.
+# The sed script removes that.
 guile-procedures.txt: guile-procedures.texi
 	rm -f $@
 	makeinfo --force -o $@ guile-procedures.texi || test -f $@
+	sed 's/\(\f\) */\1/' $@ > $@-T && mv $@-T $@
 
 else
 
