@@ -32,7 +32,7 @@
  namespace (via adding #define, typedef, or similar to this file) with
  generic names.  This usually means that any new names should be
  prefixed by either SCM_ or GUILE_.  i.e. do *not* #define HAVE_FOO or
- SIZEOF_BAR.  See configure.in, gen-scmconfig.h.in, and
+ SIZEOF_BAR.  See configure.ac, gen-scmconfig.h.in, and
  gen-scmconfig.c for examples of how to properly handle this issue.
  The main documentation is in gen-scmconfig.c.
 

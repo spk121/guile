@@ -2,9 +2,9 @@
 
 # This file contains the shared library versioning information.  Right
 # now, for this to work properly, you'll also need to add AC_SUBST
-# calls to the right place in configure.in, add the right
+# calls to the right place in configure.ac, add the right
 # -version-info statement to your Makefile.am, and add a call to
-# source this file from configure.in.  Later we may automate more of
+# source this file from configure.ac.  Later we may automate more of
 # this.
 
 LIBGUILEREADLINE_MAJOR=17
