@@ -140,7 +140,7 @@ scm_i_rstate_from_datum (scm_t_rstate *state, SCM value)
   scm_t_i_rstate *istate = (scm_t_i_rstate*) state;
   scm_t_uint32 w, c;
   long length;
-  
+
   SCM_VALIDATE_LIST_COPYLEN (SCM_ARG1, value, length);
   SCM_ASSERT (length == 3, value, SCM_ARG1, FUNC_NAME);
   SCM_ASSERT (scm_is_eq (SCM_CAR (value), scm_i_rstate_tag),
@@ -227,13 +227,13 @@ scm_c_normal01 (scm_t_rstate *state)
   else
     {
       double r, a, n;
-      
+
       r = sqrt (-2.0 * log (scm_c_uniform01 (state)));
       a = 2.0 * M_PI * scm_c_uniform01 (state);
-      
+
       n = r * sin (a);
       state->normal_next = r * cos (a);
-      
+
       return n;
     }
 }
@@ -274,7 +274,7 @@ scm_c_random64 (scm_t_rstate *state, scm_t_uint64 m)
 
   if (m <= SCM_T_UINT32_MAX)
     return scm_c_random (state, (scm_t_uint32) m);
-  
+
   mask = scm_i_mask32 (m >> 32);
   while ((r = ((scm_t_uint64) (state->rng->random_bits (state) & mask) << 32)
           | state->rng->random_bits (state)) >= m)
@@ -322,7 +322,7 @@ scm_c_random_bignum (scm_t_rstate *state, SCM m)
       scm_t_uint32 chunks_left = num_chunks;
 
       mpz_set_ui (SCM_I_BIG_MPZ (result), 0);
-      
+
       if (end_bits)
         {
           /* generate a mask with ones in the end_bits position, i.e. if
@@ -334,7 +334,7 @@ scm_c_random_bignum (scm_t_rstate *state, SCM m)
           *current_chunk-- = highest_bits;
           chunks_left--;
         }
-      
+
       while (chunks_left)
         {
           /* now fill in the remaining scm_t_uint32 sized chunks */
@@ -360,7 +360,7 @@ scm_c_random_bignum (scm_t_rstate *state, SCM m)
 /*
  * Scheme level representation of random states.
  */
- 
+
 scm_t_bits scm_tc16_rstate;
 
 static SCM
@@ -376,7 +376,7 @@ make_rstate (scm_t_rstate *state)
 
 SCM_GLOBAL_VARIABLE_INIT (scm_var_random_state, "*random-state*", scm_seed_to_random_state (scm_from_locale_string ("URL:http://stat.fsu.edu/~geo/diehard.html")));
 
-SCM_DEFINE (scm_random, "random", 1, 1, 0, 
+SCM_DEFINE (scm_random, "random", 1, 1, 0,
             (SCM n, SCM state),
             "Return a number in [0, N).\n"
             "\n"
@@ -420,7 +420,7 @@ SCM_DEFINE (scm_random, "random", 1, 1, 0,
 }
 #undef FUNC_NAME
 
-SCM_DEFINE (scm_copy_random_state, "copy-random-state", 0, 1, 0, 
+SCM_DEFINE (scm_copy_random_state, "copy-random-state", 0, 1, 0,
             (SCM state),
             "Return a copy of the random state @var{state}.")
 #define FUNC_NAME s_scm_copy_random_state
@@ -432,7 +432,7 @@ SCM_DEFINE (scm_copy_random_state, "copy-random-state", 0, 1, 0,
 }
 #undef FUNC_NAME
 
-SCM_DEFINE (scm_seed_to_random_state, "seed->random-state", 1, 0, 0, 
+SCM_DEFINE (scm_seed_to_random_state, "seed->random-state", 1, 0, 0,
             (SCM seed),
             "Return a new random state using @var{seed}.")
 #define FUNC_NAME s_scm_seed_to_random_state
@@ -445,11 +445,11 @@ SCM_DEFINE (scm_seed_to_random_state, "seed->random-state", 1, 0, 0,
 					scm_i_string_length (seed)));
   scm_remember_upto_here_1 (seed);
   return res;
-  
+
 }
 #undef FUNC_NAME
 
-SCM_DEFINE (scm_datum_to_random_state, "datum->random-state", 1, 0, 0, 
+SCM_DEFINE (scm_datum_to_random_state, "datum->random-state", 1, 0, 0,
             (SCM datum),
             "Return a new random state using @var{datum}, which should have\n"
             "been obtained from @code{random-state->datum}.")
@@ -459,7 +459,7 @@ SCM_DEFINE (scm_datum_to_random_state, "datum->random-state", 1, 0, 0,
 }
 #undef FUNC_NAME
 
-SCM_DEFINE (scm_random_state_to_datum, "random-state->datum", 1, 0, 0, 
+SCM_DEFINE (scm_random_state_to_datum, "random-state->datum", 1, 0, 0,
             (SCM state),
             "Return a datum representation of @var{state} that may be\n"
             "written out and read back with the Scheme reader.")
@@ -470,7 +470,7 @@ SCM_DEFINE (scm_random_state_to_datum, "random-state->datum", 1, 0, 0,
 }
 #undef FUNC_NAME
 
-SCM_DEFINE (scm_random_uniform, "random:uniform", 0, 1, 0, 
+SCM_DEFINE (scm_random_uniform, "random:uniform", 0, 1, 0,
             (SCM state),
 	    "Return a uniformly distributed inexact real random number in\n"
 	    "[0,1).")
@@ -483,7 +483,7 @@ SCM_DEFINE (scm_random_uniform, "random:uniform", 0, 1, 0,
 }
 #undef FUNC_NAME
 
-SCM_DEFINE (scm_random_normal, "random:normal", 0, 1, 0, 
+SCM_DEFINE (scm_random_normal, "random:normal", 0, 1, 0,
             (SCM state),
 	    "Return an inexact real in a normal distribution.  The\n"
 	    "distribution used has mean 0 and standard deviation 1.  For a\n"
@@ -501,63 +501,73 @@ SCM_DEFINE (scm_random_normal, "random:normal", 0, 1, 0,
 static void
 vector_scale_x (SCM v, double c)
 {
-  size_t n;
-  if (scm_is_vector (v))
-    {
-      n = SCM_SIMPLE_VECTOR_LENGTH (v);
-      while (n-- > 0)
-	SCM_REAL_VALUE (SCM_SIMPLE_VECTOR_REF (v, n)) *= c;
-    }
-  else
-    {
-      /* must be a f64vector. */
-      scm_t_array_handle handle;
-      size_t i, len;
-      ssize_t inc;
-      double *elts;
+  scm_t_array_handle handle;
+  scm_t_array_dim const * dims;
+  ssize_t i, inc, ubnd;
 
-      elts = scm_f64vector_writable_elements (v, &handle, &len, &inc);
+  scm_array_get_handle (v, &handle);
+  dims = scm_array_handle_dims (&handle);
+  if (1 == scm_array_handle_rank (&handle))
+    {
+      ubnd = dims[0].ubnd;
+      inc = dims[0].inc;
 
-      for (i = 0; i < len; i++, elts += inc)
-	*elts *= c;
-      
-      scm_array_handle_release (&handle);
+      if (handle.element_type == SCM_ARRAY_ELEMENT_TYPE_F64)
+        {
+          double *elts = (double *)(handle.writable_elements) + handle.base;
+          for (i = dims[0].lbnd; i <= ubnd; ++i, elts += inc)
+            *elts *= c;
+          return;
+        }
+      else if (handle.element_type == SCM_ARRAY_ELEMENT_TYPE_SCM)
+        {
+          SCM *elts = (SCM *)(handle.writable_elements) + handle.base;
+          for (i = dims[0].lbnd; i <= ubnd; ++i, elts += inc)
+            SCM_REAL_VALUE (*elts) *= c;
+          return;
+        }
     }
+  scm_array_handle_release (&handle);
+  scm_misc_error (NULL, "must be a rank-1 array of type #t or 'f64", scm_list_1 (v));
 }
 
 static double
 vector_sum_squares (SCM v)
 {
   double x, sum = 0.0;
-  size_t n;
-  if (scm_is_vector (v))
+  scm_t_array_handle handle;
+  scm_t_array_dim const * dims;
+  ssize_t i, inc, ubnd;
+
+  scm_array_get_handle (v, &handle);
+  dims = scm_array_handle_dims (&handle);
+  if (1 == scm_array_handle_rank (&handle))
     {
-      n = SCM_SIMPLE_VECTOR_LENGTH (v);
-      while (n-- > 0)
-	{
-	  x = SCM_REAL_VALUE (SCM_SIMPLE_VECTOR_REF (v, n));
-	  sum += x * x;
-	}
+      ubnd = dims[0].ubnd;
+      inc = dims[0].inc;
+      if (handle.element_type == SCM_ARRAY_ELEMENT_TYPE_F64)
+        {
+          const double *elts = (const double *)(handle.elements) + handle.base;
+          for (i = dims[0].lbnd; i <= ubnd; ++i, elts += inc)
+            {
+              x = *elts;
+              sum += x * x;
+            }
+          return sum;
+        }
+      else if (handle.element_type == SCM_ARRAY_ELEMENT_TYPE_SCM)
+        {
+          const SCM *elts = (const SCM *)(handle.elements) + handle.base;
+          for (i = dims[0].lbnd; i <= ubnd; ++i, elts += inc)
+            {
+              x = SCM_REAL_VALUE (*elts);
+              sum += x * x;
+            }
+          return sum;
+        }
     }
-  else
-    {
-      /* must be a f64vector. */
-      scm_t_array_handle handle;
-      size_t i, len;
-      ssize_t inc;
-      const double *elts;
-
-      elts = scm_f64vector_elements (v, &handle, &len, &inc);
-
-      for (i = 0; i < len; i++, elts += inc)
-	{
-	  x = *elts;
-	  sum += x * x;
-	}
-
-      scm_array_handle_release (&handle);
-    }
-  return sum;
+  scm_array_handle_release (&handle);
+  scm_misc_error (NULL, "must be an array of type #t or 'f64", scm_list_1 (v));
 }
 
 /* For the uniform distribution on the solid sphere, note that in
@@ -565,7 +575,7 @@ vector_sum_squares (SCM v)
  * distribution r^n; i.e., u=r^n is uniform [0,1], so r can be
  * generated as r=u^(1/n).
  */
-SCM_DEFINE (scm_random_solid_sphere_x, "random:solid-sphere!", 1, 1, 0, 
+SCM_DEFINE (scm_random_solid_sphere_x, "random:solid-sphere!", 1, 1, 0,
             (SCM v, SCM state),
 	    "Fills @var{vect} with inexact real random numbers the sum of\n"
 	    "whose squares is less than 1.0.  Thinking of @var{vect} as\n"
@@ -606,16 +616,16 @@ SCM_DEFINE (scm_random_hollow_sphere_x, "random:hollow-sphere!", 1, 1, 0,
 #undef FUNC_NAME
 
 
-SCM_DEFINE (scm_random_normal_vector_x, "random:normal-vector!", 1, 1, 0, 
+SCM_DEFINE (scm_random_normal_vector_x, "random:normal-vector!", 1, 1, 0,
             (SCM v, SCM state),
             "Fills vect with inexact real random numbers that are\n"
             "independent and standard normally distributed\n"
             "(i.e., with mean 0 and variance 1).")
 #define FUNC_NAME s_scm_random_normal_vector_x
 {
-  long i;
   scm_t_array_handle handle;
-  scm_t_array_dim *dim;
+  scm_t_array_dim const * dims;
+  ssize_t i;
 
   if (SCM_UNBNDP (state))
     state = SCM_VARIABLE_REF (scm_var_random_state);
@@ -627,30 +637,29 @@ SCM_DEFINE (scm_random_normal_vector_x, "random:normal-vector!", 1, 1, 0,
       scm_array_handle_release (&handle);
       scm_wrong_type_arg_msg (NULL, 0, v, "rank 1 array");
     }
-  
-  dim = scm_array_handle_dims (&handle);
+
+  dims = scm_array_handle_dims (&handle);
 
   if (handle.element_type == SCM_ARRAY_ELEMENT_TYPE_SCM)
     {
       SCM *elts = scm_array_handle_writable_elements (&handle);
-      for (i = dim->lbnd; i <= dim->ubnd; i++, elts += dim->inc)
-	*elts = scm_from_double (scm_c_normal01 (SCM_RSTATE (state)));
+      for (i = dims->lbnd; i <= dims->ubnd; i++, elts += dims->inc)
+        *elts = scm_from_double (scm_c_normal01 (SCM_RSTATE (state)));
     }
   else
     {
       /* must be a f64vector. */
       double *elts = scm_array_handle_f64_writable_elements (&handle);
-      for (i = dim->lbnd; i <= dim->ubnd; i++, elts += dim->inc)
-	*elts = scm_c_normal01 (SCM_RSTATE (state));
+      for (i = dims->lbnd; i <= dims->ubnd; i++, elts += dims->inc)
+        *elts = scm_c_normal01 (SCM_RSTATE (state));
     }
 
   scm_array_handle_release (&handle);
-
   return SCM_UNSPECIFIED;
 }
 #undef FUNC_NAME
 
-SCM_DEFINE (scm_random_exp, "random:exp", 0, 1, 0, 
+SCM_DEFINE (scm_random_exp, "random:exp", 0, 1, 0,
             (SCM state),
 	    "Return an inexact real in an exponential distribution with mean\n"
 	    "1.  For an exponential distribution with mean u use (* u\n"
@@ -781,13 +790,13 @@ scm_init_random ()
     scm_i_rstate_to_datum
   };
   scm_the_rng = rng;
-  
+
   scm_tc16_rstate = scm_make_smob_type ("random-state", 0);
 
   for (m = 1; m <= 0x100; m <<= 1)
     for (i = m >> 1; i < m; ++i)
       scm_masktab[i] = m - 1;
-  
+
 #include "libguile/random.x"
 
   scm_add_feature ("random");
