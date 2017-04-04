@@ -268,7 +268,7 @@
             (let ((pid (primitive-fork-if-available)))
 	      ;; Spawn a server process.
 	      (case pid
-		((-1) (throw 'unresolved))
+		((-1) (set! server-pid #f))
 		((0)   ;; the kid:  serve two connections and exit
 		 (let serve ((conn
 			      (false-if-exception (accept server-socket)))
@@ -348,7 +348,7 @@
             (let ((pid (primitive-fork-if-available)))
               ;; Spawn a server process.
               (case pid
-                ((-1) (throw 'unresolved))
+                ((-1) (set! server-pid #f))
                 ((0)   ;; the kid: send MESSAGE and exit
                  (exit
                   (false-if-exception
@@ -446,7 +446,7 @@
             (let ((pid (primitive-fork-if-available)))
 	      ;; Spawn a server process.
 	      (case pid
-		((-1) (throw 'unresolved))
+		((-1) (set! server-pid #f))
 		((0)   ;; the kid:  serve two connections and exit
 		 (let serve ((conn
 			      (false-if-exception (accept server-socket)))
