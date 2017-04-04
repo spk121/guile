@@ -315,7 +315,7 @@
 
 (pass-if "valid wide mode string"
   ;; Pass 'open-file' a valid mode string, but as a wide string.
-  (let ((mode "λ"))
+  (let ((mode (string-copy "λ")))
     (string-set! mode 0 #\r)
     (let ((port (open-file "/dev/null" mode)))
       (and (input-port? port)
