@@ -21,7 +21,6 @@
 (define-module (test-suite test-ports)
   #:use-module (test-suite lib)
   #:use-module (test-suite guile-test)
-  #:use-module (ice-9 popen)
   #:use-module (ice-9 rdelim)
   #:use-module (ice-9 threads)
   #:use-module (rnrs bytevectors)
@@ -618,23 +617,30 @@
 
 ;;;; Pipe (popen) ports.
 
+(define-syntax-rule (if-supported body ...)
+  (when (provided? 'popen)
+        (begin body ...)))
+
+(if-supported
+ (use-modules (ice-9 popen))
+
 ;;; Run a command, and read its output.
-(let* ((pipe (open-pipe "echo 'Howdy there, partner!'" "r"))
-       (in-string (read-all pipe)))
-  (close-pipe pipe)
-  (pass-if "pipe: read"
-           (equal? in-string "Howdy there, partner!\n")))
+ (let* ((pipe (open-pipe "echo 'Howdy there, partner!'" "r"))
+        (in-string (read-all pipe)))
+   (close-pipe pipe)
+   (pass-if "pipe: read"
+     (equal? in-string "Howdy there, partner!\n")))
 
 ;;; Run a command, send some output to it, and see if it worked.
-(let* ((filename (test-file))
-       (pipe (open-pipe (string-append "grep Mommy > " filename) "w")))
-  (display "Now Jimmy lives on a mushroom cloud\n" pipe)
-  (display "Mommy, why does everybody have a bomb?\n" pipe)
-  (close-pipe pipe)
-  (let ((in-string (read-file filename)))
-    (pass-if "pipe: write"
-             (equal? in-string "Mommy, why does everybody have a bomb?\n")))
-  (delete-file filename))
+ (let* ((filename (test-file))
+        (pipe (open-pipe (string-append "grep Mommy > " filename) "w")))
+   (display "Now Jimmy lives on a mushroom cloud\n" pipe)
+   (display "Mommy, why does everybody have a bomb?\n" pipe)
+   (close-pipe pipe)
+   (let ((in-string (read-file filename)))
+     (pass-if "pipe: write"
+       (equal? in-string "Mommy, why does everybody have a bomb?\n")))
+   (delete-file filename)))
 
 (pass-if-equal "pipe, fdopen, and line buffering"
     "foo\nbar\n"
@@ -1020,80 +1026,81 @@
 
 ;;;; Generic operations across all port types.
 
-(let ((port-loop-temp (test-file)))
+(if-supported
+ (let ((port-loop-temp (test-file)))
 
-  ;; Return a list of input ports that all return the same text.
-  ;; We map tests over this list.
-  (define (input-port-list text)
+   ;; Return a list of input ports that all return the same text.
+   ;; We map tests over this list.
+   (define (input-port-list text)
 
-    ;; Create a text file some of the ports will use.
-    (let ((out-port (open-output-file port-loop-temp)))
-      (display text out-port)
-      (close-port out-port))
+     ;; Create a text file some of the ports will use.
+     (let ((out-port (open-output-file port-loop-temp)))
+       (display text out-port)
+       (close-port out-port))
 
-    (list (open-input-file port-loop-temp)
-          (open-input-pipe (string-append "cat " port-loop-temp))
-          (call-with-input-string text (lambda (x) x))
-          ;; We don't test soft ports at the moment.
-          ))
+     (list (open-input-file port-loop-temp)
+           (open-input-pipe (string-append "cat " port-loop-temp))
+           (call-with-input-string text (lambda (x) x))
+           ;; We don't test soft ports at the moment.
+           ))
 
-  (define port-list-names '("file" "pipe" "string"))
+   (define port-list-names '("file" "pipe" "string"))
 
-  ;; Test the line counter.
-  (define (test-line-counter text second-line final-column)
-    (with-test-prefix "line counter"
-      (let ((ports (input-port-list text)))
-        (for-each
-         (lambda (port port-name)
-           (with-test-prefix port-name
-             (pass-if "at beginning of input"
-                      (= (port-line port) 0))
-             (pass-if "read first character"
-                      (eqv? (read-char port) #\x))
-             (pass-if "after reading one character"
-                      (= (port-line port) 0))
-             (pass-if "read first newline"
-                      (eqv? (read-char port) #\newline))
-             (pass-if "after reading first newline char"
-                      (= (port-line port) 1))
-             (pass-if "second line read correctly"
-                      (equal? (read-line port) second-line))
-             (pass-if "read-line increments line number"
-                      (= (port-line port) 2))
-             (pass-if "read-line returns EOF"
-                      (let loop ((i 0))
-                        (cond
-                         ((eof-object? (read-line port)) #t)
-                         ((> i 20) #f)
-                         (else (loop (+ i 1))))))
-             (pass-if "line count is 5 at EOF"
-                      (= (port-line port) 5))
-             (pass-if "column is correct at EOF"
-                      (= (port-column port) final-column))))
-         ports port-list-names)
-        (for-each close-port ports)
-        (delete-file port-loop-temp))))
+   ;; Test the line counter.
+   (define (test-line-counter text second-line final-column)
+     (with-test-prefix "line counter"
+       (let ((ports (input-port-list text)))
+         (for-each
+          (lambda (port port-name)
+            (with-test-prefix port-name
+              (pass-if "at beginning of input"
+                (= (port-line port) 0))
+              (pass-if "read first character"
+                (eqv? (read-char port) #\x))
+              (pass-if "after reading one character"
+                (= (port-line port) 0))
+              (pass-if "read first newline"
+                (eqv? (read-char port) #\newline))
+              (pass-if "after reading first newline char"
+                (= (port-line port) 1))
+              (pass-if "second line read correctly"
+                (equal? (read-line port) second-line))
+              (pass-if "read-line increments line number"
+                (= (port-line port) 2))
+              (pass-if "read-line returns EOF"
+                (let loop ((i 0))
+                  (cond
+                   ((eof-object? (read-line port)) #t)
+                   ((> i 20) #f)
+                   (else (loop (+ i 1))))))
+              (pass-if "line count is 5 at EOF"
+                (= (port-line port) 5))
+              (pass-if "column is correct at EOF"
+                (= (port-column port) final-column))))
+          ports port-list-names)
+         (for-each close-port ports)
+         (delete-file port-loop-temp))))
 
-  (with-test-prefix "newline"
-    (test-line-counter
-     (string-append "x\n"
-                    "He who receives an idea from me, receives instruction\n"
-                    "himself without lessening mine; as he who lights his\n"
-                    "taper at mine, receives light without darkening me.\n"
-                    "  --- Thomas Jefferson\n")
-     "He who receives an idea from me, receives instruction"
-     0))
+   (with-test-prefix "newline"
+     (test-line-counter
+      (string-append "x\n"
+                     "He who receives an idea from me, receives instruction\n"
+                     "himself without lessening mine; as he who lights his\n"
+                     "taper at mine, receives light without darkening me.\n"
+                     "  --- Thomas Jefferson\n")
+      "He who receives an idea from me, receives instruction"
+      0))
 
-  (with-test-prefix "no newline"
-    (test-line-counter
-     (string-append "x\n"
-                    "He who receives an idea from me, receives instruction\n"
-                    "himself without lessening mine; as he who lights his\n"
-                    "taper at mine, receives light without darkening me.\n"
-                    "  --- Thomas Jefferson\n"
-                    "no newline here")
-     "He who receives an idea from me, receives instruction"
-     15)))
+   (with-test-prefix "no newline"
+     (test-line-counter
+      (string-append "x\n"
+                     "He who receives an idea from me, receives instruction\n"
+                     "himself without lessening mine; as he who lights his\n"
+                     "taper at mine, receives light without darkening me.\n"
+                     "  --- Thomas Jefferson\n"
+                     "no newline here")
+      "He who receives an idea from me, receives instruction"
+      15))))
 
 ;; Test port-line and port-column for output ports
 
