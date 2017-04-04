@@ -1,4 +1,4 @@
-/* Copyright (C) 2012, 2013, 2014 Free Software Foundation, Inc.
+/* Copyright (C) 2012, 2013, 2014, 2017 Free Software Foundation, Inc.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public License
@@ -27,6 +27,11 @@
 #include <fcntl.h>
 
 #include <full-write.h>
+
+#ifdef __CYGWIN__
+#define SEMAPHORE 1
+#include <semaphore.h>
+#endif
 
 #include "libguile/bdw-gc.h"
 #include "libguile/_scm.h"
@@ -163,8 +168,16 @@ queue_finalizer_async (void)
 
 
 #if SCM_USE_PTHREAD_THREADS
-
+#if SEMAPHORE
+static sem_t produce_sem;
+static sem_t consume_sem;
+static scm_i_pthread_mutex_t finalization_data_lock =
+  SCM_I_PTHREAD_MUTEX_INITIALIZER;
+static int notify_finalizers = 0;
+static int notify_forking = 0;
+#else /* ! SEMAPHORE */
 static int finalization_pipe[2];
+#endif /* ! SEMAPHORE */
 static scm_i_pthread_mutex_t finalization_thread_lock =
   SCM_I_PTHREAD_MUTEX_INITIALIZER;
 static pthread_t finalization_thread;
@@ -173,15 +186,43 @@ static int finalization_thread_is_running = 0;
 static void
 notify_finalizers_to_run (void)
 {
+#if SEMAPHORE
+  int posted = 0;
+  sem_wait (&consume_sem);
+  scm_i_pthread_mutex_lock (&finalization_data_lock);
+  if (notify_finalizers == 0)
+    {
+      notify_finalizers = 1;
+      posted = 1;
+    }
+  scm_i_pthread_mutex_unlock (&finalization_data_lock);
+  if (posted)
+    sem_post (&produce_sem);
+#else /* ! SEMAPHORE */
   char byte = 0;
   full_write (finalization_pipe[1], &byte, 1);
+#endif /* ! SEMAPHORE */
 }
 
 static void
 notify_about_to_fork (void)
 {
+#if SEMAPHORE
+  int posted = 0;
+  sem_wait (&consume_sem);
+  scm_i_pthread_mutex_lock (&finalization_data_lock);
+  if (notify_forking == 0)
+    {
+      notify_forking = 1;
+      posted = 1;
+    }
+  scm_i_pthread_mutex_unlock (&finalization_data_lock);
+  if (posted)
+    sem_post (&produce_sem);
+#else /* ! SEMAPHORE */
   char byte = 1;
   full_write (finalization_pipe[1], &byte, 1);
+#endif /* ! SEMAPHORE */
 }
 
 struct finalization_pipe_data
@@ -195,13 +236,37 @@ static void*
 read_finalization_pipe_data (void *data)
 {
   struct finalization_pipe_data *fdata = data;
-  
+
+#if SEMAPHORE
+  int consumed = 0;
+  sem_wait (&produce_sem);
+  scm_i_pthread_mutex_lock (&finalization_data_lock);
+  if (notify_finalizers)
+    {
+      fdata->n = 1;
+      fdata->byte = 0;
+      fdata->err = 0;
+      consumed = 1;
+      notify_finalizers = 0;
+    }
+  else if (!consumed && notify_forking)
+    {
+      fdata->n = 1;
+      fdata->byte = 1;
+      fdata->err = 0;
+      consumed = 1;
+      notify_forking = 0;
+    }
+  scm_i_pthread_mutex_unlock (&finalization_data_lock);
+  if (consumed)
+    sem_post (&consume_sem);
+#else
   fdata->n = read (finalization_pipe[0], &fdata->byte, 1);
   fdata->err = errno;
-
+#endif
   return NULL;
 }
-  
+
 static void*
 finalization_thread_proc (void *unused)
 {
@@ -356,12 +421,19 @@ scm_set_automatic_finalization_enabled (int enabled_p)
   if (enabled_p)
     {
 #if SCM_USE_PTHREAD_THREADS
+#if SEMAPHORE
+      if (sem_init (&produce_sem, 0, 0) == -1)
+        scm_syserror (NULL);
+      if (sem_init (&consume_sem, 0, 1) == -1)
+        scm_syserror (NULL);
+#else /* ! SEMAPHORE */
       if (pipe2 (finalization_pipe, O_CLOEXEC) != 0)
         scm_syserror (NULL);
+#endif /* ! SEMAPHORE */
       GC_set_finalizer_notifier (spawn_finalizer_thread);
-#else
+#else /* ! SCM_USE_PTHREAD_THREADS */
       GC_set_finalizer_notifier (queue_finalizer_async);
-#endif
+#endif /* ! SCM_USE_PTHREAD_THREADS */
     }
   else
     {
@@ -369,11 +441,18 @@ scm_set_automatic_finalization_enabled (int enabled_p)
 
 #if SCM_USE_PTHREAD_THREADS
       stop_finalization_thread ();
+#if SEMAPHORE
+      sem_destroy (&produce_sem);
+      sem_destroy (&consume_sem);
+      notify_finalizers = 0;
+      notify_forking = 0;
+#else /* ! SEMAPHORE */
       close (finalization_pipe[0]);
       close (finalization_pipe[1]);
       finalization_pipe[0] = -1;
       finalization_pipe[1] = -1;
-#endif
+#endif /* ! SEMAPHORE */
+#endif /* SCM_USE_PTHREAD_THREADS */
     }
 
   automatic_finalization_p = enabled_p;
@@ -412,9 +491,16 @@ scm_init_finalizer_thread (void)
 #if SCM_USE_PTHREAD_THREADS
   if (automatic_finalization_p)
     {
+#if SEMAPHORE
+      if (sem_init (&produce_sem, 0, 0) == -1)
+        scm_syserror (NULL);
+      if (sem_init (&consume_sem, 0, 1) == -1)
+        scm_syserror (NULL);
+#else /* ! SEMAPHORE */
       if (pipe2 (finalization_pipe, O_CLOEXEC) != 0)
         scm_syserror (NULL);
+#endif /* ! SEMAPHORE */
       GC_set_finalizer_notifier (spawn_finalizer_thread);
     }
-#endif
+#endif /* SCM_USE_PTHREAD_THREADS */
 }

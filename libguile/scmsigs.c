@@ -41,6 +41,12 @@
 
 #include <full-write.h>
 
+
+#ifdef __CYGWIN__
+#define SEMAPHORE 1
+#include <semaphore.h>
+#endif
+
 #include "libguile/_scm.h"
 
 #include "libguile/async.h"
@@ -124,13 +130,29 @@ close_1 (SCM proc, SCM arg)
    semantics as on a proper system.  If you're relying on much in the way of
    signal handling on mingw you probably lose anyway.  */
 
+#if SEMAPHORE
+static sem_t produce_sem;
+static sem_t consume_sem;
+static scm_i_pthread_mutex_t signal_data_lock =
+  SCM_I_PTHREAD_MUTEX_INITIALIZER;
+static char notify_signal = '\0';
+#else /* ! SEMAPHORE */
 static int signal_pipe[2];
+#endif
 
 static SIGRETTYPE
 take_signal (int signum)
 {
   char sigbyte = signum;
+#if SEMAPHORE
+  sem_wait (&consume_sem);
+  scm_i_pthread_mutex_lock (&signal_data_lock);
+  notify_signal = sigbyte;
+  scm_i_pthread_mutex_unlock (&signal_data_lock);
+  sem_post (&produce_sem);
+#else /* ! SEMAPHORE */
   full_write (signal_pipe[1], &sigbyte, 1);
+#endif /* ! SEMAPHORE */
 
 #ifndef HAVE_SIGACTION
   signal (signum, take_signal);
@@ -148,13 +170,22 @@ static void*
 read_signal_pipe_data (void * data)
 {
   struct signal_pipe_data *sdata = data;
-  
+#if SEMAPHORE
+  sem_wait (&produce_sem);
+  scm_i_pthread_mutex_lock (&signal_data_lock);
+  sdata->n = 1;
+  sdata->sigbyte = notify_signal;
+  scm_i_pthread_mutex_unlock (&signal_data_lock);
+  notify_signal = '\0';
+  sem_post (&consume_sem);
+#else /* ! SEMAPHORE */
   sdata->n = read (signal_pipe[0], &sdata->sigbyte, 1);
   sdata->err = errno;
+#endif /* ! SEMAPHORE */
 
   return NULL;
 }
-  
+
 static SCM
 signal_delivery_thread (void *data)
 {
@@ -175,7 +206,7 @@ signal_delivery_thread (void *data)
       struct signal_pipe_data sigdata;
 
       scm_without_guile (read_signal_pipe_data, &sigdata);
-      
+
       sig = sigdata.sigbyte;
       if (sigdata.n == 1 && sig >= 0 && sig < NSIG)
 	{
@@ -202,8 +233,15 @@ start_signal_delivery_thread (void)
 
   scm_i_pthread_mutex_lock (&signal_delivery_thread_mutex);
 
+#if SEMAPHORE
+  if (sem_init (&produce_sem, 0, 0) == -1)
+    scm_syserror (NULL);
+  if (sem_init (&consume_sem, 0, 1) == -1)
+    scm_syserror (NULL);
+#else /* ! SEMAPHORE */
   if (pipe2 (signal_pipe, O_CLOEXEC) != 0)
     scm_syserror (NULL);
+#endif /* ! SEMAPHORE */
   signal_thread = scm_spawn_thread (signal_delivery_thread, NULL,
 				    scm_handle_by_message,
 				    "signal delivery thread");
@@ -312,7 +350,7 @@ SCM_DEFINE (scm_sigaction_for_thread, "sigaction", 1, 3, 0,
 #endif
   int query_only = 0;
   int save_handler = 0;
-      
+
   SCM old_handler;
 
   csig = scm_to_signed_integer (signum, 0, NSIG-1);
@@ -491,7 +529,7 @@ SCM_DEFINE (scm_restore_signals, "restore-signals", 0, 0, 0,
 	  if (signal (i, orig_handlers[i]) == SIG_ERR)
 	    SCM_SYSERROR;
 	  orig_handlers[i] = SIG_ERR;
-	  SCM_SIMPLE_VECTOR_SET (*signal_handlers, i, SCM_BOOL_F);	  
+	  SCM_SIMPLE_VECTOR_SET (*signal_handlers, i, SCM_BOOL_F);
 	}
 #endif
     }
@@ -573,7 +611,7 @@ SCM_DEFINE (scm_setitimer, "setitimer", 5, 0, 0,
   pack_tv (&new_timer.it_value, value_seconds, value_microseconds);
 
   SCM_SYSCALL(rv = setitimer(c_which_timer, &new_timer, &old_timer));
-  
+
   if(rv != 0)
     SCM_SYSERROR;
 
@@ -695,7 +733,15 @@ scm_i_close_signal_pipe()
 
 #if SCM_USE_PTHREAD_THREADS
   if (scm_i_signal_delivery_thread != NULL)
-    close (signal_pipe[1]);
+    {
+#if SEMAPHORE
+      sem_destroy (&produce_sem);
+      sem_destroy (&consume_sem);
+      notify_signal = '\0';
+#else /* ! SEMAPHORE */
+      close (signal_pipe[1]);
+#endif /* ! SEMAPHORE */
+    }
 #endif
 
   scm_i_pthread_mutex_unlock (&signal_delivery_thread_mutex);
