@@ -5,7 +5,8 @@ dnl
 define(GUILE_CONFIGURE_COPYRIGHT,[[
 
 Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006,
-  2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017 Free Software Foundation, Inc.
+  2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017,
+  2018 Free Software Foundation, Inc.
 
 This file is part of GUILE
 
@@ -682,6 +683,7 @@ AC_SUBST([SCM_I_GSC_HAVE_STRUCT_DIRENT64])
 #   fenv.h - available in C99, but not older systems
 #   machine/fpu.h - on Tru64 5.1b, the declaration of fesetround(3) is in
 #     this file instead of <fenv.h>
+#   netinet/tcp.h - missing on MinGW
 #   process.h - mingw specific
 #   sched.h - missing on MinGW
 #   sys/sendfile.h - non-POSIX, found in glibc
@@ -690,7 +692,7 @@ AC_CHECK_HEADERS([complex.h fenv.h io.h libc.h limits.h memory.h process.h strin
 sys/dir.h sys/ioctl.h sys/select.h \
 sys/time.h sys/timeb.h sys/times.h sys/stdtypes.h sys/types.h \
 sys/utime.h time.h unistd.h utime.h pwd.h grp.h sys/utsname.h \
-direct.h machine/fpu.h sched.h sys/sendfile.h])
+direct.h machine/fpu.h sched.h sys/sendfile.h netinet/tcp.h])
 
 # "complex double" is new in C99, and "complex" is only a keyword if
 # <complex.h> is included

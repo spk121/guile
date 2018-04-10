@@ -1,4 +1,4 @@
-/* Copyright (C) 1996-1998, 2000-2007, 2009, 2011-2015
+/* Copyright (C) 1996-1998, 2000-2007, 2009, 2011-2015, 2018
  *   Free Software Foundation, Inc.
  *
  * This library is free software; you can redistribute it and/or
@@ -40,7 +40,9 @@
 #include <sys/un.h>
 #endif
 #include <netinet/in.h>
+#ifdef HAVE_NETINET_TCP_H
 #include <netinet/tcp.h>
+#endif
 #include <netdb.h>
 #include <arpa/inet.h>
 
