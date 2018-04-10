@@ -539,6 +539,12 @@ AC_DEFUN([gl_INIT],
   fi
   gl_MODULE_INDICATOR([mkostemp])
   gl_STDLIB_MODULE_INDICATOR([mkostemp])
+  gl_FUNC_MKTIME
+  if test $REPLACE_MKTIME = 1; then
+    AC_LIBOBJ([mktime])
+    gl_PREREQ_MKTIME
+  fi
+  gl_TIME_MODULE_INDICATOR([mktime])
   AC_REQUIRE([gl_MSVC_INVAL])
   if test $HAVE_MSVC_INVALID_PARAMETER_HANDLER = 1; then
     AC_LIBOBJ([msvc-inval])
@@ -747,7 +753,6 @@ AC_DEFUN([gl_INIT],
   gl_gnulib_enabled_mbsinit=false
   gl_gnulib_enabled_mbtowc=false
   gl_gnulib_enabled_memchr=false
-  gl_gnulib_enabled_mktime=false
   gl_gnulib_enabled_5264294aa0a5557541b53c8c741f7f31=false
   gl_gnulib_enabled_pathmax=false
   gl_gnulib_enabled_raise=false
@@ -987,24 +992,6 @@ AC_SUBST([LTALLOCA])
       gl_gnulib_enabled_memchr=true
     fi
   }
-  func_gl_gnulib_m4code_mktime ()
-  {
-    if ! $gl_gnulib_enabled_mktime; then
-      gl_FUNC_MKTIME
-      if test $REPLACE_MKTIME = 1; then
-        AC_LIBOBJ([mktime])
-        gl_PREREQ_MKTIME
-      fi
-      gl_TIME_MODULE_INDICATOR([mktime])
-      gl_gnulib_enabled_mktime=true
-      if test $REPLACE_MKTIME = 1; then
-        func_gl_gnulib_m4code_intprops
-      fi
-      if test $REPLACE_MKTIME = 1; then
-        func_gl_gnulib_m4code_time_r
-      fi
-    fi
-  }
   func_gl_gnulib_m4code_5264294aa0a5557541b53c8c741f7f31 ()
   {
     if ! $gl_gnulib_enabled_5264294aa0a5557541b53c8c741f7f31; then
@@ -1014,7 +1001,6 @@ AC_SUBST([LTALLOCA])
         gl_PREREQ_MKTIME
       fi
       gl_gnulib_enabled_5264294aa0a5557541b53c8c741f7f31=true
-      func_gl_gnulib_m4code_mktime
     fi
   }
   func_gl_gnulib_m4code_pathmax ()
@@ -1300,6 +1286,12 @@ AC_SUBST([LTALLOCA])
   if test $HAVE_MKOSTEMP = 0; then
     func_gl_gnulib_m4code_tempname
   fi
+  if test $REPLACE_MKTIME = 1; then
+    func_gl_gnulib_m4code_intprops
+  fi
+  if test $REPLACE_MKTIME = 1; then
+    func_gl_gnulib_m4code_time_r
+  fi
   if test $HAVE_NL_LANGINFO = 0 || test $REPLACE_NL_LANGINFO = 1; then
     func_gl_gnulib_m4code_localeconv
   fi
@@ -1400,7 +1392,6 @@ AC_SUBST([LTALLOCA])
   AM_CONDITIONAL([gl_GNULIB_ENABLED_mbsinit], [$gl_gnulib_enabled_mbsinit])
   AM_CONDITIONAL([gl_GNULIB_ENABLED_mbtowc], [$gl_gnulib_enabled_mbtowc])
   AM_CONDITIONAL([gl_GNULIB_ENABLED_memchr], [$gl_gnulib_enabled_memchr])
-  AM_CONDITIONAL([gl_GNULIB_ENABLED_mktime], [$gl_gnulib_enabled_mktime])
   AM_CONDITIONAL([gl_GNULIB_ENABLED_5264294aa0a5557541b53c8c741f7f31], [$gl_gnulib_enabled_5264294aa0a5557541b53c8c741f7f31])
   AM_CONDITIONAL([gl_GNULIB_ENABLED_pathmax], [$gl_gnulib_enabled_pathmax])
   AM_CONDITIONAL([gl_GNULIB_ENABLED_raise], [$gl_gnulib_enabled_raise])
