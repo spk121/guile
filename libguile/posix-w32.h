@@ -3,7 +3,7 @@
 #ifndef SCM_POSIX_W32_H
 #define SCM_POSIX_W32_H
 
-/* Copyright (C) 2001, 2006 Free Software Foundation, Inc.
+/* Copyright (C) 2001, 2006, 2018 Free Software Foundation, Inc.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public License
@@ -75,9 +75,9 @@ SCM_INTERNAL int uname (struct utsname * uts);
 SCM_INTERNAL int waitpid (intptr_t, int *, int);
 SCM_INTERNAL int w32_status_to_termsig (DWORD status);
 
-SCM_INTERNAL int start_child (const char *exec_file, char **argv,
-                              int reading, int c2p[2], int writing, int p2c[2],
-                              int infd, int outfd, int errfd);
+SCM_INTERNAL pid_t start_child (const char *exec_file, char **argv,
+                                int reading, int c2p[2], int writing,
+                                int p2c[2], int infd, int outfd, int errfd);
 
 SCM_INTERNAL int kill (int pid, int sig);
 
