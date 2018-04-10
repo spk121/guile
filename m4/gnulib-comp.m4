@@ -96,6 +96,7 @@ AC_DEFUN([gl_EARLY],
   # Code from module func:
   # Code from module gendocs:
   # Code from module getaddrinfo:
+  # Code from module gethostname:
   # Code from module getlogin:
   # Code from module getpeername:
   # Code from module getsockname:
@@ -373,6 +374,12 @@ AC_DEFUN([gl_INIT],
     AC_LIBOBJ([gai_strerror])
   fi
   gl_NETDB_MODULE_INDICATOR([getaddrinfo])
+  gl_FUNC_GETHOSTNAME
+  if test $HAVE_GETHOSTNAME = 0; then
+    AC_LIBOBJ([gethostname])
+    gl_PREREQ_GETHOSTNAME
+  fi
+  gl_UNISTD_MODULE_INDICATOR([gethostname])
   gl_FUNC_GETLOGIN
   if test $HAVE_GETLOGIN = 0; then
     AC_LIBOBJ([getlogin])
@@ -1263,6 +1270,9 @@ AC_SUBST([LTALLOCA])
   if test $HAVE_GETADDRINFO = 0; then
     func_gl_gnulib_m4code_sockets
   fi
+  if test $HAVE_GETHOSTNAME = 0; then
+    func_gl_gnulib_m4code_sockets
+  fi
   if test $REPLACE_ISFINITE = 1; then
     func_gl_gnulib_m4code_b1df7117b479d2da59d76deba468ee21
   fi
@@ -1617,6 +1627,7 @@ AC_DEFUN([gl_FILE_LIST], [
   lib/full-write.h
   lib/gai_strerror.c
   lib/getaddrinfo.c
+  lib/gethostname.c
   lib/getlogin.c
   lib/getpeername.c
   lib/getsockname.c
@@ -1827,6 +1838,7 @@ AC_DEFUN([gl_FILE_LIST], [
   m4/fsync.m4
   m4/func.m4
   m4/getaddrinfo.m4
+  m4/gethostname.m4
   m4/getlogin.m4
   m4/gettimeofday.m4
   m4/glibc21.m4
