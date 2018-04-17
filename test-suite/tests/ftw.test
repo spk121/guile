@@ -253,37 +253,41 @@
               (file-system-fold enter? leaf down up skip error '() name))))))
 
   (pass-if "dangling symlink and lstat"
-    (with-file-tree %top-builddir '(directory "test-dangling"
-                                              (("dangling" -> "xxx")))
-      (let ((enter? (lambda (n s r) #t))
-            (leaf   (lambda (n s r) (cons `(leaf ,n) r)))
-            (down   (lambda (n s r) (cons `(down ,n) r)))
-            (up     (lambda (n s r) (cons `(up ,n) r)))
-            (skip   (lambda (n s r) (cons `(skip ,n) r)))
-            (error  (lambda (n s e r) (cons `(error ,n ,e) r)))
-            (name   (string-append %top-builddir "/test-dangling")))
-        (equal? (file-system-fold enter? leaf down up skip error '()
-                                  name)
-                `((up   ,name)
-                  (leaf ,(string-append name "/dangling"))
-                  (down ,name))))))
+    (if (not (defined? 'symlink))
+        'unresolved
+        (with-file-tree %top-builddir '(directory "test-dangling"
+                                                  (("dangling" -> "xxx")))
+          (let ((enter? (lambda (n s r) #t))
+                (leaf   (lambda (n s r) (cons `(leaf ,n) r)))
+                (down   (lambda (n s r) (cons `(down ,n) r)))
+                (up     (lambda (n s r) (cons `(up ,n) r)))
+                (skip   (lambda (n s r) (cons `(skip ,n) r)))
+                (error  (lambda (n s e r) (cons `(error ,n ,e) r)))
+                (name   (string-append %top-builddir "/test-dangling")))
+            (equal? (file-system-fold enter? leaf down up skip error '()
+                                      name)
+                    `((up   ,name)
+                      (leaf ,(string-append name "/dangling"))
+                      (down ,name)))))))
 
   (pass-if "dangling symlink and stat"
-    ;; Same as above, but using `stat' instead of `lstat'.
-    (with-file-tree %top-builddir '(directory "test-dangling"
-                                              (("dangling" -> "xxx")))
-      (let ((enter? (lambda (n s r) #t))
-            (leaf   (lambda (n s r) (cons `(leaf ,n) r)))
-            (down   (lambda (n s r) (cons `(down ,n) r)))
-            (up     (lambda (n s r) (cons `(up ,n) r)))
-            (skip   (lambda (n s r) (cons `(skip ,n) r)))
-            (error  (lambda (n s e r) (cons `(error ,n ,e) r)))
-            (name   (string-append %top-builddir "/test-dangling")))
-        (equal? (file-system-fold enter? leaf down up skip error '()
-                                  name stat)
-                `((up    ,name)
-                  (error ,(string-append name "/dangling") ,ENOENT)
-                  (down  ,name)))))))
+    (if (not (defined? 'symlink))
+        'unresolved
+        ;; Same as above, but using `stat' instead of `lstat'.
+        (with-file-tree %top-builddir '(directory "test-dangling"
+                                                  (("dangling" -> "xxx")))
+          (let ((enter? (lambda (n s r) #t))
+                (leaf   (lambda (n s r) (cons `(leaf ,n) r)))
+                (down   (lambda (n s r) (cons `(down ,n) r)))
+                (up     (lambda (n s r) (cons `(up ,n) r)))
+                (skip   (lambda (n s r) (cons `(skip ,n) r)))
+                (error  (lambda (n s e r) (cons `(error ,n ,e) r)))
+                (name   (string-append %top-builddir "/test-dangling")))
+            (equal? (file-system-fold enter? leaf down up skip error '()
+                                      name stat)
+                    `((up    ,name)
+                      (error ,(string-append name "/dangling") ,ENOENT)
+                      (down  ,name))))))))
 
 (with-test-prefix "file-system-tree"
 
@@ -334,9 +338,10 @@
 
   (pass-if "test-suite"
     (let ((select? (cut string-suffix? ".test" <>)))
-      (match (scandir (string-append %test-dir "/tests") select?)
-        (("00-initial-env.test" (? select?) ...)
-         #t))))
+      (false-if-exception
+       (match (scandir (string-append %test-dir "/tests") select?)
+         (("00-initial-env.test" (? select?) ...)
+          #t)))))
 
   (pass-if "flat file"
     (not (scandir (string-append %test-dir "/Makefile.am"))))
@@ -350,12 +355,14 @@
   ;; In Guile up to 2.0.6, this would return ("." ".." "link-to-dir").
   (pass-if-equal "symlink to directory"
       '("." ".." "link-to-dir" "subdir")
-    (with-file-tree %top-builddir '(directory "test-scandir-symlink"
-                                              (("link-to-dir" -> "subdir")
-                                               (directory "subdir"
-                                                          (("a")))))
-      (let ((name (string-append %top-builddir "/test-scandir-symlink")))
-        (scandir name)))))
+    (if (not (defined? 'symlink))
+        'unresolved
+        (with-file-tree %top-builddir '(directory "test-scandir-symlink"
+                                                  (("link-to-dir" -> "subdir")
+                                                   (directory "subdir"
+                                                              (("a")))))
+          (let ((name (string-append %top-builddir "/test-scandir-symlink")))
+            (scandir name))))))
 
 ;;; Local Variables:
 ;;; eval: (put 'with-file-tree 'scheme-indent-function 2)
