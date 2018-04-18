@@ -221,8 +221,10 @@ check_ports ()
 
   /* Sanity check: Make sure that `filename' is actually writeable.
      We used to use mktemp(3), but that is now considered a security risk.  */
-  if (0 > mkstemp (filename))
+  int fd = mkstemp (filename);
+  if (fd < 0)
     exit (EXIT_FAILURE);
+  close (fd);
 
   scm_dynwind_begin (0);
   {
