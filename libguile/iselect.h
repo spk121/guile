@@ -28,9 +28,9 @@
 
 /* Needed for FD_SET on some systems.  */
 #include <sys/types.h>
-#if defined(SCM_HAVE_SYS_SELECT_H)
+#if SCM_HAVE_SYS_SELECT_H
 #include <sys/select.h>
-#elif defined(SCM_HAVE_WINSOCK2_H)
+#elif SCM_HAVE_WINSOCK2_H
 #include <winsock2.h>
 #endif
 
