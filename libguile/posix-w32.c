@@ -1,4 +1,4 @@
-/* Copyright (C) 2001, 2006, 2008, 2016 Free Software Foundation, Inc.
+/* Copyright (C) 2001, 2006, 2008, 2016, 2018 Free Software Foundation, Inc.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public License
@@ -740,8 +740,11 @@ start_child (const char *exec_file, char **argv,
   CloseHandle (herr);
   CloseHandle (pi.hThread);
 
-  /* Posix requires to call the shell if execvp fails to invoke EXEC_FILE.  */
-  if (errno_save == ENOEXEC || errno_save == ENOENT)
+  /* Posix requires to call the shell if execvp fails to invoke EXEC_FILE.
+   * But if there are no arguments, this would just open an interactive
+   * cmd.exe shell, so return in that case. */
+  if ((errno_save == ENOEXEC || errno_save == ENOENT)
+      && (argv[0] != NULL && argv[1] != NULL)
     {
       const char *shell = getenv ("ComSpec");
 

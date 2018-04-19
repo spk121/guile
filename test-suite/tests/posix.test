@@ -235,8 +235,9 @@
     ;; With Guile up to 2.0.7 included, the child process launched by
     ;; `system*' would remain alive after an `execvp' failure.
     (let ((me (getpid)))
-      (and (not (zero? (system* "something-that-does-not-exist")))
-           (= me (getpid))))))
+      (and
+       (not (equal? 0 (false-if-exception (system* "something-that-does-not-exist"))))
+       (= me (getpid))))))
 
 ;;
 ;; crypt
@@ -245,12 +246,16 @@
 (with-test-prefix "crypt"
 
   (pass-if "basic usage"
-    (string? (crypt "pass" "abcdefg")))
+    (if (not (defined? 'crypt))
+        (throw 'unsupported)
+        (string? (crypt "pass" "abcdefg"))))
 
   (pass-if-exception "glibc EINVAL" exception:system-error
     ;; This used to deadlock while trying to throw to 'system-error'.
     ;; This test uses the special interpretation of the salt that glibc
     ;; does; specifically, we pass a syntactically invalid salt here.
-    (if (string-contains %host-type "-gnu")
-        (crypt "pass" "$X$abc")                   ;EINVAL
-        (throw 'unresolved))))
+    (if (not (defined? 'crypt))
+        (throw 'unsupported)
+        (if (string-contains %host-type "-gnu")
+            (crypt "pass" "$X$abc")                   ;EINVAL
+            (throw 'unresolved)))))
