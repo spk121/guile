@@ -744,7 +744,7 @@ start_child (const char *exec_file, char **argv,
    * But if there are no arguments, this would just open an interactive
    * cmd.exe shell, so return in that case. */
   if ((errno_save == ENOEXEC || errno_save == ENOENT)
-      && (argv[0] != NULL && argv[1] != NULL)
+      && (argv[0] != NULL && argv[1] != NULL))
     {
       const char *shell = getenv ("ComSpec");
 
