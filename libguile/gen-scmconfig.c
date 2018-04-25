@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Free Software Foundation, Inc.
+/* Copyright (C) 2003-2013, 2018 Free Software Foundation, Inc.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public License
@@ -19,7 +19,7 @@
 /**********************************************************************
 
   Description of Guile's public config header mechanics:
-  ----------------------------------------------------- 
+  -----------------------------------------------------
 
   Guile has four core headers:
 
@@ -151,7 +151,7 @@ main (int argc, char *argv[])
       "\n"
       "#ifndef SCM_SCMCONFIG_H\n"
       "#define SCM_SCMCONFIG_H\n");
-  
+
   /*** various important headers ***/
   pf ("\n");
   pf ("/* Important headers */\n");
@@ -239,7 +239,7 @@ main (int argc, char *argv[])
   pf ("\n");
   pf ("/* Standard types. */\n");
 
-  pf ("/* These are always defined */\n");  
+  pf ("/* These are always defined */\n");
   pf ("#define SCM_SIZEOF_CHAR %d\n", SIZEOF_CHAR);
   pf ("#define SCM_SIZEOF_UNSIGNED_CHAR %d\n", SIZEOF_UNSIGNED_CHAR);
   pf ("#define SCM_SIZEOF_SHORT %d\n", SIZEOF_SHORT);
@@ -345,6 +345,12 @@ main (int argc, char *argv[])
   pf ("#define SCM_HAVE_GC_PTHREAD_EXIT 0 /* 0 or 1 */\n");
 #endif
 
+#ifdef HAVE_PTHREAD_SIGMASK
+  pf ("#define SCM_HAVE_PTHREAD_SIGMASK 1 /* 0 or 1 */\n");
+#else
+  pf ("#define SCM_HAVE_PTHREAD_SIGMASK 0 /* 0 or 1 */\n");
+#endif
+
 #ifdef HAVE_GC_PTHREAD_SIGMASK
   pf ("#define SCM_HAVE_GC_PTHREAD_SIGMASK 1 /* 0 or 1 */\n");
 #else
@@ -413,7 +419,7 @@ main (int argc, char *argv[])
   pf ("#define SCM_ICONVEH_QUESTION_MARK %d\n",
       SCM_I_GSC_ICONVEH_QUESTION_MARK);
   pf ("#define SCM_ICONVEH_ESCAPE_SEQUENCE %d\n",
-      SCM_I_GSC_ICONVEH_ESCAPE_SEQUENCE);  
+      SCM_I_GSC_ICONVEH_ESCAPE_SEQUENCE);
 
   printf ("#endif\n");
 

@@ -3,7 +3,7 @@
 #ifndef SCM_NULL_THREADS_H
 #define SCM_NULL_THREADS_H
 
-/* Copyright (C) 2005, 2006, 2010 Free Software Foundation, Inc.
+/* Copyright (C) 2005, 2006, 2010, 2018 Free Software Foundation, Inc.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public License
@@ -82,11 +82,13 @@ scm_i_sched_yield (void)
 
 /* Signals
  */
+#if SCM_HAVE_PTHREAD_SIGMASK == 1
 static inline int
 scm_i_pthread_sigmask (int how, const sigset_t *set, sigset_t *oldset)
 {
   return sigprocmask (how, set, oldset);
 }
+#endif
 
 /* Mutexes
  */
