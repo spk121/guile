@@ -28,7 +28,7 @@
   "Set up a REPL server in a separate process and call PROC with a
 socket connected to that server."
   ;; The REPL server requires thread. The test requires fork.
-  (unless (and (provided? 'threads) (provided? 'fork) (provided 'AF_UNIX))
+  (unless (and (provided? 'threads) (provided? 'fork) (provided? 'AF_UNIX))
     (throw 'unsupported))
 
   (let ((sockaddr      (make-socket-address AF_UNIX "/tmp/repl-server"))
