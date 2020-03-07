@@ -1,8 +1,63 @@
 Guile NEWS --- history of user-visible changes.
-Copyright (C) 1996-2019 Free Software Foundation, Inc.
+Copyright (C) 1996-2020 Free Software Foundation, Inc.
 See the end for copying conditions.
 
 Please send Guile bug reports to bug-guile@gnu.org.
+
+
+
+Changes in 2.2.7 (since 2.2.6)
+
+* New interfaces and functionality
+
+** (texinfo plain-text) now exports '*line-width*' fluid
+
+The new '*line-width*' fluid allows users to specify the width of a line
+for the purposes of line wrapping.  See "texinfo plain-text" in the
+manual.
+
+* Bug fixes
+
+** Reduce GC pressure when using bignums
+
+Guile no longer installs a finalizer on each bignum (large integer) it
+creates.  This significantly improves speed and memory usage on
+applications that make heavy use of bignums, such as the compiler
+itself.
+
+** Fix peval bug that ignored excess arguments
+
+In an expression like:
+
+  ((lambda ()
+     (define (add1 n)(+ 1 n))
+     (add1 1 2)))
+
+the compiler (specifically 'peval') would silently ignore the excess
+argument to 'add1'.
+
+** Respect thread local fluid defaults
+
+Previously (fluid-ref (make-thread-local-fluid #t)) would return #f.
+This is now fixed.
+
+** Fix non-deterministic crash in 'finalization_thread_proc'
+   (<https://bugs.gnu.org/37757>)
+
+** texinfo properly renders @acronym in plain text
+   (<https://bugs.gnu.org/37846>)
+
+** 'scm_port_poll' honors "w" flags
+   (<https://bugs.gnu.org/36709>)
+
+** Do not record LDFLAGS in .pc file
+   (<https://bugs.gnu.org/36339>)
+
+** Fix Readline configure check for the sake of libedit
+
+This fixes builds on macOS against the system-provided libedit.
+
+** Fix build on platforms where the stack grows upwards
 
 
 
