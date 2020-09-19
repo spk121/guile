@@ -623,9 +623,10 @@
         (seek fdes 0 SEEK_CUR)
 
         ;; If we get here, it might be because PORT was not GC'd, we
-        ;; don't know (and we can't use a guardian because it would keep
-        ;; PORT alive.)
-        (close-fdes fdes)
+        ;; don't know, and we can't use a guardian because it would keep
+        ;; PORT alive, and we can't close the descriptor because
+        ;; subseuqent opens may re-use it, and then if this port is
+        ;; garbage collected, it'll close the descriptor unexpectedly.
         (throw 'unresolved))
       (lambda args
         (system-error-errno args)))))
