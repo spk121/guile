@@ -40,7 +40,9 @@
 #include <sys/un.h>
 #endif
 #include <netinet/in.h>
+#ifdef HAVE_NETINET_TCP_H
 #include <netinet/tcp.h>
+#endif
 #include <netdb.h>
 #include <arpa/inet.h>
 

@@ -389,7 +389,7 @@ AC_CHECK_HEADERS([complex.h fenv.h io.h libc.h limits.h memory.h process.h strin
 sys/dir.h sys/ioctl.h sys/select.h \
 sys/time.h sys/timeb.h sys/times.h sys/stdtypes.h sys/types.h \
 sys/utime.h time.h unistd.h utime.h pwd.h grp.h sys/utsname.h \
-direct.h machine/fpu.h sched.h sys/sendfile.h])
+direct.h machine/fpu.h sched.h sys/sendfile.h netinet/tcp.h])
 
 # "complex double" is new in C99, and "complex" is only a keyword if
 # <complex.h> is included
