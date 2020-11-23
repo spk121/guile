@@ -74,10 +74,6 @@ EXTRA_DIST = LICENSE HACKING GUILE-VERSION			\
 	     m4/gnulib-cache.m4					\
 	     ChangeLog-2008					\
 	     .version						\
-	     gnulib-local/lib/localcharset.h.diff		\
-	     gnulib-local/lib/localcharset.c.diff		\
-	     gnulib-local/m4/clock_time.m4.diff			\
-	     gnulib-local/build-aux/git-version-gen.diff	\
 	     libguile/texi-fragments-to-docstrings		\
 	     gdbinit
 

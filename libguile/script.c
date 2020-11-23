@@ -286,30 +286,16 @@ scm_shell_usage (int fatal, char *message)
                : SCM_BOOL_F));
 }
 
-/* Return a list of strings from ARGV, which contains ARGC strings
-   assumed to be encoded in the current locale.  Use
-   `environ_locale_charset' instead of relying on
-   `scm_from_locale_string' because the user hasn't had a change to call
-   (setlocale LC_ALL "") yet.
-
-   XXX: This hack is for 2.0 and will be removed in the next stable
-   series where the `setlocale' call will be implicit.  See
-   <http://lists.gnu.org/archive/html/guile-devel/2011-11/msg00040.html>
-   for details.  */
 static SCM
 locale_arguments_to_string_list (int argc, char **const argv)
 {
   int i;
   SCM lst;
-  const char *encoding;
 
-  encoding = environ_locale_charset ();
   for (i = argc - 1, lst = SCM_EOL;
        i >= 0;
        i--)
-    lst = scm_cons (scm_from_stringn (argv[i], (size_t) -1, encoding,
-				      SCM_FAILED_CONVERSION_ESCAPE_SEQUENCE),
-		    lst);
+    lst = scm_cons (scm_from_locale_stringn (argv[i], (size_t) -1), lst);
 
   return lst;
 }

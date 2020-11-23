@@ -1,8 +1,8 @@
-#!/bin/sh
+#!/usr/bin/sh
 # Print a version string.
-scriptversion=2017-01-09.19; # UTC
+scriptversion=2019-10-13.15; # UTC
 
-# Copyright (C) 2007-2017 Free Software Foundation, Inc.
+# Copyright (C) 2007-2020 Free Software Foundation, Inc.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -15,9 +15,9 @@ scriptversion=2017-01-09.19; # UTC
 # GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-# This script is derived from GIT-VERSION-GEN from GIT: http://git.or.cz/.
+# This script is derived from GIT-VERSION-GEN from GIT: https://git-scm.com/.
 # It may be run two ways:
 # - from a git repository in which the "git describe" command below
 #   produces useful output (thus requiring at least one signed tag)
@@ -72,9 +72,10 @@ scriptversion=2017-01-09.19; # UTC
 
 me=$0
 
+year=`expr "$scriptversion" : '\([^-]*\)'`
 version="git-version-gen $scriptversion
 
-Copyright 2011 Free Software Foundation, Inc.
+Copyright $year Free Software Foundation, Inc.
 There is NO warranty.  You may redistribute this software
 under the terms of the GNU General Public License.
 For more information about these matters, see the files named COPYING."
@@ -86,7 +87,6 @@ Print a version string.
 Options:
 
    --prefix PREFIX    prefix of git tags (default 'v')
-   --match            pattern for git tags to match (default: '\$prefix*')
    --fallback VERSION
                       fallback version to use if \"git --version\" fails
 
@@ -98,15 +98,11 @@ Running without arguments will suffice in most cases."
 prefix=v
 fallback=
 
-unset match
-unset tag_sed_script
-
 while test $# -gt 0; do
   case $1 in
     --help) echo "$usage"; exit 0;;
     --version) echo "$version"; exit 0;;
     --prefix) shift; prefix=${1?};;
-    --match) shift; match="$1";;
     --fallback) shift; fallback=${1?};;
     -*)
       echo "$0: Unknown option '$1'." >&2
@@ -130,7 +126,6 @@ if test "x$tarball_version_file" = x; then
     exit 1
 fi
 
-match="${match:-$prefix*}"
 tag_sed_script="${tag_sed_script:-s/x/x/}"
 
 nl='
@@ -147,11 +142,9 @@ then
     v=`cat $tarball_version_file` || v=
     case $v in
         *$nl*) v= ;; # reject multi-line output
-        [0-9]*) ;;
-        *) v= ;;
     esac
     test "x$v" = x \
-        && echo "$0: WARNING: $tarball_version_file is missing or damaged" 1>&2
+        && echo "$0: WARNING: $tarball_version_file is damaged" 1>&2
 fi
 
 if test "x$v" != x
@@ -161,7 +154,7 @@ then
 # directory, and "git describe" output looks sensible, use that to
 # derive a version string.
 elif test "`git log -1 --pretty=format:x . 2>&1`" = x \
-    && v=`git describe --abbrev=4 --match="$match" HEAD 2>/dev/null \
+    && v=`git describe --abbrev=4 --match="$prefix*" HEAD 2>/dev/null \
           || git describe --abbrev=4 HEAD 2>/dev/null` \
     && v=`printf '%s\n' "$v" | sed "$tag_sed_script"` \
     && case $v in
@@ -173,9 +166,10 @@ then
     # tag or the previous older version that did not?
     #   Newer: v6.10-77-g0f8faeb
     #   Older: v6.10-g0f8faeb
-    case $v in
-        *-*-*) : git describe is okay three part flavor ;;
-        *-*)
+    vprefix=`expr "X$v" : 'X\(.*\)-g[^-]*$'` || vprefix=$v
+    case $vprefix in
+        *-*) : git describe is probably okay three part flavor ;;
+        *)
             : git describe is older two part flavor
             # Recreate the number of commits and rewrite such that the
             # result is the same as if we were using the newer version
@@ -190,9 +184,9 @@ then
             ;;
     esac
 
-    # Change the first '-' to a '.', so version-comparing tools work properly.
-    # Remove the "g" in git describe's output string, to save a byte.
-    v=`echo "$v" | sed 's/-/./;s/\(.*\)-g/\1-/'`;
+    # Change the penultimate "-" to ".", for version-comparing tools.
+    # Remove the "g" to save a byte.
+    v=`echo "$v" | sed 's/-\([^-]*\)-g\([^-]*\)$/.\1-\2/'`;
     v_from_git=1
 elif test "x$fallback" = x || git --version >/dev/null 2>&1; then
     v=UNKNOWN
@@ -224,7 +218,7 @@ fi
 printf %s "$v"
 
 # Local variables:
-# eval: (add-hook 'write-file-hooks 'time-stamp)
+# eval: (add-hook 'before-save-hook 'time-stamp)
 # time-stamp-start: "scriptversion="
 # time-stamp-format: "%:y-%02m-%02d.%02H"
 # time-stamp-time-zone: "UTC0"
