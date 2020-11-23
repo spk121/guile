@@ -78,6 +78,7 @@
 #  gendocs \
 #  getaddrinfo \
 #  getlogin \
+#  getpagesize \
 #  getpeername \
 #  getsockname \
 #  getsockopt \
@@ -176,6 +177,7 @@ gl_MODULES([
   gendocs
   getaddrinfo
   getlogin
+  getpagesize
   getpeername
   getsockname
   getsockopt
