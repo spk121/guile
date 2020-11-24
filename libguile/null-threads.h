@@ -83,11 +83,13 @@ scm_i_sched_yield (void)
 
 /* Signals
  */
+#if SCM_HAVE_PTHREAD_SIGMASK == 1
 static inline int
 scm_i_pthread_sigmask (int how, const sigset_t *set, sigset_t *oldset)
 {
   return sigprocmask (how, set, oldset);
 }
+#endif
 
 /* Mutexes
  */

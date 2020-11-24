@@ -289,6 +289,12 @@ main (int argc, char *argv[])
   pf ("#define SCM_NEED_BRACES_ON_PTHREAD_MUTEX_INITIALIZER %d /* 0 or 1 */\n",
       SCM_I_GSC_NEED_BRACES_ON_PTHREAD_MUTEX_INITIALIZER);
 
+#ifdef HAVE_PTHREAD_SIGMASK
+  pf ("#define SCM_HAVE_PTHREAD_SIGMASK 1 /* 0 or 1 */\n");
+#else
+  pf ("#define SCM_HAVE_PTHREAD_SIGMASK 0 /* 0 or 1 */\n");
+#endif
+  
 #ifdef HAVE_GC_PTHREAD_CANCEL
   pf ("#define SCM_HAVE_GC_PTHREAD_CANCEL 1 /* 0 or 1 */\n");
 #else
@@ -301,6 +307,7 @@ main (int argc, char *argv[])
   pf ("#define SCM_HAVE_GC_PTHREAD_EXIT 0 /* 0 or 1 */\n");
 #endif
 
+  
 #ifdef HAVE_GC_PTHREAD_SIGMASK
   pf ("#define SCM_HAVE_GC_PTHREAD_SIGMASK 1 /* 0 or 1 */\n");
 #else
