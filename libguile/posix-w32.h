@@ -20,7 +20,10 @@
    License along with Guile.  If not, see
    <https://www.gnu.org/licenses/>.  */
 
+#include <windef.h>
 #include <string.h>
+#include "libguile/scm.h"
+
 
 #define _UTSNAME_LENGTH 65
 #define _UTSNAME_NODENAME_LENGTH _UTSNAME_LENGTH
