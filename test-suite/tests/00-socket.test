@@ -153,7 +153,7 @@
 ;;              "unix address path too long: ~A"
 ;;              ("/tmp/nix-build-fb7bph4ifh0vr3ihigm702dzffdnapfj-guile-coverage-1.9.5.drv-0/guile-test-socket-1258553296-77619")
 ;;              #f)
-(chdir %tmpdir)
+(false-if-exception (chdir %tmpdir))
 
 (define (temp-file-path)
   ;; Return a temporary file name, assuming the current directory is %TMPDIR.
