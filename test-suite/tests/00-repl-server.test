@@ -39,6 +39,10 @@
 (define (call-with-repl-server proc)
   "Set up a REPL server in a separate process and call PROC with a
 socket connected to that server."
+  ;; The REPL server test requires thread. The test requires fork.
+  (unless (and (provided? 'threads) (provided? 'fork) (provided? 'AF_UNIX))
+    (throw 'unsupported))
+
   (let* ((tmpdir (make-tempdir))
          (sockaddr (make-socket-address AF_UNIX (string-append tmpdir "/repl-server")))
          (client-socket (socket AF_UNIX SOCK_STREAM 0)))
