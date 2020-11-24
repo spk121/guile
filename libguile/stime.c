@@ -63,6 +63,7 @@
 #include "dynwind.h"
 #include "feature.h"
 #include "gsubr.h"
+#include "list.h"
 #include "modules.h"
 #include "numbers.h"
 #include "pairs.h"

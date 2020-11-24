@@ -43,6 +43,7 @@
 #include "eval.h"
 #include "extensions.h"
 #include "gsubr.h"
+#include "list.h"
 #include "pairs.h"
 #include "programs.h"
 #include "strings.h"
