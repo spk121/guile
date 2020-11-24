@@ -1,6 +1,6 @@
 ;;;; 00-repl-server.test --- REPL server.  -*- mode: scheme; coding: utf-8; -*-
 ;;;;
-;;;; 	Copyright (C) 2016, 2017 Free Software Foundation, Inc.
+;;;; 	Copyright (C) 2016, 2017, 2020 Free Software Foundation, Inc.
 ;;;;
 ;;;; This library is free software; you can redistribute it and/or
 ;;;; modify it under the terms of the GNU Lesser General Public
@@ -39,6 +39,10 @@
 (define (call-with-repl-server proc)
   "Set up a REPL server in a separate process and call PROC with a
 socket connected to that server."
+  ;; The REPL server test requires thread. The test requires fork.
+  (unless (and (provided? 'threads) (provided? 'fork) (provided? 'AF_UNIX))
+    (throw 'unsupported))
+
   (let* ((tmpdir (make-tempdir))
          (sockaddr (make-socket-address AF_UNIX (string-append tmpdir "/repl-server")))
          (client-socket (socket AF_UNIX SOCK_STREAM 0)))
