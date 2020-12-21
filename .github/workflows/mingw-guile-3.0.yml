@@ -2,9 +2,9 @@ name: MinGW w/ Guile 3.0
 
 on:
   push:
-    branches: [ dev-cicd ]
+    branches: [ master ]
   pull_request:
-    branches: [ dev-cicd ]
+    branches: [ master ]
 
 jobs:
   build:
