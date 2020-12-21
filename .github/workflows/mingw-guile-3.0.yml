@@ -50,7 +50,7 @@ jobs:
         name: guile-dist
         path: dist
     - name: make check
-      run: make check
+      run: cd guile; make check; cd ..
     - name: Archive test logs
       uses: actions/upload-artifact@v2
       with:
