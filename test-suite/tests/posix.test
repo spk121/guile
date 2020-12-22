@@ -171,11 +171,13 @@
 
   (pass-if-exception "non-tty argument" exception:system-error
     ;; This used to crash in 1.8.1 and earlier.
-    (let ((file (false-if-exception
-                 (open-output-file "/dev/null"))))
-      (if (not file)
-          (throw 'unsupported)
-          (ttyname file)))))
+    (if (not (defined? 'ttyname))
+        (throw 'unsupported)
+        (let ((file (false-if-exception
+                     (open-output-file "/dev/null"))))
+          (if (not file)
+              (throw 'unsupported)
+              (ttyname file))))))
 
 ;;
 ;; utimes
@@ -200,7 +202,7 @@
 
   (pass-if-equal "AT_SYMLINK_NOFOLLOW"
       '(1 1)
-    (if (defined? 'AT_SYMLINK_NOFOLLOW)
+    (if (and (defined? 'symlink) (defined? 'AT_SYMLINK_NOFOLLOW))
         (let ((file "posix.test-utime"))
           (dynamic-wind
             (lambda ()
@@ -250,8 +252,11 @@
     ;; With Guile up to 2.0.7 included, the child process launched by
     ;; `system*' would remain alive after an `execvp' failure.
     (let ((me (getpid)))
-      (and (not (zero? (system* "something-that-does-not-exist")))
-           (= me (getpid))))))
+      (and
+       (not (equal? 0
+                    (false-if-exception
+                     (system* "something-that-does-not-exist"))))
+       (= me (getpid))))))
 
 ;;
 ;; crypt
@@ -260,7 +265,9 @@
 (with-test-prefix "crypt"
 
   (pass-if "basic usage"
-    (string? (crypt "pass" "abcdefg")))
+    (if (not (defined? 'crypt))
+        (throw 'unsupported)
+        (string? (crypt "pass" "abcdefg"))))
 
   (pass-if "crypt invalid salt on glibc"
     (begin
