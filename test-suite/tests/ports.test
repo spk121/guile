@@ -1318,14 +1318,17 @@
       (set-port-encoding! p "does-not-exist")
       (read p)))
 
-  (let ((filename (test-file)))
-    (with-output-to-file filename (lambda () (write 'test)))
+  (let* ((filename (test-file))
+         (port (open-output-file filename)))
+    (write 'test port)
+    (close-port port)
 
     (pass-if-exception "%default-port-encoding, wrong encoding"
         exception:miscellaneous-error
-      (read (with-fluids ((%default-port-encoding "does-not-exist"))
-              (open-input-file filename))))
-
+      (with-fluids ((%default-port-encoding "does-not-exist"))
+                   (set! port (open-input-file filename))
+                   (read port)))
+    (false-if-exception (close-port port))
     (delete-file filename)))
 
 ;;;
