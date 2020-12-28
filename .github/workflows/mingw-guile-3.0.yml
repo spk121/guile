@@ -29,6 +29,8 @@ jobs:
           mingw-w64-i686-libtool
           mingw-w64-i686-libunistring
           mingw-w64-i686-gobject-introspection
+    - name: env
+      run: export LANG=C TERM=dumb VERBOSE=true TZ=America/Los_Angeles
     - name: make dist directory
       run: mkdir `pwd`/dist
     - name: bootstrap
