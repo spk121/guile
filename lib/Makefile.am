@@ -73,6 +73,7 @@
 #  gendocs \
 #  getaddrinfo \
 #  getlogin \
+#  getpagesize \
 #  getpeername \
 #  getsockname \
 #  getsockopt \
@@ -796,6 +797,15 @@ EXTRA_DIST += getlogin.c
 EXTRA_libgnu_la_SOURCES += getlogin.c
 
 ## end   gnulib module getlogin
+
+## begin gnulib module getpagesize
+
+
+EXTRA_DIST += getpagesize.c
+
+EXTRA_libgnu_la_SOURCES += getpagesize.c
+
+## end   gnulib module getpagesize
 
 ## begin gnulib module getpeername
 

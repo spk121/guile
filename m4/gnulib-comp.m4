@@ -105,6 +105,7 @@ AC_DEFUN([gl_EARLY],
   # Code from module getaddrinfo:
   # Code from module getdtablesize:
   # Code from module getlogin:
+  # Code from module getpagesize:
   # Code from module getpeername:
   # Code from module getrandom:
   # Code from module getsockname:
@@ -401,6 +402,11 @@ AC_DEFUN([gl_INIT],
   fi
   gl_UNISTD_MODULE_INDICATOR([getlogin])
   AC_REQUIRE([gl_LIB_GETLOGIN])
+  gl_FUNC_GETPAGESIZE
+  if test $REPLACE_GETPAGESIZE = 1; then
+    AC_LIBOBJ([getpagesize])
+  fi
+  gl_UNISTD_MODULE_INDICATOR([getpagesize])
   AC_REQUIRE([gl_HEADER_SYS_SOCKET])
   if test "$ac_cv_header_winsock2_h" = yes; then
     AC_LIBOBJ([getpeername])
@@ -1866,6 +1872,7 @@ AC_DEFUN([gl_FILE_LIST], [
   lib/getaddrinfo.c
   lib/getdtablesize.c
   lib/getlogin.c
+  lib/getpagesize.c
   lib/getpeername.c
   lib/getrandom.c
   lib/getsockname.c
@@ -2105,6 +2112,7 @@ AC_DEFUN([gl_FILE_LIST], [
   m4/getaddrinfo.m4
   m4/getdtablesize.m4
   m4/getlogin.m4
+  m4/getpagesize.m4
   m4/getrandom.m4
   m4/gnulib-common.m4
   m4/host-cpu-c-abi.m4
