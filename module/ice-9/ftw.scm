@@ -1,6 +1,6 @@
 ;;;; ftw.scm --- file system tree walk
 
-;;;; 	Copyright (C) 2002, 2003, 2006, 2011, 2012, 2014, 2016 Free Software Foundation, Inc.
+;;;; 	Copyright (C) 2002, 2003, 2006, 2011, 2012, 2014, 2016, 2018 Free Software Foundation, Inc.
 ;;;;
 ;;;; This library is free software; you can redistribute it and/or
 ;;;; modify it under the terms of the GNU Lesser General Public
@@ -199,6 +199,16 @@
             file-system-tree
             scandir))
 
+(define-macro (getuid-or-false)
+  (if (defined? 'getuid)
+      (getuid)
+      #f))
+
+(define-macro (getgid-or-false)
+  (if (defined? 'getgid)
+      (getgid)
+      #f))
+
 (define (directory-files dir)
   (let ((dir-stream (opendir dir)))
     (let loop ((new (readdir dir-stream))
@@ -233,16 +243,22 @@
 ;; usually there's just a handful mounted, so the strategy here is a small
 ;; hash table indexed by dev, containing hash tables indexed by ino.
 ;;
+;; On some file systems, stat:ino is always zero.  In that case,
+;; a string hash of the full file name is used.
+;;
 ;; It'd be possible to make a pair (dev . ino) and use that as the key to a
 ;; single hash table.  It'd use an extra pair for every file visited, but
 ;; might be a little faster if it meant less scheme code.
 ;;
 (define (visited?-proc size)
   (let ((dev-hash (make-hash-table 7)))
-    (lambda (s)
+    (lambda (s name)
       (and s
-	   (let ((ino-hash (hashv-ref dev-hash (stat:dev s)))
-		 (ino      (stat:ino s)))
+	   (let* ((ino-hash (hashv-ref dev-hash (stat:dev s)))
+                  (%ino     (stat:ino s))
+                  (ino      (if (= 0 %ino)
+                                (string-hash name)
+                                %ino)))
 	     (or ino-hash
 		 (begin
 		   (set! ino-hash (make-hash-table size))
@@ -253,18 +269,16 @@
 		   #f)))))))
 
 (define (stat-dir-readable?-proc uid gid)
-  (let ((uid (getuid))
-        (gid (getgid)))
-    (lambda (s)
-      (let* ((perms (stat:perms s))
-             (perms-bit-set? (lambda (mask)
-                               (not (= 0 (logand mask perms))))))
-        (or (zero? uid)
-            (and (= uid (stat:uid s))
-                 (perms-bit-set? #o400))
-            (and (= gid (stat:gid s))
-                 (perms-bit-set? #o040))
-            (perms-bit-set? #o004))))))
+  (lambda (s)
+    (let* ((perms (stat:perms s))
+           (perms-bit-set? (lambda (mask)
+                             (logtest mask perms))))
+      (or (equal? uid 0)
+          (and (equal? uid (stat:uid s))
+               (perms-bit-set? #o400))
+          (and (equal? gid (stat:gid s))
+               (perms-bit-set? #o040))
+          (perms-bit-set? #o004)))))
 
 (define (stat&flag-proc dir-readable? . control-flags)
   (let* ((directory-flag (if (memq 'depth control-flags)
@@ -305,11 +319,12 @@
   (let* ((visited? (visited?-proc (cond ((memq 'hash-size options) => cadr)
                                         (else 211))))
          (stat&flag (stat&flag-proc
-                     (stat-dir-readable?-proc (getuid) (getgid)))))
+                     (stat-dir-readable?-proc (getuid-or-false)
+                                              (getgid-or-false)))))
     (letrec ((go (lambda (fullname)
                    (call-with-values (lambda () (stat&flag fullname))
                      (lambda (s flag)
-                       (or (visited? s)
+                       (or (visited? s fullname)
                            (let ((ret (proc fullname s flag))) ; callback
                              (or (eq? #t ret)
                                  (throw 'ftw-early-exit ret))
@@ -351,7 +366,8 @@
                         (lambda (flag) (eq? flag 'directory-processed))
                         (lambda (flag) (eq? flag 'directory))))
          (stat&flag (apply stat&flag-proc
-                           (stat-dir-readable?-proc (getuid) (getgid))
+                           (stat-dir-readable?-proc (getuid-or-false)
+                                                    (getgid-or-false))
                            (cons 'nftw-style control-flags))))
     (letrec ((go (lambda (fullname base level)
                    (call-with-values (lambda () (stat&flag fullname))
@@ -373,7 +389,7 @@
                                                          fullname))
                                                     (1+ level)))
                                               (directory-files fullname))))))
-                         (or (visited? s)
+                         (or (visited? s fullname)
                              (not (same-dev? s))
                              (if depth-first?
                                  (begin (kids) (self))
@@ -413,11 +429,21 @@ Return the result of these successive applications.
 When FILE-NAME names a flat file, (LEAF PATH STAT INIT) is returned.
 The optional STAT parameter defaults to `lstat'."
 
-  (define (mark v s)
-    (vhash-cons (cons (stat:dev s) (stat:ino s)) #t v))
+  ;; Use drive and inode number as a hash key.  If the filesystem
+  ;; doesn't use inodes, fall back to a string hash.
+  (define (mark v s fname)
+    (vhash-cons (cons (stat:dev s)
+                      (if (= 0 (stat:ino s))
+                          (string-hash fname)
+                          (stat:ino s)))
+                #t v))
 
-  (define (visited? v s)
-    (vhash-assoc (cons (stat:dev s) (stat:ino s)) v))
+  (define (visited? v s fname)
+    (vhash-assoc (cons (stat:dev s)
+                       (if (= 0 (stat:ino s))
+                           (string-hash fname)
+                           (stat:ino s)))
+                 v))
 
   (let loop ((name     file-name)
              (path     "")
@@ -434,12 +460,12 @@ The optional STAT parameter defaults to `lstat'."
      ((integer? dir-stat)
       ;; FILE-NAME is not readable.
       (error full-name #f dir-stat result))
-     ((visited? visited dir-stat)
+     ((visited? visited dir-stat full-name)
       (values result visited))
      ((eq? 'directory (stat:type dir-stat)) ; true except perhaps the 1st time
       (if (enter? full-name dir-stat result)
           (let ((dir     (errno-if-exception (opendir full-name)))
-                (visited (mark visited dir-stat)))
+                (visited (mark visited dir-stat full-name)))
             (cond
              ((directory-stream? dir)
               (let liip ((entry   (readdir dir))
@@ -486,7 +512,7 @@ The optional STAT parameter defaults to `lstat'."
               (values (error full-name dir-stat dir result)
                       visited))))
           (values (skip full-name dir-stat result)
-                  (mark visited dir-stat))))
+                  (mark visited dir-stat full-name))))
      (else
       ;; Caller passed a FILE-NAME that names a flat file, not a directory.
       (leaf full-name dir-stat result)))))
