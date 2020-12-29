@@ -11,16 +11,14 @@ on:
 
 jobs:
   build:
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-20.04
     continue-on-error: true
     strategy:
       matrix:
         include:
-          - os: ubuntu-20.04
-            threads: --without-threads
+          - threads: --without-threads
             jit: --enable-jit=no
-          - os: ubuntu-20.04
-            threads: --with-threads
+          - threads: --with-threads
             jit: --enable-jit=yes
 
     steps:
@@ -32,7 +30,7 @@ jobs:
     - name: bootstrap
       run: ./autogen.sh
     - name: configure
-      run: ./configure CFLAGS="-g -O2 -Wall" ${{ matrix.jit }} ${{ matrix.threads }}
+      run: ./configure CFLAGS="-g -O2 -Wall" ${{ matrix.jit }} ${{ matrix.threads }} --enable-verbose-tests
     - name: make
       run: make -j2
     - name: make check

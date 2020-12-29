@@ -46,7 +46,7 @@ jobs:
     - name: bootstrap
       run: ./autogen.sh
     - name: configure
-      run: ./configure CFLAGS="-g -O2 -Wall" ${{ matrix.jit }} ${{ matrix.threads }}
+      run: ./configure CFLAGS="-g -O2 -Wall" ${{ matrix.jit }} ${{ matrix.threads }} --enable-verbose-tests
     - name: make
       run: make -j2
     - name: make check
