@@ -170,6 +170,21 @@ AC_ARG_ENABLE(tmpnam,
   AS_HELP_STRING([--disable-tmpnam],[omit POSIX tmpnam]),,
   enable_tmpnam=yes)
 
+AC_ARG_ENABLE([verbose-tests],
+  [AS_HELP_STRING([--enable-verbose-tests],
+                  [enable verbose info to the console during 'make check'])],
+  [case "${enableval}" in
+    yes) verbose_tests=true ;;
+    no)  verbose_tests=false ;;
+    *) AC_MSG_ERROR([bad value ${enableval} for --enable-verbose-tests]) ;;
+    esac],[verbose_tests=false])
+if test x$verbose_tests = xtrue; then
+  VERBOSE_TEST_FLAG="-v"
+else
+  VERBOSE_TEST_FLAG=
+fi
+AC_SUBST([VERBOSE_TEST_FLAG])
+
 AC_ARG_ENABLE([deprecated],
   AS_HELP_STRING([--disable-deprecated],[omit deprecated features]))
 

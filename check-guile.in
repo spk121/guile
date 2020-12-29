@@ -46,6 +46,7 @@ exec $guile \
     -L "$TEST_SUITE_DIR" \
     --no-auto-compile -e main -s "$TEST_SUITE_DIR/guile-test" \
     --test-suite "$TEST_SUITE_DIR/tests" \
+    @VERBOSE_TEST_FLAG@ \
     --log-file check-guile.log "$@"
 
 # check-guile ends here
