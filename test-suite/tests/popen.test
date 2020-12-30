@@ -41,6 +41,9 @@
 (define-syntax-rule (if-supported body ...)
   (begin body ...))
 
+(define mingw?
+  (string-contains %host-type "-mingw32"))
+
 (if-supported
  (use-modules (ice-9 popen))
 
@@ -104,22 +107,24 @@
    ;; sure that we are testing what the parent sees at a point where
    ;; the child has closed stdout but is still alive.
    (pass-if "no duplicate"
-     (let* ((c2p (pipe))
-            (p2c (pipe))
-            (port (with-error-to-port (cdr c2p)
-                    (lambda ()
-                      (with-input-from-port (car p2c)
+     (if mingw?
+         (throw 'untested)
+         (let* ((c2p (pipe))
+                (p2c (pipe))
+                (port (with-error-to-port (cdr c2p)
                         (lambda ()
-                          (open-input-pipe
-                           (format #f "exec 1>~a; echo closed 1>&2; \
+                          (with-input-from-port (car p2c)
+                            (lambda ()
+                              (open-input-pipe
+                               (format #f "exec 1>~a; echo closed 1>&2; \
 exec 2>~a; read REPLY"
-                                   %null-device %null-device))))))))
-       (close-port (cdr c2p)) ;; write side
-       (let ((result (eof-object? (read-char port))))
-         (display "hello!\n" (cdr p2c))
-         (force-output (cdr p2c))
-         (close-pipe port)
-         result))))
+                                       %null-device %null-device))))))))
+           (close-port (cdr c2p)) ;; write side
+           (let ((result (eof-object? (read-char port))))
+             (display "hello!\n" (cdr p2c))
+             (force-output (cdr p2c))
+             (close-pipe port)
+             result)))))
 
  ;;
  ;; open-output-pipe
