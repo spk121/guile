@@ -1491,19 +1491,22 @@ SCM_DEFINE (scm_recvfrom, "recvfrom!", 2, 3, 0,
 
   SCM_VALIDATE_BYTEVECTOR (1, buf);
 
-  if (SCM_UNBNDP (start))
-    offset = 0;
-  else
-    offset = scm_to_size_t (start);
-
   if (SCM_UNBNDP (end))
     cend = SCM_BYTEVECTOR_LENGTH (buf);
   else
     {
       cend = scm_to_size_t (end);
-      if (SCM_UNLIKELY (cend >= SCM_BYTEVECTOR_LENGTH (buf)
-                        || cend < offset))
+      if (SCM_UNLIKELY (cend > SCM_BYTEVECTOR_LENGTH (buf)))
         scm_out_of_range (FUNC_NAME, end);
+    }
+
+  if (SCM_UNBNDP (start))
+    offset = 0;
+  else
+    {
+      offset = scm_to_size_t (start);
+      if (SCM_UNLIKELY (cend < offset))
+        scm_out_of_range (FUNC_NAME, start);
     }
 
   SCM_SYSCALL (rv = recvfrom (fd,
