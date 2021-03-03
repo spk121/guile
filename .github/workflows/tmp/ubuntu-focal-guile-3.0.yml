@@ -2,9 +2,12 @@ name: Ubuntu Focal w/ Guile 3.0
 
 on:
   push:
-    branches: [ master ]
+    branches:
+      - wip-mingw-guile-3.0
   pull_request:
-    branches: [ master ]
+    branches: 
+      - wip-mingw-guile-3.0
+  workflow_dispatch:
 
 jobs:
   build:
@@ -16,7 +19,7 @@ jobs:
     - name: env
       run: export LANG=C.UTF-8 TERM=dumb VERBOSE=true DEBIAN_FRONTEND=noninteractive TZ=America/Los_Angeles
     - name: install packages
-      run: sudo apt-get install -y gnulib texlive libunistring-dev libgmp-dev libgc-dev xz-utils lzip
+      run: sudo apt-get install -y gnulib texlive lzip gzip xzip libunistring-dev libgmp-dev libgc-dev libltdl-dev libncurses-dev libreadline-dev
     - name: make dist directory
       run: mkdir `pwd`/dist
     - name: bootstrap

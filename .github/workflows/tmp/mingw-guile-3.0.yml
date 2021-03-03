@@ -1,28 +1,40 @@
-name: Ubuntu Focal w/ Guile 3.0
+name: MinGW w/ Guile 3.0
 
 on:
   push:
-    branches: [ master ]
+    branches:
+      - wip-mingw-guile-3.0
   pull_request:
-    branches: [ master ]
+    branches: 
+      - wip-mingw-guile-3.0
+  workflow_dispatch:
 
 jobs:
   build:
-
-    runs-on: ubuntu-20.04
-
+    runs-on: windows-2019
+    defaults:
+      run:
+        shell: msys2 {0}
     steps:
     - uses: actions/checkout@v2
-    - name: env
-      run: export LANG=C.UTF-8 TERM=dumb VERBOSE=true DEBIAN_FRONTEND=noninteractive TZ=America/Los_Angeles
-    - name: install packages
-      run: sudo apt-get install -y gnulib texlive libunistring-dev libgmp-dev libgc-dev xz-utils lzip
+    - uses: msys2/setup-msys2@v2
+      with:
+        msystem: MINGW32
+        update: false
+        install: >-
+          base-devel
+          git
+          mingw-w64-i686-toolchain
+          mingw-w64-i686-gc
+          mingw-w64-i686-libtool
+          mingw-w64-i686-libunistring
+          mingw-w64-i686-gobject-introspection
     - name: make dist directory
       run: mkdir `pwd`/dist
     - name: bootstrap
       run: ./autogen.sh
     - name: configure
-      run: ./configure --prefix=`pwd`/dist
+      run: ./configure --without-threads --enable-jit=no --prefix=`pwd`/dist
     - name: make
       run: make
     - name: make install

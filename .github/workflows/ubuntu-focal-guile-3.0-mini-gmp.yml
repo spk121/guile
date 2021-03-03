@@ -22,7 +22,7 @@ jobs:
     - name: bootstrap
       run: ./autogen.sh
     - name: configure
-      run: ./configure --prefix=`pwd`/dist
+      run: ./configure --enable-mini-gmp --prefix=`pwd`/dist
     - name: make
       run: make
     - name: make install
