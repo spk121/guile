@@ -351,6 +351,8 @@ by a label, respectively."
            (($ $callk _ proc args)
             (let ((args (vars->intset args)))
               (return (get-defs k) (if proc (intset-add args proc) args))))
+           (($ $calli args callee)
+            (return (get-defs k) (intset-add (vars->intset args) callee)))
            (($ $primcall name param args)
             (return (get-defs k) (vars->intset args)))
            (($ $values args)

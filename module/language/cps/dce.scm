@@ -160,6 +160,8 @@ sites."
                  (adjoin-vars args (if proc
                                        (adjoin-var proc live-vars)
                                        live-vars))))
+        (($ $calli args callee)
+         (values live-labels (adjoin-var callee (adjoin-vars args live-vars))))
         (($ $primcall name param args)
          (values live-labels (adjoin-vars args live-vars)))
         (($ $values args)

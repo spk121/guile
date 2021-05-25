@@ -604,6 +604,9 @@
       (lambda (label cont cps)
         (match cont
           (($ $kargs names vars
+              ($ $continue k src ($ $calli)))
+           (error "$calli unsupported by guile-vm backend"))
+          (($ $kargs names vars
               ($ $continue k src ($ $primcall op param args)))
            (match (hashq-ref *primcall-lowerers* op)
              (#f cps)

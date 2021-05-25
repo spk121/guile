@@ -206,8 +206,12 @@ $call, and are always called with a compatible arity."
       (match cont
         (($ $kargs _ _ ($ $continue _ _ exp))
          (match exp
-           ((or ($ $const) ($ $prim) ($ $const-fun) ($ $code) ($ $fun) ($ $rec))
+           ((or ($ $const) ($ $prim) ($ $fun) ($ $rec))
             functions)
+           (($ $const-fun kfun)
+            (intmap-remove functions kfun))
+           (($ $code kfun)
+            (intmap-remove functions kfun))
            (($ $values args)
             (exclude-vars functions args))
            (($ $call proc args)
@@ -226,6 +230,10 @@ $call, and are always called with a compatible arity."
               (restrict-arity functions proc (length args))))
            (($ $callk k proc args)
             (exclude-vars functions (if proc (cons proc args) args)))
+           (($ $calli args callee)
+            ;; While callee is a var and not a label, it is a var that
+            ;; holds a code label, not a function value.
+            (exclude-vars functions args))
            (($ $primcall name param args)
             (exclude-vars functions args))))
         (($ $kargs _ _ ($ $branch kf kt src op param args))
@@ -466,7 +474,7 @@ function set."
           (match (intmap-ref conts k*)
             (($ $kreceive ($ $arity req () rest () #f) kargs)
              (match exp
-               ((or ($ $call) ($ $callk))
+               ((or ($ $call) ($ $callk) ($ $calli))
                 (with-cps cps (build-term ($continue k* src ,exp))))
                ;; We need to punch through the $kreceive; otherwise we'd
                ;; have to rewrite as a call to the 'values primitive.

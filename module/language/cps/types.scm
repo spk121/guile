@@ -2102,7 +2102,7 @@ maximum, where type is a bitset as a fixnum."
                      (adjoin-var out def (var-type-entry in arg))))))))
          (_
           (propagate1 k types))))
-      ((or ($ $call) ($ $callk))
+      ((or ($ $call) ($ $callk) ($ $calli))
        (propagate1 k types))
       (($ $rec names vars funs)
        (let ((proc-type (make-type-entry &procedure -inf.0 +inf.0)))

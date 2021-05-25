@@ -72,6 +72,8 @@
               (if proc
                   (add-use proc uses)
                   uses)))
+           (($ $calli args callee)
+            (add-uses args (add-use callee uses)))
            (($ $primcall name param args)
             (add-uses args uses))))
         (($ $kargs _ _ ($ $branch kf kt src op param args))
@@ -205,6 +207,8 @@ shared closures to use the appropriate 'self' variable, if possible."
               ((closure . label) ($callk label closure ,args)))))
         (($ $callk label proc args)
          ($callk label (and proc (subst proc)) ,(map subst args)))
+        (($ $calli args callee)
+         ($calli ,(map subst args) (subst callee)))
         (($ $primcall name param args)
          ($primcall name param ,(map subst args)))
         (($ $values args)
@@ -346,6 +350,8 @@ references."
                            (if proc
                                (add-use proc uses)
                                uses)))
+                        (($ $calli args callee)
+                         (add-uses args (add-use callee uses)))
                         (($ $primcall name param args)
                          (add-uses args uses))))
                      (($ $branch kf kt src op param args)
@@ -785,6 +791,15 @@ bound to @var{closure}, and continue to @var{k}."
 
         (($ $continue k src ($ $callk label proc args))
          (convert-known-proc-call cps k src label proc args))
+
+        (($ $continue k src ($ $calli args callee))
+         (convert-args cps args
+           (lambda (cps args)
+             (convert-arg cps callee
+               (lambda (cps callee)
+                 (with-cps cps
+                   (build-term
+                     ($continue k src ($calli args callee)))))))))
 
         (($ $continue k src ($ $primcall name param args))
          (convert-args cps args

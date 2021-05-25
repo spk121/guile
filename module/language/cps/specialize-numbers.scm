@@ -1,6 +1,6 @@
 ;;; Continuation-passing style (CPS) intermediate language (IL)
 
-;; Copyright (C) 2015-2020 Free Software Foundation, Inc.
+;; Copyright (C) 2015-2021 Free Software Foundation, Inc.
 
 ;;;; This library is free software; you can redistribute it and/or
 ;;;; modify it under the terms of the GNU Lesser General Public
@@ -361,6 +361,8 @@ BITS indicating the significant bits needed for a variable.  BITS may be
                          (if proc
                              (add-unknown-use out proc)
                              out)))
+                      (($ $calli args callee)
+                       (add-unknown-uses (add-unknown-use out callee) args))
                       (($ $primcall name param args)
                        (let ((h (significant-bits-handler name)))
                          (if h
