@@ -116,6 +116,7 @@
 
           ((string-match "^x86_64-.*-gnux32" triplet) 4)  ; x32
 
+          ((string-match "32$" cpu) 4)
           ((string-match "64$" cpu) 8)
           ((string-match "64_?[lbe][lbe]$" cpu) 8)
           ((member cpu '("sparc" "powerpc" "mips" "mipsel" "nios2" "m68k" "sh3" "sh4" "arc")) 4)
