@@ -606,7 +606,7 @@ Mutating the returned bytevector mutates the memory pointed to by
 
 @deffn {Scheme Procedure} bytevector->pointer bv [offset]
 @deffnx {C Function} scm_bytevector_to_pointer (bv, offset)
-Return a pointer pointer aliasing the memory pointed to by @var{bv} or
+Return a pointer aliasing the memory pointed to by @var{bv} or
 @var{offset} bytes after @var{bv} when @var{offset} is passed.
 @end deffn
 

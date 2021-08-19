@@ -5662,7 +5662,7 @@ since combining N of them builds @code{(- N 1)} intermediate lists.
 
 Transducers are oblivious to what kind of process they are used in, and
 are composable without building intermediate collections.  This means we
-can create a transducer that squares all even numbers:
+can create a transducer that squares all odd numbers:
 
 @example
 (compose (tfilter odd?) (tmap (lambda (x) (* x x))))
@@ -5735,7 +5735,7 @@ reducer with result-so-far and the maybe-transformed input.
 A simple example is as following:
 
 @example
-(list-transduce (tfilter odd?)+ '(1 2 3 4 5)).
+(list-transduce (tfilter odd?) + '(1 2 3 4 5)).
 @end example
 
 This first returns a transducer filtering all odd
@@ -5809,12 +5809,12 @@ and SRFI-158-styled generators respectively.
 @deffnx {Scheme Procedure} port-transduce xform f reader port
 @deffnx {Scheme Procedure} port-transduce xform f identity reader port
 
-Same as @code{list-reduce} but for ports.  Called without a port, it
-reduces over the results of applying @var{reader} until the
-EOF-object is returned, presumably to read from
-@code{current-input-port}.  With a port @var{reader} is applied to
-@var{port} instead of without any arguments.  If @var{identity} is
-provided, that is used as the initial identity in the reduction.
+Same as @code{list-transduce} but for ports.  Called without a port, it
+reduces over the results of applying @var{reader} until the EOF-object
+is returned, presumably to read from @code{current-input-port}.  With a
+port @var{reader} is applied to @var{port} instead of without any
+arguments.  If @var{identity} is provided, that is used as the initial
+identity in the reduction.
 @end deffn
 
 
@@ -5890,7 +5890,7 @@ transduction.
 Returns a transducer that applies @var{proc} to all values.  Stateless.
 @end deffn
 
-@deffn tfilter pred?
+@deffn {Scheme Procedure} tfilter pred?
 Returns a transducer that removes values for which @var{pred?} returns #f.
 
 Stateless.
@@ -5935,7 +5935,7 @@ Stateful.
 
 
 @deffn {Scheme Procedure} tdrop-while pred?
-Returns a transducer that discards the the first values for which
+Returns a transducer that discards the first values for which
 @var{pred?} returns true.
 
 Stateful.
@@ -5995,9 +5995,9 @@ Stateful.
 @end deffn
 
 @deffn {Scheme Procedure} tsegment n
-Returns a transducer that groups @var{n} inputs in lists of @var{n}
-elements.  When the transduction stops, it flushes any remaining
-collection, even if it contains fewer than @var{n} elements.
+Returns a transducer that groups inputs into lists of @var{n} elements.
+When the transduction stops, it flushes any remaining collection, even
+if it contains fewer than @var{n} elements.
 
 Stateful.
 @end deffn
@@ -6126,13 +6126,13 @@ The bytevector-u8 version of list-reduce.
 @end deffn
 
 @deffn {Scheme Procedure} port-reduce f identity reader port
-The port version of list-reducer.  It reduces over port using reader
+The port version of list-reduce.  It reduces over port using reader
 until reader returns the EOF object.
 @end deffn
 
 @deffn {Scheme Procedure} generator-reduce f identity gen
-The port version of list-reduce.  It reduces over @code{gen} until it
-returns the EOF object
+The generator version of list-reduce.  It reduces over @code{gen} until
+it returns the EOF object
 @end deffn
 
 @c srfi-modules.texi ends here
