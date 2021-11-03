@@ -1299,7 +1299,7 @@ renumber_file_descriptor (int fd, int err)
     {
       /* At this point we are in the child process before exec.  We
          cannot safely raise an exception in this environment.  */
-      char *msg = strerror (errno);
+      const char *msg = strerror (errno);
       fprintf (fdopen (err, "a"), "start_child: dup failed: %s\n", msg);
       _exit (127);  /* Use exit status 127, as with other exec errors. */
     }
@@ -1383,7 +1383,7 @@ start_child (const char *exec_file, char **exec_argv,
 
   /* The exec failed!  There is nothing sensible to do.  */
   {
-    char *msg = strerror (errno);
+    const char *msg = strerror (errno);
     fprintf (fdopen (2, "a"), "In execvp of %s: %s\n",
              exec_file, msg);
   }
