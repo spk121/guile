@@ -5466,7 +5466,10 @@
         (ash-variant -1 (- (expt 2 1000))))
       (pass-if-exception "Huge left shift of non-zero => numerical overflow"
           exception:numerical-overflow
-        (ash-variant 123 (expt 2 1000)))))
+        (ash-variant 123 (expt 2 1000)))
+      (pass-if-exception "Shift large enough to cause gmp abort in 3.0.7"
+          exception:numerical-overflow
+        (ash-variant 1 (expt 2 37)))))
 
   (test-ash-variant       'ash       ash floor #f)
   (test-ash-variant 'round-ash round-ash round #t)

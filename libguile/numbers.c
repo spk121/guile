@@ -5110,35 +5110,28 @@ SCM_DEFINE (scm_ash, "ash", 2, 0, 0,
 	    "@end lisp")
 #define FUNC_NAME s_scm_ash
 {
-  if (SCM_I_INUMP (n) || SCM_BIGP (n))
-    {
-      long bits_to_shift;
-
-      if (SCM_I_INUMP (count))  /* fast path, not strictly needed */
-        bits_to_shift = SCM_I_INUM (count);
-      else if (scm_is_signed_integer (count, LONG_MIN + 1, LONG_MAX))
-        /* We exclude LONG_MIN to ensure that 'bits_to_shift' can be
-           negated without overflowing. */
-        bits_to_shift = scm_to_long (count);
-      else if (scm_is_false (scm_positive_p (scm_sum (scm_integer_length (n),
-                                                      count))))
-        /* Huge right shift that eliminates all but the sign bit */
-        return scm_is_false (scm_negative_p (n))
-          ? SCM_INUM0 : SCM_I_MAKINUM (-1);
-      else if (scm_is_true (scm_zero_p (n)))
-        return SCM_INUM0;
-      else
-        scm_num_overflow ("ash");
-
-      if (bits_to_shift > 0)
-        return left_shift_exact_integer (n, bits_to_shift);
-      else if (SCM_LIKELY (bits_to_shift < 0))
-        return floor_right_shift_exact_integer (n, -bits_to_shift);
-      else
-        return n;
-    }
-  else
+  if (!SCM_I_INUMP (n) && !SCM_BIGP (n))
     SCM_WRONG_TYPE_ARG (SCM_ARG1, n);
+  
+  if (scm_is_false (scm_positive_p (scm_sum (scm_integer_length (n),
+                                             count))))
+    /* Huge right shift that eliminates all but the sign bit */
+    return scm_is_false (scm_negative_p (n))
+      ? SCM_INUM0 : SCM_I_MAKINUM (-1);
+  else if (scm_is_true (scm_zero_p (n)))
+    return SCM_INUM0;
+  else if (scm_is_signed_integer (count, INT32_MIN + 1, INT32_MAX)) {
+    /* We exclude MIN to ensure that 'bits_to_shift' can be
+       negated without overflowing, if INT32_MIN happens to be LONG_MIN */
+    long bits_to_shift = scm_to_long (count);
+    if (bits_to_shift > 0)
+      return left_shift_exact_integer (n, bits_to_shift);
+    else if (SCM_LIKELY (bits_to_shift < 0))
+      return floor_right_shift_exact_integer (n, -bits_to_shift);
+    else
+      return n;
+  } else
+    scm_num_overflow ("ash");
 }
 #undef FUNC_NAME
 
@@ -5164,34 +5157,27 @@ SCM_DEFINE (scm_round_ash, "round-ash", 2, 0, 0,
 	    "@end lisp")
 #define FUNC_NAME s_scm_round_ash
 {
-  if (SCM_I_INUMP (n) || SCM_BIGP (n))
-    {
-      long bits_to_shift;
-
-      if (SCM_I_INUMP (count))  /* fast path, not strictly needed */
-        bits_to_shift = SCM_I_INUM (count);
-      else if (scm_is_signed_integer (count, LONG_MIN + 1, LONG_MAX))
-        /* We exclude LONG_MIN to ensure that 'bits_to_shift' can be
-           negated without overflowing. */
-        bits_to_shift = scm_to_long (count);
-      else if (scm_is_true (scm_negative_p (scm_sum (scm_integer_length (n),
-                                                     count)))
-               || scm_is_true (scm_zero_p (n)))
-        /* If N is zero, or the right shift count exceeds the integer
-           length, the result is zero. */
-        return SCM_INUM0;
-      else
-        scm_num_overflow ("round-ash");
-
-      if (bits_to_shift > 0)
-        return left_shift_exact_integer (n, bits_to_shift);
-      else if (SCM_LIKELY (bits_to_shift < 0))
-        return round_right_shift_exact_integer (n, -bits_to_shift);
-      else
-        return n;
-    }
-  else
+  if (!SCM_I_INUMP (n) && !SCM_BIGP (n))
     SCM_WRONG_TYPE_ARG (SCM_ARG1, n);
+  
+  if (scm_is_true (scm_negative_p (scm_sum (scm_integer_length (n),
+                                            count)))
+      || scm_is_true (scm_zero_p (n)))
+    /* If N is zero, or the right shift count exceeds the integer
+       length, the result is zero. */
+    return SCM_INUM0;
+  else if (scm_is_signed_integer (count, INT32_MIN + 1, INT32_MAX)) {
+    /* We exclude MIN to ensure that 'bits_to_shift' can be
+       negated without overflowing, if INT32_MIN happens to be LONG_MIN */
+    long bits_to_shift = scm_to_long (count);
+    if (bits_to_shift > 0)
+      return left_shift_exact_integer (n, bits_to_shift);
+    else if (SCM_LIKELY (bits_to_shift < 0))
+      return round_right_shift_exact_integer (n, -bits_to_shift);
+    else
+      return n;
+  } else 
+    scm_num_overflow ("round-ash");
 }
 #undef FUNC_NAME
 
