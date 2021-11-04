@@ -1444,7 +1444,9 @@ minimum, and maximum."
         (define! result &s64 &s64-min &s64-max))))
 
 (define-type-inferrer (ulsh a b result)
-  (if (<= (ash (&max/u64 a) (&max/u64 b)) &u64-max)
+  (if (and
+       (or (zero? (&max/u64 a)) (< (&max/u64 b) 64)) ; don't even try
+       (<= (ash (&max/u64 a) (&max/u64 b)) &u64-max))
       ;; No overflow; we can be precise.
       (define! result &u64
         (ash (&min/0 a) (&min/0 b))
