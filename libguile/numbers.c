@@ -5120,17 +5120,19 @@ SCM_DEFINE (scm_ash, "ash", 2, 0, 0,
       ? SCM_INUM0 : SCM_I_MAKINUM (-1);
   else if (scm_is_true (scm_zero_p (n)))
     return SCM_INUM0;
-  else if (scm_is_signed_integer (count, INT32_MIN + 1, INT32_MAX)) {
-    /* We exclude MIN to ensure that 'bits_to_shift' can be
-       negated without overflowing, if INT32_MIN happens to be LONG_MIN */
-    long bits_to_shift = scm_to_long (count);
-    if (bits_to_shift > 0)
-      return left_shift_exact_integer (n, bits_to_shift);
-    else if (SCM_LIKELY (bits_to_shift < 0))
-      return floor_right_shift_exact_integer (n, -bits_to_shift);
-    else
-      return n;
-  } else
+  else if (scm_is_signed_integer (count, INT32_MIN + 1, INT32_MAX))
+    {
+      /* We exclude MIN to ensure that 'bits_to_shift' can be
+         negated without overflowing, if INT32_MIN happens to be LONG_MIN */
+      long bits_to_shift = scm_to_long (count);
+      if (bits_to_shift > 0)
+        return left_shift_exact_integer (n, bits_to_shift);
+      else if (SCM_LIKELY (bits_to_shift < 0))
+        return floor_right_shift_exact_integer (n, -bits_to_shift);
+      else
+        return n;
+    }
+  else
     scm_num_overflow ("ash");
 }
 #undef FUNC_NAME
@@ -5166,17 +5168,19 @@ SCM_DEFINE (scm_round_ash, "round-ash", 2, 0, 0,
     /* If N is zero, or the right shift count exceeds the integer
        length, the result is zero. */
     return SCM_INUM0;
-  else if (scm_is_signed_integer (count, INT32_MIN + 1, INT32_MAX)) {
-    /* We exclude MIN to ensure that 'bits_to_shift' can be
-       negated without overflowing, if INT32_MIN happens to be LONG_MIN */
-    long bits_to_shift = scm_to_long (count);
-    if (bits_to_shift > 0)
-      return left_shift_exact_integer (n, bits_to_shift);
-    else if (SCM_LIKELY (bits_to_shift < 0))
-      return round_right_shift_exact_integer (n, -bits_to_shift);
-    else
-      return n;
-  } else 
+  else if (scm_is_signed_integer (count, INT32_MIN + 1, INT32_MAX))
+    {
+      /* We exclude MIN to ensure that 'bits_to_shift' can be
+         negated without overflowing, if INT32_MIN happens to be LONG_MIN */
+      long bits_to_shift = scm_to_long (count);
+      if (bits_to_shift > 0)
+        return left_shift_exact_integer (n, bits_to_shift);
+      else if (SCM_LIKELY (bits_to_shift < 0))
+        return round_right_shift_exact_integer (n, -bits_to_shift);
+      else
+        return n;
+    }
+  else 
     scm_num_overflow ("round-ash");
 }
 #undef FUNC_NAME
