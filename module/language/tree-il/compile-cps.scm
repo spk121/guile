@@ -1587,7 +1587,7 @@ use as the proc slot."
     (((k . v) . meta)
      (let ((meta (sanitize-meta meta)))
        (case k
-         ((arg-representations) meta)
+         ((arg-representations noreturn return-type) meta)
          (else (acons k v meta)))))))
 
 ;;; The conversion from Tree-IL to CPS essentially wraps every

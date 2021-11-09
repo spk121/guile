@@ -65,6 +65,7 @@ SOURCES =					\
   language/cps/prune-top-level-scopes.scm	\
   language/cps/reify-primitives.scm		\
   language/cps/renumber.scm			\
+  language/cps/return-types.scm			\
   language/cps/rotate-loops.scm			\
   language/cps/self-references.scm		\
   language/cps/simplify.scm			\
