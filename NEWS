@@ -49,6 +49,11 @@ Bytevectors" in the manual.
 Compared to the previous versions, these accept range arguments. See
 "Accessing and Modifying Vector Contents" in the manual.
 
+** (system foreign) supports C99 complex types
+
+The types `complex-float' and `complex-double' stand for C99 `float
+_Complex' and `double _Complex` respectively.
+
 
 Changes in 3.0.7 (since 3.0.6)
 

@@ -465,8 +465,11 @@ C types.
 @defvrx {Scheme Variable} int64
 @defvrx {Scheme Variable} float
 @defvrx {Scheme Variable} double
+@defvrx {Scheme Variable} complex-double
+@defvrx {Scheme Variable} complex-float
 These values represent the C numeric types of the specified sizes and
-signednesses.
+signednesses. @code{complex-float} and @code{complex-double} stand for
+C99 @code{float _Complex} and @code{double _Complex} respecively.
 @end defvr
 
 In addition there are some convenience bindings for indicating types of

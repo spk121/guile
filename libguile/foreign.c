@@ -29,6 +29,10 @@
 
 #include <ffi.h>
 
+#ifdef FFI_TARGET_HAS_COMPLEX_TYPE
+#include <complex.h>
+#endif
+
 #include "boolean.h"
 #include "bytevectors.h"
 #include "dynwind.h"
@@ -63,6 +67,10 @@
 SCM_SYMBOL (sym_void, "void");
 SCM_SYMBOL (sym_float, "float");
 SCM_SYMBOL (sym_double, "double");
+#ifdef FFI_TARGET_HAS_COMPLEX_TYPE
+SCM_SYMBOL (sym_complex_float, "complex-float");
+SCM_SYMBOL (sym_complex_double, "complex-double");
+#endif
 SCM_SYMBOL (sym_uint8, "uint8");
 SCM_SYMBOL (sym_int8, "int8");
 SCM_SYMBOL (sym_uint16, "uint16");
@@ -470,6 +478,12 @@ SCM_DEFINE (scm_alignof, "alignof", 1, 0, 0, (SCM type),
           return scm_from_size_t (alignof_type (float));
         case SCM_FOREIGN_TYPE_DOUBLE:
           return scm_from_size_t (alignof_type (double));
+#ifdef FFI_TARGET_HAS_COMPLEX_TYPE
+        case SCM_FOREIGN_TYPE_COMPLEX_FLOAT:
+          return scm_from_size_t (alignof_type (float _Complex));
+        case SCM_FOREIGN_TYPE_COMPLEX_DOUBLE:
+          return scm_from_size_t (alignof_type (double _Complex));
+#endif
         case SCM_FOREIGN_TYPE_UINT8:
           return scm_from_size_t (alignof_type (uint8_t));
         case SCM_FOREIGN_TYPE_INT8:
@@ -534,6 +548,12 @@ SCM_DEFINE (scm_sizeof, "sizeof", 1, 0, 0, (SCM type),
           return scm_from_size_t (sizeof (float));
         case SCM_FOREIGN_TYPE_DOUBLE:
           return scm_from_size_t (sizeof (double));
+#ifdef FFI_TARGET_HAS_COMPLEX_TYPE
+        case SCM_FOREIGN_TYPE_COMPLEX_FLOAT:
+          return scm_from_size_t (sizeof (float _Complex));
+        case SCM_FOREIGN_TYPE_COMPLEX_DOUBLE:
+          return scm_from_size_t (sizeof (double _Complex));
+#endif
         case SCM_FOREIGN_TYPE_UINT8:
           return scm_from_size_t (sizeof (uint8_t));
         case SCM_FOREIGN_TYPE_INT8:
@@ -626,6 +646,14 @@ fill_ffi_type (SCM type, ffi_type *ftype, ffi_type ***type_ptrs,
         case SCM_FOREIGN_TYPE_DOUBLE:
           *ftype = ffi_type_double;
           return;
+#ifdef FFI_TARGET_HAS_COMPLEX_TYPE
+        case SCM_FOREIGN_TYPE_COMPLEX_FLOAT:
+          *ftype = ffi_type_complex_float;
+          return;
+        case SCM_FOREIGN_TYPE_COMPLEX_DOUBLE:
+          *ftype = ffi_type_complex_double;
+          return;
+#endif
         case SCM_FOREIGN_TYPE_UINT8:
           *ftype = ffi_type_uint8;
           return;
@@ -882,6 +910,23 @@ unpack (const ffi_type *type, void *loc, SCM x, int return_value_p)
       *(double *) loc = scm_to_double (x);
       break;
 
+      /* no FFI_TYPE_xxx_COMPLEX or (FFI_TYPE_COMPLEX_xxx) :-| */
+
+#ifdef FFI_TARGET_HAS_COMPLEX_TYPE
+    case FFI_TYPE_COMPLEX:
+      {
+        double re = scm_to_double (scm_real_part(x));
+        double im = scm_to_double (scm_imag_part(x));
+        if (sizeof (float _Complex) == type->size)
+          *(float _Complex *) loc = (float)re + _Complex_I * (float)im;
+        else if (sizeof (double _Complex) == type->size)
+          *(double _Complex *) loc = re + _Complex_I * im;
+        else
+          abort();
+      }
+      break;
+#endif
+
     /* For integer return values smaller than `int', libffi expects the
        result in an `ffi_arg'-long buffer.  */
 
@@ -959,6 +1004,28 @@ pack (const ffi_type * type, const void *loc, int return_value_p)
       return scm_from_double (*(float *) loc);
     case FFI_TYPE_DOUBLE:
       return scm_from_double (*(double *) loc);
+
+      /* no FFI_TYPE_xxx_COMPLEX or (FFI_TYPE_COMPLEX_xxx) :-| */
+
+#ifdef FFI_TARGET_HAS_COMPLEX_TYPE
+    case FFI_TYPE_COMPLEX:
+      {
+        double re, im;
+        if (sizeof (float _Complex) == type->size)
+          {
+            re = crealf(*(float _Complex *) loc);
+            im = cimagf(*(float _Complex *) loc);
+          }
+        else if (sizeof (double _Complex) == type->size)
+          {
+            re = creal(*(double _Complex *) loc);
+            im = cimag(*(double _Complex *) loc);
+          }
+        else
+          abort ();
+        return scm_make_rectangular (scm_from_double (re), scm_from_double (im));
+      }
+#endif
 
       /* For integer return values smaller than `int', libffi stores the
 	 result in an `ffi_arg'-long buffer, of which only the
@@ -1172,6 +1239,10 @@ scm_init_foreign (void)
   scm_define (sym_void, scm_from_uint8 (SCM_FOREIGN_TYPE_VOID));
   scm_define (sym_float, scm_from_uint8 (SCM_FOREIGN_TYPE_FLOAT));
   scm_define (sym_double, scm_from_uint8 (SCM_FOREIGN_TYPE_DOUBLE));
+#ifdef FFI_TARGET_HAS_COMPLEX_TYPE
+  scm_define (sym_complex_float, scm_from_uint8 (SCM_FOREIGN_TYPE_COMPLEX_FLOAT));
+  scm_define (sym_complex_double, scm_from_uint8 (SCM_FOREIGN_TYPE_COMPLEX_DOUBLE));
+#endif
   scm_define (sym_uint8, scm_from_uint8 (SCM_FOREIGN_TYPE_UINT8));
   scm_define (sym_int8, scm_from_uint8 (SCM_FOREIGN_TYPE_INT8));
   scm_define (sym_uint16, scm_from_uint8 (SCM_FOREIGN_TYPE_UINT16));

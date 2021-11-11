@@ -416,7 +416,14 @@
           (data   (list 77 (list 42 4.2 55) 88)))
       (equal? (parse-c-struct (make-c-struct layout data)
                               layout)
-              data))))
+              data)))
+
+  (when (defined? 'complex-float)
+    (pass-if "complex types"
+      (let ((layout (list complex-float int complex-double))
+            (data '(1+3i 99 3-1i)))
+        (equal? data (parse-c-struct (make-c-struct layout data)
+                                     layout))))))
 
 
 (with-test-prefix "lib->cyg"

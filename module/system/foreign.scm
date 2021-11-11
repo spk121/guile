@@ -23,6 +23,7 @@
   #:use-module (srfi srfi-9 gnu)
   #:export (void
             float double
+            complex-float complex-double
             short
             unsigned-short
             int unsigned-int long unsigned-long size_t ssize_t ptrdiff_t
@@ -93,9 +94,22 @@
            (bytevector-u32-native-set! bv offset (pointer-address ptr))))
     (else (error "what machine is this?"))))
 
+(define (writer-complex set size)
+  (lambda (bv i val)
+    (set bv i (real-part val))
+    (set bv (+ i size) (imag-part val))))
+
+(define (reader-complex ref size)
+  (lambda (bv i)
+    (make-rectangular
+     (ref bv i)
+     (ref bv (+ i size)))))
+
 (define *writers*
   `((,float . ,bytevector-ieee-single-native-set!)
     (,double . ,bytevector-ieee-double-native-set!)
+    (,complex-float . ,(writer-complex bytevector-ieee-single-native-set! (sizeof float)))
+    (,complex-double . ,(writer-complex bytevector-ieee-double-native-set! (sizeof double)))
     (,int8 . ,bytevector-s8-set!)
     (,uint8 . ,bytevector-u8-set!)
     (,int16 . ,bytevector-s16-native-set!)
@@ -109,6 +123,8 @@
 (define *readers*
   `((,float . ,bytevector-ieee-single-native-ref)
     (,double . ,bytevector-ieee-double-native-ref)
+    (,complex-float . ,(reader-complex bytevector-ieee-single-native-ref (sizeof float)))
+    (,complex-double . ,(reader-complex bytevector-ieee-double-native-ref (sizeof double)))
     (,int8 . ,bytevector-s8-ref)
     (,uint8 . ,bytevector-u8-ref)
     (,int16 . ,bytevector-s16-native-ref)
