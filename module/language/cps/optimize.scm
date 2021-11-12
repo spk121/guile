@@ -36,6 +36,7 @@
   #:use-module (language cps reify-primitives)
   #:use-module (language cps renumber)
   #:use-module (language cps rotate-loops)
+  #:use-module (language cps return-types)
   #:use-module (language cps self-references)
   #:use-module (language cps simplify)
   #:use-module (language cps specialize-numbers)
@@ -110,6 +111,7 @@
   (specialize-primcalls #:specialize-primcalls?)
   (optimize-branch-chains #:optimize-branch-chains?)
   (eliminate-common-subexpressions #:cse?)
+  (optimize-known-return-types #:optimize-known-return-types?)
   (eliminate-dead-code #:eliminate-dead-code?)
   ;; Running simplify here enables rotate-loops to do a better job.
   (simplify #:simplify?)
