@@ -469,8 +469,9 @@ function set."
       (if (eq? k k*)
           (with-cps cps (build-term ($continue k src ,exp)))
           ;; We are contifying this return.  It must be a call or a
-          ;; $values expression.  k* will be either a $ktail or a
-          ;; $kreceive continuation.
+          ;; $values expression.  k* will be a $ktail or a $kreceive
+          ;; continuation, or a $kargs continuation for a
+          ;; known-number-of-values return.
           (match (intmap-ref conts k*)
             (($ $kreceive ($ $arity req () rest () #f) kargs)
              (match exp
@@ -480,6 +481,10 @@ function set."
                ;; have to rewrite as a call to the 'values primitive.
                (($ $values vals)
                 (inline-return cps k* kargs src (length req) rest vals))))
+            (($ $kargs)
+             (match exp
+               ((or ($ $callk) ($ $values))
+                (with-cps cps (build-term ($continue k* src ,exp))))))
             (($ $ktail)
              (with-cps cps (build-term ($continue k* src ,exp))))))))
   (define (contify-unchecked-function cps kfun)

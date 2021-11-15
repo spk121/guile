@@ -102,16 +102,6 @@
     (letk kclause ($kclause ('() '() #f '() #f) kbody #f))
     kclause))
 
-;; A $kreceive continuation should have only one predecessor.
-(define (uniquify-receive cps k)
-  (match (intmap-ref cps k)
-    (($ $kreceive ($ $arity req () rest () #f) kargs)
-     (with-cps cps
-       (letk k ($kreceive req rest kargs))
-       k))
-    (_
-     (with-cps cps k))))
-
 (define (wrap-unary cps k src wrap unwrap op param a)
   (with-cps cps
     (letv a* res*)
@@ -619,16 +609,6 @@
           ((imm-s64-< (s12? a) b) load-s64 (s64-< a b))
           ((eq-constant? (imm16? b) a) load-const (eq? a b))
           (_ cps))))
-      (($ $kargs names vars ($ $continue k src ($ $call proc args)))
-       (with-cps cps
-         (let$ k (uniquify-receive k))
-         (setk label ($kargs names vars
-                       ($continue k src ($call proc args))))))
-      (($ $kargs names vars ($ $continue k src ($ $callk k* proc args)))
-       (with-cps cps
-         (let$ k (uniquify-receive k))
-         (setk label ($kargs names vars
-                       ($continue k src ($callk k* proc args))))))
       (_ cps)))
 
   (with-fresh-name-state cps

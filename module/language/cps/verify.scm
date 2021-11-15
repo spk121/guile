@@ -1,5 +1,5 @@
 ;;; Diagnostic checker for CPS
-;;; Copyright (C) 2014-2020 Free Software Foundation, Inc.
+;;; Copyright (C) 2014-2021 Free Software Foundation, Inc.
 ;;;
 ;;; This library is free software: you can redistribute it and/or modify
 ;;; it under the terms of the GNU Lesser General Public License as
@@ -271,10 +271,6 @@ definitions that are available at LABEL."
          (unless (= (length vars) n)
            (error "expected n-ary continuation" n cont)))
         (_ (error "expected $kargs continuation" cont))))
-    (define (assert-kreceive-or-ktail)
-      (match cont
-        ((or ($ $kreceive) ($ $ktail)) #t)
-        (_ (error "expected $kreceive or $ktail continuation" cont))))
     (match exp
       ((or ($ $const) ($ $prim) ($ $const-fun) ($ $code) ($ $fun))
        (assert-unary))
@@ -291,9 +287,13 @@ definitions that are available at LABEL."
          (($ $ktail) #t)
          (_ (assert-n-ary (length args)))))
       (($ $call proc args)
-       (assert-kreceive-or-ktail))
+       (match cont
+         ((or ($ $kreceive) ($ $ktail)) #t)
+         (_ (error "expected $kreceive or $ktail continuation" cont))))
       (($ $callk k proc args)
-       (assert-kreceive-or-ktail))
+       (match cont
+         ((or ($ $kargs) ($ $kreceive) ($ $ktail)) #t)
+         (_ (error "expected $kargs, $kreceive or $ktail continuation" cont))))
       (($ $primcall name param args)
        (match cont
          (($ $kargs) #t)

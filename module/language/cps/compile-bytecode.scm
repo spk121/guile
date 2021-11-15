@@ -135,6 +135,8 @@
                (emit-fmov asm dst src)
                (lp moves reset-frame?)))))))
       (match cont
+        (($ $kargs)
+         (shuffle-results))
         (($ $kreceive ($ $arity req () rest () #f) kargs)
          (let ((nreq (length req))
                (rest-var (and rest

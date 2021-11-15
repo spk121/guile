@@ -389,6 +389,8 @@ by a label, respectively."
              (($ $values (arg))
               (intmap-add representations var
                           (intmap-ref representations arg)))
+             (($ $callk)
+              (intmap-add representations var 'scm))
              (($ $primcall (or 'scm->f64 'load-f64 's64->f64
                                'f32-ref 'f64-ref
                                'fadd 'fsub 'fmul 'fdiv 'fsqrt 'fabs
@@ -425,7 +427,11 @@ by a label, respectively."
               (fold (lambda (arg var representations)
                       (intmap-add representations var
                                   (intmap-ref representations arg)))
-                    representations args vars))))))
+                    representations args vars))
+             (($ $callk)
+              (fold1 (lambda (var representations)
+                      (intmap-add representations var 'scm))
+                     vars representations))))))
        (($ $kargs _ _ (or ($ $branch) ($ $switch) ($ $prompt) ($ $throw)))
         representations)
        (($ $kfun src meta self tail entry)
