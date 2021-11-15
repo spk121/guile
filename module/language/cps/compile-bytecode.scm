@@ -52,7 +52,8 @@
     empty-intmap)))
 
 ;; Any $values expression that continues to a $kargs and causes no
-;; shuffles is a forwarding label.
+;; shuffles is a forwarding label.  $kreceive conts also forward to
+;; their continuations.
 (define (compute-forwarding-labels cps allocation)
   (fixpoint
    (lambda (forwarding-map)
@@ -72,6 +73,8 @@
                           (($ $ktail) forwarding-labels)
                           (_ (intmap-add forwarding-labels label k))))
                        (_ forwarding-labels)))
+                    (($ $kreceive arity kargs)
+                     (intmap-add forwarding-labels label kargs))
                     (_ forwarding-labels)))
                 cps empty-intmap)))
 
@@ -101,40 +104,62 @@
       (unless (= dst src)
         (emit-mov asm (from-sp dst) (from-sp src))))
 
-    (define (compile-tail label exp)
-      ;; There are only three kinds of expressions in tail position:
-      ;; tail calls, multiple-value returns, and single-value returns.
-      (define (maybe-reset-frame nlocals)
-        (unless (= frame-size nlocals)
-          (emit-reset-frame asm nlocals)))
-      (match exp
-        (($ $call proc args)
-         (for-each (match-lambda
-                    ((src . dst) (emit-mov asm (from-sp dst) (from-sp src))))
-                   (lookup-parallel-moves label allocation))
-         (maybe-reset-frame (1+ (length args)))
-         (emit-handle-interrupts asm)
-         (emit-tail-call asm))
-        (($ $callk k proc args)
-         (for-each (match-lambda
-                    ((src . dst) (emit-mov asm (from-sp dst) (from-sp src))))
-                   (lookup-parallel-moves label allocation))
-         (let ((nclosure (if proc 1 0)))
-           (maybe-reset-frame (+ nclosure (length args))))
-         (emit-handle-interrupts asm)
-         (emit-tail-call-label asm k))
-        (($ $values args)
-         (for-each (match-lambda
-                    ((src . dst) (emit-mov asm (from-sp dst) (from-sp src))))
-                   (lookup-parallel-moves label allocation))
-         (maybe-reset-frame (length args))
-         (emit-handle-interrupts asm)
-         (emit-return-values asm))))
+    (define (emit-moves moves)
+      (for-each (match-lambda
+                  ((src . dst)
+                   (emit-mov asm (from-sp dst) (from-sp src))))
+                moves))
 
-    (define (compile-value label exp dst)
+    (define (compile-tail nlocals emit-tail)
+      (unless (= frame-size nlocals)
+        (emit-reset-frame asm nlocals))
+      (emit-handle-interrupts asm)
+      (emit-tail asm))
+
+    (define (compile-receive label proc-slot cont)
+      (define (shuffle-results)
+        (let lp ((moves (lookup-parallel-moves label allocation))
+                 (reset-frame? #f))
+          (cond
+           ((and (not reset-frame?)
+                 (and-map (match-lambda
+                            ((src . dst)
+                             (and (< src frame-size) (< dst frame-size))))
+                          moves))
+            (emit-reset-frame asm frame-size)
+            (emit-moves moves))
+           (else
+            (match moves
+              (() #t)
+              (((src . dst) . moves)
+               (emit-fmov asm dst src)
+               (lp moves reset-frame?)))))))
+      (match cont
+        (($ $kreceive ($ $arity req () rest () #f) kargs)
+         (let ((nreq (length req))
+               (rest-var (and rest
+                              (match (intmap-ref cps kargs)
+                                (($ $kargs names (_ ... rest))
+                                 rest)))))
+           (cond
+            ((and (= 1 nreq) rest-var (not (maybe-slot rest-var))
+                  (match (lookup-parallel-moves label allocation)
+                    ((((? (lambda (src) (= src proc-slot)) src)
+                       . dst)) dst)
+                    (_ #f)))
+             ;; A common case: one required live return value,
+             ;; ignoring any additional values.
+             => (lambda (dst)
+                  (emit-receive asm dst proc-slot frame-size)))
+            (else
+             (unless (and (zero? nreq) rest-var)
+               (emit-receive-values asm proc-slot (->bool rest-var) nreq))
+             (when (and rest-var (maybe-slot rest-var))
+               (emit-bind-rest asm (+ proc-slot nreq)))
+             (shuffle-results)))))))
+
+    (define (compile-value exp dst)
       (match exp
-        (($ $values (arg))
-         (maybe-mov dst (slot arg)))
         (($ $primcall (or 's64->u64 'u64->s64) #f (arg))
          (maybe-mov dst (slot arg)))
         (($ $const exp)
@@ -302,9 +327,8 @@
          (emit-text asm `((,name ,(from-sp dst)
                                  ,@(map (compose from-sp slot) args)))))))
 
-    (define (compile-effect label exp k)
+    (define (compile-effect exp)
       (match exp
-        (($ $values ()) #f)
         (($ $primcall 'cache-set! key (val))
          (emit-cache-set! asm key (from-sp (slot val))))
         (($ $primcall 'scm-set! annotation (obj idx val))
@@ -393,50 +417,15 @@
         (#('throw/value+data param (val))
          (emit-throw/value+data asm (from-sp (slot val)) param))))
 
-    (define (emit-parallel-moves-after-return-and-reset-frame label nlocals)
-      (let lp ((moves (lookup-parallel-moves label allocation))
-               (reset-frame? #f))
-        (cond
-         ((and (not reset-frame?)
-               (and-map (match-lambda
-                         ((src . dst)
-                          (and (< src nlocals) (< dst nlocals))))
-                        moves))
-          (emit-reset-frame asm nlocals)
-          (lp moves #t))
-         (else
-          (match moves
-            (() #t)
-            (((src . dst) . moves)
-             (emit-fmov asm dst src)
-             (lp moves reset-frame?)))))))
-
     (define (compile-prompt label k kh escape? tag)
-      (match (intmap-ref cps kh)
-        (($ $kreceive ($ $arity req () rest () #f) khandler-body)
-         (let ((receive-args (gensym "handler"))
-               (nreq (length req))
-               (proc-slot (lookup-call-proc-slot label allocation)))
-           (emit-prompt asm (from-sp (slot tag)) escape? proc-slot
-                        receive-args)
-           (emit-j asm k)
-           (emit-label asm receive-args)
-           (unless (and rest (zero? nreq))
-             (emit-receive-values asm proc-slot (->bool rest) nreq))
-           (when (and rest
-                      (match (intmap-ref cps khandler-body)
-                        (($ $kargs names (_ ... rest))
-                         (maybe-slot rest))))
-             (emit-bind-rest asm (+ proc-slot nreq)))
-           (emit-parallel-moves-after-return-and-reset-frame kh frame-size)
-           (emit-j asm (forward-label khandler-body))))))
-
-    (define (compile-values label exp syms)
-      (match exp
-        (($ $values args)
-         (for-each (match-lambda
-                    ((src . dst) (emit-mov asm (from-sp dst) (from-sp src))))
-                   (lookup-parallel-moves label allocation)))))
+      (let ((receive-args (gensym "handler"))
+            (proc-slot (lookup-call-proc-slot label allocation)))
+        (emit-prompt asm (from-sp (slot tag)) escape? proc-slot
+                     receive-args)
+        (emit-j asm k)
+        (emit-label asm receive-args)
+        (compile-receive kh proc-slot (intmap-ref cps kh))
+        (emit-j asm (forward-label kh))))
 
     (define (compile-test label next-label kf kt op param args)
       (define (prefer-true?)
@@ -540,44 +529,6 @@
         (#('f64-<= #f (a b)) (binary-<= emit-f64<? a b))
         (#('f64-= #f (a b)) (binary-test emit-f64=? a b))))
 
-    (define (compile-trunc label k exp nreq rest-var)
-      (define (do-call proc args emit-call)
-        (let* ((proc-slot (lookup-call-proc-slot label allocation))
-               (nclosure (if proc 1 0))
-               (nargs (+ nclosure (length args)))
-               (arg-slots (map (lambda (x) (+ x proc-slot)) (iota nargs))))
-          (for-each (match-lambda
-                     ((src . dst) (emit-mov asm (from-sp dst) (from-sp src))))
-                    (lookup-parallel-moves label allocation))
-          (emit-handle-interrupts asm)
-          (emit-call asm proc-slot nargs)
-          (emit-slot-map asm proc-slot (lookup-slot-map label allocation))
-          (cond
-           ((and (= 1 nreq) (and rest-var) (not (maybe-slot rest-var))
-                 (match (lookup-parallel-moves k allocation)
-                   ((((? (lambda (src) (= src proc-slot)) src)
-                      . dst)) dst)
-                   (_ #f)))
-            ;; The usual case: one required live return value, ignoring
-            ;; any additional values.
-            => (lambda (dst)
-                 (emit-receive asm dst proc-slot frame-size)))
-           (else
-            (unless (and (zero? nreq) rest-var)
-              (emit-receive-values asm proc-slot (->bool rest-var) nreq))
-            (when (and rest-var (maybe-slot rest-var))
-              (emit-bind-rest asm (+ proc-slot nreq)))
-            (emit-parallel-moves-after-return-and-reset-frame k frame-size)))))
-      (match exp
-        (($ $call proc args)
-         (do-call proc args
-                  (lambda (asm proc-slot nargs)
-                    (emit-call asm proc-slot nargs))))
-        (($ $callk k proc args)
-         (do-call proc args
-                  (lambda (asm proc-slot nargs)
-                    (emit-call-label asm proc-slot nargs k))))))
-
     (define (skip-elided-conts label)
       (if (elide-cont? label)
           (skip-elided-conts (1+ label))
@@ -585,34 +536,56 @@
 
     (define (compile-expression label k exp)
       (let* ((forwarded-k (forward-label k))
-             (fallthrough? (= forwarded-k (skip-elided-conts (1+ label)))))
+             (fallthrough? (= forwarded-k (skip-elided-conts (1+ label))))
+             (cont (intmap-ref cps k)))
         (define (maybe-emit-jump)
           (unless fallthrough?
             (emit-j asm forwarded-k)))
-        (match (intmap-ref cps k)
-          (($ $ktail)
-           (compile-tail label exp))
-          (($ $kargs (name) (sym))
-           (let ((dst (maybe-slot sym)))
-             (when dst
-               (compile-value label exp dst)))
-           (maybe-emit-jump))
-          (($ $kargs () ())
-           (compile-effect label exp k)
-           (maybe-emit-jump))
-          (($ $kargs names syms)
-           (compile-values label exp syms)
-           (maybe-emit-jump))
-          (($ $kreceive ($ $arity req () rest () #f) kargs)
-           (compile-trunc label k exp (length req)
-                          (and rest
-                               (match (intmap-ref cps kargs)
-                                 (($ $kargs names (_ ... rest)) rest))))
-           (let* ((kargs (forward-label kargs))
-                  (fallthrough? (and fallthrough?
-                                     (= kargs (skip-elided-conts (1+ k))))))
-             (unless fallthrough?
-               (emit-j asm kargs)))))))
+        (define (compile-values nvalues)
+          (emit-moves (lookup-parallel-moves label allocation))
+          (match cont
+            (($ $ktail)
+             (compile-tail nvalues emit-return-values))
+            (($ $kargs)
+             (maybe-emit-jump))))
+        (define (compile-call kfun proc args)
+          (emit-moves (lookup-parallel-moves label allocation))
+          (let* ((nclosure (if proc 1 0))
+                 (nargs (+ nclosure (length args))))
+            (match cont
+              (($ $ktail)
+               (compile-tail nargs
+                             (if kfun
+                                 (lambda (asm)
+                                   (emit-tail-call-label asm kfun))
+                                 emit-tail-call)))
+              (_
+               (let ((proc-slot (lookup-call-proc-slot label allocation)))
+                 (emit-handle-interrupts asm)
+                 (if kfun
+                     (emit-call-label asm proc-slot nargs kfun)
+                     (emit-call asm proc-slot nargs))
+                 (emit-slot-map asm proc-slot
+                                (lookup-slot-map label allocation))
+                 (compile-receive k proc-slot cont)
+                 (maybe-emit-jump))))))
+        (match exp
+          (($ $values args)
+           (compile-values (length args)))
+          (($ $call proc args)
+           (compile-call #f proc args))
+          (($ $callk kfun proc args)
+           (compile-call kfun proc args))
+          (_
+           (match cont
+             (($ $kargs names vars)
+              (match vars
+                (() (compile-effect exp))
+                ((var)
+                 (let ((dst (maybe-slot var)))
+                   (when dst
+                     (compile-value exp dst)))))
+              (maybe-emit-jump)))))))
 
     (define (compile-term label term)
       (match term
