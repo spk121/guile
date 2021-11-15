@@ -67,7 +67,7 @@
    (intmap-fold (lambda (label cont forwarding-labels)
                   (match cont
                     (($ $kargs _ _ ($ $continue k _ ($ $values)))
-                     (match (lookup-parallel-moves label allocation)
+                     (match (lookup-send-parallel-moves label allocation)
                        (()
                         (match (intmap-ref cps k)
                           (($ $ktail) forwarding-labels)
@@ -118,7 +118,7 @@
 
     (define (compile-receive label proc-slot cont)
       (define (shuffle-results)
-        (let lp ((moves (lookup-parallel-moves label allocation))
+        (let lp ((moves (lookup-receive-parallel-moves label allocation))
                  (reset-frame? #f))
           (cond
            ((and (not reset-frame?)
@@ -143,7 +143,7 @@
                                  rest)))))
            (cond
             ((and (= 1 nreq) rest-var (not (maybe-slot rest-var))
-                  (match (lookup-parallel-moves label allocation)
+                  (match (lookup-receive-parallel-moves label allocation)
                     ((((? (lambda (src) (= src proc-slot)) src)
                        . dst)) dst)
                     (_ #f)))
@@ -424,7 +424,7 @@
                      receive-args)
         (emit-j asm k)
         (emit-label asm receive-args)
-        (compile-receive kh proc-slot (intmap-ref cps kh))
+        (compile-receive label proc-slot (intmap-ref cps kh))
         (emit-j asm (forward-label kh))))
 
     (define (compile-test label next-label kf kt op param args)
@@ -542,14 +542,14 @@
           (unless fallthrough?
             (emit-j asm forwarded-k)))
         (define (compile-values nvalues)
-          (emit-moves (lookup-parallel-moves label allocation))
+          (emit-moves (lookup-send-parallel-moves label allocation))
           (match cont
             (($ $ktail)
              (compile-tail nvalues emit-return-values))
             (($ $kargs)
              (maybe-emit-jump))))
         (define (compile-call kfun proc args)
-          (emit-moves (lookup-parallel-moves label allocation))
+          (emit-moves (lookup-send-parallel-moves label allocation))
           (let* ((nclosure (if proc 1 0))
                  (nargs (+ nclosure (length args))))
             (match cont
@@ -567,7 +567,7 @@
                      (emit-call asm proc-slot nargs))
                  (emit-slot-map asm proc-slot
                                 (lookup-slot-map label allocation))
-                 (compile-receive k proc-slot cont)
+                 (compile-receive label proc-slot cont)
                  (maybe-emit-jump))))))
         (match exp
           (($ $values args)

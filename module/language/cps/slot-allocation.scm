@@ -40,7 +40,8 @@
             lookup-representation
             lookup-nlocals
             lookup-call-proc-slot
-            lookup-parallel-moves
+            lookup-send-parallel-moves
+            lookup-receive-parallel-moves
             lookup-slot-map))
 
 (define-record-type $allocation
@@ -57,8 +58,8 @@
   ;;
   (representations allocation-representations)
 
-  ;; A map of LABEL to /call allocs/, for expressions that continue to
-  ;; $kreceive continuations: non-tail calls and $prompt terms.
+  ;; A map of LABEL to /call allocs/, for non-tail $call/$callk, and for
+  ;; $prompt.
   ;;
   ;; A call alloc contains two pieces of information: the call's /proc
   ;; slot/ and a /dead slot map/.  The proc slot indicates the slot of a
@@ -73,7 +74,7 @@
 
   ;; A map of LABEL to /parallel moves/.  Parallel moves shuffle locals
   ;; into position for a $call, $callk, or $values, or shuffle returned
-  ;; values back into place in a $kreceive.
+  ;; values back into place at a return continuation.
   ;;
   ;; A set of moves is expressed as an ordered list of (SRC . DST)
   ;; moves, where SRC and DST are slots.  This may involve a temporary
@@ -112,8 +113,13 @@
   (or (call-alloc-proc-slot (lookup-call-alloc k allocation))
       (error "Call has no proc slot" k)))
 
-(define (lookup-parallel-moves k allocation)
-  (intmap-ref (allocation-shuffles allocation) k))
+(define (lookup-send-parallel-moves k allocation)
+  (match (intmap-ref (allocation-shuffles allocation) k)
+    ((send . receive) send)))
+
+(define (lookup-receive-parallel-moves k allocation)
+  (match (intmap-ref (allocation-shuffles allocation) k)
+    ((send . receive) receive)))
 
 (define (lookup-slot-map k allocation)
   (or (call-alloc-slot-map (lookup-call-alloc k allocation))
@@ -410,18 +416,28 @@ are comparable with eqv?.  A tmp slot may be used."
   (define (parallel-move src-slots dst-slots tmp-slot)
     (solve-parallel-move src-slots dst-slots tmp-slot))
 
-  (define (compute-receive-shuffles label proc-slot)
-    (match (get-cont label)
+  ;; A term can have two sets of shuffles: one set to shuffle operands
+  ;; to the term (the "send moves"), and one set to shuffle results (the
+  ;; "receive moves").  An example of send moves would be a call getting
+  ;; its arguments into position, or a $values performing a parallel
+  ;; move.  Receive moves come when binding call results to values, for
+  ;; local returns (call returns) or non-local returns (prompt
+  ;; handlers).
+  (define (add-shuffles shuffles label send-moves receive-moves)
+    (intmap-add! shuffles label (cons send-moves receive-moves)))
+
+  (define (compute-receive-shuffles k proc-slot)
+    (match (get-cont k)
       (($ $kreceive arity kargs)
-       (let* ((results (match (get-cont kargs)
-                         (($ $kargs names vars) vars)))
-              (value-slots (integers proc-slot (length results)))
+       (compute-receive-shuffles kargs proc-slot))
+      (($ $kargs names results)
+       (let* ((value-slots (integers proc-slot (length results)))
               (result-slots (get-slots results))
               ;; Filter out unused results.
               (value-slots (filter-map (lambda (val result) (and result val))
                                        value-slots result-slots))
               (result-slots (filter (lambda (x) x) result-slots))
-              (live (compute-live-slots kargs)))
+              (live (compute-live-slots k)))
          (parallel-move value-slots
                         result-slots
                         (compute-tmp-slot live value-slots))))))
@@ -431,19 +447,19 @@ are comparable with eqv?.  A tmp slot may be used."
       (($ $ktail)
        (let* ((live (compute-live-slots label))
               (tail-slots (integers 0 (length args)))
-              (moves (parallel-move (get-slots args)
-                                    tail-slots
-                                    (compute-tmp-slot live tail-slots))))
-         (intmap-add! shuffles label moves)))
-      (($ $kreceive)
+              (send-moves (parallel-move (get-slots args)
+                                         tail-slots
+                                         (compute-tmp-slot live tail-slots))))
+         (add-shuffles shuffles label send-moves '())))
+      ((or ($ $kargs) ($ $kreceive))
        (let* ((live (compute-live-slots label))
               (proc-slot (get-proc-slot label))
               (call-slots (integers proc-slot (length args)))
-              (arg-moves (parallel-move (get-slots args)
-                                        call-slots
-                                        (compute-tmp-slot live call-slots))))
-         (intmap-add! (intmap-add! shuffles label arg-moves)
-                      k (compute-receive-shuffles k proc-slot))))))
+              (send-moves (parallel-move (get-slots args)
+                                         call-slots
+                                         (compute-tmp-slot live call-slots)))
+              (receive-moves (compute-receive-shuffles k proc-slot)))
+         (add-shuffles shuffles label send-moves receive-moves)))))
     
   (define (add-values-shuffles label k args shuffles)
     (match (get-cont k)
@@ -451,21 +467,22 @@ are comparable with eqv?.  A tmp slot may be used."
        (let* ((live (compute-live-slots label))
               (src-slots (get-slots args))
               (dst-slots (integers 0 (length args)))
-              (moves (parallel-move src-slots dst-slots
-                                    (compute-tmp-slot live dst-slots))))
-         (intmap-add! shuffles label moves)))
+              (send-moves (parallel-move src-slots dst-slots
+                                         (compute-tmp-slot live dst-slots))))
+         (add-shuffles shuffles label send-moves '())))
       (($ $kargs _ dst-vars)
        (let* ((live (logior (compute-live-slots label)
                             (compute-live-slots k)))
               (src-slots (get-slots args))
               (dst-slots (get-slots dst-vars))
-              (moves (parallel-move src-slots dst-slots
-                                    (compute-tmp-slot live '()))))
-         (intmap-add! shuffles label moves)))))
+              (send-moves (parallel-move src-slots dst-slots
+                                         (compute-tmp-slot live '()))))
+         (add-shuffles shuffles label send-moves '())))))
 
   (define (add-prompt-shuffles label k handler shuffles)
-    (intmap-add! shuffles handler
-                 (compute-receive-shuffles handler (get-proc-slot label))))
+    (define receive-moves
+      (compute-receive-shuffles handler (get-proc-slot label)))
+    (add-shuffles shuffles label '() receive-moves))
 
   (define (compute-shuffles label cont shuffles)
     (match cont
@@ -500,11 +517,14 @@ are comparable with eqv?.  A tmp slot may be used."
       (slot (max size (1+ slot)))))
   (define (max-size* vars size)
     (fold max-size size vars))
-  (define (shuffle-size moves size)
+  (define (shuffle-size* moves size)
     (match moves
       (() size)
       (((src . dst) . moves)
-       (shuffle-size moves (max size (1+ src) (1+ dst))))))
+       (shuffle-size* moves (max size (1+ src) (1+ dst))))))
+  (define (shuffle-size send+receive size)
+    (match send+receive
+      ((send . receive) (shuffle-size* send (shuffle-size* receive size)))))
   (define (call-size label nargs size)
     (shuffle-size (get-shuffles label)
                   (max (+ (get-proc-slot label) nargs) size)))
@@ -520,9 +540,9 @@ are comparable with eqv?.  A tmp slot may be used."
               (call-size label (+ nclosure (length args)) size)))
            (($ $continue _ _ ($ $values args))
             (shuffle-size (get-shuffles label) size))
+           (($ $prompt)
+            (shuffle-size (get-shuffles label) size))
            (_ size))))
-      (($ $kreceive)
-       (shuffle-size (get-shuffles label) size))
       (_ size)))
 
   (intmap-fold measure-cont cps minimum-frame-size))
@@ -729,6 +749,8 @@ are comparable with eqv?.  A tmp slot may be used."
            (values (allocate* args tail-slots slots pre-live)
                    call-allocs)))
         (($ $kreceive arity kargs)
+         (allocate-call label kargs args slots call-allocs pre-live))
+        (($ $kargs names results)
          (let*-values
              (((post-live) (compute-live-out-slots slots label))
               ((proc-slot) (compute-call-proc-slot post-live))
@@ -740,13 +762,13 @@ are comparable with eqv?.  A tmp slot may be used."
               ;; especially for unused extra values, and avoiding frame
               ;; size growth due to sparse locals.
               ((slots result-live)
-               (match (get-cont kargs)
-                 (($ $kargs () ())
+               (match results
+                 (()
                   (values slots post-live))
-                 (($ $kargs (_ . _) (_ . results))
+                 ((_ . results*)
                   (let ((result-slots (integers (+ proc-slot 1)
-                                                (length results))))
-                    (allocate* results result-slots slots post-live)))))
+                                                (length results*))))
+                    (allocate* results* result-slots slots post-live)))))
               ((slot-map) (compute-slot-map slots (intmap-ref live-out label)
                                             (- proc-slot frame-size)))
               ((call) (make-call-alloc proc-slot slot-map)))
