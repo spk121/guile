@@ -25,6 +25,15 @@ pipe2(2) system call found on GNU/Linux and GNU/Hurd, instead of having
 to call `fnctl' afterwards.  See "Ports and File Descriptors" in the
 manual for details.
 
+** Bindings to `openat' and friends
+
+The procedures `openat', `open-fdes-at', `statat', `chownat',
+`unlinkat', `chmodat', `renameat', `mkdirat' and `symlinkat' have been
+added.  They resolve file names relative to a directory passed as a file
+port.  The procedures `chdir' `readlink' and `utime' have been extended
+to support file ports.  The related flags `AT_REMOVEDIR' and
+`AT_EACCESS' have been added. See `File System' in the manual
+
 ** Abstract Unix-domain sockets are supported
 
 It is now possible to create an AF_UNIX socket with a leading zero byte
@@ -63,6 +72,9 @@ for use with `setsockopt'.
    (<https://bugs.gnu.org/57567>)
 ** Baseline compiler no longer crashes on (not (list 1 2))
    (<https://bugs.gnu.org/58217>)
+** Fix documentation of ‘mkdir’
+   Previously, the documentation implied the umask was ignored if the
+   mode was set explicitly.  However, this is not the case.
 
 
 Changes in 3.0.8 (since 3.0.7)
