@@ -1,5 +1,6 @@
 /* Copyright 1995-2014, 2016-2019, 2021-2022
      Free Software Foundation, Inc.
+   Copyright 2021 Maxime Devos <maximedevos@telenet.be>
 
    This file is part of Guile.
 
@@ -1676,13 +1677,14 @@ SCM_DEFINE (scm_tmpfile, "tmpfile", 0, 0, 0,
 #undef FUNC_NAME
 
 SCM_DEFINE (scm_utime, "utime", 1, 5, 0,
-            (SCM pathname, SCM actime, SCM modtime, SCM actimens, SCM modtimens,
+            (SCM object, SCM actime, SCM modtime, SCM actimens, SCM modtimens,
              SCM flags),
 	    "@code{utime} sets the access and modification times for the\n"
-	    "file named by @var{pathname}.  If @var{actime} or @var{modtime} is\n"
+	    "file named by @var{object}.  If @var{actime} or @var{modtime} is\n"
 	    "not supplied, then the current time is used.  @var{actime} and\n"
 	    "@var{modtime} must be integer time values as returned by the\n"
 	    "@code{current-time} procedure.\n\n"
+            "@var{object} must be a file name or a port (if supported by the system).\n\n"
             "The optional @var{actimens} and @var{modtimens} are nanoseconds\n"
             "to add @var{actime} and @var{modtime}. Nanosecond precision is\n"
             "only supported on some combinations of file systems and operating\n"
@@ -1694,7 +1696,11 @@ SCM_DEFINE (scm_utime, "utime", 1, 5, 0,
 	    "modification time to the current time.\n\n"
             "Last, @var{flags} may be either @code{0} or the\n"
             "@code{AT_SYMLINK_NOFOLLOW} constant, to set the time of\n"
-            "@var{pathname} even if it is a symbolic link.\n")
+            "@var{pathname} even if it is a symbolic link.\n\n"
+            "On GNU/Linux systems, at least when using the Linux kernel\n"
+            "5.10.46, if @var{object} is a port, it may not be a symbolic\n"
+            "link, even if @code{AT_SYMLINK_NOFOLLOW} is set.  This is either\n"
+            "a bug in Linux or Guile's wrappers.  The exact cause is unclear.")
 #define FUNC_NAME s_scm_utime
 {
   int rv;
@@ -1753,8 +1759,18 @@ SCM_DEFINE (scm_utime, "utime", 1, 5, 0,
     times[1].tv_sec = mtim_sec;
     times[1].tv_nsec = mtim_nsec;
 
-    STRING_SYSCALL (pathname, c_pathname,
-                    rv = utimensat (AT_FDCWD, c_pathname, times, f));
+    if (SCM_OPFPORTP (object))
+      {
+        int fd;
+        fd = SCM_FPORT_FDES (object);
+        SCM_SYSCALL (rv = futimens (fd, times));
+        scm_remember_upto_here_1 (object);
+      }
+    else
+      {
+        STRING_SYSCALL (object, c_pathname,
+                        rv = utimensat (AT_FDCWD, c_pathname, times, f));
+      }
   }
 #else
   {
@@ -1768,7 +1784,7 @@ SCM_DEFINE (scm_utime, "utime", 1, 5, 0,
     if (f != 0)
       scm_out_of_range(FUNC_NAME, flags);
 
-    STRING_SYSCALL (pathname, c_pathname,
+    STRING_SYSCALL (object, c_pathname,
                     rv = utime (c_pathname, &utm));
   }
 #endif

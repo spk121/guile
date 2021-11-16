@@ -814,13 +814,15 @@ the new permissions as a decimal number, e.g., @code{(chmod "foo" #o755)}.
 The return value is unspecified.
 @end deffn
 
-@deffn {Scheme Procedure} utime pathname [actime [modtime [actimens [modtimens [flags]]]]]
-@deffnx {C Function} scm_utime (pathname, actime, modtime, actimens, modtimens, flags)
+@deffn {Scheme Procedure} utime object [actime [modtime [actimens [modtimens [flags]]]]]
+@deffnx {C Function} scm_utime (object, actime, modtime, actimens, modtimens, flags)
 @code{utime} sets the access and modification times for the
-file named by @var{pathname}.  If @var{actime} or @var{modtime} is
+file named by @var{object}.  If @var{actime} or @var{modtime} is
 not supplied, then the current time is used.  @var{actime} and
 @var{modtime} must be integer time values as returned by the
 @code{current-time} procedure.
+
+@var{object} must be a file name or a port (if supported by the system).
 
 The optional @var{actimens} and @var{modtimens} are nanoseconds
 to add @var{actime} and @var{modtime}. Nanosecond precision is
@@ -835,8 +837,13 @@ modification time to the current time.
 @vindex AT_SYMLINK_NOFOLLOW
 Last, @var{flags} may be either @code{0} or the
 @code{AT_SYMLINK_NOFOLLOW} constant, to set the time of
-@var{pathname} even if it is a symbolic link.
+@var{object} even if it is a symbolic link.
 @end deffn
+
+On GNU/Linux systems, at least when using the Linux kernel 5.10.46,
+if @var{object} is a port, it may not be a symbolic link,
+even if @code{AT_SYMLINK_NOFOLLOW} is set.  This is either a bug
+in Linux or Guile's wrappers.  The exact cause is unclear.
 
 @findex unlink
 @deffn {Scheme Procedure} delete-file str

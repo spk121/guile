@@ -2,6 +2,7 @@
 ;;;;
 ;;;; Copyright 2003-2004, 2006-2007, 2010, 2012, 2015, 2017-2019, 2021-2022
 ;;;;   Free Software Foundation, Inc.
+;;;; Copyright 2021 Maxime Devos <maximedevos@telenet.be>
 ;;;;
 ;;;; This library is free software; you can redistribute it and/or
 ;;;; modify it under the terms of the GNU Lesser General Public
@@ -201,7 +202,75 @@
                 (list (stat:atime info) (stat:mtime info))))
             (lambda ()
               (delete-file file))))
-        (throw 'unsupported))))
+        (throw 'unsupported)))
+
+  (define (utime-unless-unsupported oops . arguments)
+    (catch 'system-error
+      (lambda ()
+        (catch 'wrong-type-arg
+          (lambda ()
+            (apply utime arguments))
+          (lambda _
+            ;; 'futimens' is not supported on all platforms.
+            (oops))))
+      (lambda args
+        ;; On some platforms, 'futimens' returns ENOSYS according to Gnulib.
+        (if (= (system-error-errno args) ENOSYS)
+            (oops)
+            (apply throw args)))))
+
+  (pass-if-equal "file port"
+      '(1 1)
+    (let ((file "posix.test-utime"))
+      (false-if-exception (delete-file file))
+      (close-port (open-output-file file))
+      (define (delete)
+        (delete-file file))
+      (define (oops)
+        (delete)
+        (throw 'unsupported))
+      (call-with-input-file file
+        (lambda (port)
+          (utime-unless-unsupported oops port 1 1 0 0)
+          (define info (stat file))
+          (delete)
+          (list (stat:atime info) (stat:mtime info))))))
+
+  ;; This causes an EBADF system error on GNU/Linux with the 5.10.46 kernel.
+  #;
+  (pass-if-equal "file port (port representing symbolic link)"
+      '(1 1)
+    (let ((file "posix.test-utime"))
+      (unless (false-if-exception
+               (begin (symlink "/should-be-irrelevant" file)
+                      #t))
+        (display "cannot create symlink, a utime test skipped\n")
+        (throw 'unresolved))
+      (unless (and (defined? 'O_NOFOLLOW)
+                   (defined? 'O_PATH)
+                   (not (= 0 O_NOFOLLOW))
+                   (not (= 0 O_PATH)))
+        (display "cannot open symlinks, a utime test skipped\n")
+        (throw 'unresolved))
+      (define (delete)
+        (when port (close-port port))
+        (false-if-exception (delete-file file)))
+      (define (oops)
+        (delete)
+        (throw 'unsupported))
+      (define port #f)
+      (catch #t
+        (lambda ()
+          (set! port
+            (open file (logior O_NOFOLLOW O_PATH)))
+          (utime-unless-unsupported oops port 1 1 0 0))
+        (lambda args
+          (pk 'deleting file)
+          (delete)
+          (apply throw args)))
+      (define info (lstat file))
+      (delete)
+      (list (stat:mtime info) (stat:atime info)))))
 
 ;;
 ;; affinity
