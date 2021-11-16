@@ -65,6 +65,7 @@
 # define readdir_r_or_readdir64_r       readdir_r
 #endif
 #define stat_or_stat64                  CHOOSE_LARGEFILE(stat,stat64)
+#define fstatat_or_fstatat64            CHOOSE_LARGEFILE(fstatat,fstatat64)
 #define truncate_or_truncate64          CHOOSE_LARGEFILE(truncate,truncate64)
 #define scm_from_off_t_or_off64_t       CHOOSE_LARGEFILE(scm_from_off_t,scm_from_int64)
 #define scm_from_ino_t_or_ino64_t       CHOOSE_LARGEFILE(scm_from_ulong,scm_from_uint64)

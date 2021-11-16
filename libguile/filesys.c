@@ -588,6 +588,45 @@ SCM_DEFINE (scm_stat, "stat", 1, 1, 0,
 }
 #undef FUNC_NAME
 
+#ifdef HAVE_FSTATAT
+SCM_DEFINE (scm_statat, "statat", 2, 1, 0,
+            (SCM dir, SCM filename, SCM flags),
+            "Like @code{stat}, but resolve @var{filename} relative to the\n"
+            "directory referred to by the file port @var{dir} instead.\n\n"
+            "The optional argument @var{flags} argument can be\n"
+            "@code{AT_SYMLINK_NOFOLLOW}, in which case @var{filename} will\n"
+            "not be dereferenced even if it is a symbolic link.")
+#define FUNC_NAME s_scm_statat
+{
+  int rv;
+  int dir_fdes;
+  int c_flags;
+  struct stat_or_stat64 stat_temp;
+
+  if (SCM_UNBNDP (flags))
+    c_flags = 0;
+  else
+    c_flags = scm_to_int (flags);
+
+  SCM_VALIDATE_OPFPORT (SCM_ARG1, dir);
+  dir_fdes = SCM_FPORT_FDES (dir);
+
+  STRING_SYSCALL (filename, c_filename,
+                  rv = fstatat_or_fstatat64 (dir_fdes, c_filename,
+                                             &stat_temp, c_flags));
+  scm_remember_upto_here_1 (dir);
+  if (rv != 0)
+    {
+      int en = errno;
+      SCM_SYSERROR_MSG ("~A: ~S",
+                        scm_list_2 (scm_strerror (scm_from_int (en)), filename),
+                        en);
+    }
+  return scm_stat2scm (&stat_temp);
+}
+#undef FUNC_NAME
+#endif /* HAVE_FSTATAT */
+
 SCM_DEFINE (scm_lstat, "lstat", 1, 0, 0, 
             (SCM str),
 	    "Similar to @code{stat}, but does not follow symbolic links, i.e.,\n"

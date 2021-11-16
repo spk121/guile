@@ -773,6 +773,14 @@ it will return information about a symbolic link itself, not the
 file it points to.  @var{path} must be a string.
 @end deffn
 
+@deffn {Scheme Procedure} statat dir filename [flags]
+@deffnx {C Function} scm_statat dir filename flags
+Like @code{stat}, but resolve @var{filename} relative to the directory
+referred to by the file port @var{dir} instead.  The optional argument
+@var{flags} argument can be @code{AT_SYMLINK_NOFOLLOW}, in which case
+@var{filename} will not be dereferenced even if it is a symbolic link.
+@end deffn
+
 @deffn {Scheme Procedure} readlink path
 @deffnx {C Function} scm_readlink (path)
 Return the value of the symbolic link named by @var{path} (a string, or

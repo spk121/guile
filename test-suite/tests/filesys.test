@@ -134,6 +134,86 @@
 	(close-port port)
 	(eqv? 5 (stat:size st))))))
 
+(with-test-prefix "statat"
+  ;; file-exists? from (ice-9 boot) dereferences symbolic links
+  ;; (a bug?).
+  (define (file-exists? filename)
+    (catch 'system-error
+      (lambda () (lstat filename) #t)
+      (lambda args
+        (if (= (system-error-errno args) ENOENT)
+            ;; For the purposes of the following tests,
+            ;; it is safe to ignore errors like EPERM, but a correct
+            ;; implementation would return #t for that error.
+            #f
+            (apply throw  args)))))
+  (define (maybe-delete-directory)
+    (when (file-exists? (test-directory))
+      (for-each
+       (lambda (filename)
+         (define full-name (in-vicinity (test-directory) filename))
+         (when (file-exists? full-name)
+           (delete-file full-name)))
+       '("test-file" "test-symlink"))
+      (rmdir (test-directory))))
+  (define (skip-unless-defined . things)
+    (for-each (lambda (thing)
+                (unless (defined? thing)
+                  (throw 'unsupported)))
+              things))
+  (maybe-delete-directory)
+  (mkdir (test-directory))
+  (call-with-output-file (in-vicinity (test-directory) "test-file")
+    (lambda (port)
+      (display "hello" port)))
+
+  ;; Return #true if the symlink was created, #false otherwise.
+  (define (maybe-create-symlink)
+    (if (file-exists? (in-vicinity (test-directory) "test-symlink"))
+        #t
+        (false-if-exception
+         (symlink "test-file"
+                  (in-vicinity (test-directory) "test-symlink")))))
+
+  (pass-if-equal "regular file" 5
+    (skip-unless-defined 'statat)
+    (call-with-port
+     (open (test-directory) O_RDONLY)
+     (lambda (port)
+       (stat:size (statat port "test-file")))))
+
+  (pass-if-equal "regular file, AT_SYMLINK_NOFOLLOW" 5
+    (skip-unless-defined 'statat 'AT_SYMLINK_NOFOLLOW)
+    (call-with-port
+     (open (test-directory) O_RDONLY)
+     (lambda (port)
+       (stat:size (statat port "test-file" AT_SYMLINK_NOFOLLOW)))))
+
+  (pass-if-equal "symbolic links are dereferenced" '(regular 5)
+    ;; Not all systems support symlinks.
+    (skip-unless-defined 'statat 'symlink)
+    (unless (maybe-create-symlink)
+      (throw 'unresolved))
+    (call-with-port
+     (open (test-directory) O_RDONLY)
+     (lambda (port)
+       (define result (statat port "test-symlink"))
+       (list (stat:type result) (stat:size result)))))
+
+  (pass-if-equal "symbolic links are not dereferenced"
+      `(symlink ,(string-length "test-file"))
+    ;; Not all systems support symlinks.
+    (skip-unless-defined 'statat 'symlink)
+    (unless (maybe-create-symlink)
+      (throw 'unresolved))
+    (call-with-port
+     (open (test-directory) O_RDONLY)
+     (lambda (port)
+       (define result (statat port "test-symlink" AT_SYMLINK_NOFOLLOW))
+       (list (stat:type result) (stat:size result)))))
+
+  (maybe-delete-directory))
+
 (with-test-prefix "sendfile"
 
   (let* ((file (search-path %load-path "ice-9/boot-9.scm"))
