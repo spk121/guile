@@ -920,7 +920,8 @@ the directory referred to by the file port @var{dir}.
 Create a new directory named by @var{path}.  If @var{mode} is omitted
 then the permissions of the directory are set to @code{#o777}
 masked with the current umask (@pxref{Processes, @code{umask}}).
-Otherwise they are set to the value specified with @var{mode}.
+Otherwise they are set to the value specified with @var{mode}
+masked with the current umask.
 The return value is unspecified.
 @end deffn
 
