@@ -802,6 +802,17 @@ unsupported at present).  If @var{owner} or @var{group} is specified
 as @code{-1}, then that ID is not changed.
 @end deffn
 
+@findex fchownat
+@deffn {Scheme Procedure} chownat dir name owner group [flags]
+@deffnx {C Function} scm_chownat (dir, name, owner, group, flags)
+Like @code{chown}, but modify the owner and/or group of
+the file named @var{name} in the directory referred to
+by the file port @var{dir} instead.  The optional argument
+@var{flags} is a bitmask.  If @code{AT_SYMLINK_NOFOLLOW} is
+present, then @var{name} will not be dereferenced if it is a
+symbolic link.
+@end deffn
+
 @findex fchmod
 @deffn {Scheme Procedure} chmod object mode
 @deffnx {C Function} scm_chmod (object, mode)

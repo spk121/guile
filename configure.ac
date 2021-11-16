@@ -509,7 +509,7 @@ AC_CHECK_HEADERS([crt_externs.h])
 #   isblank - available as a GNU extension or in C99
 #   _NSGetEnviron - Darwin specific
 #   strcoll_l, newlocale, uselocale, utimensat, futimens, fchmodat,
-#   unlinkat - POSIX.1-2008
+#   unlinkat, fchownat - POSIX.1-2008
 #   strtol_l - non-POSIX, found in glibc
 #   fork - unavailable on Windows
 #   sched_getaffinity, sched_setaffinity - GNU extensions (glibc)
@@ -517,7 +517,7 @@ AC_CHECK_HEADERS([crt_externs.h])
 #   pipe2 - non-POSIX, found in glibc (GNU/Linux and GNU/Hurd)
 #
 AC_CHECK_FUNCS([DINFINITY DQNAN cexp chsize clog clog10 ctermid         \
-  fesetround ftime ftruncate fchown fchmod fchdir readlinkat		\
+  fesetround ftime ftruncate fchown fchownat fchmod fchdir readlinkat	\
   fchmodat symlinkat mkdirat renameat unlinkat getcwd geteuid getsid	\
   gettimeofday getuid getgid gmtime_r ioctl lstat mkdir mkdtemp mknod   \
   nice readlink rmdir setegid seteuid                            \

@@ -180,6 +180,41 @@ SCM_DEFINE (scm_chown, "chown", 3, 0, 0,
 #undef FUNC_NAME
 #endif /* HAVE_CHOWN */
 
+#ifdef HAVE_FCHOWNAT
+SCM_DEFINE (scm_chownat, "chown-at", 4, 1, 0,
+            (SCM dir, SCM name, SCM owner, SCM group, SCM flags),
+            "Like @code{chown}, but modify the owner and/or group of\n"
+            "the file named @var{name} in the directory referred to\n"
+            "by the file port @var{dir} instead.  The optional argument\n"
+            "@var{flags} is a bitmask.  If @code{AT_SYMLINK_NOFOLLOW} is\n"
+            "present, then @var{name} will not be dereferenced if it is a\n"
+            "symbolic link.")
+#define FUNC_NAME s_scm_chownat
+{
+  int rv;
+  int dir_fdes;
+  int c_flags;
+
+  if (SCM_UNBNDP (flags))
+    c_flags = 0;
+  else
+    c_flags = scm_to_int (flags);
+
+  SCM_VALIDATE_OPFPORT (SCM_ARG1, dir);
+  dir_fdes = SCM_FPORT_FDES (dir);
+
+  STRING_SYSCALL (name, c_name,
+                  rv = fchownat (dir_fdes, c_name,
+                                 scm_to_int (owner), scm_to_int (group),
+                                 c_flags));
+  scm_remember_upto_here_1 (dir);
+  if (rv == -1)
+    SCM_SYSERROR;
+  return SCM_UNSPECIFIED;
+}
+#undef FUNC_NAME
+#endif /* HAVE_FCHOWNAT */
+
 
 
 SCM_DEFINE (scm_open_fdes, "open-fdes", 2, 1, 0, 
