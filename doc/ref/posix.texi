@@ -895,6 +895,15 @@ Renames the file specified by @var{oldname} to @var{newname}.
 The return value is unspecified.
 @end deffn
 
+@findex renameat
+@deffn {Scheme Procedure} rename-file-at olddir oldname newdir newname
+@deffnx {C Function} scm_renameat (olddir, oldname, newdir, newname)
+Like @code{rename-file}, but when @var{olddir} or @var{newdir} is true,
+resolve @var{oldname} or @var{newname} relative to the directory
+specified by the file port @var{olddir} or @var{newdir} instead of the
+current working directory.
+@end deffn
+
 @deffn {Scheme Procedure} link oldpath newpath
 @deffnx {C Function} scm_link (oldpath, newpath)
 Creates a new name @var{newpath} in the file system for the

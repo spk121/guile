@@ -1408,6 +1408,40 @@ SCM_DEFINE (scm_rename, "rename-file", 2, 0, 0,
 }
 #undef FUNC_NAME
 
+#ifdef HAVE_RENAMEAT
+SCM_DEFINE (scm_renameat, "rename-file-at", 4, 0, 0,
+            (SCM olddir, SCM oldname, SCM newdir, SCM newname),
+            "Like @code{rename-file}, but when @var{olddir} or @var{newdir}\n"
+            "is true, resolve @var{oldname} or @var{newname} relative to\n"
+            "the directory specified by file port @var{olddir} or\n"
+            "@var{newdir} instead of the current working directory.")
+#define FUNC_NAME s_scm_renameat
+{
+  int rv;
+  int old_fdes, new_fdes;
+
+  old_fdes = AT_FDCWD;
+  new_fdes = AT_FDCWD;
+
+  if (scm_is_true (olddir)) {
+    SCM_VALIDATE_OPFPORT (SCM_ARG1, olddir);
+    old_fdes = SCM_FPORT_FDES (olddir);
+  }
+  if (scm_is_true (newdir)) {
+    SCM_VALIDATE_OPFPORT (SCM_ARG3, newdir);
+    new_fdes = SCM_FPORT_FDES (newdir);
+  }
+
+  STRING2_SYSCALL (oldname, c_oldname,
+		   newname, c_newname,
+		   rv = renameat (old_fdes, c_oldname, new_fdes, c_newname));
+  scm_remember_upto_here_2 (olddir, newdir);
+  if (rv != 0)
+    SCM_SYSERROR;
+  return SCM_UNSPECIFIED;
+}
+#undef FUNC_NAME
+#endif
 
 SCM_DEFINE (scm_delete_file, "delete-file", 1, 0, 0, 
            (SCM str),

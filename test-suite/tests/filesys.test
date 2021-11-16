@@ -31,6 +31,8 @@
   (data-file-name "filesys-test-link.tmp"))
 (define (test-directory)
   (data-file-name "filesys-test-dir.tmp"))
+(define (test-directory2)
+  (data-file-name "filesys-test-dir2.tmp"))
 
 
 ;;;
@@ -432,3 +434,105 @@
        (mkdirat port (test-directory))
        (stat:perms (stat (test-directory))))))
   (maybe-delete-directory))
+
+(with-test-prefix "rename-file-at"
+  (define (skip-if-unsupported)
+    (unless (defined? 'rename-file-at)
+      (throw 'unsupported)))
+  (pass-if-equal "current working directory" '(#f "hello")
+    (skip-if-unsupported)
+    ;; Create a file in the test directory
+    (call-with-output-file "filesys-test-a.tmp"
+      (lambda (port) (display "hello" port)))
+    ;; Try to rename it
+    (rename-file-at #f "filesys-test-a.tmp" #f "filesys-test-b.tmp")
+    ;; Verify it exists under the new name, and not under the old name
+    (list (file-exists? "filesys-test-a.tmp")
+          (call-with-input-file "filesys-test-b.tmp" get-string-all)))
+
+  (false-if-exception (delete-file "filesys-test-a.tmp"))
+  (false-if-exception (delete-file "filesys-test-b.tmp"))
+
+  (pass-if-equal "two ports" '(#f "hello")
+    (skip-if-unsupported)
+    (mkdir (test-directory))
+    (mkdir (test-directory2))
+    ;; Create a file in the first directory
+    (call-with-output-file (in-vicinity (test-directory) "a")
+      (lambda (port) (display "hello" port)))
+    (let ((port1 (open (test-directory) O_RDONLY))
+          (port2 (open (test-directory2) O_RDONLY)))
+      ;; Try to rename it
+      (rename-file-at port1 "a" port2 "b")
+      (close-port port1)
+      (close-port port2)
+      ;; Verify it exists under the new name, and not under the old name
+      (list (file-exists? (in-vicinity (test-directory) "a"))
+            (call-with-input-file (in-vicinity (test-directory2) "b")
+              get-string-all))))
+  (false-if-exception (delete-file (in-vicinity (test-directory) "a")))
+  (false-if-exception (delete-file (in-vicinity (test-directory2) "b")))
+  (false-if-exception (rmdir (test-directory)))
+  (false-if-exception (rmdir (test-directory2)))
+
+  (pass-if-equal "port and current working directory" '(#f "hello")
+    (skip-if-unsupported)
+    (mkdir (test-directory))
+    ;; Create a file in (test-directory)
+    (call-with-output-file (in-vicinity (test-directory) "a")
+      (lambda (port) (display "hello" port)))
+    (let ((port (open (test-directory) O_RDONLY)))
+      ;; Try to rename it
+      (rename-file-at port "a" #f (basename (test-file)))
+      (close-port port)
+      ;; Verify it exists under the new name, and not under the old name.
+      (list (file-exists? (in-vicinity (test-directory) "a"))
+            (call-with-input-file (test-file) get-string-all))))
+  (false-if-exception (delete-file (in-vicinity (test-directory) "a")))
+  (false-if-exception (rmdir (test-directory)))
+  (false-if-exception (delete-file (test-file)))
+
+  (pass-if-equal "current working directory and port" '(#f "hello")
+    (skip-if-unsupported)
+    (mkdir (test-directory))
+    ;; Create a file in the working directory
+    (call-with-output-file (test-file)
+      (lambda (port) (display "hello" port)))
+    (let ((port (open (test-directory) O_RDONLY)))
+      ;; Try to rename it
+      (rename-file-at #f (basename (test-file)) port "b")
+      (close-port port)
+      ;; Verify it exists under the new name, and not under the old name.
+      (list (file-exists? (test-file))
+            (call-with-input-file (in-vicinity (test-directory) "b")
+              get-string-all))))
+
+  (false-if-exception (delete-file (in-vicinity (test-directory) "b")))
+  (false-if-exception (delete-file (test-file)))
+  (false-if-exception (rmdir (test-directory)))
+
+  (pass-if-exception "not a file port (1)" exception:wrong-type-arg
+    (skip-if-unsupported)
+    (rename-file-at (open-input-string "") "some" #f "thing"))
+
+  (pass-if-exception "not a file port (2)" exception:wrong-type-arg
+    (skip-if-unsupported)
+    (rename-file-at #f "some" (open-input-string "") "thing"))
+
+  (pass-if-exception "closed port (1)" exception:wrong-type-arg
+    (skip-if-unsupported)
+    (rename-file-at (call-with-port (open "." O_RDONLY) identity)
+                    "some" #f "thing"))
+
+  (pass-if-exception "closed port (2)" exception:wrong-type-arg
+    (skip-if-unsupported)
+    (rename-file-at #f "some" (call-with-port (open "." O_RDONLY) identity)
+                    "thing"))
+
+  (pass-if-exception "not a string (1)" exception:wrong-type-arg
+    (skip-if-unsupported)
+    (rename-file-at #f 'what #f "thing"))
+
+  (pass-if-exception "not a string (2)" exception:wrong-type-arg
+    (skip-if-unsupported)
+    (rename-file-at #f "some" #f 'what)))

@@ -48,6 +48,7 @@ SCM_API SCM scm_close_fdes (SCM fd);
 SCM_API SCM scm_stat (SCM object, SCM exception_on_error);
 SCM_API SCM scm_link (SCM oldpath, SCM newpath);
 SCM_API SCM scm_rename (SCM oldname, SCM newname);
+SCM_API SCM scm_renameat (SCM olddir, SCM oldname, SCM newdir, SCM newname);
 SCM_API SCM scm_delete_file (SCM str);
 SCM_API SCM scm_mkdir (SCM path, SCM mode);
 SCM_API SCM scm_mkdirat (SCM dir, SCM path, SCM mode);
