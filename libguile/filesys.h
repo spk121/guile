@@ -50,6 +50,7 @@ SCM_API SCM scm_link (SCM oldpath, SCM newpath);
 SCM_API SCM scm_rename (SCM oldname, SCM newname);
 SCM_API SCM scm_delete_file (SCM str);
 SCM_API SCM scm_mkdir (SCM path, SCM mode);
+SCM_API SCM scm_mkdirat (SCM dir, SCM path, SCM mode);
 SCM_API SCM scm_rmdir (SCM path);
 SCM_API SCM scm_directory_stream_p (SCM obj);
 SCM_API SCM scm_opendir (SCM dirname);

@@ -1351,6 +1351,31 @@ SCM_DEFINE (scm_mkdir, "mkdir", 1, 1, 0,
 }
 #undef FUNC_NAME
 
+#ifdef HAVE_MKDIRAT
+SCM_DEFINE (scm_mkdirat, "mkdirat", 2, 1, 0,
+            (SCM dir, SCM path, SCM mode),
+            "Like @code{mkdir}, but resolve @var{path} relative to the directory\n"
+            "referred to by the file port @var{dir} instead.")
+#define FUNC_NAME s_scm_mkdirat
+{
+  int rv;
+  int dir_fdes;
+  mode_t c_mode;
+
+  c_mode = SCM_UNBNDP (mode) ? 0777 : scm_to_uint (mode);
+  SCM_VALIDATE_OPFPORT (SCM_ARG1, dir);
+  dir_fdes = SCM_FPORT_FDES (dir);
+
+  STRING_SYSCALL (path, c_path, rv = mkdirat (dir_fdes, c_path, c_mode));
+  if (rv != 0)
+    SCM_SYSERROR;
+
+  scm_remember_upto_here_1 (dir);
+  return SCM_UNSPECIFIED;
+}
+#undef FUNC_NAME
+#endif
+
 SCM_DEFINE (scm_rmdir, "rmdir", 1, 0, 0, 
             (SCM path),
 	    "Remove the existing directory named by @var{path}.  The directory must\n"

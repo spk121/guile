@@ -29,6 +29,8 @@
   (data-file-name "filesys-test.tmp"))
 (define (test-symlink)
   (data-file-name "filesys-test-link.tmp"))
+(define (test-directory)
+  (data-file-name "filesys-test-dir.tmp"))
 
 
 ;;;
@@ -394,3 +396,39 @@
       (throw 'unsupported))
     (symlinkat (call-with-port (open "." O_RDONLY) identity)
                (test-file) (test-symlink))))
+
+(with-test-prefix "mkdirat"
+  (define (skip-if-unsupported)
+    (unless (defined? 'mkdirat)
+      (throw 'unsupported)))
+  (define (maybe-delete-directory)
+    (when (file-exists? (test-directory))
+      (rmdir (test-directory))))
+  (maybe-delete-directory)
+
+  (pass-if-equal "create" 'directory
+    (skip-if-unsupported)
+    (call-with-port
+     (open "." O_RDONLY)
+     (lambda (port)
+       (mkdirat port (test-directory))
+       (stat:type (stat (test-directory))))))
+  (maybe-delete-directory)
+
+  (pass-if-equal "explicit perms" (logand #o111 (lognot (umask)))
+    (skip-if-unsupported)
+    (call-with-port
+     (open "." O_RDONLY)
+     (lambda (port)
+       (mkdirat port (test-directory) #o111)
+       (stat:perms (stat (test-directory))))))
+  (maybe-delete-directory)
+
+  (pass-if-equal "create, implicit perms" (logand #o777 (lognot (umask)))
+    (skip-if-unsupported)
+    (call-with-port
+     (open "." O_RDONLY)
+     (lambda (port)
+       (mkdirat port (test-directory))
+       (stat:perms (stat (test-directory))))))
+  (maybe-delete-directory))

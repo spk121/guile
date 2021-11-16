@@ -924,6 +924,12 @@ Otherwise they are set to the value specified with @var{mode}.
 The return value is unspecified.
 @end deffn
 
+@deffn {Scheme Procedure} mkdirat dir path [mode]
+@deffnx {C Function} scm_mkdirat (dir, path, mode)
+Like @code{mkdir}, but resolve @var{path} relative to the directory
+referred to by the file port @var{dir} instead.
+@end deffn
+
 @deffn {Scheme Procedure} rmdir path
 @deffnx {C Function} scm_rmdir (path)
 Remove the existing directory named by @var{path}.  The directory must
