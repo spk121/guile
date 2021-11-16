@@ -852,6 +852,18 @@ Deletes (or ``unlinks'') the file whose path is specified by
 @var{str}.
 @end deffn
 
+@findex unlinkat
+@deffn {Scheme Procedure} delete-file-at dir str [flags]
+@deffnx {C Function} scm_delete_file_at (dir, str, flags)
+Like @code{unlink}, but resolve @var{str} relative to the
+directory referred to by the file port @var{dir} instead.
+
+The optional @var{flags} argument can be @code{AT_REMOVEDIR},
+in which case @code{delete-file-at} will act like @code{rmdir} instead
+of @code{delete-file}.  Why doesn't POSIX have a @code{rmdirat} function
+for this instead?  No idea!
+@end deffn
+
 @deffn {Scheme Procedure} copy-file oldfile newfile
 @deffnx {C Function} scm_copy_file (oldfile, newfile)
 Copy the file specified by @var{oldfile} to @var{newfile}.

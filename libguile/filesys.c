@@ -1456,6 +1456,38 @@ SCM_DEFINE (scm_delete_file, "delete-file", 1, 0, 0,
 }
 #undef FUNC_NAME
 
+#ifdef HAVE_UNLINKAT
+SCM_DEFINE (scm_delete_file_at, "delete-file-at", 2, 1, 0,
+            (SCM dir, SCM str, SCM flags),
+            "Like @code{unlink}, but resolve @var{str} relative to the\n"
+            "directory referred to by the file port @var{dir} instead.\n\n"
+            "The optional @var{flags} argument can be @code{AT_REMOVEDIR},\n"
+            "in which case @code{delete-file-at} will act like @code{rmdir} instead\n"
+            "of @code{delete-file}.  Why doesn't POSIX have a @code{rmdirat} function\n"
+            "for this instead?  No idea!")
+#define FUNC_NAME s_scm_delete_file_at
+{
+  int ans;
+  int dir_fdes;
+  int c_flags;
+
+  if (SCM_UNBNDP (flags))
+    c_flags = 0;
+  else
+    c_flags = scm_to_int (flags);
+
+  SCM_VALIDATE_OPFPORT (SCM_ARG1, dir);
+  dir_fdes = SCM_FPORT_FDES (dir);
+
+  STRING_SYSCALL (str, c_str, ans = unlinkat (dir_fdes, c_str, c_flags));
+  scm_remember_upto_here_1 (dir);
+  if (ans != 0)
+    SCM_SYSERROR;
+  return SCM_UNSPECIFIED;
+}
+#undef FUNC_NAME
+#endif
+
 SCM_DEFINE (scm_access, "access?", 2, 0, 0,
             (SCM path, SCM how),
 	    "Test accessibility of a file under the real UID and GID of the\n"

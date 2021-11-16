@@ -589,3 +589,62 @@
   (pass-if-exception "not a string (2)" exception:wrong-type-arg
     (skip-if-unsupported)
     (rename-file-at #f "some" #f 'what)))
+
+(with-test-prefix "delete-file-at"
+  (define (skip-if-unsupported)
+    (when (not (and (defined? 'delete-file-at)
+                    (defined? 'AT_REMOVEDIR)))
+      (throw 'unsupported)))
+  (define (create-test-file)
+    (call-with-output-file (test-file) identity))
+  (define (create-test-directory)
+    (mkdir (test-directory)))
+  (define (delete-test-file)
+    (when (file-exists? (test-file))
+      (delete-file (test-file))))
+  (define (delete-test-directory)
+    (when (file-exists? (test-directory))
+      (rmdir (test-directory))))
+
+  (pass-if-equal "regular file" #f
+    (skip-if-unsupported)
+    (create-test-file)
+    (call-with-port
+     (open (dirname (test-file)) O_RDONLY)
+     (lambda (port)
+       (delete-file-at port (basename (test-file)))))
+    (file-exists? (test-file)))
+  (delete-test-file)
+
+  (pass-if-equal "regular file, explicit flags" #f
+    (skip-if-unsupported)
+    (create-test-file)
+    (call-with-port
+     (open (dirname (test-file)) O_RDONLY)
+     (lambda (port)
+       (delete-file-at port (basename (test-file)) 0)))
+    (file-exists? (test-file)))
+  (delete-test-file)
+
+  (pass-if-equal "directory, explicit flags" #f
+    (skip-if-unsupported)
+    (create-test-directory)
+    (call-with-port
+     (open (dirname (test-directory)) O_RDONLY)
+     (lambda (port)
+       (delete-file-at port (basename (test-directory)) AT_REMOVEDIR)))
+    (file-exists? (test-directory)))
+  (delete-test-directory)
+
+  (pass-if-exception "not a port" exception:wrong-type-arg
+    (skip-if-unsupported)
+    (delete-file-at 'bogus "irrelevant"))
+
+  (pass-if-exception "not a file port" exception:wrong-type-arg
+    (skip-if-unsupported)
+    (delete-file-at (open-input-string "") "irrelevant"))
+
+  (pass-if-exception "closed port" exception:wrong-type-arg
+    (skip-if-unsupported)
+    (delete-file-at (call-with-port (open "." O_RDONLY) identity)
+                    "irrelevant")))
