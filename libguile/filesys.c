@@ -1032,6 +1032,29 @@ SCM_DEFINE (scm_symlink, "symlink", 2, 0, 0,
 #undef FUNC_NAME
 #endif /* HAVE_SYMLINK */
 
+#ifdef HAVE_SYMLINKAT
+SCM_DEFINE (scm_symlinkat, "symlinkat", 3, 0, 0,
+            (SCM dir, SCM oldpath, SCM newpath),
+            "Like @code{symlink}, but resolve @var{newpath} relative\n"
+            "to the directory referred to by the file port @var{dir}.")
+#define FUNC_NAME s_scm_symlinkat
+{
+  int val;
+  int fdes;
+
+  SCM_VALIDATE_OPFPORT (SCM_ARG1, dir);
+  fdes = SCM_FPORT_FDES (dir);
+  STRING2_SYSCALL (oldpath, c_oldpath,
+		   newpath, c_newpath,
+		   val = symlinkat (c_oldpath, fdes, c_newpath));
+  scm_remember_upto_here_1 (dir);
+  if (val != 0)
+    SCM_SYSERROR;
+  return SCM_UNSPECIFIED;
+}
+#undef FUNC_NAME
+#endif /* HAVE_SYMLINKAT */
+
 /* Static helper function for choosing between readlink
    and readlinkat. */
 static int

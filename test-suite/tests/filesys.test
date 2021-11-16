@@ -367,3 +367,30 @@
 
   (false-if-exception (delete-file (test-symlink)))
   (false-if-exception (delete-file (test-file))))
+
+(with-test-prefix "symlinkat"
+  (pass-if-equal "create" (test-file)
+    (unless (defined? 'symlinkat)
+      (throw 'unsupported))
+    (call-with-port
+     (open "." O_RDONLY)
+     (lambda (port)
+       (symlinkat port (test-file) (test-symlink))
+       (readlink (test-symlink)))))
+  (false-if-exception (delete-file (test-symlink)))
+
+  (pass-if-exception "not a port" exception:wrong-type-arg
+    (unless (defined? 'symlinkat)
+      (throw 'unsupported))
+    (symlinkat "bogus" (test-file) (test-symlink)))
+
+  (pass-if-exception "not a file port" exception:wrong-type-arg
+    (unless (defined? 'symlinkat)
+      (throw 'unsupported))
+    (symlinkat (open-input-string "") (test-file) (test-symlink)))
+
+  (pass-if-exception "closed port" exception:wrong-type-arg
+    (unless (defined? 'symlinkat)
+      (throw 'unsupported))
+    (symlinkat (call-with-port (open "." O_RDONLY) identity)
+               (test-file) (test-symlink))))

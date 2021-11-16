@@ -62,6 +62,7 @@ SCM_API SCM scm_select (SCM reads, SCM writes, SCM excepts, SCM secs, SCM msecs)
 SCM_API SCM scm_fcntl (SCM object, SCM cmd, SCM value);
 SCM_API SCM scm_fsync (SCM object);
 SCM_API SCM scm_symlink (SCM oldpath, SCM newpath);
+SCM_API SCM scm_symlinkat (SCM dir, SCM oldpath, SCM newpath);
 SCM_API SCM scm_readlink (SCM path);
 SCM_API SCM scm_lstat (SCM str);
 SCM_API SCM scm_copy_file (SCM oldfile, SCM newfile);

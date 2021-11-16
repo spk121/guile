@@ -909,6 +909,12 @@ Create a symbolic link named @var{newpath} with the value (i.e., pointing to)
 @var{oldpath}.  The return value is unspecified.
 @end deffn
 
+@deffn {Scheme Procedure} symlinkat dir oldpath newpath
+@deffnx {C Function} scm_symlinkat (dir, oldpath, newpath)
+Like @code{symlink}, but resolve @var{newpath} relative to
+the directory referred to by the file port @var{dir}.
+@end deffn
+
 @deffn {Scheme Procedure} mkdir path [mode]
 @deffnx {C Function} scm_mkdir (path, mode)
 Create a new directory named by @var{path}.  If @var{mode} is omitted
