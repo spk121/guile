@@ -728,3 +728,76 @@
     (skip-if-unsupported)
     (delete-file-at (call-with-port (open "." O_RDONLY) identity)
                     "irrelevant")))
+
+(with-test-prefix "openat"
+  (define (skip-if-unsupported)
+    (unless (defined? 'openat)
+      (throw 'unsupported)))
+
+  (define file (search-path %load-path "ice-9/boot-9.scm"))
+
+  (define (call-with-relatively-opened-file directory-arguments file-arguments
+                                            proc)
+    (call-with-port
+     (apply open directory-arguments)
+     (lambda (directory)
+       (call-with-port
+        (apply openat directory file-arguments)
+        (lambda (port)
+          (proc port))))))
+
+  (pass-if-equal "mode read-only" "r"
+    (skip-if-unsupported)
+    (call-with-relatively-opened-file
+     (list (dirname file) O_RDONLY)
+     (list (basename file) O_RDONLY)
+     (lambda (port) (port-mode port))))
+
+  (pass-if-equal "port-revealed count" 0
+    (skip-if-unsupported)
+    (call-with-relatively-opened-file
+     (list (dirname file) O_RDONLY)
+     (list (basename file) O_RDONLY)
+     (lambda (port) (port-revealed port))))
+
+  (when (file-exists? (test-file))
+    (delete-file (test-file)))
+
+  (pass-if-equal "O_CREAT/O_WRONLY" (list #t (logand (lognot (umask)) #o666) "w")
+    (skip-if-unsupported)
+    (call-with-relatively-opened-file
+     (list (dirname (test-file)) O_RDONLY)
+     (list (basename (test-file)) (logior O_WRONLY O_CREAT))
+     (lambda (port)
+       (list (file-exists? (test-file))
+             (stat:perms (stat (test-file)))
+             (port-mode port)))))
+
+  (when (file-exists? (test-file))
+    (delete-file (test-file)))
+
+  (pass-if-equal "O_CREAT/O_WRONLY, non-default mode"
+      (list #t (logand (lognot (umask)) #o700) "w")
+    (skip-if-unsupported)
+    (call-with-relatively-opened-file
+     (list (dirname (test-file)) O_RDONLY)
+     (list (basename (test-file)) (logior O_WRONLY O_CREAT) #o700)
+     (lambda (port)
+       (list (file-exists? (test-file))
+             (stat:perms (stat (test-file)))
+             (port-mode port)))))
+
+  (pass-if-exception "closed port" exception:wrong-type-arg
+    (skip-if-unsupported)
+    (openat (call-with-port (open "." O_RDONLY) identity) "." O_RDONLY))
+
+  (pass-if-exception "non-file port" exception:wrong-type-arg
+    (skip-if-unsupported)
+    (openat (open-input-string "") "." O_RDONLY))
+
+  (pass-if-exception "not a port" exception:wrong-type-arg
+    (skip-if-unsupported)
+    (openat "not a port" "." O_RDONLY))
+
+  (when (file-exists? (test-file))
+    (delete-file (test-file))))

@@ -296,10 +296,23 @@ Create the file if it does not already exist.
 for additional flags.
 @end deffn
 
+@deffn {Scheme Procedure} openat dir path flags [mode]
+@deffnx {C Function} scm_openat (dir, path, flags, mode)
+Similar to @code{open}, but resolve the file name @var{path}
+relative to the directory referred to by the file port @var{dir}
+instead.
+@end deffn
+
 @deffn {Scheme Procedure} open-fdes path flags [mode]
 @deffnx {C Function} scm_open_fdes (path, flags, mode)
 Similar to @code{open} but return a file descriptor instead of
 a port.
+@end deffn
+
+@deffn {Scheme Procedure} open-fdes-at dir path flags [mode]
+@deffnx {C Function} scm_open_fdes_at (dir, path, flags, mode)
+Similar to @code{openat}, but return a file descriptor instead
+of a port.
 @end deffn
 
 @deffn {Scheme Procedure} close fd_or_port

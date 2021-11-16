@@ -509,7 +509,7 @@ AC_CHECK_HEADERS([crt_externs.h])
 #   isblank - available as a GNU extension or in C99
 #   _NSGetEnviron - Darwin specific
 #   strcoll_l, newlocale, uselocale, utimensat, futimens, fchmodat,
-#   unlinkat, fchownat, fstatat - POSIX.1-2008
+#   unlinkat, fchownat, fstatat, openat - POSIX.1-2008
 #   strtol_l - non-POSIX, found in glibc
 #   fork - unavailable on Windows
 #   sched_getaffinity, sched_setaffinity - GNU extensions (glibc)
@@ -527,7 +527,8 @@ AC_CHECK_FUNCS([DINFINITY DQNAN cexp chsize clog clog10 ctermid         \
   getgrent kill getppid getpgrp fork setitimer getitimer strchr strcmp  \
   index bcopy rindex truncate isblank _NSGetEnviron              \
   strcoll_l strtod_l strtol_l newlocale uselocale utimensat     \
-  fstatat futimens sched_getaffinity sched_setaffinity sendfile pipe2])
+  fstatat futimens openat						\
+  sched_getaffinity sched_setaffinity sendfile pipe2])
 
 # The newlib C library uses _NL_ prefixed locale langinfo constants.
 AC_CHECK_DECLS([_NL_NUMERIC_GROUPING], [], [], [[#include <langinfo.h>]])

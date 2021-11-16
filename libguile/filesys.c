@@ -236,6 +236,60 @@ SCM_DEFINE (scm_open_fdes, "open-fdes", 2, 1, 0,
 }
 #undef FUNC_NAME
 
+#ifdef HAVE_OPENAT
+SCM_DEFINE (scm_open_fdes_at, "open-fdes-at", 3, 1, 0,
+            (SCM dir, SCM path, SCM flags, SCM mode),
+            "Similar to @code{openat}, but return a file descriptor instead\n"
+            "of a port.")
+#define FUNC_NAME s_scm_open_fdes_at
+{
+  int dir_fdes;
+  int fd;
+  int iflags;
+  int imode;
+
+  iflags = SCM_NUM2INT (SCM_ARG2, flags);
+  imode = SCM_NUM2INT_DEF (3, mode, 0666);
+  SCM_VALIDATE_OPFPORT (SCM_ARG1, dir);
+  dir_fdes = SCM_FPORT_FDES (dir);
+
+  STRING_SYSCALL (path, c_path,
+                  fd = openat_or_openat64 (dir_fdes, c_path, iflags, imode));
+  scm_remember_upto_here_1 (dir);
+  if (fd == -1)
+    SCM_SYSERROR;
+  return scm_from_int (fd);
+}
+#undef FUNC_NAME
+#endif /* HAVE_OPENAT */
+
+/* A helper function for converting some open flags to
+   what scm_fdes_to_port expects. */
+static char *
+flags_to_mode (int iflags)
+{
+  if ((iflags & O_RDWR) == O_RDWR)
+    {
+      /* Opened read-write.  */
+      if (iflags & O_APPEND)
+	return "a+";
+      else if (iflags & O_CREAT)
+	return "w+";
+      else
+	return "r+";
+    }
+  else
+    {
+      /* Opened read-only or write-only.  */
+      if (iflags & O_APPEND)
+	return "a";
+      else if (iflags & O_WRONLY)
+	return "w";
+      else
+	return "r";
+    }
+}
+
 SCM_DEFINE (scm_open, "open", 2, 1, 0, 
             (SCM path, SCM flags, SCM mode),
 	    "Open the file named by @var{path} for reading and/or writing.\n"
@@ -272,31 +326,33 @@ SCM_DEFINE (scm_open, "open", 2, 1, 0,
   fd = scm_to_int (scm_open_fdes (path, flags, mode));
   iflags = SCM_NUM2INT (2, flags);
 
-  if ((iflags & O_RDWR) == O_RDWR)
-    {
-      /* Opened read-write.  */
-      if (iflags & O_APPEND)
-	port_mode = "a+";
-      else if (iflags & O_CREAT)
-	port_mode = "w+";
-      else
-	port_mode = "r+";
-    }
-  else
-    {
-      /* Opened read-only or write-only.  */
-      if (iflags & O_APPEND)
-	port_mode = "a";
-      else if (iflags & O_WRONLY)
-	port_mode = "w";
-      else
-	port_mode = "r";
-    }
-
+  port_mode = (char *) flags_to_mode (iflags);
   newpt = scm_fdes_to_port (fd, port_mode, path);
   return newpt;
 }
 #undef FUNC_NAME
+
+#ifdef HAVE_OPENAT
+SCM_DEFINE (scm_openat, "openat", 3, 1, 0,
+            (SCM dir, SCM path, SCM flags, SCM mode),
+            "Similar to @code{open}, but resolve the file name @var{path}\n"
+            "relative to the directory referred to by the file port @var{dir}\n"
+            "instead.")
+#define FUNC_NAME s_scm_openat
+{
+  SCM newpt;
+  char *port_mode;
+  int fd;
+  int iflags;
+
+  iflags = SCM_NUM2INT (2, flags);
+  port_mode = (char *) flags_to_mode (iflags);
+  fd = scm_to_int (scm_open_fdes_at (dir, path, flags, mode));
+  newpt = scm_fdes_to_port (fd, port_mode, path);
+  return newpt;
+}
+#undef FUNC_NAME
+#endif /* HAVE_OPENAT */
 
 SCM_DEFINE (scm_close, "close", 1, 0, 0, 
             (SCM fd_or_port),

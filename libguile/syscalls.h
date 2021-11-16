@@ -58,6 +58,7 @@
 #define lstat_or_lstat64                CHOOSE_LARGEFILE(lstat,lstat64)
 #define off_t_or_off64_t                CHOOSE_LARGEFILE(off_t,off64_t)
 #define open_or_open64                  CHOOSE_LARGEFILE(open,open64)
+#define openat_or_openat64              CHOOSE_LARGEFILE(openat,openat64)
 #define readdir_or_readdir64            CHOOSE_LARGEFILE(readdir,readdir64)
 #if SCM_HAVE_READDIR64_R == 1
 # define readdir_r_or_readdir64_r       CHOOSE_LARGEFILE(readdir_r,readdir64_r)
