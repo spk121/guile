@@ -1032,10 +1032,30 @@ SCM_DEFINE (scm_symlink, "symlink", 2, 0, 0,
 #undef FUNC_NAME
 #endif /* HAVE_SYMLINK */
 
-SCM_DEFINE (scm_readlink, "readlink", 1, 0, 0, 
+/* Static helper function for choosing between readlink
+   and readlinkat. */
+static int
+do_readlink (int fd, const char *c_path, char *buf, size_t size)
+{
+#ifdef HAVE_READLINKAT
+  if (fd != -1)
+    return readlinkat (fd, c_path, buf, size);
+#else
+  (void) fd;
+#endif
+  return readlink (c_path, buf, size);
+}
+
+SCM_DEFINE (scm_readlink, "readlink", 1, 0, 0,
             (SCM path),
-	    "Return the value of the symbolic link named by @var{path} (a\n"
-	    "string), i.e., the file that the link points to.")
+            "Return the value of the symbolic link named by @var{path} (a\n"
+            "string, or a port if supported by the system),\n"
+            "i.e., the file that the link points to.\n"
+            "To read a symbolic link represented by a port, the symbolic\n"
+            "link must have been opened with the @code{O_NOFOLLOW} and\n"
+            "@code{O_PATH} flags."
+            "@code{(provided? 'readlink-port)} reports whether ports are\n"
+            "supported.")
 #define FUNC_NAME s_scm_readlink
 {
   int rv;
@@ -1043,20 +1063,31 @@ SCM_DEFINE (scm_readlink, "readlink", 1, 0, 0,
   char *buf;
   SCM result;
   char *c_path;
-  
+  int fdes;
+
   scm_dynwind_begin (0);
-
-  c_path = scm_to_locale_string (path);
-  scm_dynwind_free (c_path);
-
+#ifdef HAVE_READLINKAT
+  if (SCM_OPFPORTP (path))
+    {
+      c_path = "";
+      fdes = SCM_FPORT_FDES (path);
+    }
+  else
+#endif
+    {
+      fdes = -1;
+      c_path = scm_to_locale_string (path);
+      scm_dynwind_free (c_path);
+    }
   buf = scm_malloc (size);
 
-  while ((rv = readlink (c_path, buf, size)) == size)
+  while ((rv = do_readlink (fdes, c_path, buf, size)) == size)
     {
       free (buf);
       size *= 2;
       buf = scm_malloc (size);
     }
+  scm_remember_upto_here_1 (path);
   if (rv == -1)
     {
       int save_errno = errno;
@@ -2072,6 +2103,9 @@ scm_init_filesys ()
 
 #ifdef HAVE_FCHDIR
   scm_add_feature("chdir-port");
+#endif
+#ifdef HAVE_READLINKAT
+  scm_add_feature("readlink-port");
 #endif
 
 #include "filesys.x"

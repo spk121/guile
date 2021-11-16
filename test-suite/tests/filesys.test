@@ -306,3 +306,64 @@
 
   (pass-if-exception "non-file port" exception:wrong-type-arg
     (chdir (open-input-string ""))))
+
+(with-test-prefix "readlink"
+  (false-if-exception (delete-file (test-symlink)))
+  (false-if-exception (delete-file (test-file)))
+  (call-with-output-file (test-file)
+    (lambda (port)
+      (display "hello" port)))
+  (if (not (false-if-exception
+	    (begin (symlink (test-file) (test-symlink)) #t)))
+      (display "cannot create symlink, some readlink tests skipped\n")
+      (let ()
+        (pass-if-equal "file name of symlink" (test-file)
+          (readlink (test-symlink)))
+
+        (pass-if-equal "port representing a symlink" (test-file)
+          (let ()
+            (unless (and (provided? 'readlink-port)
+                         (defined? 'O_NOFOLLOW)
+                         (defined? 'O_PATH)
+                         (not (= 0 O_NOFOLLOW))
+                         (not (= 0 O_PATH)))
+              (throw 'unsupported))
+            (define port (open (test-symlink) (logior O_NOFOLLOW O_PATH)))
+            (define points-to (false-if-exception (readlink port)))
+            (close-port port)
+            points-to))
+
+        (pass-if-exception "not a port or file name" exception:wrong-type-arg
+          (readlink '(stuff)))))
+
+  (pass-if-equal "port representing a regular file" EINVAL
+    (call-with-input-file (test-file)
+      (lambda (port)
+        (unless (provided? 'readlink-port)
+          (throw 'unsupported))
+        (catch 'system-error
+          (lambda ()
+            (readlink port)
+            (close-port port) ; should be unreachable
+            #f)
+          (lambda args
+            (close-port port)
+            ;; At least Linux 5.10.46 returns ENOENT instead of EINVAL.
+            ;; Possibly surprising, but it is documented in some man
+            ;; pages and it doesn't appear to be an accident:
+            ;; <https://elixir.bootlin.com/linux/v5.10.46/source/fs/stat.c#L419>.
+            (define error (system-error-errno args))
+            (if (= error ENOENT)
+                EINVAL
+                error))))))
+
+  (pass-if-exception "non-file port" exception:wrong-type-arg
+    (readlink (open-input-string "")))
+
+  (pass-if-exception "closed port" exception:wrong-type-arg
+    (let ((port (open-file (test-file) "r")))
+      (close-port port)
+      (readlink port)))
+
+  (false-if-exception (delete-file (test-symlink)))
+  (false-if-exception (delete-file (test-file))))

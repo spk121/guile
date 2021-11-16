@@ -775,8 +775,13 @@ file it points to.  @var{path} must be a string.
 
 @deffn {Scheme Procedure} readlink path
 @deffnx {C Function} scm_readlink (path)
-Return the value of the symbolic link named by @var{path} (a
-string), i.e., the file that the link points to.
+Return the value of the symbolic link named by @var{path} (a string, or
+a port if supported by the system), i.e., the file that the link points
+to.
+
+To read a symbolic link represented by a port, the symbolic link must
+have been opened with the @code{O_NOFOLLOW} and @code{O_PATH} flags.
+@code{(provided? 'readlink-port)} reports whether ports are supported.
 @end deffn
 
 @findex fchown
