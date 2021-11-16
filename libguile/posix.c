@@ -2528,6 +2528,12 @@ scm_init_posix ()
 #ifdef AT_EMPTY_PATH
   scm_c_define ("AT_EMPTY_PATH", scm_from_int (AT_EMPTY_PATH));
 #endif
+#ifdef AT_REMOVEDIR
+  scm_c_define ("AT_REMOVEDIR", scm_from_int (AT_REMOVEDIR));
+#endif
+#ifdef AT_EACCESS
+  scm_c_define ("AT_EACCESS", scm_from_int (AT_EACCESS));
+#endif
 
 #include "cpp-SIG.c"
 #include "posix.x"
