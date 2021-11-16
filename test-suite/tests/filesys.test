@@ -1,6 +1,7 @@
 ;;;; filesys.test --- test file system functions -*- scheme -*-
 ;;;; 
 ;;;; Copyright (C) 2004, 2006, 2013, 2019, 2021 Free Software Foundation, Inc.
+;;;; Copyright (C) 2021 Maxime Devos <maximedevos@telenet.be>
 ;;;; 
 ;;;; This library is free software; you can redistribute it and/or
 ;;;; modify it under the terms of the GNU Lesser General Public
@@ -265,3 +266,43 @@
                  (result   (eqv? 'directory (stat:type _stat))))
             (false-if-exception (rmdir name))
             result)))))
+
+(with-test-prefix "chdir"
+  (pass-if-equal "current directory" (getcwd)
+    (begin (chdir ".") (getcwd)))
+  (define file (search-path %load-path "ice-9/boot-9.scm"))
+
+
+  (pass-if-equal "test directory" (dirname file)
+    (let ((olddir (getcwd))
+          (dir #f))
+      (chdir (dirname file))
+      (set! dir (getcwd))
+      (chdir olddir)
+      dir))
+
+  (pass-if-equal "test directory, via port" (dirname file)
+    (unless (provided? 'chdir-port)
+      (throw 'unresolved))
+    (let ((olddir (getcwd))
+          (port (open (dirname file) O_RDONLY))
+          (dir #f))
+      (chdir port)
+      (set! dir (getcwd))
+      (chdir olddir)
+      dir))
+
+  (pass-if-exception "closed port"  exception:wrong-type-arg
+    (unless (provided? 'chdir-port)
+      (throw 'unresolved))
+    (let ((port (open (dirname file) O_RDONLY))
+          (olddir (getcwd)))
+      (close-port port)
+      (chdir port)
+      (chdir olddir))) ; should not be reached
+
+  (pass-if-exception "not a port or file name" exception:wrong-type-arg
+    (chdir '(stuff)))
+
+  (pass-if-exception "non-file port" exception:wrong-type-arg
+    (chdir (open-input-string ""))))

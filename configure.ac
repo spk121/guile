@@ -516,7 +516,8 @@ AC_CHECK_HEADERS([crt_externs.h])
 #   pipe2 - non-POSIX, found in glibc (GNU/Linux and GNU/Hurd)
 #
 AC_CHECK_FUNCS([DINFINITY DQNAN cexp chsize clog clog10 ctermid         \
-  fesetround ftime ftruncate fchown fchmod getcwd geteuid getsid        \
+  fesetround ftime ftruncate fchown fchmod fchdir			\
+  getcwd geteuid getsid							\
   gettimeofday getuid getgid gmtime_r ioctl lstat mkdir mkdtemp mknod   \
   nice readlink rmdir setegid seteuid                            \
   setuid setgid setpgid setsid sigaction siginterrupt stat64  \

@@ -2,6 +2,7 @@
 @c This is part of the GNU Guile Reference Manual.
 @c Copyright (C)  1996, 1997, 2000, 2001, 2002, 2003, 2004, 2006, 2007,
 @c   2008, 2009, 2010, 2011, 2012, 2013, 2014, 2017, 2021 Free Software Foundation, Inc.
+@c Copyright (C)  2021 Maxime Devos <maximedevos@telenet.be>
 @c See the file guile.texi for copying conditions.
 
 @node POSIX
@@ -1623,7 +1624,9 @@ The return value is unspecified.
 @deffn {Scheme Procedure} chdir str
 @deffnx {C Function} scm_chdir (str)
 @cindex current directory
-Change the current working directory to @var{str}.
+Change the current working directory to @var{str}.  @var{str} can be a
+string containing a file name, or a port if supported by the system.
+@code{(provided? 'chdir-port)} reports whether ports are supported.
 The return value is unspecified.
 @end deffn
 

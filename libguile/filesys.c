@@ -1,5 +1,6 @@
 /* Copyright 1996-2002,2004,2006,2009-2019,2021
      Free Software Foundation, Inc.
+   Copyright 2021 Maxime Devos <maximedevos@telenet.be>
 
    This file is part of Guile.
 
@@ -608,12 +609,28 @@ SCM_DEFINE (scm_link, "link", 2, 0, 0,
 SCM_DEFINE (scm_chdir, "chdir", 1, 0, 0, 
             (SCM str),
 	    "Change the current working directory to @var{str}.\n"
+            "@var{str} can be a string containing a file name,\n"
+            "or a port if supported by the system.\n"
+            "@code{(provided? 'chdir-port)} reports whether ports "
+            "are supported."
 	    "The return value is unspecified.")
 #define FUNC_NAME s_scm_chdir
 {
   int ans;
 
-  STRING_SYSCALL (str, c_str, ans = chdir (c_str));
+#ifdef HAVE_FCHDIR
+  if (SCM_OPFPORTP (str))
+    {
+      int fdes;
+      fdes = SCM_FPORT_FDES (str);
+      SCM_SYSCALL (ans = fchdir (fdes));
+      scm_remember_upto_here_1 (str);
+    }
+  else
+#endif
+    {
+      STRING_SYSCALL (str, c_str, ans = chdir (c_str));
+    }
   if (ans != 0)
     SCM_SYSERROR;
   return SCM_UNSPECIFIED;
@@ -2052,6 +2069,10 @@ scm_init_filesys ()
   scm_c_define ("F_OK", scm_from_int (F_OK));
 
   scm_dot_string = scm_from_utf8_string (".");
+
+#ifdef HAVE_FCHDIR
+  scm_add_feature("chdir-port");
+#endif
 
 #include "filesys.x"
 }
