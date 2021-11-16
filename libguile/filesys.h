@@ -40,6 +40,7 @@ SCM_API scm_t_bits scm_tc16_dir;
 
 SCM_API SCM scm_chown (SCM object, SCM owner, SCM group);
 SCM_API SCM scm_chmod (SCM object, SCM mode);
+SCM_API SCM scm_chmodat (SCM dir, SCM pathname, SCM mode, SCM flags);
 SCM_API SCM scm_umask (SCM mode);
 SCM_API SCM scm_open_fdes (SCM path, SCM flags, SCM mode);
 SCM_API SCM scm_open (SCM path, SCM flags, SCM mode);

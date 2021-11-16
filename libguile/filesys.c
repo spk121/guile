@@ -1548,6 +1548,42 @@ SCM_DEFINE (scm_chmod, "chmod", 2, 0, 0,
 }
 #undef FUNC_NAME
 
+#ifdef HAVE_FCHMODAT
+SCM_DEFINE (scm_chmodat, "chmodat", 3, 1, 0,
+           (SCM dir, SCM pathname, SCM mode, SCM flags),
+            "Like @var{chmod}, but modify the permissions of the file named\n"
+            "@var{pathname} in the directory referred to by the file port\n"
+            "@var{dir} instead.\n"
+            "The optional @var{flags} argument may be 0 or @code{AT_SYMLINK_NOFOLLOW},\n"
+            "in which case @var{pathname} is not dereferenced if it is a symbolic link,\n"
+            "i.e., the permissions of the symbolic link itself are modified.\n\n"
+            "Note that @code{AT_SYMLINK_NOFOLLOW} is not supported on all systems\n"
+            "and may result in @code{ENOTSUP}.")
+#define FUNC_NAME s_scm_chmodat
+{
+  int rv;
+  int c_flags;
+  int dir_fdes;
+
+  if (SCM_UNBNDP (flags))
+    c_flags = 0;
+  else
+    c_flags = scm_to_int (flags);
+
+  SCM_VALIDATE_OPFPORT (SCM_ARG1, dir);
+  dir_fdes = SCM_FPORT_FDES (dir);
+
+  STRING_SYSCALL (pathname, c_pathname,
+                  rv = fchmodat (dir_fdes, c_pathname,
+                                 scm_to_int (mode), c_flags));
+  scm_remember_upto_here_1 (dir);
+  if (rv == -1)
+    SCM_SYSERROR;
+  return SCM_UNSPECIFIED;
+}
+#undef FUNC_NAME
+#endif
+
 SCM_DEFINE (scm_umask, "umask", 0, 1, 0, 
             (SCM mode),
 	    "If @var{mode} is omitted, returns a decimal number representing the current\n"

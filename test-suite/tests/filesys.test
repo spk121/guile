@@ -271,6 +271,59 @@
             (false-if-exception (rmdir name))
             result)))))
 
+;;;
+;;; chmodat
+;;;
+
+(with-test-prefix "chmodat"
+  (call-with-output-file (test-file) (const #f))
+  (chmod (test-file) #o000)
+
+  (pass-if-equal "regular file"
+      #o300
+    (unless (defined? 'chmodat)
+      (throw 'unsupported))
+    (call-with-port
+     (open (dirname (test-file)) O_RDONLY)
+     (lambda (port)
+       (chmodat port (test-file) #o300)))
+    (stat:perms (stat (test-file))))
+
+  (chmod (test-file) #o000)
+
+  (pass-if-equal "regular file, AT_SYMLINK_NOFOLLOW"
+      #o300
+    (unless (and (defined? 'chmodat)
+                 (defined? 'AT_SYMLINK_NOFOLLOW))
+      (throw 'unsupported))
+    (call-with-port
+     (open (dirname (test-file)) O_RDONLY)
+     (lambda (port)
+       (catch 'system-error
+         (lambda ()
+           (chmodat port (basename (test-file)) #o300 AT_SYMLINK_NOFOLLOW))
+         (lambda args
+           (close-port port)
+           ;; AT_SYMLINK_NOFOLLOW is not supported on Linux (at least Linux
+           ;; 5.11.2 with the btrfs file system), even for regular files.
+           (if (= ENOTSUP (system-error-errno args))
+               (begin
+                 (display "fchmodat doesn't support AT_SYMLINK_NOFOLLOW\n")
+                 (throw 'unresolved))
+               (apply throw args))))))
+    (stat:perms (stat (test-file))))
+
+  (pass-if-exception "not a port" exception:wrong-type-arg
+    (chmodat "bogus" (test-file) #o300))
+
+  (pass-if-exception "not a file port" exception:wrong-type-arg
+    (chmodat (open-input-string "") (test-file) #o300))
+
+  (pass-if-exception "closed port" exception:wrong-type-arg
+    (chmodat (call-with-port (open "." O_RDONLY) identity) (test-file) #o300))
+
+  (delete-file (test-file)))
+
 (with-test-prefix "chdir"
   (pass-if-equal "current directory" (getcwd)
     (begin (chdir ".") (getcwd)))
