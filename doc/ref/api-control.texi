@@ -323,7 +323,7 @@ Or with two variables and a final return value,
 3**3 is 27
 3**4 is 81
 @result{}
-789
+243
 @end example
 
 The @var{variable} bindings are established like a @code{let}, in that
