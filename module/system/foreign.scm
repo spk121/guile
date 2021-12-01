@@ -108,8 +108,12 @@
 (define *writers*
   `((,float . ,bytevector-ieee-single-native-set!)
     (,double . ,bytevector-ieee-double-native-set!)
-    (,complex-float . ,(writer-complex bytevector-ieee-single-native-set! (sizeof float)))
-    (,complex-double . ,(writer-complex bytevector-ieee-double-native-set! (sizeof double)))
+    ,@(if (defined? 'complex-float)
+          `((,complex-float
+             . ,(writer-complex bytevector-ieee-single-native-set! (sizeof float)))
+            (,complex-double
+             . ,(writer-complex bytevector-ieee-double-native-set! (sizeof double))))
+          '())
     (,int8 . ,bytevector-s8-set!)
     (,uint8 . ,bytevector-u8-set!)
     (,int16 . ,bytevector-s16-native-set!)
@@ -123,8 +127,12 @@
 (define *readers*
   `((,float . ,bytevector-ieee-single-native-ref)
     (,double . ,bytevector-ieee-double-native-ref)
-    (,complex-float . ,(reader-complex bytevector-ieee-single-native-ref (sizeof float)))
-    (,complex-double . ,(reader-complex bytevector-ieee-double-native-ref (sizeof double)))
+    ,@(if (defined? 'complex-float)
+          `((,complex-float
+             . ,(reader-complex bytevector-ieee-single-native-ref (sizeof float)))
+            (,complex-double
+             . ,(reader-complex bytevector-ieee-double-native-ref (sizeof double))))
+          '())
     (,int8 . ,bytevector-s8-ref)
     (,uint8 . ,bytevector-u8-ref)
     (,int16 . ,bytevector-s16-native-ref)
