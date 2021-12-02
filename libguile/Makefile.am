@@ -1,6 +1,6 @@
 ## Process this file with Automake to create Makefile.in
 ##
-##   Copyright (C) 1998-2004, 2006-2014, 2016-2020
+##   Copyright (C) 1998-2004, 2006-2014, 2016-2021
 ##     Free Software Foundation, Inc.
 ##
 ##   This file is part of GUILE.
@@ -174,6 +174,7 @@ libguile_@GUILE_EFFECTIVE_VERSION@_la_SOURCES =				\
 	init.c					\
 	inline.c				\
 	instructions.c				\
+	integers.c				\
 	intrinsics.c				\
 	ioext.c					\
 	jit.c					\
@@ -528,6 +529,7 @@ uninstall-hook:
 ## working.
 noinst_HEADERS = conv-integer.i.c conv-uinteger.i.c		\
                  elf.h						\
+                 integers.h					\
                  intrinsics.h					\
                  srfi-14.i.c					\
                  quicksort.i.c                                  \
