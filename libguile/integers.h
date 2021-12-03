@@ -21,7 +21,10 @@
 
 
 
-/* Contents go here.  */
+#include "libguile/numbers.h"
+
+SCM_INTERNAL int scm_is_integer_odd_i (scm_t_inum i);
+SCM_INTERNAL int scm_is_integer_odd_z (SCM z);
 
 
 

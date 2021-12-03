@@ -65,6 +65,7 @@
 #include "finalizers.h"
 #include "goops.h"
 #include "gsubr.h"
+#include "integers.h"
 #include "modules.h"
 #include "pairs.h"
 #include "ports.h"
@@ -741,16 +742,9 @@ SCM_PRIMITIVE_GENERIC (scm_odd_p, "odd?", 1, 0, 0,
 #define FUNC_NAME s_scm_odd_p
 {
   if (SCM_I_INUMP (n))
-    {
-      scm_t_inum val = SCM_I_INUM (n);
-      return scm_from_bool ((val & 1L) != 0);
-    }
+    return scm_from_bool (scm_is_integer_odd_i (SCM_I_INUM (n)));
   else if (SCM_BIGP (n))
-    {
-      int odd_p = mpz_odd_p (SCM_I_BIG_MPZ (n));
-      scm_remember_upto_here_1 (n);
-      return scm_from_bool (odd_p);
-    }
+    return scm_from_bool (scm_is_integer_odd_z (n));
   else if (SCM_REALP (n))
     {
       double val = SCM_REAL_VALUE (n);
@@ -775,16 +769,9 @@ SCM_PRIMITIVE_GENERIC (scm_even_p, "even?", 1, 0, 0,
 #define FUNC_NAME s_scm_even_p
 {
   if (SCM_I_INUMP (n))
-    {
-      scm_t_inum val = SCM_I_INUM (n);
-      return scm_from_bool ((val & 1L) == 0);
-    }
+    return scm_from_bool (!scm_is_integer_odd_i (SCM_I_INUM (n)));
   else if (SCM_BIGP (n))
-    {
-      int even_p = mpz_even_p (SCM_I_BIG_MPZ (n));
-      scm_remember_upto_here_1 (n);
-      return scm_from_bool (even_p);
-    }
+    return scm_from_bool (!scm_is_integer_odd_z (n));
   else if (SCM_REALP (n))
     {
       double val = SCM_REAL_VALUE (n);
