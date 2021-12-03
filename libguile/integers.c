@@ -244,3 +244,25 @@ scm_is_integer_odd_z (SCM z)
 {
   return bignum_limbs (scm_bignum (z))[0] & 1;
 }
+
+SCM
+scm_integer_abs_i (scm_t_inum i)
+{
+  if (i >= 0)
+    return SCM_I_MAKINUM (i);
+
+  unsigned long abs = long_magnitude (i);
+  if (SCM_LIKELY (SCM_POSFIXABLE (abs)))
+    return SCM_I_MAKINUM (abs);
+
+  return ulong_to_bignum (abs);
+}
+
+SCM
+scm_integer_abs_z (SCM z)
+{
+  if (!bignum_is_negative (scm_bignum (z)))
+    return z;
+
+  return SCM_PACK (negate_bignum (clone_bignum (scm_bignum (z))));
+}

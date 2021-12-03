@@ -919,15 +919,7 @@ SCM_PRIMITIVE_GENERIC (scm_abs, "abs", 1, 0, 0,
 #define FUNC_NAME s_scm_abs
 {
   if (SCM_I_INUMP (x))
-    {
-      scm_t_inum xx = SCM_I_INUM (x);
-      if (xx >= 0)
-	return x;
-      else if (SCM_POSFIXABLE (-xx))
-	return SCM_I_MAKINUM (-xx);
-      else
-	return scm_i_inum2big (-xx);
-    }
+    return scm_integer_abs_i (SCM_I_INUM (x));
   else if (SCM_LIKELY (SCM_REALP (x)))
     {
       double xx = SCM_REAL_VALUE (x);
@@ -941,13 +933,7 @@ SCM_PRIMITIVE_GENERIC (scm_abs, "abs", 1, 0, 0,
         return x;
     }
   else if (SCM_BIGP (x))
-    {
-      const int sgn = mpz_sgn (SCM_I_BIG_MPZ (x));
-      if (sgn < 0)
-	return scm_i_clonebig (x, 0);
-      else
-	return x;
-    }
+    return scm_integer_abs_z (x);
   else if (SCM_FRACTIONP (x))
     {
       if (scm_is_false (scm_negative_p (SCM_FRACTION_NUMERATOR (x))))

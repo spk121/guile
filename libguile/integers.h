@@ -26,6 +26,9 @@
 SCM_INTERNAL int scm_is_integer_odd_i (scm_t_inum i);
 SCM_INTERNAL int scm_is_integer_odd_z (SCM z);
 
+SCM_INTERNAL SCM scm_integer_abs_i (scm_t_inum i);
+SCM_INTERNAL SCM scm_integer_abs_z (SCM z);
+
 
 
 #endif  /* SCM_INTEGERS_H */
