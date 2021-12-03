@@ -180,10 +180,20 @@ long_to_bignum (long i)
 };
 
 static SCM
-inum_to_bignum (scm_t_inum i)
+long_to_scm (long i)
 {
+  if (SCM_FIXABLE (i))
+    return SCM_I_MAKINUM (i);
   return long_to_bignum (i);
-};
+}
+
+static SCM
+ulong_to_scm (unsigned long i)
+{
+  if (SCM_POSFIXABLE (i))
+    return SCM_I_MAKINUM (i);
+  return ulong_to_bignum (i);
+}
 
 static struct scm_bignum *
 clone_bignum (struct scm_bignum *z)
@@ -210,6 +220,14 @@ make_bignum_from_mpz (mpz_srcptr mpz)
   struct scm_bignum *ret = allocate_bignum (nlimbs);
   mpn_copyi (bignum_limbs (ret), mpz_limbs_read (mpz), nlimbs);
   return mpz_sgn (mpz) < 0 ? negate_bignum (ret) : ret;
+}
+
+static struct scm_bignum *
+take_bignum_from_mpz (mpz_ptr mpz)
+{
+  struct scm_bignum *res = make_bignum_from_mpz (mpz);
+  mpz_clear (mpz);
+  return res;
 }
 
 static SCM
@@ -251,11 +269,7 @@ scm_integer_abs_i (scm_t_inum i)
   if (i >= 0)
     return SCM_I_MAKINUM (i);
 
-  unsigned long abs = long_magnitude (i);
-  if (SCM_LIKELY (SCM_POSFIXABLE (abs)))
-    return SCM_I_MAKINUM (abs);
-
-  return ulong_to_bignum (abs);
+  return ulong_to_scm (long_magnitude (i));
 }
 
 SCM
@@ -265,4 +279,62 @@ scm_integer_abs_z (SCM z)
     return z;
 
   return SCM_PACK (negate_bignum (clone_bignum (scm_bignum (z))));
+}
+
+SCM
+scm_integer_floor_quotient_ii (scm_t_inum x, scm_t_inum y)
+{
+  if (y > 0)
+    {
+      if (x < 0)
+        x = x - y + 1;
+    }
+  else if (y == 0)
+    scm_num_overflow ("floor-quotient");
+  else if (x > 0)
+    x = x - y - 1;
+  scm_t_inum q = x / y;
+  return long_to_scm (q);
+}
+
+SCM
+scm_integer_floor_quotient_iz (scm_t_inum x, SCM y)
+{
+  if (x == 0 || ((x < 0) == bignum_is_negative (scm_bignum (y))))
+    return SCM_INUM0;
+  return SCM_I_MAKINUM (-1);
+}
+ 
+SCM
+scm_integer_floor_quotient_zi (SCM x, scm_t_inum y)
+{
+  if (y == 0)
+    scm_num_overflow ("floor-quotient");
+  else if (y == 1)
+    return x;
+
+  mpz_t zx, q;
+  alias_bignum_to_mpz (scm_bignum (x), zx);
+  mpz_init (q);
+  if (y > 0)
+    mpz_fdiv_q_ui (q, zx, y);
+  else
+    {
+      mpz_cdiv_q_ui (q, zx, -y);
+      mpz_neg (q, q);
+    }
+  scm_remember_upto_here_1 (x);
+  return SCM_PACK (normalize_bignum (take_bignum_from_mpz (q)));
+}
+
+SCM
+scm_integer_floor_quotient_zz (SCM x, SCM y)
+{
+  mpz_t zx, zy, q;
+  alias_bignum_to_mpz (scm_bignum (x), zx);
+  alias_bignum_to_mpz (scm_bignum (y), zy);
+  mpz_init (q);
+  mpz_fdiv_q (q, zx, zy);
+  scm_remember_upto_here_2 (x, y);
+  return SCM_PACK (normalize_bignum (take_bignum_from_mpz (q)));
 }

@@ -29,6 +29,11 @@ SCM_INTERNAL int scm_is_integer_odd_z (SCM z);
 SCM_INTERNAL SCM scm_integer_abs_i (scm_t_inum i);
 SCM_INTERNAL SCM scm_integer_abs_z (SCM z);
 
+SCM_INTERNAL SCM scm_integer_floor_quotient_ii (scm_t_inum x, scm_t_inum y);
+SCM_INTERNAL SCM scm_integer_floor_quotient_iz (scm_t_inum x, SCM y);
+SCM_INTERNAL SCM scm_integer_floor_quotient_zi (SCM x, scm_t_inum y);
+SCM_INTERNAL SCM scm_integer_floor_quotient_zz (SCM x, SCM y);
+
 
 
 #endif  /* SCM_INTEGERS_H */
