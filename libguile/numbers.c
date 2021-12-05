@@ -1293,55 +1293,13 @@ SCM_PRIMITIVE_GENERIC (scm_floor_remainder, "floor-remainder", 2, 0, 0,
 {
   if (SCM_LIKELY (SCM_I_INUMP (x)))
     {
-      scm_t_inum xx = SCM_I_INUM (x);
-      if (SCM_LIKELY (SCM_I_INUMP (y)))
-	{
-	  scm_t_inum yy = SCM_I_INUM (y);
-	  if (SCM_UNLIKELY (yy == 0))
-	    scm_num_overflow (s_scm_floor_remainder);
-	  else
-	    {
-	      scm_t_inum rr = xx % yy;
-	      int needs_adjustment;
-
-	      if (SCM_LIKELY (yy > 0))
-		needs_adjustment = (rr < 0);
-	      else
-		needs_adjustment = (rr > 0);
-
-	      if (needs_adjustment)
-		rr += yy;
-	      return SCM_I_MAKINUM (rr);
-	    }
-	}
+      if (SCM_I_INUMP (y))
+        return scm_integer_floor_remainder_ii (SCM_I_INUM (x), SCM_I_INUM (y));
       else if (SCM_BIGP (y))
-	{
-	  int sign = mpz_sgn (SCM_I_BIG_MPZ (y));
-	  scm_remember_upto_here_1 (y);
-	  if (sign > 0)
-	    {
-	      if (xx < 0)
-		{
-		  SCM r = scm_i_mkbig ();
-		  mpz_sub_ui (SCM_I_BIG_MPZ (r), SCM_I_BIG_MPZ (y), -xx);
-		  scm_remember_upto_here_1 (y);
-		  return scm_i_normbig (r);
-		}
-	      else
-		return x;
-	    }
-	  else if (xx <= 0)
-	    return x;
-	  else
-	    {
-	      SCM r = scm_i_mkbig ();
-	      mpz_add_ui (SCM_I_BIG_MPZ (r), SCM_I_BIG_MPZ (y), xx);
-	      scm_remember_upto_here_1 (y);
-	      return scm_i_normbig (r);
-	    }
-	}
+        return scm_integer_floor_remainder_iz (SCM_I_INUM (x), y);
       else if (SCM_REALP (y))
-	return scm_i_inexact_floor_remainder (xx, SCM_REAL_VALUE (y));
+	return scm_i_inexact_floor_remainder (SCM_I_INUM (x),
+                                              SCM_REAL_VALUE (y));
       else if (SCM_FRACTIONP (y))
 	return scm_i_exact_rational_floor_remainder (x, y);
       else
@@ -1350,31 +1308,10 @@ SCM_PRIMITIVE_GENERIC (scm_floor_remainder, "floor-remainder", 2, 0, 0,
     }
   else if (SCM_BIGP (x))
     {
-      if (SCM_LIKELY (SCM_I_INUMP (y)))
-	{
-	  scm_t_inum yy = SCM_I_INUM (y);
-	  if (SCM_UNLIKELY (yy == 0))
-	    scm_num_overflow (s_scm_floor_remainder);
-	  else
-	    {
-	      scm_t_inum rr;
-	      if (yy > 0)
-		rr = mpz_fdiv_ui (SCM_I_BIG_MPZ (x), yy);
-	      else
-		rr = -mpz_cdiv_ui (SCM_I_BIG_MPZ (x), -yy);
-	      scm_remember_upto_here_1 (x);
-	      return SCM_I_MAKINUM (rr);
-	    }
-	}
+      if (SCM_I_INUMP (y))
+        return scm_integer_floor_remainder_zi (x, SCM_I_INUM (y));
       else if (SCM_BIGP (y))
-	{
-	  SCM r = scm_i_mkbig ();
-	  mpz_fdiv_r (SCM_I_BIG_MPZ (r),
-		      SCM_I_BIG_MPZ (x),
-		      SCM_I_BIG_MPZ (y));
-	  scm_remember_upto_here_2 (x, y);
-	  return scm_i_normbig (r);
-	}
+        return scm_integer_floor_remainder_zz (x, y);
       else if (SCM_REALP (y))
 	return scm_i_inexact_floor_remainder
 	  (scm_i_big2dbl (x), SCM_REAL_VALUE (y));
