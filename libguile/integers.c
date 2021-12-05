@@ -411,3 +411,97 @@ scm_integer_floor_remainder_zz (SCM x, SCM y)
   scm_remember_upto_here_2 (x, y);
   return SCM_PACK (normalize_bignum (take_bignum_from_mpz (r)));
 }
+
+void
+scm_integer_floor_divide_ii (scm_t_inum x, scm_t_inum y, SCM *qp, SCM *rp)
+{
+  if (y == 0)
+    scm_num_overflow ("floor-divide");
+
+  scm_t_inum q = x / y;
+  scm_t_inum r = x % y;
+  int needs_adjustment = (y > 0) ? (r < 0) : (r > 0);
+
+  if (needs_adjustment)
+    {
+      r += y;
+      q--;
+    }
+
+  *qp = long_to_scm (q);
+  *rp = SCM_I_MAKINUM (r);
+}
+
+void
+scm_integer_floor_divide_iz (scm_t_inum x, SCM y, SCM *qp, SCM *rp)
+{
+  if (!bignum_is_negative (scm_bignum (y)))
+    {
+      if (x < 0)
+        {
+          mpz_t zy, r;
+          alias_bignum_to_mpz (scm_bignum (y), zy);
+          mpz_init (r);
+          mpz_sub_ui (r, zy, -x);
+          scm_remember_upto_here_1 (y);
+          *qp = SCM_I_MAKINUM (-1);
+          *rp = SCM_PACK (normalize_bignum (take_bignum_from_mpz (r)));
+        }
+      else
+        {
+          *qp = SCM_INUM0;
+          *rp = SCM_I_MAKINUM (x);
+        }
+    }
+  else if (x <= 0)
+    {
+      *qp = SCM_INUM0;
+      *rp = SCM_I_MAKINUM (x);
+    }
+  else
+    {
+      mpz_t zy, r;
+      alias_bignum_to_mpz (scm_bignum (y), zy);
+      mpz_init (r);
+      mpz_add_ui (r, zy, x);
+      scm_remember_upto_here_1 (y);
+      *qp = SCM_I_MAKINUM (-1);
+      *rp = SCM_PACK (normalize_bignum (take_bignum_from_mpz (r)));
+    }
+}
+
+void
+scm_integer_floor_divide_zi (SCM x, scm_t_inum y, SCM *qp, SCM *rp)
+{
+  if (y == 0)
+    scm_num_overflow ("floor-divide");
+
+  mpz_t zx, q, r;
+  alias_bignum_to_mpz (scm_bignum (x), zx);
+  mpz_init (q);
+  mpz_init (r);
+  if (y > 0)
+    mpz_fdiv_qr_ui (q, r, zx, y);
+  else
+    {
+      mpz_cdiv_qr_ui (q, r, zx, -y);
+      mpz_neg (q, q);
+    }
+  scm_remember_upto_here_1 (x);
+  *qp = SCM_PACK (normalize_bignum (take_bignum_from_mpz (q)));
+  *rp = SCM_PACK (normalize_bignum (take_bignum_from_mpz (r)));
+}
+
+void
+scm_integer_floor_divide_zz (SCM x, SCM y, SCM *qp, SCM *rp)
+{
+  mpz_t zx, zy, q, r;
+  mpz_init (q);
+  mpz_init (r);
+  alias_bignum_to_mpz (scm_bignum (x), zx);
+  alias_bignum_to_mpz (scm_bignum (y), zy);
+  mpz_fdiv_qr (q, r, zx, zy);
+  scm_remember_upto_here_2 (x, y);
+  *qp = SCM_PACK (normalize_bignum (take_bignum_from_mpz (q)));
+  *rp = SCM_PACK (normalize_bignum (take_bignum_from_mpz (r)));
+}

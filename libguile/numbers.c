@@ -1409,74 +1409,14 @@ SCM_PRIMITIVE_GENERIC (scm_i_floor_divide, "floor/", 2, 0, 0,
 void
 scm_floor_divide (SCM x, SCM y, SCM *qp, SCM *rp)
 {
-  if (SCM_LIKELY (SCM_I_INUMP (x)))
+  if (SCM_I_INUMP (x))
     {
-      scm_t_inum xx = SCM_I_INUM (x);
-      if (SCM_LIKELY (SCM_I_INUMP (y)))
-	{
-	  scm_t_inum yy = SCM_I_INUM (y);
-	  if (SCM_UNLIKELY (yy == 0))
-	    scm_num_overflow (s_scm_floor_divide);
-	  else
-	    {
-	      scm_t_inum qq = xx / yy;
-	      scm_t_inum rr = xx % yy;
-	      int needs_adjustment;
-
-	      if (SCM_LIKELY (yy > 0))
-		needs_adjustment = (rr < 0);
-	      else
-		needs_adjustment = (rr > 0);
-
-	      if (needs_adjustment)
-		{
-		  rr += yy;
-		  qq--;
-		}
-
-	      if (SCM_LIKELY (SCM_FIXABLE (qq)))
-		*qp = SCM_I_MAKINUM (qq);
-	      else
-		*qp = scm_i_inum2big (qq);
-	      *rp = SCM_I_MAKINUM (rr);
-	    }
-	}
+      if (SCM_I_INUMP (y))
+        scm_integer_floor_divide_ii (SCM_I_INUM (x), SCM_I_INUM (y), qp, rp);
       else if (SCM_BIGP (y))
-	{
-	  int sign = mpz_sgn (SCM_I_BIG_MPZ (y));
-	  scm_remember_upto_here_1 (y);
-	  if (sign > 0)
-	    {
-	      if (xx < 0)
-		{
-		  SCM r = scm_i_mkbig ();
-		  mpz_sub_ui (SCM_I_BIG_MPZ (r), SCM_I_BIG_MPZ (y), -xx);
-		  scm_remember_upto_here_1 (y);
-		  *qp = SCM_I_MAKINUM (-1);
-		  *rp = scm_i_normbig (r);
-		}
-	      else
-		{
-		  *qp = SCM_INUM0;
-		  *rp = x;
-		}
-	    }
-	  else if (xx <= 0)
-	    {
-	      *qp = SCM_INUM0;
-	      *rp = x;
-	    }
-	  else
-	    {
-	      SCM r = scm_i_mkbig ();
-	      mpz_add_ui (SCM_I_BIG_MPZ (r), SCM_I_BIG_MPZ (y), xx);
-	      scm_remember_upto_here_1 (y);
-	      *qp = SCM_I_MAKINUM (-1);
-	      *rp = scm_i_normbig (r);
-	    }
-	}
+        scm_integer_floor_divide_iz (SCM_I_INUM (x), y, qp, rp);
       else if (SCM_REALP (y))
-	scm_i_inexact_floor_divide (xx, SCM_REAL_VALUE (y), qp, rp);
+	scm_i_inexact_floor_divide (SCM_I_INUM (x), SCM_REAL_VALUE (y), qp, rp);
       else if (SCM_FRACTIONP (y))
 	scm_i_exact_rational_floor_divide (x, y, qp, rp);
       else
@@ -1485,39 +1425,10 @@ scm_floor_divide (SCM x, SCM y, SCM *qp, SCM *rp)
     }
   else if (SCM_BIGP (x))
     {
-      if (SCM_LIKELY (SCM_I_INUMP (y)))
-	{
-	  scm_t_inum yy = SCM_I_INUM (y);
-	  if (SCM_UNLIKELY (yy == 0))
-	    scm_num_overflow (s_scm_floor_divide);
-	  else
-	    {
-	      SCM q = scm_i_mkbig ();
-	      SCM r = scm_i_mkbig ();
-	      if (yy > 0)
-		mpz_fdiv_qr_ui (SCM_I_BIG_MPZ (q), SCM_I_BIG_MPZ (r),
-				SCM_I_BIG_MPZ (x), yy);
-	      else
-		{
-		  mpz_cdiv_qr_ui (SCM_I_BIG_MPZ (q), SCM_I_BIG_MPZ (r),
-				  SCM_I_BIG_MPZ (x), -yy);
-		  mpz_neg (SCM_I_BIG_MPZ (q), SCM_I_BIG_MPZ (q));
-		}
-	      scm_remember_upto_here_1 (x);
-	      *qp = scm_i_normbig (q);
-	      *rp = scm_i_normbig (r);
-	    }
-	}
+      if (SCM_I_INUMP (y))
+        scm_integer_floor_divide_zi (x, SCM_I_INUM (y), qp, rp);
       else if (SCM_BIGP (y))
-	{
-	  SCM q = scm_i_mkbig ();
-	  SCM r = scm_i_mkbig ();
-	  mpz_fdiv_qr (SCM_I_BIG_MPZ (q), SCM_I_BIG_MPZ (r),
-		       SCM_I_BIG_MPZ (x), SCM_I_BIG_MPZ (y));
-	  scm_remember_upto_here_2 (x, y);
-	  *qp = scm_i_normbig (q);
-	  *rp = scm_i_normbig (r);
-	}
+        scm_integer_floor_divide_zz (x, y, qp, rp);
       else if (SCM_REALP (y))
 	scm_i_inexact_floor_divide (scm_i_big2dbl (x), SCM_REAL_VALUE (y),
                                     qp, rp);

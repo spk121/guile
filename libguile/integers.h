@@ -39,6 +39,15 @@ SCM_INTERNAL SCM scm_integer_floor_remainder_iz (scm_t_inum x, SCM y);
 SCM_INTERNAL SCM scm_integer_floor_remainder_zi (SCM x, scm_t_inum y);
 SCM_INTERNAL SCM scm_integer_floor_remainder_zz (SCM x, SCM y);
 
+SCM_INTERNAL void scm_integer_floor_divide_ii (scm_t_inum x, scm_t_inum y,
+                                               SCM *qp, SCM *rp);
+SCM_INTERNAL void scm_integer_floor_divide_iz (scm_t_inum x, SCM y,
+                                               SCM *qp, SCM *rp);
+SCM_INTERNAL void scm_integer_floor_divide_zi (SCM x, scm_t_inum y,
+                                               SCM *qp, SCM *rp);
+SCM_INTERNAL void scm_integer_floor_divide_zz (SCM x, SCM y,
+                                               SCM *qp, SCM *rp);
+
 
 
 #endif  /* SCM_INTEGERS_H */
