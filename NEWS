@@ -28,7 +28,7 @@ This function was undocumented.
 
 * New interfaces and functionality
 
-** Typed vector copy functions
+** Typed vector copy functions in (srfi srfi-4 gnu)
 
 The functions `u8vector-copy' `s8vector-copy' `u16vector-copy'
 `s16vector-copy' `u32vector-copy' `s32vector-copy' `u64vector-copy'
@@ -38,6 +38,10 @@ The functions `u8vector-copy' `s8vector-copy' `u16vector-copy'
 `u64vector-copy!'  `s64vector-copy!'  `f32vector-copy!'
 `f64vector-copy!'  `c32vector-copy!'  `c64vector-copy!' have been
 added. See SRFI-4 - Guile extensions" in the manual.
+
+** New function srfi-4-vector-type-size in (srfi srfi-4 gnu)
+
+See SRFI-4 - Guile extensions" in the manual.
 
 ** `bytevector-fill!' supports partial fill through optional arguments
 

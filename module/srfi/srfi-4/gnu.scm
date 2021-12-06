@@ -33,8 +33,6 @@
             c64vector? make-c64vector c64vector c64vector-length c64vector-ref
             c64vector-set! c64vector->list list->c64vector
 
-            make-srfi-4-vector
-
             ;; Somewhat polymorphic conversions.
             any->u8vector any->s8vector any->u16vector any->s16vector
             any->u32vector any->s32vector any->u64vector any->s64vector
@@ -48,10 +46,14 @@
             ;; copy range with destination
             u8vector-copy! s8vector-copy! u16vector-copy! s16vector-copy!
             u32vector-copy! s32vector-copy! u64vector-copy! s64vector-copy!
-            f32vector-copy! f64vector-copy! c32vector-copy! c64vector-copy!))
+            f32vector-copy! f64vector-copy! c32vector-copy! c64vector-copy!
+
+            ;; from libguile
+            srfi-4-vector-type-size make-srfi-4-vector))
 
 
 (define make-srfi-4-vector (@@ (srfi srfi-4) make-srfi-4-vector))
+(define srfi-4-vector-type-size (@@ (srfi srfi-4) srfi-4-vector-type-size))
 
 (define (bytevector-c32-native-ref v i)
   (make-rectangular (bytevector-ieee-single-native-ref v i)

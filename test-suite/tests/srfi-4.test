@@ -564,3 +564,20 @@
       (s8vector-copy! v 2 #s8(-1 -2 -3 -4 -5))
       (equal? #s8(9 7 -1 -2 -3 -4 -5 8) v))))
 
+(with-test-prefix "srfi-4 type size"
+
+  (pass-if "c64vector"
+    (= 16 (srfi-4-vector-type-size #c64())))
+
+  (pass-if "c32vector"
+    (= 8 (srfi-4-vector-type-size #c32())))
+
+  (pass-if "f32vector"
+    (= 4 (srfi-4-vector-type-size #f32())))
+
+  (pass-if "u16vector"
+    (= 2 (srfi-4-vector-type-size #u16())))  
+  
+  (pass-if "s8vector"
+    (= 1 (srfi-4-vector-type-size #s8()))))
+

@@ -116,3 +116,6 @@
 (define-bytevector-type s64 s64-native 8)
 (define-bytevector-type f32 ieee-single-native 4)
 (define-bytevector-type f64 ieee-double-native 8)
+
+(load-extension (string-append "libguile-" (effective-version))
+                "scm_init_srfi_4")

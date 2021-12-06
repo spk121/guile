@@ -37,6 +37,7 @@
 #include "numbers.h"
 #include "uniform.h"
 #include "variable.h"
+#include "version.h"
 
 #include "srfi-4.h"
 
@@ -277,8 +278,21 @@ SCM_DEFINE (scm_make_srfi_4_vector, "make-srfi-4-vector", 2, 1, 0,
 }
 #undef FUNC_NAME
 
+SCM_DEFINE (scm_srfi_4_vector_type_size, "srfi-4-vector-type-size", 1, 0, 0,
+            (SCM vec),
+            "Return the size, in bytes, of each element of a srfi-4 vector.")
+#define FUNC_NAME s_scm_srfi_4_vector_type_size
+{
+  SCM_VALIDATE_BYTEVECTOR (1, vec);
+  return scm_from_size_t (SCM_BYTEVECTOR_TYPE_SIZE (vec));
+}
+#undef FUNC_NAME
+
+
+/* Initialization.  */
+
 void
-scm_init_srfi_4 (void)
+scm_bootstrap_srfi_4 (void)
 {
 #define REGISTER(tag, TAG)                                       \
   scm_i_register_vector_constructor                              \
@@ -298,6 +312,15 @@ scm_init_srfi_4 (void)
   REGISTER (c32, C32);
   REGISTER (c64, C64);
 
+  scm_c_register_extension ("libguile-" SCM_EFFECTIVE_VERSION,
+                            "scm_init_srfi_4",
+			    (scm_t_extension_init_func) scm_init_srfi_4,
+			    NULL);
+}
+
+void
+scm_init_srfi_4 (void)
+{
 #include "srfi-4.x"
 }
 

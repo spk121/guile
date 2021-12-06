@@ -1776,6 +1776,12 @@ module:
 (use-modules (srfi srfi-4 gnu))
 @end example
 
+@deffn  {Scheme Procedure} srfi-4-vector-type-size obj
+Return the size, in bytes, of each element of SRFI-4 vector
+@var{obj}. For example, @code{(srfi-4-vector-type-size #u32())} returns
+@code{4}.
+@end deffn
+
 @deffn  {Scheme Procedure} any->u8vector obj
 @deffnx {Scheme Procedure} any->s8vector obj
 @deffnx {Scheme Procedure} any->u16vector obj

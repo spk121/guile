@@ -25,6 +25,7 @@
 #include "libguile/array-handle.h"
 
 SCM_API SCM scm_make_srfi_4_vector (SCM type, SCM len, SCM fill);
+SCM_API SCM scm_srfi_4_vector_type_size (SCM vec);
 
 /* Specific procedures.
  */
@@ -60,6 +61,7 @@ SCM_SRFI4_DECL (c64, double)
 
 #undef SCM_SRFI4_DECL
 
+SCM_INTERNAL void scm_bootstrap_srfi_4 (void);
 SCM_INTERNAL void scm_init_srfi_4 (void);
 
 #endif /* SCM_SRFI_4_H */

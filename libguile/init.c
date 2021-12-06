@@ -449,7 +449,7 @@ scm_i_init_guile (void *base)
   scm_init_vectors ();  /* Requires array-handle, */
   scm_init_uniform ();
   scm_init_bitvectors ();  /* Requires smob_prehistory, array-handle */
-  scm_init_srfi_4 ();  /* Requires smob_prehistory, array-handle */
+  scm_bootstrap_srfi_4 ();  /* Requires smob_prehistory, array-handle */
   scm_init_arrays ();    /* Requires smob_prehistory, array-handle */
   scm_init_array_map ();
 
