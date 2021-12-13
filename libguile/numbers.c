@@ -2208,7 +2208,6 @@ scm_i_exact_rational_centered_quotient (SCM x, SCM y)
 }
 
 static SCM scm_i_inexact_centered_remainder (double x, double y);
-static SCM scm_i_bigint_centered_remainder (SCM x, SCM y);
 static SCM scm_i_exact_rational_centered_remainder (SCM x, SCM y);
 
 SCM_PRIMITIVE_GENERIC (scm_centered_remainder, "centered-remainder", 2, 0, 0,
@@ -2227,54 +2226,16 @@ SCM_PRIMITIVE_GENERIC (scm_centered_remainder, "centered-remainder", 2, 0, 0,
 		       "@end lisp")
 #define FUNC_NAME s_scm_centered_remainder
 {
-  if (SCM_LIKELY (SCM_I_INUMP (x)))
+  if (SCM_I_INUMP (x))
     {
-      scm_t_inum xx = SCM_I_INUM (x);
-      if (SCM_LIKELY (SCM_I_INUMP (y)))
-	{
-	  scm_t_inum yy = SCM_I_INUM (y);
-	  if (SCM_UNLIKELY (yy == 0))
-	    scm_num_overflow (s_scm_centered_remainder);
-	  else
-	    {
-	      scm_t_inum rr = xx % yy;
-	      if (SCM_LIKELY (xx > 0))
-		{
-		  if (SCM_LIKELY (yy > 0))
-		    {
-		      if (rr >= (yy + 1) / 2)
-			rr -= yy;
-		    }
-		  else
-		    {
-		      if (rr >= (1 - yy) / 2)
-			rr += yy;
-		    }
-		}
-	      else
-		{
-		  if (SCM_LIKELY (yy > 0))
-		    {
-		      if (rr < -yy / 2)
-			rr += yy;
-		    }
-		  else
-		    {
-		      if (rr < yy / 2)
-			rr -= yy;
-		    }
-		}
-	      return SCM_I_MAKINUM (rr);
-	    }
-	}
+      if (SCM_I_INUMP (y))
+        return scm_integer_centered_remainder_ii (SCM_I_INUM (x),
+                                                  SCM_I_INUM (y));
       else if (SCM_BIGP (y))
-	{
-	  /* Pass a denormalized bignum version of x (even though it
-	     can fit in a fixnum) to scm_i_bigint_centered_remainder */
-	  return scm_i_bigint_centered_remainder (scm_i_long2big (xx), y);
-	}
+        return scm_integer_centered_remainder_iz (SCM_I_INUM (x), y);
       else if (SCM_REALP (y))
-	return scm_i_inexact_centered_remainder (xx, SCM_REAL_VALUE (y));
+	return scm_i_inexact_centered_remainder (SCM_I_INUM (x),
+                                                 SCM_REAL_VALUE (y));
       else if (SCM_FRACTIONP (y))
 	return scm_i_exact_rational_centered_remainder (x, y);
       else
@@ -2283,36 +2244,10 @@ SCM_PRIMITIVE_GENERIC (scm_centered_remainder, "centered-remainder", 2, 0, 0,
     }
   else if (SCM_BIGP (x))
     {
-      if (SCM_LIKELY (SCM_I_INUMP (y)))
-	{
-	  scm_t_inum yy = SCM_I_INUM (y);
-	  if (SCM_UNLIKELY (yy == 0))
-	    scm_num_overflow (s_scm_centered_remainder);
-	  else
-	    {
-	      scm_t_inum rr;
-	      /* Arrange for rr to initially be non-positive,
-		 because that simplifies the test to see
-		 if it is within the needed bounds. */
-	      if (yy > 0)
-		{
-		  rr = - mpz_cdiv_ui (SCM_I_BIG_MPZ (x), yy);
-		  scm_remember_upto_here_1 (x);
-		  if (rr < -yy / 2)
-		    rr += yy;
-		}
-	      else
-		{
-		  rr = - mpz_cdiv_ui (SCM_I_BIG_MPZ (x), -yy);
-		  scm_remember_upto_here_1 (x);
-		  if (rr < yy / 2)
-		    rr -= yy;
-		}
-	      return SCM_I_MAKINUM (rr);
-	    }
-	}
+      if (SCM_I_INUMP (y))
+        return scm_integer_centered_remainder_zi (x, SCM_I_INUM (y));
       else if (SCM_BIGP (y))
-	return scm_i_bigint_centered_remainder (x, y);
+        return scm_integer_centered_remainder_zz (x, y);
       else if (SCM_REALP (y))
 	return scm_i_inexact_centered_remainder
 	  (scm_i_big2dbl (x), SCM_REAL_VALUE (y));
@@ -2370,48 +2305,6 @@ scm_i_inexact_centered_remainder (double x, double y)
   else
     return scm_nan ();
   return scm_i_from_double (x - q * y);
-}
-
-/* Assumes that both x and y are bigints, though
-   x might be able to fit into a fixnum. */
-static SCM
-scm_i_bigint_centered_remainder (SCM x, SCM y)
-{
-  SCM r, min_r;
-
-  /* Note that x might be small enough to fit into a
-     fixnum, so we must not let it escape into the wild */
-  r = scm_i_mkbig ();
-
-  /* min_r will eventually become -abs(y)/2 */
-  min_r = scm_i_mkbig ();
-  mpz_tdiv_q_2exp (SCM_I_BIG_MPZ (min_r),
-		   SCM_I_BIG_MPZ (y), 1);
-
-  /* Arrange for rr to initially be non-positive,
-     because that simplifies the test to see
-     if it is within the needed bounds. */
-  if (mpz_sgn (SCM_I_BIG_MPZ (y)) > 0)
-    {
-      mpz_cdiv_r (SCM_I_BIG_MPZ (r),
-		  SCM_I_BIG_MPZ (x), SCM_I_BIG_MPZ (y));
-      mpz_neg (SCM_I_BIG_MPZ (min_r), SCM_I_BIG_MPZ (min_r));
-      if (mpz_cmp (SCM_I_BIG_MPZ (r), SCM_I_BIG_MPZ (min_r)) < 0)
-	mpz_add (SCM_I_BIG_MPZ (r),
-		 SCM_I_BIG_MPZ (r),
-		 SCM_I_BIG_MPZ (y));
-    }
-  else
-    {
-      mpz_fdiv_r (SCM_I_BIG_MPZ (r),
-		  SCM_I_BIG_MPZ (x), SCM_I_BIG_MPZ (y));
-      if (mpz_cmp (SCM_I_BIG_MPZ (r), SCM_I_BIG_MPZ (min_r)) < 0)
-	mpz_sub (SCM_I_BIG_MPZ (r),
-		 SCM_I_BIG_MPZ (r),
-		 SCM_I_BIG_MPZ (y));
-    }
-  scm_remember_upto_here_2 (x, y);
-  return scm_i_normbig (r);
 }
 
 static SCM

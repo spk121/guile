@@ -1119,3 +1119,115 @@ scm_integer_centered_quotient_zz (SCM x, SCM y)
 {
   return integer_centered_quotient_zz (scm_bignum (x), scm_bignum (y));
 }
+
+static SCM
+integer_centered_remainder_zz (struct scm_bignum *x, struct scm_bignum *y)
+{
+  mpz_t r, min_r, zx, zy;
+  mpz_init (r);
+  mpz_init (min_r);
+  alias_bignum_to_mpz (x, zx);
+  alias_bignum_to_mpz (y, zy);
+
+  /* Note that x might be small enough to fit into a
+     fixnum, so we must not let it escape into the wild */
+
+  /* min_r will eventually become -abs(y)/2 */
+  mpz_tdiv_q_2exp (min_r, zy, 1);
+
+  /* Arrange for r to initially be non-positive, because that simplifies
+     the test to see if it is within the needed bounds. */
+  if (mpz_sgn (zy) > 0)
+    {
+      mpz_cdiv_r (r, zx, zy);
+      mpz_neg (min_r, min_r);
+      if (mpz_cmp (r, min_r) < 0)
+	mpz_add (r, r, zy);
+    }
+  else
+    {
+      mpz_fdiv_r (r, zx, zy);
+      if (mpz_cmp (r, min_r) < 0)
+	mpz_sub (r, r, zy);
+    }
+  scm_remember_upto_here_2 (x, y);
+  mpz_clear (min_r);
+  return take_mpz (r);
+}
+
+SCM
+scm_integer_centered_remainder_ii (scm_t_inum x, scm_t_inum y)
+{
+  if (y == 0)
+    scm_num_overflow ("centered-remainder");
+
+  scm_t_inum r = x % y;
+  if (x > 0)
+    {
+      if (y > 0)
+        {
+          if (r >= (y + 1) / 2)
+            r -= y;
+        }
+      else
+        {
+          if (r >= (1 - y) / 2)
+            r += y;
+        }
+    }
+  else
+    {
+      if (y > 0)
+        {
+          if (r < -y / 2)
+            r += y;
+        }
+      else
+        {
+          if (r < y / 2)
+            r -= y;
+        }
+    }
+  return SCM_I_MAKINUM (r);
+}
+
+SCM
+scm_integer_centered_remainder_iz (scm_t_inum x, SCM y)
+{
+  return integer_centered_remainder_zz (long_to_bignum (x),
+                                        scm_bignum (y));
+}
+
+SCM
+scm_integer_centered_remainder_zi (SCM x, scm_t_inum y)
+{
+  mpz_t zx;
+  alias_bignum_to_mpz (scm_bignum (x), zx);
+
+  if (y == 0)
+    scm_num_overflow ("centered-remainder");
+
+  scm_t_inum r;
+  /* Arrange for r to initially be non-positive, because that simplifies
+     the test to see if it is within the needed bounds. */
+  if (y > 0)
+    {
+      r = - mpz_cdiv_ui (zx, y);
+      if (r < -y / 2)
+        r += y;
+    }
+  else
+    {
+      r = - mpz_cdiv_ui (zx, -y);
+      if (r < y / 2)
+        r -= y;
+    }
+  scm_remember_upto_here_1 (x);
+  return SCM_I_MAKINUM (r);
+}
+
+SCM
+scm_integer_centered_remainder_zz (SCM x, SCM y)
+{
+  return integer_centered_remainder_zz (scm_bignum (x), scm_bignum (y));
+}
