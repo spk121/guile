@@ -85,6 +85,12 @@ bignum_is_negative (struct scm_bignum *z)
   return bignum_size (z) < 0;
 }
 
+static int
+bignum_is_positive (struct scm_bignum *z)
+{
+  return bignum_size (z) > 0;
+}
+
 static size_t
 bignum_limb_count (struct scm_bignum *z)
 {
@@ -382,7 +388,7 @@ scm_integer_floor_remainder_ii (scm_t_inum x, scm_t_inum y)
 SCM
 scm_integer_floor_remainder_iz (scm_t_inum x, SCM y)
 {
-  if (!bignum_is_negative (scm_bignum (y)))
+  if (bignum_is_positive (scm_bignum (y)))
     {
       if (x < 0)
         {
@@ -463,7 +469,7 @@ scm_integer_floor_divide_ii (scm_t_inum x, scm_t_inum y, SCM *qp, SCM *rp)
 void
 scm_integer_floor_divide_iz (scm_t_inum x, SCM y, SCM *qp, SCM *rp)
 {
-  if (!bignum_is_negative (scm_bignum (y)))
+  if (bignum_is_positive (scm_bignum (y)))
     {
       if (x < 0)
         {
@@ -555,7 +561,7 @@ scm_integer_ceiling_quotient_ii (scm_t_inum x, scm_t_inum y)
 SCM
 scm_integer_ceiling_quotient_iz (scm_t_inum x, SCM y)
 {
-  if (!bignum_is_negative (scm_bignum (y)))
+  if (bignum_is_positive (scm_bignum (y)))
     {
       if (x > 0)
         return SCM_INUM1;
@@ -609,4 +615,88 @@ scm_integer_ceiling_quotient_zz (SCM x, SCM y)
   mpz_cdiv_q (q, zx, zy);
   scm_remember_upto_here_2 (x, y);
   return take_bignum_from_mpz (q);
+}
+
+SCM
+scm_integer_ceiling_remainder_ii (scm_t_inum x, scm_t_inum y)
+{
+  if (y == 0)
+    scm_num_overflow ("ceiling-remainder");
+
+  scm_t_inum r = x % y;
+  int needs_adjustment = (y > 0) ? (r > 0) : (r < 0);
+  if (needs_adjustment)
+    r -= y;
+
+  return SCM_I_MAKINUM (r);
+}
+
+SCM
+scm_integer_ceiling_remainder_iz (scm_t_inum x, SCM y)
+{
+  if (bignum_is_positive (scm_bignum (y)))
+    {
+      if (x > 0)
+        {
+          mpz_t r, zy;
+          mpz_init (r);
+          alias_bignum_to_mpz (scm_bignum (y), zy);
+          mpz_sub_ui (r, zy, x);
+          scm_remember_upto_here_1 (y);
+          mpz_neg (r, r);
+          return take_bignum_from_mpz (r);
+        }
+      else if (x == SCM_MOST_NEGATIVE_FIXNUM &&
+               bignum_cmp_long (scm_bignum (y), -SCM_MOST_NEGATIVE_FIXNUM) == 0)
+        {
+          /* Special case: x == fixnum-min && y == abs (fixnum-min) */
+          scm_remember_upto_here_1 (y);
+          return SCM_INUM0;
+        }
+      else
+        return SCM_I_MAKINUM (x);
+    }
+  else if (x >= 0)
+    return SCM_I_MAKINUM (x);
+  else
+    {
+      mpz_t r, zy;
+      mpz_init (r);
+      alias_bignum_to_mpz (scm_bignum (y), zy);
+      mpz_add_ui (r, zy, -x);
+      scm_remember_upto_here_1 (y);
+      mpz_neg (r, r);
+      return take_bignum_from_mpz (r);
+    }
+}
+
+SCM
+scm_integer_ceiling_remainder_zi (SCM x, scm_t_inum y)
+{
+  if (y == 0)
+    scm_num_overflow ("ceiling-remainder");
+  else
+    {
+      mpz_t zx;
+      alias_bignum_to_mpz (scm_bignum (x), zx);
+      scm_t_inum r;
+      if (y > 0)
+        r = -mpz_cdiv_ui (zx, y);
+      else
+        r = mpz_fdiv_ui (zx, -y);
+      scm_remember_upto_here_1 (x);
+      return SCM_I_MAKINUM (r);
+    }
+}
+
+SCM
+scm_integer_ceiling_remainder_zz (SCM x, SCM y)
+{
+  mpz_t r, zx, zy;
+  mpz_init (r);
+  alias_bignum_to_mpz (scm_bignum (x), zx);
+  alias_bignum_to_mpz (scm_bignum (y), zy);
+  mpz_cdiv_r (r, zx, zy);
+  scm_remember_upto_here_2 (x, y);
+  return take_bignum_from_mpz (r);
 }
