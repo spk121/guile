@@ -1503,3 +1503,119 @@ scm_integer_round_quotient_zz (SCM x, SCM y)
 
   return scm_i_normbig (q);
 }
+
+static SCM
+integer_round_remainder_zz (struct scm_bignum *x, struct scm_bignum *y)
+{
+  mpz_t q, r, r2, zx, zy;
+  int cmp, needs_adjustment;
+
+  /* Note that x might be small enough to fit into a
+     fixnum, so we must not let it escape into the wild */
+  mpz_init (q);
+  mpz_init (r);
+  mpz_init (r2);
+  alias_bignum_to_mpz (x, zx);
+  alias_bignum_to_mpz (y, zy);
+
+  mpz_fdiv_qr (q, r, zx, zy);
+  scm_remember_upto_here_1 (x);
+  mpz_mul_2exp (r2, r, 1);  /* r2 = 2*r */
+
+  cmp = mpz_cmpabs (r2, zy);
+  if (mpz_odd_p (q))
+    needs_adjustment = (cmp >= 0);
+  else
+    needs_adjustment = (cmp > 0);
+
+  if (needs_adjustment)
+    mpz_sub (r, r, zy);
+
+  scm_remember_upto_here_1 (y);
+  mpz_clear (q);
+  mpz_clear (r2);
+  return take_mpz (r);
+}
+
+SCM
+scm_integer_round_remainder_ii (scm_t_inum x, scm_t_inum y)
+{
+  if (y == 0)
+    scm_num_overflow ("round-remainder");
+
+  scm_t_inum q = x / y;
+  scm_t_inum r = x % y;
+  scm_t_inum ay = y;
+  scm_t_inum r2 = 2 * r;
+
+  if (y < 0)
+    {
+      ay = -ay;
+      r2 = -r2;
+    }
+
+  if (q & 1L)
+    {
+      if (r2 >= ay)
+        r -= y;
+      else if (r2 <= -ay)
+        r += y;
+    }
+  else
+    {
+      if (r2 > ay)
+        r -= y;
+      else if (r2 < -ay)
+        r += y;
+    }
+
+  return SCM_I_MAKINUM (r);
+}
+
+SCM
+scm_integer_round_remainder_iz (scm_t_inum x, SCM y)
+{
+  return integer_round_remainder_zz (long_to_bignum (x), scm_bignum (y));
+}
+
+SCM
+scm_integer_round_remainder_zi (SCM x, scm_t_inum y)
+{
+  if (y == 0)
+    scm_num_overflow ("round-remainder");
+
+  mpz_t q, zx;
+  scm_t_inum r;
+  int needs_adjustment;
+
+  mpz_init (q);
+  alias_bignum_to_mpz (scm_bignum (x), zx);
+
+  if (y > 0)
+    {
+      r = mpz_fdiv_q_ui (q, zx, y);
+      if (mpz_odd_p (q))
+        needs_adjustment = (2*r >= y);
+      else
+        needs_adjustment = (2*r > y);
+    }
+  else
+    {
+      r = - mpz_cdiv_q_ui (q, zx, -y);
+      if (mpz_odd_p (q))
+        needs_adjustment = (2*r <= y);
+      else
+        needs_adjustment = (2*r < y);
+    }
+  scm_remember_upto_here_1 (x);
+  mpz_clear (q);
+  if (needs_adjustment)
+    r -= y;
+  return SCM_I_MAKINUM (r);
+}
+
+SCM
+scm_integer_round_remainder_zz (SCM x, SCM y)
+{
+  return integer_round_remainder_zz (scm_bignum (x), scm_bignum (y));
+}

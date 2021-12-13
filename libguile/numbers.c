@@ -2533,7 +2533,6 @@ scm_i_exact_rational_round_quotient (SCM x, SCM y)
 }
 
 static SCM scm_i_inexact_round_remainder (double x, double y);
-static SCM scm_i_bigint_round_remainder (SCM x, SCM y);
 static SCM scm_i_exact_rational_round_remainder (SCM x, SCM y);
 
 SCM_PRIMITIVE_GENERIC (scm_round_remainder, "round-remainder", 2, 0, 0,
@@ -2556,53 +2555,15 @@ SCM_PRIMITIVE_GENERIC (scm_round_remainder, "round-remainder", 2, 0, 0,
 		       "@end lisp")
 #define FUNC_NAME s_scm_round_remainder
 {
-  if (SCM_LIKELY (SCM_I_INUMP (x)))
+  if (SCM_I_INUMP (x))
     {
-      scm_t_inum xx = SCM_I_INUM (x);
-      if (SCM_LIKELY (SCM_I_INUMP (y)))
-	{
-	  scm_t_inum yy = SCM_I_INUM (y);
-	  if (SCM_UNLIKELY (yy == 0))
-	    scm_num_overflow (s_scm_round_remainder);
-	  else
-	    {
-	      scm_t_inum qq = xx / yy;
-	      scm_t_inum rr = xx % yy;
-	      scm_t_inum ay = yy;
-	      scm_t_inum r2 = 2 * rr;
-
-	      if (SCM_LIKELY (yy < 0))
-		{
-		  ay = -ay;
-		  r2 = -r2;
-		}
-
-	      if (qq & 1L)
-		{
-		  if (r2 >= ay)
-		    rr -= yy;
-		  else if (r2 <= -ay)
-		    rr += yy;
-		}
-	      else
-		{
-		  if (r2 > ay)
-		    rr -= yy;
-		  else if (r2 < -ay)
-		    rr += yy;
-		}
-	      return SCM_I_MAKINUM (rr);
-	    }
-	}
+      if (SCM_I_INUMP (y))
+        return scm_integer_round_remainder_ii (SCM_I_INUM (x), SCM_I_INUM (y));
       else if (SCM_BIGP (y))
-	{
-	  /* Pass a denormalized bignum version of x (even though it
-	     can fit in a fixnum) to scm_i_bigint_round_remainder */
-	  return scm_i_bigint_round_remainder
-	    (scm_i_long2big (xx), y);
-	}
+        return scm_integer_round_remainder_iz (SCM_I_INUM (x), y);
       else if (SCM_REALP (y))
-	return scm_i_inexact_round_remainder (xx, SCM_REAL_VALUE (y));
+	return scm_i_inexact_round_remainder (SCM_I_INUM (x),
+                                              SCM_REAL_VALUE (y));
       else if (SCM_FRACTIONP (y))
 	return scm_i_exact_rational_round_remainder (x, y);
       else
@@ -2611,43 +2572,10 @@ SCM_PRIMITIVE_GENERIC (scm_round_remainder, "round-remainder", 2, 0, 0,
     }
   else if (SCM_BIGP (x))
     {
-      if (SCM_LIKELY (SCM_I_INUMP (y)))
-	{
-	  scm_t_inum yy = SCM_I_INUM (y);
-	  if (SCM_UNLIKELY (yy == 0))
-	    scm_num_overflow (s_scm_round_remainder);
-	  else
-	    {
-	      SCM q = scm_i_mkbig ();
-	      scm_t_inum rr;
-	      int needs_adjustment;
-
-	      if (yy > 0)
-		{
-		  rr = mpz_fdiv_q_ui (SCM_I_BIG_MPZ (q),
-				      SCM_I_BIG_MPZ (x), yy);
-		  if (mpz_odd_p (SCM_I_BIG_MPZ (q)))
-		    needs_adjustment = (2*rr >= yy);
-		  else
-		    needs_adjustment = (2*rr > yy);
-		}
-	      else
-		{
-		  rr = - mpz_cdiv_q_ui (SCM_I_BIG_MPZ (q),
-					SCM_I_BIG_MPZ (x), -yy);
-		  if (mpz_odd_p (SCM_I_BIG_MPZ (q)))
-		    needs_adjustment = (2*rr <= yy);
-		  else
-		    needs_adjustment = (2*rr < yy);
-		}
-	      scm_remember_upto_here_2 (x, q);
-	      if (needs_adjustment)
-		rr -= yy;
-	      return SCM_I_MAKINUM (rr);
-	    }
-	}
+      if (SCM_I_INUMP (y))
+        return scm_integer_round_remainder_zi (x, SCM_I_INUM (y));
       else if (SCM_BIGP (y))
-	return scm_i_bigint_round_remainder (x, y);
+        return scm_integer_round_remainder_zz (x, y);
       else if (SCM_REALP (y))
 	return scm_i_inexact_round_remainder
 	  (scm_i_big2dbl (x), SCM_REAL_VALUE (y));
@@ -2702,39 +2630,6 @@ scm_i_inexact_round_remainder (double x, double y)
       double q = scm_c_round (x / y);
       return scm_i_from_double (x - q * y);
     }
-}
-
-/* Assumes that both x and y are bigints, though
-   x might be able to fit into a fixnum. */
-static SCM
-scm_i_bigint_round_remainder (SCM x, SCM y)
-{
-  SCM q, r, r2;
-  int cmp, needs_adjustment;
-
-  /* Note that x might be small enough to fit into a
-     fixnum, so we must not let it escape into the wild */
-  q = scm_i_mkbig ();
-  r = scm_i_mkbig ();
-  r2 = scm_i_mkbig ();
-
-  mpz_fdiv_qr (SCM_I_BIG_MPZ (q), SCM_I_BIG_MPZ (r),
-	       SCM_I_BIG_MPZ (x), SCM_I_BIG_MPZ (y));
-  scm_remember_upto_here_1 (x);
-  mpz_mul_2exp (SCM_I_BIG_MPZ (r2), SCM_I_BIG_MPZ (r), 1);  /* r2 = 2*r */
-
-  cmp = mpz_cmpabs (SCM_I_BIG_MPZ (r2), SCM_I_BIG_MPZ (y));
-  if (mpz_odd_p (SCM_I_BIG_MPZ (q)))
-    needs_adjustment = (cmp >= 0);
-  else
-    needs_adjustment = (cmp > 0);
-  scm_remember_upto_here_2 (q, r2);
-
-  if (needs_adjustment)
-    mpz_sub (SCM_I_BIG_MPZ (r), SCM_I_BIG_MPZ (r), SCM_I_BIG_MPZ (y));
-
-  scm_remember_upto_here_1 (y);
-  return scm_i_normbig (r);
 }
 
 static SCM
