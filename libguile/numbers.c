@@ -2320,7 +2320,6 @@ scm_i_exact_rational_centered_remainder (SCM x, SCM y)
 
 static void scm_i_inexact_centered_divide (double x, double y,
 					   SCM *qp, SCM *rp);
-static void scm_i_bigint_centered_divide (SCM x, SCM y, SCM *qp, SCM *rp);
 static void scm_i_exact_rational_centered_divide (SCM x, SCM y,
 						  SCM *qp, SCM *rp);
 
@@ -2352,57 +2351,15 @@ SCM_PRIMITIVE_GENERIC (scm_i_centered_divide, "centered/", 2, 0, 0,
 void
 scm_centered_divide (SCM x, SCM y, SCM *qp, SCM *rp)
 {
-  if (SCM_LIKELY (SCM_I_INUMP (x)))
+  if (SCM_I_INUMP (x))
     {
-      scm_t_inum xx = SCM_I_INUM (x);
-      if (SCM_LIKELY (SCM_I_INUMP (y)))
-	{
-	  scm_t_inum yy = SCM_I_INUM (y);
-	  if (SCM_UNLIKELY (yy == 0))
-	    scm_num_overflow (s_scm_centered_divide);
-	  else
-	    {
-	      scm_t_inum qq = xx / yy;
-	      scm_t_inum rr = xx % yy;
-	      if (SCM_LIKELY (xx > 0))
-		{
-		  if (SCM_LIKELY (yy > 0))
-		    {
-		      if (rr >= (yy + 1) / 2)
-			{ qq++; rr -= yy; }
-		    }
-		  else
-		    {
-		      if (rr >= (1 - yy) / 2)
-			{ qq--; rr += yy; }
-		    }
-		}
-	      else
-		{
-		  if (SCM_LIKELY (yy > 0))
-		    {
-		      if (rr < -yy / 2)
-			{ qq--; rr += yy; }
-		    }
-		  else
-		    {
-		      if (rr < yy / 2)
-			{ qq++; rr -= yy; }
-		    }
-		}
-	      if (SCM_LIKELY (SCM_FIXABLE (qq)))
-		*qp = SCM_I_MAKINUM (qq);
-	      else
-		*qp = scm_i_inum2big (qq);
-	      *rp = SCM_I_MAKINUM (rr);
-	    }
-	}
+      if (SCM_I_INUMP (y))
+        scm_integer_centered_divide_ii (SCM_I_INUM (x), SCM_I_INUM (y), qp, rp);
       else if (SCM_BIGP (y))
-        /* Pass a denormalized bignum version of x (even though it
-           can fit in a fixnum) to scm_i_bigint_centered_divide */
-        scm_i_bigint_centered_divide (scm_i_long2big (xx), y, qp, rp);
+        scm_integer_centered_divide_iz (SCM_I_INUM (x), y, qp, rp);
       else if (SCM_REALP (y))
-	scm_i_inexact_centered_divide (xx, SCM_REAL_VALUE (y), qp, rp);
+	scm_i_inexact_centered_divide (SCM_I_INUM (x), SCM_REAL_VALUE (y),
+                                       qp, rp);
       else if (SCM_FRACTIONP (y))
 	scm_i_exact_rational_centered_divide (x, y, qp, rp);
       else
@@ -2411,49 +2368,10 @@ scm_centered_divide (SCM x, SCM y, SCM *qp, SCM *rp)
     }
   else if (SCM_BIGP (x))
     {
-      if (SCM_LIKELY (SCM_I_INUMP (y)))
-	{
-	  scm_t_inum yy = SCM_I_INUM (y);
-	  if (SCM_UNLIKELY (yy == 0))
-	    scm_num_overflow (s_scm_centered_divide);
-	  else
-	    {
-	      SCM q = scm_i_mkbig ();
-	      scm_t_inum rr;
-	      /* Arrange for rr to initially be non-positive,
-		 because that simplifies the test to see
-		 if it is within the needed bounds. */
-	      if (yy > 0)
-		{
-		  rr = - mpz_cdiv_q_ui (SCM_I_BIG_MPZ (q),
-					SCM_I_BIG_MPZ (x), yy);
-		  scm_remember_upto_here_1 (x);
-		  if (rr < -yy / 2)
-		    {
-		      mpz_sub_ui (SCM_I_BIG_MPZ (q),
-				  SCM_I_BIG_MPZ (q), 1);
-		      rr += yy;
-		    }
-		}
-	      else
-		{
-		  rr = - mpz_cdiv_q_ui (SCM_I_BIG_MPZ (q),
-					SCM_I_BIG_MPZ (x), -yy);
-		  scm_remember_upto_here_1 (x);
-		  mpz_neg (SCM_I_BIG_MPZ (q), SCM_I_BIG_MPZ (q));
-		  if (rr < yy / 2)
-		    {
-		      mpz_add_ui (SCM_I_BIG_MPZ (q),
-				  SCM_I_BIG_MPZ (q), 1);
-		      rr -= yy;
-		    }
-		}
-	      *qp = scm_i_normbig (q);
-	      *rp = SCM_I_MAKINUM (rr);
-	    }
-	}
+      if (SCM_I_INUMP (y))
+        scm_integer_centered_divide_zi (x, SCM_I_INUM (y), qp, rp);
       else if (SCM_BIGP (y))
-	scm_i_bigint_centered_divide (x, y, qp, rp);
+        scm_integer_centered_divide_zz (x, y, qp, rp);
       else if (SCM_REALP (y))
 	scm_i_inexact_centered_divide (scm_i_big2dbl (x), SCM_REAL_VALUE (y),
                                        qp, rp);
@@ -2505,58 +2423,6 @@ scm_i_inexact_centered_divide (double x, double y, SCM *qp, SCM *rp)
   r = x - q * y;
   *qp = scm_i_from_double (q);
   *rp = scm_i_from_double (r);
-}
-
-/* Assumes that both x and y are bigints, though
-   x might be able to fit into a fixnum. */
-static void
-scm_i_bigint_centered_divide (SCM x, SCM y, SCM *qp, SCM *rp)
-{
-  SCM q, r, min_r;
-
-  /* Note that x might be small enough to fit into a
-     fixnum, so we must not let it escape into the wild */
-  q = scm_i_mkbig ();
-  r = scm_i_mkbig ();
-
-  /* min_r will eventually become -abs(y/2) */
-  min_r = scm_i_mkbig ();
-  mpz_tdiv_q_2exp (SCM_I_BIG_MPZ (min_r),
-		   SCM_I_BIG_MPZ (y), 1);
-
-  /* Arrange for rr to initially be non-positive,
-     because that simplifies the test to see
-     if it is within the needed bounds. */
-  if (mpz_sgn (SCM_I_BIG_MPZ (y)) > 0)
-    {
-      mpz_cdiv_qr (SCM_I_BIG_MPZ (q), SCM_I_BIG_MPZ (r),
-		   SCM_I_BIG_MPZ (x), SCM_I_BIG_MPZ (y));
-      mpz_neg (SCM_I_BIG_MPZ (min_r), SCM_I_BIG_MPZ (min_r));
-      if (mpz_cmp (SCM_I_BIG_MPZ (r), SCM_I_BIG_MPZ (min_r)) < 0)
-	{
-	  mpz_sub_ui (SCM_I_BIG_MPZ (q),
-		      SCM_I_BIG_MPZ (q), 1);
-	  mpz_add (SCM_I_BIG_MPZ (r),
-		   SCM_I_BIG_MPZ (r),
-		   SCM_I_BIG_MPZ (y));
-	}
-    }
-  else
-    {
-      mpz_fdiv_qr (SCM_I_BIG_MPZ (q), SCM_I_BIG_MPZ (r),
-		   SCM_I_BIG_MPZ (x), SCM_I_BIG_MPZ (y));
-      if (mpz_cmp (SCM_I_BIG_MPZ (r), SCM_I_BIG_MPZ (min_r)) < 0)
-	{
-	  mpz_add_ui (SCM_I_BIG_MPZ (q),
-		      SCM_I_BIG_MPZ (q), 1);
-	  mpz_sub (SCM_I_BIG_MPZ (r),
-		   SCM_I_BIG_MPZ (r),
-		   SCM_I_BIG_MPZ (y));
-	}
-    }
-  scm_remember_upto_here_2 (x, y);
-  *qp = scm_i_normbig (q);
-  *rp = scm_i_normbig (r);
 }
 
 static void

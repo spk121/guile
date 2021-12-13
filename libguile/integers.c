@@ -1231,3 +1231,136 @@ scm_integer_centered_remainder_zz (SCM x, SCM y)
 {
   return integer_centered_remainder_zz (scm_bignum (x), scm_bignum (y));
 }
+
+static void
+integer_centered_divide_zz (struct scm_bignum *x, struct scm_bignum *y,
+                            SCM *qp, SCM *rp)
+{
+  mpz_t q, r, min_r, zx, zy;
+  mpz_init (q);
+  mpz_init (r);
+  mpz_init (min_r);
+  alias_bignum_to_mpz (x, zx);
+  alias_bignum_to_mpz (y, zy);
+
+  /* Note that x might be small enough to fit into a fixnum, so we must
+     not let it escape into the wild */
+
+  /* min_r will eventually become -abs(y/2) */
+  mpz_tdiv_q_2exp (min_r, zy, 1);
+
+  /* Arrange for rr to initially be non-positive, because that
+     simplifies the test to see if it is within the needed bounds. */
+  if (mpz_sgn (zy) > 0)
+    {
+      mpz_cdiv_qr (q, r, zx, zy);
+      mpz_neg (min_r, min_r);
+      if (mpz_cmp (r, min_r) < 0)
+	{
+	  mpz_sub_ui (q, q, 1);
+	  mpz_add (r, r, zy);
+	}
+    }
+  else
+    {
+      mpz_fdiv_qr (q, r, zx, zy);
+      if (mpz_cmp (r, min_r) < 0)
+	{
+	  mpz_add_ui (q, q, 1);
+	  mpz_sub (r, r, zy);
+	}
+    }
+  scm_remember_upto_here_2 (x, y);
+  mpz_clear (min_r);
+  *qp = take_mpz (q);
+  *rp = take_mpz (r);
+}
+
+void
+scm_integer_centered_divide_ii (scm_t_inum x, scm_t_inum y, SCM *qp, SCM *rp)
+{
+  if (y == 0)
+    scm_num_overflow ("centered-divide");
+
+  scm_t_inum q = x / y;
+  scm_t_inum r = x % y;
+  if (x > 0)
+    {
+      if (y > 0)
+        {
+          if (r >= (y + 1) / 2)
+            { q++; r -= y; }
+        }
+      else
+        {
+          if (r >= (1 - y) / 2)
+            { q--; r += y; }
+        }
+    }
+  else
+    {
+      if (y > 0)
+        {
+          if (r < -y / 2)
+            { q--; r += y; }
+        }
+      else
+        {
+          if (r < y / 2)
+            { q++; r -= y; }
+        }
+    }
+  *qp = long_to_scm (q);
+  *rp = SCM_I_MAKINUM (r);
+}
+
+void
+scm_integer_centered_divide_iz (scm_t_inum x, SCM y, SCM *qp, SCM *rp)
+{
+  integer_centered_divide_zz (long_to_bignum (x), scm_bignum (y), qp, rp);
+}
+
+void
+scm_integer_centered_divide_zi (SCM x, scm_t_inum y, SCM *qp, SCM *rp)
+{
+  if (y == 0)
+    scm_num_overflow ("centered-divide");
+
+  mpz_t q, zx;
+  mpz_init (q);
+  alias_bignum_to_mpz (scm_bignum (x), zx);
+  scm_t_inum r;
+
+  /* Arrange for r to initially be non-positive, because that
+     simplifies the test to see if it is within the needed bounds. */
+
+  if (y > 0)
+    {
+      r = - mpz_cdiv_q_ui (q, zx, y);
+      if (r < -y / 2)
+        {
+          mpz_sub_ui (q, q, 1);
+          r += y;
+        }
+    }
+  else
+    {
+      r = - mpz_cdiv_q_ui (q, zx, -y);
+      mpz_neg (q, q);
+      if (r < y / 2)
+        {
+          mpz_add_ui (q, q, 1);
+          r -= y;
+        }
+    }
+  scm_remember_upto_here_1 (x);
+  *qp = take_mpz (q);
+  *rp = SCM_I_MAKINUM (r);
+}
+
+void
+scm_integer_centered_divide_zz (SCM x, SCM y, SCM *qp, SCM *rp)
+{
+  integer_centered_divide_zz (scm_bignum (x), scm_bignum (y), qp, rp);
+}
+
