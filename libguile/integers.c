@@ -250,7 +250,7 @@ normalize_bignum (struct scm_bignum *z)
 }
 
 static SCM
-take_bignum_from_mpz (mpz_ptr mpz)
+take_mpz (mpz_ptr mpz)
 {
   struct scm_bignum *res = make_bignum_from_mpz (mpz);
   mpz_clear (mpz);
@@ -358,7 +358,7 @@ scm_integer_floor_quotient_zi (SCM x, scm_t_inum y)
       mpz_neg (q, q);
     }
   scm_remember_upto_here_1 (x);
-  return take_bignum_from_mpz (q);
+  return take_mpz (q);
 }
 
 SCM
@@ -370,7 +370,7 @@ scm_integer_floor_quotient_zz (SCM x, SCM y)
   mpz_init (q);
   mpz_fdiv_q (q, zx, zy);
   scm_remember_upto_here_2 (x, y);
-  return take_bignum_from_mpz (q);
+  return take_mpz (q);
 }
 
 SCM
@@ -397,7 +397,7 @@ scm_integer_floor_remainder_iz (scm_t_inum x, SCM y)
           alias_bignum_to_mpz (scm_bignum (y), zy);
           mpz_sub_ui (r, zy, -x);
           scm_remember_upto_here_1 (y);
-          return take_bignum_from_mpz (r);
+          return take_mpz (r);
         }
       else
         return SCM_I_MAKINUM (x);
@@ -411,7 +411,7 @@ scm_integer_floor_remainder_iz (scm_t_inum x, SCM y)
       alias_bignum_to_mpz (scm_bignum (y), zy);
       mpz_add_ui (r, zy, x);
       scm_remember_upto_here_1 (y);
-      return take_bignum_from_mpz (r);
+      return take_mpz (r);
     }
 }
 
@@ -443,7 +443,7 @@ scm_integer_floor_remainder_zz (SCM x, SCM y)
   mpz_init (r);
   mpz_fdiv_r (r, zx, zy);
   scm_remember_upto_here_2 (x, y);
-  return take_bignum_from_mpz (r);
+  return take_mpz (r);
 }
 
 void
@@ -479,7 +479,7 @@ scm_integer_floor_divide_iz (scm_t_inum x, SCM y, SCM *qp, SCM *rp)
           mpz_sub_ui (r, zy, -x);
           scm_remember_upto_here_1 (y);
           *qp = SCM_I_MAKINUM (-1);
-          *rp = take_bignum_from_mpz (r);
+          *rp = take_mpz (r);
         }
       else
         {
@@ -500,7 +500,7 @@ scm_integer_floor_divide_iz (scm_t_inum x, SCM y, SCM *qp, SCM *rp)
       mpz_add_ui (r, zy, x);
       scm_remember_upto_here_1 (y);
       *qp = SCM_I_MAKINUM (-1);
-      *rp = take_bignum_from_mpz (r);
+      *rp = take_mpz (r);
     }
 }
 
@@ -522,8 +522,8 @@ scm_integer_floor_divide_zi (SCM x, scm_t_inum y, SCM *qp, SCM *rp)
       mpz_neg (q, q);
     }
   scm_remember_upto_here_1 (x);
-  *qp = take_bignum_from_mpz (q);
-  *rp = take_bignum_from_mpz (r);
+  *qp = take_mpz (q);
+  *rp = take_mpz (r);
 }
 
 void
@@ -536,8 +536,8 @@ scm_integer_floor_divide_zz (SCM x, SCM y, SCM *qp, SCM *rp)
   alias_bignum_to_mpz (scm_bignum (y), zy);
   mpz_fdiv_qr (q, r, zx, zy);
   scm_remember_upto_here_2 (x, y);
-  *qp = take_bignum_from_mpz (q);
-  *rp = take_bignum_from_mpz (r);
+  *qp = take_mpz (q);
+  *rp = take_mpz (r);
 }
 
 SCM
@@ -601,7 +601,7 @@ scm_integer_ceiling_quotient_zi (SCM x, scm_t_inum y)
           mpz_neg (q, q);
         }
       scm_remember_upto_here_1 (x);
-      return take_bignum_from_mpz (q);
+      return take_mpz (q);
     }
 }
 
@@ -614,7 +614,7 @@ scm_integer_ceiling_quotient_zz (SCM x, SCM y)
   alias_bignum_to_mpz (scm_bignum (y), zy);
   mpz_cdiv_q (q, zx, zy);
   scm_remember_upto_here_2 (x, y);
-  return take_bignum_from_mpz (q);
+  return take_mpz (q);
 }
 
 SCM
@@ -644,7 +644,7 @@ scm_integer_ceiling_remainder_iz (scm_t_inum x, SCM y)
           mpz_sub_ui (r, zy, x);
           scm_remember_upto_here_1 (y);
           mpz_neg (r, r);
-          return take_bignum_from_mpz (r);
+          return take_mpz (r);
         }
       else if (x == SCM_MOST_NEGATIVE_FIXNUM &&
                bignum_cmp_long (scm_bignum (y), -SCM_MOST_NEGATIVE_FIXNUM) == 0)
@@ -666,7 +666,7 @@ scm_integer_ceiling_remainder_iz (scm_t_inum x, SCM y)
       mpz_add_ui (r, zy, -x);
       scm_remember_upto_here_1 (y);
       mpz_neg (r, r);
-      return take_bignum_from_mpz (r);
+      return take_mpz (r);
     }
 }
 
@@ -698,5 +698,117 @@ scm_integer_ceiling_remainder_zz (SCM x, SCM y)
   alias_bignum_to_mpz (scm_bignum (y), zy);
   mpz_cdiv_r (r, zx, zy);
   scm_remember_upto_here_2 (x, y);
-  return take_bignum_from_mpz (r);
+  return take_mpz (r);
+}
+
+void
+scm_integer_ceiling_divide_ii (scm_t_inum x, scm_t_inum y, SCM *qp, SCM *rp)
+{
+  if (y == 0)
+    scm_num_overflow ("ceiling-divide");
+  else
+    {
+      scm_t_inum q = x / y;
+      scm_t_inum r = x % y;
+      int needs_adjustment;
+
+      if (y > 0)
+        needs_adjustment = (r > 0);
+      else
+        needs_adjustment = (r < 0);
+
+      if (needs_adjustment)
+        {
+          r -= y;
+          q++;
+        }
+      *qp = long_to_scm (q);
+      *rp = SCM_I_MAKINUM (r);
+    }
+}
+
+void
+scm_integer_ceiling_divide_iz (scm_t_inum x, SCM y, SCM *qp, SCM *rp)
+{
+  if (bignum_is_positive (scm_bignum (y)))
+    {
+      if (x > 0)
+        {
+          mpz_t r, zy;
+          mpz_init (r);
+          alias_bignum_to_mpz (scm_bignum (y), zy);
+          mpz_sub_ui (r, zy, x);
+          scm_remember_upto_here_1 (y);
+          mpz_neg (r, r);
+          *qp = SCM_INUM1;
+          *rp = take_mpz (r);
+        }
+      else if (x == SCM_MOST_NEGATIVE_FIXNUM &&
+               bignum_cmp_long (scm_bignum (y), -SCM_MOST_NEGATIVE_FIXNUM) == 0)
+        {
+          /* Special case: x == fixnum-min && y == abs (fixnum-min) */
+          scm_remember_upto_here_1 (y);
+          *qp = SCM_I_MAKINUM (-1);
+          *rp = SCM_INUM0;
+        }
+      else
+        {
+          *qp = SCM_INUM0;
+          *rp = SCM_I_MAKINUM (x);
+        }
+    }
+  else if (x >= 0)
+    {
+      *qp = SCM_INUM0;
+      *rp = SCM_I_MAKINUM (x);
+    }
+  else
+    {
+      mpz_t r, zy;
+      mpz_init (r);
+      alias_bignum_to_mpz (scm_bignum (y), zy);
+      mpz_add_ui (r, zy, -x);
+      scm_remember_upto_here_1 (y);
+      mpz_neg (r, r);
+      *qp = SCM_INUM1;
+      *rp = take_mpz (r);
+    }
+}
+
+void
+scm_integer_ceiling_divide_zi (SCM x, scm_t_inum y, SCM *qp, SCM *rp)
+{
+  if (y == 0)
+    scm_num_overflow ("ceiling-divide");
+  else
+    {
+      mpz_t q, r, zx;
+      mpz_init (q);
+      mpz_init (r);
+      alias_bignum_to_mpz (scm_bignum (x), zx);
+      if (y > 0)
+        mpz_cdiv_qr_ui (q, r, zx, y);
+      else
+        {
+          mpz_fdiv_qr_ui (q, r, zx, -y);
+          mpz_neg (q, q);
+        }
+      scm_remember_upto_here_1 (x);
+      *qp = take_mpz (q);
+      *rp = take_mpz (r);
+    }
+}
+
+void
+scm_integer_ceiling_divide_zz (SCM x, SCM y, SCM *qp, SCM *rp)
+{
+  mpz_t q, r, zx, zy;
+  mpz_init (q);
+  mpz_init (r);
+  alias_bignum_to_mpz (scm_bignum (x), zx);
+  alias_bignum_to_mpz (scm_bignum (y), zy);
+  mpz_cdiv_qr (q, r, zx, zy);
+  scm_remember_upto_here_2 (x, y);
+  *qp = take_mpz (q);
+  *rp = take_mpz (r);
 }
