@@ -610,8 +610,7 @@ The C level work required in this model usually consists of packaging
 and exporting functions and application objects such that they can be
 seen and manipulated on the Scheme level.  To help with this, Guile's C
 language interface includes utility features that aim to make this kind
-of integration very easy for the application developer.  These features
-are documented later in this part of the manual: see REFFIXME.
+of integration very easy for the application developer.
 
 This model, though, is really just one of a range of possible
 programming options.  If all of the functionality that you need is
@@ -704,20 +703,25 @@ written, most of the difficulties of memory management can be avoided by
 using Guile's C interface features from the start.
 
 For the full documentation on writing C code for Guile and connecting
-existing C code to the Guile world, see REFFIXME.
+existing C code to the Guile world, see @ref{Defining New
+Foreign Object Types}, @ref{Primitive Procedures}, and @ref{Foreign
+Function Interface}.
 
 
 @node Basic Constraints
 @subsubsection Functional and Performance Constraints
 
+@c REFFIXME
 
 @node Style Choices
 @subsubsection Your Preferred Programming Style
 
+@c REFFIXME
 
 @node Program Control
 @subsubsection What Controls Program Execution?
 
+@c REFFIXME
 
 @node User Programming
 @subsection How About Application Users?

@@ -801,8 +801,8 @@ procedure has a so-called @dfn{setter} attached, which is a procedure
 for storing something into a data structure.
 
 Procedures with setters are treated specially when the procedure appears
-in the special form @code{set!} (REFFIXME).  How it works is best shown
-by example.
+in the special form @code{set!}. @c (REFFIXME)
+How it works is best shown by example.
 
 Suppose we have a procedure called @code{foo-ref}, which accepts two
 arguments, a value of type @code{foo} and an integer.  The procedure

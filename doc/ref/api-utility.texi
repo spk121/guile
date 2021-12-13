@@ -184,8 +184,9 @@ properties allow you to do just that.
 
 Guile's representation of an object property is a procedure-with-setter
 (@pxref{Procedures with Setters}) that can be used with the generalized
-form of @code{set!} (REFFIXME) to set and retrieve that property for any
-Scheme object.  So, setting a property looks like this:
+form of @code{set!} @c (REFFIXME)
+to set and retrieve that property for any Scheme object.  So, setting a
+property looks like this:
 
 @lisp
 (set! (my-property obj1) value-for-obj1)
