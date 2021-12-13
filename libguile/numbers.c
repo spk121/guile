@@ -1815,38 +1815,16 @@ SCM_PRIMITIVE_GENERIC (scm_truncate_quotient, "truncate-quotient", 2, 0, 0,
 		       "@end lisp")
 #define FUNC_NAME s_scm_truncate_quotient
 {
-  if (SCM_LIKELY (SCM_I_INUMP (x)))
+  if (SCM_I_INUMP (x))
     {
-      scm_t_inum xx = SCM_I_INUM (x);
-      if (SCM_LIKELY (SCM_I_INUMP (y)))
-	{
-	  scm_t_inum yy = SCM_I_INUM (y);
-	  if (SCM_UNLIKELY (yy == 0))
-	    scm_num_overflow (s_scm_truncate_quotient);
-	  else
-	    {
-	      scm_t_inum qq = xx / yy;
-	      if (SCM_LIKELY (SCM_FIXABLE (qq)))
-		return SCM_I_MAKINUM (qq);
-	      else
-		return scm_i_inum2big (qq);
-	    }
-	}
+      if (SCM_I_INUMP (y))
+        return scm_integer_truncate_quotient_ii (SCM_I_INUM (x),
+                                                 SCM_I_INUM (y));
       else if (SCM_BIGP (y))
-	{
-	  if (SCM_UNLIKELY (xx == SCM_MOST_NEGATIVE_FIXNUM)
-	      && SCM_UNLIKELY (mpz_cmp_ui (SCM_I_BIG_MPZ (y),
-					   - SCM_MOST_NEGATIVE_FIXNUM) == 0))
-	    {
-	      /* Special case: x == fixnum-min && y == abs (fixnum-min) */
-	      scm_remember_upto_here_1 (y);
-	      return SCM_I_MAKINUM (-1);
-	    }
-	  else
-	    return SCM_INUM0;
-	}
+        return scm_integer_truncate_quotient_iz (SCM_I_INUM (x), y);
       else if (SCM_REALP (y))
-	return scm_i_inexact_truncate_quotient (xx, SCM_REAL_VALUE (y));
+	return scm_i_inexact_truncate_quotient (SCM_I_INUM (x),
+                                                SCM_REAL_VALUE (y));
       else if (SCM_FRACTIONP (y))
 	return scm_i_exact_rational_truncate_quotient (x, y);
       else
@@ -1855,36 +1833,10 @@ SCM_PRIMITIVE_GENERIC (scm_truncate_quotient, "truncate-quotient", 2, 0, 0,
     }
   else if (SCM_BIGP (x))
     {
-      if (SCM_LIKELY (SCM_I_INUMP (y)))
-	{
-	  scm_t_inum yy = SCM_I_INUM (y);
-	  if (SCM_UNLIKELY (yy == 0))
-	    scm_num_overflow (s_scm_truncate_quotient);
-	  else if (SCM_UNLIKELY (yy == 1))
-	    return x;
-	  else
-	    {
-	      SCM q = scm_i_mkbig ();
-	      if (yy > 0)
-		mpz_tdiv_q_ui (SCM_I_BIG_MPZ (q), SCM_I_BIG_MPZ (x), yy);
-	      else
-		{
-		  mpz_tdiv_q_ui (SCM_I_BIG_MPZ (q), SCM_I_BIG_MPZ (x), -yy);
-		  mpz_neg (SCM_I_BIG_MPZ (q), SCM_I_BIG_MPZ (q));
-		}
-	      scm_remember_upto_here_1 (x);
-	      return scm_i_normbig (q);
-	    }
-	}
+      if (SCM_I_INUMP (y))
+        return scm_integer_truncate_quotient_zi (x, SCM_I_INUM (y));
       else if (SCM_BIGP (y))
-	{
-	  SCM q = scm_i_mkbig ();
-	  mpz_tdiv_q (SCM_I_BIG_MPZ (q),
-		      SCM_I_BIG_MPZ (x),
-		      SCM_I_BIG_MPZ (y));
-	  scm_remember_upto_here_2 (x, y);
-	  return scm_i_normbig (q);
-	}
+        return scm_integer_truncate_quotient_zz (x, y);
       else if (SCM_REALP (y))
 	return scm_i_inexact_truncate_quotient
 	  (scm_i_big2dbl (x), SCM_REAL_VALUE (y));

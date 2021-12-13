@@ -67,6 +67,11 @@ SCM_INTERNAL void scm_integer_ceiling_divide_zi (SCM x, scm_t_inum y,
 SCM_INTERNAL void scm_integer_ceiling_divide_zz (SCM x, SCM y,
                                                  SCM *qp, SCM *rp);
 
+SCM_INTERNAL SCM scm_integer_truncate_quotient_ii (scm_t_inum x, scm_t_inum y);
+SCM_INTERNAL SCM scm_integer_truncate_quotient_iz (scm_t_inum x, SCM y);
+SCM_INTERNAL SCM scm_integer_truncate_quotient_zi (SCM x, scm_t_inum y);
+SCM_INTERNAL SCM scm_integer_truncate_quotient_zz (SCM x, SCM y);
+
 
 
 #endif  /* SCM_INTEGERS_H */
