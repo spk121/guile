@@ -72,6 +72,11 @@ SCM_INTERNAL SCM scm_integer_truncate_quotient_iz (scm_t_inum x, SCM y);
 SCM_INTERNAL SCM scm_integer_truncate_quotient_zi (SCM x, scm_t_inum y);
 SCM_INTERNAL SCM scm_integer_truncate_quotient_zz (SCM x, SCM y);
 
+SCM_INTERNAL SCM scm_integer_truncate_remainder_ii (scm_t_inum x, scm_t_inum y);
+SCM_INTERNAL SCM scm_integer_truncate_remainder_iz (scm_t_inum x, SCM y);
+SCM_INTERNAL SCM scm_integer_truncate_remainder_zi (SCM x, scm_t_inum y);
+SCM_INTERNAL SCM scm_integer_truncate_remainder_zz (SCM x, SCM y);
+
 
 
 #endif  /* SCM_INTEGERS_H */

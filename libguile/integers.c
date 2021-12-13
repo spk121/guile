@@ -874,3 +874,56 @@ scm_integer_truncate_quotient_zz (SCM x, SCM y)
   scm_remember_upto_here_2 (x, y);
   return take_mpz (q);
 }
+
+SCM
+scm_integer_truncate_remainder_ii (scm_t_inum x, scm_t_inum y)
+{
+  if (y == 0)
+    scm_num_overflow ("truncate-remainder");
+  else
+    {
+      scm_t_inum q = x % y;
+      return long_to_scm (q);
+    }
+}
+
+SCM
+scm_integer_truncate_remainder_iz (scm_t_inum x, SCM y)
+{
+  if (x == SCM_MOST_NEGATIVE_FIXNUM &&
+      bignum_cmp_long (scm_bignum (y), -SCM_MOST_NEGATIVE_FIXNUM) == 0)
+    {
+      /* Special case: x == fixnum-min && y == abs (fixnum-min) */
+      scm_remember_upto_here_1 (y);
+      return SCM_INUM0;
+    }
+  else
+    return SCM_I_MAKINUM (x);
+}
+
+SCM
+scm_integer_truncate_remainder_zi (SCM x, scm_t_inum y)
+{
+  if (y == 0)
+    scm_num_overflow ("truncate-remainder");
+  else
+    {
+      mpz_t zx;
+      alias_bignum_to_mpz (scm_bignum (x), zx);
+      scm_t_inum r = mpz_tdiv_ui (zx, (y > 0) ? y : -y) * mpz_sgn (zx);
+      scm_remember_upto_here_1 (x);
+      return SCM_I_MAKINUM (r);
+    }
+}
+
+SCM
+scm_integer_truncate_remainder_zz (SCM x, SCM y)
+{
+  mpz_t r, zx, zy;
+  mpz_init (r);
+  alias_bignum_to_mpz (scm_bignum (x), zx);
+  alias_bignum_to_mpz (scm_bignum (y), zy);
+  mpz_tdiv_r (r, zx, zy);
+  scm_remember_upto_here_2 (x, y);
+  return take_mpz (r);
+}
