@@ -1619,3 +1619,126 @@ scm_integer_round_remainder_zz (SCM x, SCM y)
 {
   return integer_round_remainder_zz (scm_bignum (x), scm_bignum (y));
 }
+
+static void
+integer_round_divide_zz (struct scm_bignum *x, struct scm_bignum *y,
+                         SCM *qp, SCM *rp)
+{
+  mpz_t q, r, r2, zx, zy;
+  int cmp, needs_adjustment;
+
+  /* Note that x might be small enough to fit into a fixnum, so we must
+     not let it escape into the wild */
+  mpz_init (q);
+  mpz_init (r);
+  mpz_init (r2);
+  alias_bignum_to_mpz (x, zx);
+  alias_bignum_to_mpz (y, zy);
+
+  mpz_fdiv_qr (q, r, zx, zy);
+  scm_remember_upto_here_1 (x);
+  mpz_mul_2exp (r2, r, 1);  /* r2 = 2*r */
+
+  cmp = mpz_cmpabs (r2, zy);
+  if (mpz_odd_p (q))
+    needs_adjustment = (cmp >= 0);
+  else
+    needs_adjustment = (cmp > 0);
+
+  if (needs_adjustment)
+    {
+      mpz_add_ui (q, q, 1);
+      mpz_sub (r, r, zy);
+    }
+
+  scm_remember_upto_here_1 (y);
+  mpz_clear (r2);
+  *qp = take_mpz (q);
+  *rp = take_mpz (r);
+}
+
+void
+scm_integer_round_divide_ii (scm_t_inum x, scm_t_inum y, SCM *qp, SCM *rp)
+{
+  if (y == 0)
+    scm_num_overflow ("round-divide");
+
+  scm_t_inum q = x / y;
+  scm_t_inum r = x % y;
+  scm_t_inum ay = y;
+  scm_t_inum r2 = 2 * r;
+
+  if (y < 0)
+    {
+      ay = -ay;
+      r2 = -r2;
+    }
+
+  if (q & 1L)
+    {
+      if (r2 >= ay)
+        { q++; r -= y; }
+      else if (r2 <= -ay)
+        { q--; r += y; }
+    }
+  else
+    {
+      if (r2 > ay)
+        { q++; r -= y; }
+      else if (r2 < -ay)
+        { q--; r += y; }
+    }
+  *qp = long_to_scm (q);
+  *rp = SCM_I_MAKINUM (r);
+}
+
+void
+scm_integer_round_divide_iz (scm_t_inum x, SCM y, SCM *qp, SCM *rp)
+{
+  integer_round_divide_zz (long_to_bignum (x), scm_bignum (y), qp, rp);
+}
+
+void
+scm_integer_round_divide_zi (SCM x, scm_t_inum y, SCM *qp, SCM *rp)
+{
+  if (y == 0)
+    scm_num_overflow ("round-divide");
+
+  mpz_t q, zx;
+  mpz_init (q);
+  alias_bignum_to_mpz (scm_bignum (x), zx);
+  scm_t_inum r;
+  int needs_adjustment;
+
+  if (y > 0)
+    {
+      r = mpz_fdiv_q_ui (q, zx, y);
+      if (mpz_odd_p (q))
+        needs_adjustment = (2*r >= y);
+      else
+        needs_adjustment = (2*r > y);
+    }
+  else
+    {
+      r = - mpz_cdiv_q_ui (q, zx, -y);
+      mpz_neg (q, q);
+      if (mpz_odd_p (q))
+        needs_adjustment = (2*r <= y);
+      else
+        needs_adjustment = (2*r < y);
+    }
+  scm_remember_upto_here_1 (x);
+  if (needs_adjustment)
+    {
+      mpz_add_ui (q, q, 1);
+      r -= y;
+    }
+  *qp = take_mpz (q);
+  *rp = SCM_I_MAKINUM (r);
+}
+
+void
+scm_integer_round_divide_zz (SCM x, SCM y, SCM *qp, SCM *rp)
+{
+  integer_round_divide_zz (scm_bignum (x), scm_bignum (y), qp, rp);
+}

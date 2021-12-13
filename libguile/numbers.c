@@ -2644,7 +2644,6 @@ scm_i_exact_rational_round_remainder (SCM x, SCM y)
 
 
 static void scm_i_inexact_round_divide (double x, double y, SCM *qp, SCM *rp);
-static void scm_i_bigint_round_divide (SCM x, SCM y, SCM *qp, SCM *rp);
 static void scm_i_exact_rational_round_divide (SCM x, SCM y, SCM *qp, SCM *rp);
 
 SCM_PRIMITIVE_GENERIC (scm_i_round_divide, "round/", 2, 0, 0,
@@ -2679,54 +2678,14 @@ SCM_PRIMITIVE_GENERIC (scm_i_round_divide, "round/", 2, 0, 0,
 void
 scm_round_divide (SCM x, SCM y, SCM *qp, SCM *rp)
 {
-  if (SCM_LIKELY (SCM_I_INUMP (x)))
+  if (SCM_I_INUMP (x))
     {
-      scm_t_inum xx = SCM_I_INUM (x);
-      if (SCM_LIKELY (SCM_I_INUMP (y)))
-	{
-	  scm_t_inum yy = SCM_I_INUM (y);
-	  if (SCM_UNLIKELY (yy == 0))
-	    scm_num_overflow (s_scm_round_divide);
-	  else
-	    {
-	      scm_t_inum qq = xx / yy;
-	      scm_t_inum rr = xx % yy;
-	      scm_t_inum ay = yy;
-	      scm_t_inum r2 = 2 * rr;
-
-	      if (SCM_LIKELY (yy < 0))
-		{
-		  ay = -ay;
-		  r2 = -r2;
-		}
-
-	      if (qq & 1L)
-		{
-		  if (r2 >= ay)
-		    { qq++; rr -= yy; }
-		  else if (r2 <= -ay)
-		    { qq--; rr += yy; }
-		}
-	      else
-		{
-		  if (r2 > ay)
-		    { qq++; rr -= yy; }
-		  else if (r2 < -ay)
-		    { qq--; rr += yy; }
-		}
-	      if (SCM_LIKELY (SCM_FIXABLE (qq)))
-		*qp = SCM_I_MAKINUM (qq);
-	      else
-		*qp = scm_i_inum2big (qq);
-	      *rp = SCM_I_MAKINUM (rr);
-	    }
-	}
+      if (SCM_I_INUMP (y))
+        scm_integer_round_divide_ii (SCM_I_INUM (x), SCM_I_INUM (y), qp, rp);
       else if (SCM_BIGP (y))
-        /* Pass a denormalized bignum version of x (even though it
-           can fit in a fixnum) to scm_i_bigint_round_divide */
-        scm_i_bigint_round_divide (scm_i_long2big (SCM_I_INUM (x)), y, qp, rp);
+        scm_integer_round_divide_iz (SCM_I_INUM (x), y, qp, rp);
       else if (SCM_REALP (y))
-	scm_i_inexact_round_divide (xx, SCM_REAL_VALUE (y), qp, rp);
+	scm_i_inexact_round_divide (SCM_I_INUM (x), SCM_REAL_VALUE (y), qp, rp);
       else if (SCM_FRACTIONP (y))
 	scm_i_exact_rational_round_divide (x, y, qp, rp);
       else
@@ -2735,48 +2694,10 @@ scm_round_divide (SCM x, SCM y, SCM *qp, SCM *rp)
     }
   else if (SCM_BIGP (x))
     {
-      if (SCM_LIKELY (SCM_I_INUMP (y)))
-	{
-	  scm_t_inum yy = SCM_I_INUM (y);
-	  if (SCM_UNLIKELY (yy == 0))
-	    scm_num_overflow (s_scm_round_divide);
-	  else
-	    {
-	      SCM q = scm_i_mkbig ();
-	      scm_t_inum rr;
-	      int needs_adjustment;
-
-	      if (yy > 0)
-		{
-		  rr = mpz_fdiv_q_ui (SCM_I_BIG_MPZ (q),
-				      SCM_I_BIG_MPZ (x), yy);
-		  if (mpz_odd_p (SCM_I_BIG_MPZ (q)))
-		    needs_adjustment = (2*rr >= yy);
-		  else
-		    needs_adjustment = (2*rr > yy);
-		}
-	      else
-		{
-		  rr = - mpz_cdiv_q_ui (SCM_I_BIG_MPZ (q),
-					SCM_I_BIG_MPZ (x), -yy);
-		  mpz_neg (SCM_I_BIG_MPZ (q), SCM_I_BIG_MPZ (q));
-		  if (mpz_odd_p (SCM_I_BIG_MPZ (q)))
-		    needs_adjustment = (2*rr <= yy);
-		  else
-		    needs_adjustment = (2*rr < yy);
-		}
-	      scm_remember_upto_here_1 (x);
-	      if (needs_adjustment)
-		{
-		  mpz_add_ui (SCM_I_BIG_MPZ (q), SCM_I_BIG_MPZ (q), 1);
-		  rr -= yy;
-		}
-	      *qp = scm_i_normbig (q);
-	      *rp = SCM_I_MAKINUM (rr);
-	    }
-	}
+      if (SCM_I_INUMP (y))
+        scm_integer_round_divide_zi (x, SCM_I_INUM (y), qp, rp);
       else if (SCM_BIGP (y))
-	scm_i_bigint_round_divide (x, y, qp, rp);
+        scm_integer_round_divide_zz (x, y, qp, rp);
       else if (SCM_REALP (y))
 	scm_i_inexact_round_divide (scm_i_big2dbl (x), SCM_REAL_VALUE (y),
                                     qp, rp);
@@ -2824,42 +2745,6 @@ scm_i_inexact_round_divide (double x, double y, SCM *qp, SCM *rp)
       *qp = scm_i_from_double (q);
       *rp = scm_i_from_double (r);
     }
-}
-
-/* Assumes that both x and y are bigints, though
-   x might be able to fit into a fixnum. */
-static void
-scm_i_bigint_round_divide (SCM x, SCM y, SCM *qp, SCM *rp)
-{
-  SCM q, r, r2;
-  int cmp, needs_adjustment;
-
-  /* Note that x might be small enough to fit into a
-     fixnum, so we must not let it escape into the wild */
-  q = scm_i_mkbig ();
-  r = scm_i_mkbig ();
-  r2 = scm_i_mkbig ();
-
-  mpz_fdiv_qr (SCM_I_BIG_MPZ (q), SCM_I_BIG_MPZ (r),
-	       SCM_I_BIG_MPZ (x), SCM_I_BIG_MPZ (y));
-  scm_remember_upto_here_1 (x);
-  mpz_mul_2exp (SCM_I_BIG_MPZ (r2), SCM_I_BIG_MPZ (r), 1);  /* r2 = 2*r */
-
-  cmp = mpz_cmpabs (SCM_I_BIG_MPZ (r2), SCM_I_BIG_MPZ (y));
-  if (mpz_odd_p (SCM_I_BIG_MPZ (q)))
-    needs_adjustment = (cmp >= 0);
-  else
-    needs_adjustment = (cmp > 0);
-
-  if (needs_adjustment)
-    {
-      mpz_add_ui (SCM_I_BIG_MPZ (q), SCM_I_BIG_MPZ (q), 1);
-      mpz_sub (SCM_I_BIG_MPZ (r), SCM_I_BIG_MPZ (r), SCM_I_BIG_MPZ (y));
-    }
-
-  scm_remember_upto_here_2 (r2, y);
-  *qp = scm_i_normbig (q);
-  *rp = scm_i_normbig (r);
 }
 
 static void
