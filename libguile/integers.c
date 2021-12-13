@@ -160,28 +160,26 @@ negate_bignum (struct scm_bignum *z)
   return z;
 }
 
-static SCM
+static struct scm_bignum *
 make_bignum_1 (int is_negative, mp_limb_t limb)
 {
   struct scm_bignum *z = allocate_bignum (1);
   z->limbs[0] = limb;
-  return SCM_PACK (is_negative ? negate_bignum(z) : z);
+  return is_negative ? negate_bignum(z) : z;
 }
 
-static SCM
+static struct scm_bignum *
 ulong_to_bignum (unsigned long u)
 {
-  ASSERT (!SCM_POSFIXABLE (u));
   return make_bignum_1 (0, u);
 };
 
-static SCM
+static struct scm_bignum *
 long_to_bignum (long i)
 {
   if (i > 0)
     return ulong_to_bignum (i);
 
-  ASSERT (!SCM_NEGFIXABLE (i));
   return make_bignum_1 (1, long_magnitude (i));
 };
 
@@ -190,7 +188,7 @@ long_to_scm (long i)
 {
   if (SCM_FIXABLE (i))
     return SCM_I_MAKINUM (i);
-  return long_to_bignum (i);
+  return SCM_PACK (long_to_bignum (i));
 }
 
 static SCM
@@ -198,7 +196,7 @@ ulong_to_scm (unsigned long i)
 {
   if (SCM_POSFIXABLE (i))
     return SCM_I_MAKINUM (i);
-  return ulong_to_bignum (i);
+  return SCM_PACK (ulong_to_bignum (i));
 }
 
 static struct scm_bignum *
@@ -997,4 +995,127 @@ scm_integer_truncate_divide_zz (SCM x, SCM y, SCM *qp, SCM *rp)
   scm_remember_upto_here_2 (x, y);
   *qp = take_mpz (q);
   *rp = take_mpz (r);
+}
+
+static SCM
+integer_centered_quotient_zz (struct scm_bignum *x, struct scm_bignum *y)
+{
+  mpz_t q, r, min_r, zx, zy;
+  mpz_init (q);
+  mpz_init (r);
+  mpz_init (min_r);
+  alias_bignum_to_mpz (x, zx);
+  alias_bignum_to_mpz (y, zy);
+
+  /* Note that x might be small enough to fit into a fixnum, so we must
+     not let it escape into the wild.  */
+
+  /* min_r will eventually become -abs(y)/2 */
+  mpz_tdiv_q_2exp (min_r, zy, 1);
+
+  /* Arrange for rr to initially be non-positive, because that
+     simplifies the test to see if it is within the needed bounds. */
+  if (mpz_sgn (zy) > 0)
+    {
+      mpz_cdiv_qr (q, r, zx, zy);
+      scm_remember_upto_here_2 (x, y);
+      mpz_neg (min_r, min_r);
+      if (mpz_cmp (r, min_r) < 0)
+	mpz_sub_ui (q, q, 1);
+    }
+  else
+    {
+      mpz_fdiv_qr (q, r, zx, zy);
+      scm_remember_upto_here_2 (x, y);
+      if (mpz_cmp (r, min_r) < 0)
+        mpz_add_ui (q, q, 1);
+    }
+  mpz_clear (r);
+  mpz_clear (min_r);
+  return take_mpz (q);
+}
+
+SCM
+scm_integer_centered_quotient_ii (scm_t_inum x, scm_t_inum y)
+{
+  if (y == 0)
+    scm_num_overflow ("centered-quotient");
+
+  scm_t_inum q = x / y;
+  scm_t_inum r = x % y;
+  if (x > 0)
+    {
+      if (y > 0)
+        {
+          if (r >= (y + 1) / 2)
+            q++;
+        }
+      else
+        {
+          if (r >= (1 - y) / 2)
+            q--;
+        }
+    }
+  else
+    {
+      if (y > 0)
+        {
+          if (r < -y / 2)
+            q--;
+        }
+      else
+        {
+          if (r < y / 2)
+            q++;
+        }
+    }
+  return long_to_scm (q);
+}
+
+SCM
+scm_integer_centered_quotient_iz (scm_t_inum x, SCM y)
+{
+  return integer_centered_quotient_zz (long_to_bignum (x),
+                                       scm_bignum (y));
+}
+
+SCM
+scm_integer_centered_quotient_zi (SCM x, scm_t_inum y)
+{
+  if (y == 0)
+    scm_num_overflow ("centered-quotient");
+  else if (y == 1)
+    return x;
+  else
+    {
+      mpz_t q, zx;
+      mpz_init (q);
+      alias_bignum_to_mpz (scm_bignum (x), zx);
+      scm_t_inum r;
+      /* Arrange for r to initially be non-positive, because that
+         simplifies the test to see if it is within the needed
+         bounds. */
+      if (y > 0)
+        {
+          r = - mpz_cdiv_q_ui (q, zx, y);
+          scm_remember_upto_here_1 (x);
+          if (r < -y / 2)
+            mpz_sub_ui (q, q, 1);
+        }
+      else
+        {
+          r = - mpz_cdiv_q_ui (q, zx, -y);
+          scm_remember_upto_here_1 (x);
+          mpz_neg (q, q);
+          if (r < y / 2)
+            mpz_add_ui (q, q, 1);
+        }
+      return take_mpz (q);
+    }
+}
+
+SCM
+scm_integer_centered_quotient_zz (SCM x, SCM y)
+{
+  return integer_centered_quotient_zz (scm_bignum (x), scm_bignum (y));
 }
