@@ -1817,3 +1817,40 @@ scm_integer_gcd_zz (SCM x, SCM y)
   scm_remember_upto_here_2 (x, y);
   return take_mpz (result);
 }
+
+SCM
+scm_integer_lcm_ii (scm_t_inum x, scm_t_inum y)
+{
+  SCM d = scm_integer_gcd_ii (x, y);
+  if (scm_is_eq (d, SCM_INUM0))
+    return d;
+  else
+    return scm_abs (scm_product (SCM_I_MAKINUM (x),
+                                 scm_quotient (SCM_I_MAKINUM (y), d)));
+}
+
+SCM
+scm_integer_lcm_zi (SCM x, scm_t_inum y)
+{
+  if (y == 0) return SCM_INUM0;
+  if (y < 0) y = - y;
+  mpz_t result, zx;
+  mpz_init (result);
+  alias_bignum_to_mpz (scm_bignum (x), zx);
+  mpz_lcm_ui (result, zx, y);
+  scm_remember_upto_here_1 (x);
+  return take_mpz (result);
+}
+
+SCM
+scm_integer_lcm_zz (SCM x, SCM y)
+{
+  mpz_t result, zx, zy;
+  mpz_init (result);
+  alias_bignum_to_mpz (scm_bignum (x), zx);
+  alias_bignum_to_mpz (scm_bignum (y), zy);
+  mpz_lcm (result, zx, zy);
+  scm_remember_upto_here_2 (x, y);
+  /* shouldn't need to normalize b/c lcm of 2 bigs should be big */
+  return take_mpz (result);
+}

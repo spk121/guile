@@ -2844,33 +2844,15 @@ SCM_PRIMITIVE_GENERIC (scm_i_lcm, "lcm", 0, 2, 1,
 SCM
 scm_lcm (SCM n1, SCM n2)
 {
-  if (SCM_UNLIKELY (SCM_UNBNDP (n2)))
+  if (SCM_UNBNDP (n2))
     return SCM_UNBNDP (n1) ? SCM_INUM1 : scm_abs (n1);
 
-  if (SCM_LIKELY (SCM_I_INUMP (n1)))
+  if (SCM_I_INUMP (n1))
     {
-      if (SCM_LIKELY (SCM_I_INUMP (n2)))
-        {
-          SCM d = scm_gcd (n1, n2);
-          if (scm_is_eq (d, SCM_INUM0))
-            return d;
-          else
-            return scm_abs (scm_product (n1, scm_quotient (n2, d)));
-        }
-      else if (SCM_LIKELY (SCM_BIGP (n2)))
-        {
-          /* inum n1, big n2 */
-        inumbig:
-          {
-            SCM result = scm_i_mkbig ();
-            scm_t_inum nn1 = SCM_I_INUM (n1);
-            if (nn1 == 0) return SCM_INUM0;
-            if (nn1 < 0) nn1 = - nn1;
-            mpz_lcm_ui (SCM_I_BIG_MPZ (result), SCM_I_BIG_MPZ (n2), nn1);
-            scm_remember_upto_here_1 (n2);
-            return result;
-          }
-        }
+      if (SCM_I_INUMP (n2))
+        return scm_integer_lcm_ii (SCM_I_INUM (n1), SCM_I_INUM (n2));
+      else if (SCM_BIGP (n2))
+        return scm_integer_lcm_zi (n2, SCM_I_INUM (n1));
       else if (SCM_REALP (n2) && scm_is_integer (n2))
         goto handle_inexacts;
       else
@@ -2878,22 +2860,10 @@ scm_lcm (SCM n1, SCM n2)
     }
   else if (SCM_LIKELY (SCM_BIGP (n1)))
     {
-      /* big n1 */
       if (SCM_I_INUMP (n2))
-        {
-          SCM_SWAP (n1, n2);
-          goto inumbig;
-        }
-      else if (SCM_LIKELY (SCM_BIGP (n2)))
-        {
-          SCM result = scm_i_mkbig ();
-          mpz_lcm(SCM_I_BIG_MPZ (result),
-                  SCM_I_BIG_MPZ (n1),
-                  SCM_I_BIG_MPZ (n2));
-          scm_remember_upto_here_2(n1, n2);
-          /* shouldn't need to normalize b/c lcm of 2 bigs should be big */
-          return result;
-        }
+        return scm_integer_lcm_zi (n1, SCM_I_INUM (n2));
+      else if (SCM_BIGP (n2))
+        return scm_integer_lcm_zz (n1, n2);
       else if (SCM_REALP (n2) && scm_is_integer (n2))
         goto handle_inexacts;
       else

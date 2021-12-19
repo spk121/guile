@@ -128,6 +128,10 @@ SCM_INTERNAL SCM scm_integer_gcd_ii (scm_t_inum x, scm_t_inum y);
 SCM_INTERNAL SCM scm_integer_gcd_zi (SCM x, scm_t_inum y);
 SCM_INTERNAL SCM scm_integer_gcd_zz (SCM x, SCM y);
 
+SCM_INTERNAL SCM scm_integer_lcm_ii (scm_t_inum x, scm_t_inum y);
+SCM_INTERNAL SCM scm_integer_lcm_zi (SCM x, scm_t_inum y);
+SCM_INTERNAL SCM scm_integer_lcm_zz (SCM x, SCM y);
+
 
 
 #endif  /* SCM_INTEGERS_H */
