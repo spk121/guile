@@ -3155,23 +3155,9 @@ SCM_DEFINE (scm_logbit_p, "logbit?", 2, 0, 0,
   iindex = scm_to_ulong (index);
 
   if (SCM_I_INUMP (j))
-    {
-      if (iindex < SCM_LONG_BIT - 1)
-        /* Arrange for the number to be converted to unsigned before
-           checking the bit, to ensure that we're testing the bit in a
-           two's complement representation (regardless of the native
-           representation.  */
-        return scm_from_bool ((1UL << iindex) & SCM_I_INUM (j));
-      else
-        /* Portably check the sign.  */
-        return scm_from_bool (SCM_I_INUM (j) < 0);
-    }
+    return scm_from_bool (scm_integer_logbit_ui (iindex, SCM_I_INUM (j)));
   else if (SCM_BIGP (j))
-    {
-      int val = mpz_tstbit (SCM_I_BIG_MPZ (j), iindex);
-      scm_remember_upto_here_1 (j);
-      return scm_from_bool (val);
-    }
+    return scm_from_bool (scm_integer_logbit_uz (iindex, j));
   else
     SCM_WRONG_TYPE_ARG (SCM_ARG2, j);
 }

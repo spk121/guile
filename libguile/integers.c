@@ -2008,3 +2008,23 @@ scm_integer_logtest_zz (SCM x, SCM y)
 {
   return scm_is_eq (scm_integer_logand_zz (x, y), SCM_INUM0);
 }
+
+int
+scm_integer_logbit_ui (unsigned long index, scm_t_inum n)
+{
+  if (index < SCM_LONG_BIT)
+    /* Assume two's complement representation.  */
+    return (n >> index) & 1;
+  else
+    return n < 0;
+}
+
+int
+scm_integer_logbit_uz (unsigned long index, SCM n)
+{
+  mpz_t zn;
+  alias_bignum_to_mpz (scm_bignum (n), zn);
+  int val = mpz_tstbit (zn, index);
+  scm_remember_upto_here_1 (n);
+  return val;
+}
