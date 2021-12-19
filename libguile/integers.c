@@ -27,6 +27,7 @@
 #include <stdio.h>
 #include <verify.h>
 
+#include "boolean.h"
 #include "numbers.h"
 
 #include "integers.h"
@@ -1988,4 +1989,22 @@ scm_integer_logxor_zz (SCM x, SCM y)
   mpz_xor (result, zy, zx);
   scm_remember_upto_here_2 (x, y);
   return take_mpz (result);
+}
+
+int
+scm_integer_logtest_ii (scm_t_inum x, scm_t_inum y)
+{
+  return (x & y) ? 1 : 0;
+}
+
+int
+scm_integer_logtest_zi (SCM x, scm_t_inum y)
+{
+  return scm_is_eq (scm_integer_logand_zi (x, y), SCM_INUM0);
+}
+
+int
+scm_integer_logtest_zz (SCM x, SCM y)
+{
+  return scm_is_eq (scm_integer_logand_zz (x, y), SCM_INUM0);
 }

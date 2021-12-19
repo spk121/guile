@@ -3112,56 +3112,22 @@ SCM_DEFINE (scm_logtest, "logtest", 2, 0, 0,
 	    "@end lisp")
 #define FUNC_NAME s_scm_logtest
 {
-  scm_t_inum nj;
-
   if (SCM_I_INUMP (j))
     {
-      nj = SCM_I_INUM (j);
       if (SCM_I_INUMP (k))
-	{
-	  scm_t_inum nk = SCM_I_INUM (k);
-	  return scm_from_bool (nj & nk);
-	}
+        return scm_from_bool (scm_integer_logtest_ii (SCM_I_INUM (j),
+                                                      SCM_I_INUM (k)));
       else if (SCM_BIGP (k))
-	{
-	intbig: 
-	  if (nj == 0)
-	    return SCM_BOOL_F;
-	  {
-	    SCM result;
-	    mpz_t nj_z;
-	    mpz_init_set_si (nj_z, nj);
-	    mpz_and (nj_z, nj_z, SCM_I_BIG_MPZ (k));
-	    scm_remember_upto_here_1 (k);
-	    result = scm_from_bool (mpz_sgn (nj_z) != 0);
-	    mpz_clear (nj_z);
-	    return result;
-	  }
-	}
+        return scm_from_bool (scm_integer_logtest_zi (k, SCM_I_INUM (j)));
       else
 	SCM_WRONG_TYPE_ARG (SCM_ARG2, k);
     }
   else if (SCM_BIGP (j))
     {
       if (SCM_I_INUMP (k))
-	{
-	  SCM_SWAP (j, k);
-	  nj = SCM_I_INUM (j);
-	  goto intbig;
-	}
+        return scm_from_bool (scm_integer_logtest_zi (j, SCM_I_INUM (k)));
       else if (SCM_BIGP (k))
-	{
-	  SCM result;
-	  mpz_t result_z;
-	  mpz_init (result_z);
-	  mpz_and (result_z,
-		   SCM_I_BIG_MPZ (j),
-		   SCM_I_BIG_MPZ (k));
-	  scm_remember_upto_here_2 (j, k);
-	  result = scm_from_bool (mpz_sgn (result_z) != 0);
-	  mpz_clear (result_z);
-	  return result;
-	}
+        return scm_from_bool (scm_integer_logtest_zz (j, k));
       else
 	SCM_WRONG_TYPE_ARG (SCM_ARG2, k);
     }
