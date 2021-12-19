@@ -124,6 +124,10 @@ SCM_INTERNAL void scm_integer_round_divide_zi (SCM x, scm_t_inum y,
 SCM_INTERNAL void scm_integer_round_divide_zz (SCM x, SCM y,
                                                SCM *qp, SCM *rp);
 
+SCM_INTERNAL SCM scm_integer_gcd_ii (scm_t_inum x, scm_t_inum y);
+SCM_INTERNAL SCM scm_integer_gcd_zi (SCM x, scm_t_inum y);
+SCM_INTERNAL SCM scm_integer_gcd_zz (SCM x, SCM y);
+
 
 
 #endif  /* SCM_INTEGERS_H */

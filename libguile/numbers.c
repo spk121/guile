@@ -2782,68 +2782,15 @@ SCM_PRIMITIVE_GENERIC (scm_i_gcd, "gcd", 0, 2, 1,
 SCM
 scm_gcd (SCM x, SCM y)
 {
-  if (SCM_UNLIKELY (SCM_UNBNDP (y)))
+  if (SCM_UNBNDP (y))
     return SCM_UNBNDP (x) ? SCM_INUM0 : scm_abs (x);
   
-  if (SCM_LIKELY (SCM_I_INUMP (x)))
+  if (SCM_I_INUMP (x))
     {
-      if (SCM_LIKELY (SCM_I_INUMP (y)))
-        {
-          scm_t_inum xx = SCM_I_INUM (x);
-          scm_t_inum yy = SCM_I_INUM (y);
-          scm_t_inum u = xx < 0 ? -xx : xx;
-          scm_t_inum v = yy < 0 ? -yy : yy;
-          scm_t_inum result;
-          if (SCM_UNLIKELY (xx == 0))
-	    result = v;
-	  else if (SCM_UNLIKELY (yy == 0))
-	    result = u;
-	  else
-	    {
-	      int k = 0;
-	      /* Determine a common factor 2^k */
-	      while (((u | v) & 1) == 0)
-		{
-		  k++;
-		  u >>= 1;
-		  v >>= 1;
-		}
-	      /* Now, any factor 2^n can be eliminated */
-	      if ((u & 1) == 0)
-		while ((u & 1) == 0)
-		  u >>= 1;
-	      else
-		while ((v & 1) == 0)
-		  v >>= 1;
-	      /* Both u and v are now odd.  Subtract the smaller one
-		 from the larger one to produce an even number, remove
-		 more factors of two, and repeat. */
-	      while (u != v)
-		{
-		  if (u > v)
-		    {
-		      u -= v;
-		      while ((u & 1) == 0)
-			u >>= 1;
-		    }
-		  else
-		    {
-		      v -= u;
-		      while ((v & 1) == 0)
-			v >>= 1;
-		    }
-		}
-	      result = u << k;
-	    }
-          return (SCM_POSFIXABLE (result)
-		  ? SCM_I_MAKINUM (result)
-		  : scm_i_inum2big (result));
-        }
+      if (SCM_I_INUMP (y))
+        return scm_integer_gcd_ii (SCM_I_INUM (x), SCM_I_INUM (y));
       else if (SCM_BIGP (y))
-        {
-          SCM_SWAP (x, y);
-          goto big_inum;
-        }
+        return scm_integer_gcd_zi (y, SCM_I_INUM (x));
       else if (SCM_REALP (y) && scm_is_integer (y))
         goto handle_inexacts;
       else
@@ -2852,30 +2799,9 @@ scm_gcd (SCM x, SCM y)
   else if (SCM_BIGP (x))
     {
       if (SCM_I_INUMP (y))
-        {
-          scm_t_bits result;
-          scm_t_inum yy;
-        big_inum:
-          yy = SCM_I_INUM (y);
-          if (yy == 0)
-            return scm_abs (x);
-          if (yy < 0)
-	    yy = -yy;
-          result = mpz_gcd_ui (NULL, SCM_I_BIG_MPZ (x), yy);
-          scm_remember_upto_here_1 (x);
-          return (SCM_POSFIXABLE (result) 
-		  ? SCM_I_MAKINUM (result)
-		  : scm_from_unsigned_integer (result));
-        }
+        return scm_integer_gcd_zi (x, SCM_I_INUM (y));
       else if (SCM_BIGP (y))
-        {
-          SCM result = scm_i_mkbig ();
-          mpz_gcd (SCM_I_BIG_MPZ (result),
-		   SCM_I_BIG_MPZ (x),
-		   SCM_I_BIG_MPZ (y));
-          scm_remember_upto_here_2 (x, y);
-          return scm_i_normbig (result);
-        }
+        return scm_integer_gcd_zz (x, y);
       else if (SCM_REALP (y) && scm_is_integer (y))
         goto handle_inexacts;
       else

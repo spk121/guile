@@ -1742,3 +1742,78 @@ scm_integer_round_divide_zz (SCM x, SCM y, SCM *qp, SCM *rp)
 {
   integer_round_divide_zz (scm_bignum (x), scm_bignum (y), qp, rp);
 }
+
+SCM
+scm_integer_gcd_ii (scm_t_inum x, scm_t_inum y)
+{
+  scm_t_inum u = x < 0 ? -x : x;
+  scm_t_inum v = y < 0 ? -y : y;
+  scm_t_inum result;
+  if (x == 0)
+    result = v;
+  else if (y == 0)
+    result = u;
+  else
+    {
+      int k = 0;
+      /* Determine a common factor 2^k */
+      while (((u | v) & 1) == 0)
+        {
+          k++;
+          u >>= 1;
+          v >>= 1;
+        }
+      /* Now, any factor 2^n can be eliminated */
+      if ((u & 1) == 0)
+        while ((u & 1) == 0)
+          u >>= 1;
+      else
+        while ((v & 1) == 0)
+          v >>= 1;
+      /* Both u and v are now odd.  Subtract the smaller one
+         from the larger one to produce an even number, remove
+         more factors of two, and repeat. */
+      while (u != v)
+        {
+          if (u > v)
+            {
+              u -= v;
+              while ((u & 1) == 0)
+                u >>= 1;
+            }
+          else
+            {
+              v -= u;
+              while ((v & 1) == 0)
+                v >>= 1;
+            }
+        }
+      result = u << k;
+    }
+  return ulong_to_scm (result);
+}
+
+SCM
+scm_integer_gcd_zi (SCM x, scm_t_inum y)
+{
+  scm_t_bits result;
+  if (y == 0)
+    return scm_abs (x);
+  if (y < 0)
+    y = -y;
+  result = mpz_gcd_ui (NULL, SCM_I_BIG_MPZ (x), y);
+  scm_remember_upto_here_1 (x);
+  return ulong_to_scm (result);
+}
+
+SCM
+scm_integer_gcd_zz (SCM x, SCM y)
+{
+  mpz_t result, zx, zy;
+  mpz_init (result);
+  alias_bignum_to_mpz (scm_bignum (x), zx);
+  alias_bignum_to_mpz (scm_bignum (y), zy);
+  mpz_gcd (result, zx, zy);
+  scm_remember_upto_here_2 (x, y);
+  return take_mpz (result);
+}
