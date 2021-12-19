@@ -151,6 +151,9 @@ SCM_INTERNAL int scm_integer_logtest_zz (SCM x, SCM y);
 SCM_INTERNAL int scm_integer_logbit_ui (unsigned long bit, scm_t_inum n);
 SCM_INTERNAL int scm_integer_logbit_uz (unsigned long bit, SCM n);
 
+SCM_INTERNAL SCM scm_integer_lognot_i (scm_t_inum n);
+SCM_INTERNAL SCM scm_integer_lognot_z (SCM n);
+
 
 
 #endif  /* SCM_INTEGERS_H */

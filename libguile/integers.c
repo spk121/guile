@@ -2028,3 +2028,20 @@ scm_integer_logbit_uz (unsigned long index, SCM n)
   scm_remember_upto_here_1 (n);
   return val;
 }
+
+SCM
+scm_integer_lognot_i (scm_t_inum n)
+{
+  return SCM_I_MAKINUM (~n);
+}
+
+SCM
+scm_integer_lognot_z (SCM n)
+{
+  mpz_t result, zn;
+  mpz_init (result);
+  alias_bignum_to_mpz (scm_bignum (n), zn);
+  mpz_com (result, zn);
+  scm_remember_upto_here_1 (n);
+  return take_mpz (result);
+}
