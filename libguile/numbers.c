@@ -2945,8 +2945,6 @@ SCM_DEFINE (scm_i_logand, "logand", 0, 2, 1,
 SCM scm_logand (SCM n1, SCM n2)
 #define FUNC_NAME s_scm_logand
 {
-  scm_t_inum nn1;
-
   if (SCM_UNBNDP (n2))
     {
       if (SCM_UNBNDP (n1))
@@ -3007,8 +3005,6 @@ SCM_DEFINE (scm_i_logior, "logior", 0, 2, 1,
 SCM scm_logior (SCM n1, SCM n2)
 #define FUNC_NAME s_scm_logior
 {
-  scm_t_inum nn1;
-
   if (SCM_UNBNDP (n2))
     {
       if (SCM_UNBNDP (n1))
@@ -3021,47 +3017,19 @@ SCM scm_logior (SCM n1, SCM n2)
 
   if (SCM_I_INUMP (n1))
     {
-      nn1 = SCM_I_INUM (n1);
       if (SCM_I_INUMP (n2))
-	{
-	  long nn2 = SCM_I_INUM (n2);
-	  return SCM_I_MAKINUM (nn1 | nn2);
-	}
+        return scm_integer_logior_ii (SCM_I_INUM (n1), SCM_I_INUM (n2));
       else if (SCM_BIGP (n2))
-	{
-	intbig:
-	  if (nn1 == 0)
-	    return n2;
-	  {
-	    SCM result_z = scm_i_mkbig ();
-	    mpz_t nn1_z;
-	    mpz_init_set_si (nn1_z, nn1);
-	    mpz_ior (SCM_I_BIG_MPZ (result_z), nn1_z, SCM_I_BIG_MPZ (n2));
-	    scm_remember_upto_here_1 (n2);
-	    mpz_clear (nn1_z);
-	    return scm_i_normbig (result_z);
-	  }
-	}
+        return scm_integer_logior_zi (n2, SCM_I_INUM (n1));
       else
 	SCM_WRONG_TYPE_ARG (SCM_ARG2, n2);
     }
   else if (SCM_BIGP (n1))
     {
       if (SCM_I_INUMP (n2))
-	{
-	  SCM_SWAP (n1, n2); 
-	  nn1 = SCM_I_INUM (n1);
-	  goto intbig;
-	}
+        return scm_integer_logior_zi (n1, SCM_I_INUM (n2));
       else if (SCM_BIGP (n2))
-	{
-	  SCM result_z = scm_i_mkbig ();
-	  mpz_ior (SCM_I_BIG_MPZ (result_z),
-		   SCM_I_BIG_MPZ (n1),
-		   SCM_I_BIG_MPZ (n2));
-	  scm_remember_upto_here_2 (n1, n2);
-	  return scm_i_normbig (result_z);
-	}
+        return scm_integer_logior_zz (n1, n2);
       else
 	SCM_WRONG_TYPE_ARG (SCM_ARG2, n2);
     }

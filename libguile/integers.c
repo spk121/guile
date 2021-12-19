@@ -1924,3 +1924,37 @@ scm_integer_logand_zz (SCM x, SCM y)
   scm_remember_upto_here_2 (x, y);
   return take_mpz (result);
 }
+
+SCM
+scm_integer_logior_ii (scm_t_inum x, scm_t_inum y)
+{
+  return SCM_I_MAKINUM (x | y);
+}
+
+SCM
+scm_integer_logior_zi (SCM x, scm_t_inum y)
+{
+  if (y == 0)
+    return x;
+
+  mpz_t result, zx, zy;
+  mpz_init (result);
+  alias_bignum_to_mpz (scm_bignum (x), zx);
+  mpz_init_set_si (zy, y);
+  mpz_ior (result, zy, zx);
+  scm_remember_upto_here_1 (x);
+  mpz_clear (zy);
+  return take_mpz (result);
+}
+
+SCM
+scm_integer_logior_zz (SCM x, SCM y)
+{
+  mpz_t result, zx, zy;
+  mpz_init (result);
+  alias_bignum_to_mpz (scm_bignum (x), zx);
+  alias_bignum_to_mpz (scm_bignum (y), zy);
+  mpz_ior (result, zy, zx);
+  scm_remember_upto_here_2 (x, y);
+  return take_mpz (result);
+}

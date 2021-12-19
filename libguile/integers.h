@@ -136,6 +136,10 @@ SCM_INTERNAL SCM scm_integer_logand_ii (scm_t_inum x, scm_t_inum y);
 SCM_INTERNAL SCM scm_integer_logand_zi (SCM x, scm_t_inum y);
 SCM_INTERNAL SCM scm_integer_logand_zz (SCM x, SCM y);
 
+SCM_INTERNAL SCM scm_integer_logior_ii (scm_t_inum x, scm_t_inum y);
+SCM_INTERNAL SCM scm_integer_logior_zi (SCM x, scm_t_inum y);
+SCM_INTERNAL SCM scm_integer_logior_zz (SCM x, SCM y);
+
 
 
 #endif  /* SCM_INTEGERS_H */
