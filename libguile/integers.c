@@ -2045,3 +2045,60 @@ scm_integer_lognot_z (SCM n)
   scm_remember_upto_here_1 (n);
   return take_mpz (result);
 }
+
+static void
+integer_init_mpz (mpz_ptr z, SCM n)
+{
+  if (SCM_I_INUMP (n))
+    mpz_init_set_si (z, SCM_I_INUM (n));
+  else
+    {
+      ASSERT (SCM_BIGP (n));
+      mpz_t zn;
+      alias_bignum_to_mpz (scm_bignum (n), zn);
+      mpz_init_set (z, zn);
+      scm_remember_upto_here_1 (n);
+    }
+}
+
+SCM
+scm_integer_modulo_expt_nnn (SCM n, SCM k, SCM m)
+{
+  if (scm_is_eq (m, SCM_INUM0))
+    scm_num_overflow ("modulo-expt");
+
+  mpz_t n_tmp, k_tmp, m_tmp;
+
+  integer_init_mpz (n_tmp, n);
+  integer_init_mpz (k_tmp, k);
+  integer_init_mpz (m_tmp, m);
+
+  /* if the exponent K is negative, and we simply call mpz_powm, we
+     will get a divide-by-zero exception when an inverse 1/n mod m
+     doesn't exist (or is not unique).  Since exceptions are hard to
+     handle, we'll attempt the inversion "by hand" -- that way, we get
+     a simple failure code, which is easy to handle. */
+
+  if (-1 == mpz_sgn (k_tmp))
+    {
+      if (!mpz_invert (n_tmp, n_tmp, m_tmp))
+        {
+          mpz_clear (n_tmp);
+          mpz_clear (k_tmp);
+          mpz_clear (m_tmp);
+
+          scm_num_overflow ("modulo-expt");
+        }
+      mpz_neg (k_tmp, k_tmp);
+    }
+
+  mpz_powm (n_tmp, n_tmp, k_tmp, m_tmp);
+
+  if (mpz_sgn (m_tmp) < 0 && mpz_sgn (n_tmp) != 0)
+    mpz_add (n_tmp, n_tmp, m_tmp);
+
+  mpz_clear (m_tmp);
+  mpz_clear (k_tmp);
+
+  return take_mpz (n_tmp);
+}
