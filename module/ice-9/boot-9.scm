@@ -1,6 +1,6 @@
 ;;; -*- mode: scheme; coding: utf-8; -*-
 
-;;;; Copyright (C) 1995-2014, 2016-2021  Free Software Foundation, Inc.
+;;;; Copyright (C) 1995-2014, 2016-2022  Free Software Foundation, Inc.
 ;;;;
 ;;;; This library is free software; you can redistribute it and/or
 ;;;; modify it under the terms of the GNU Lesser General Public
@@ -4615,6 +4615,44 @@ when none is available, reading FILE-NAME with READER."
      (make-procedure-with-setter
       (lambda () (fluid-ref using-readline?))
       (lambda (v) (fluid-set! using-readline? v)))))
+
+
+
+;;; {Math helpers}
+;;;
+
+(define (integer-expt n k)
+  "Return @var{n} raised to the power @var{k}.  @var{k} must be an exact
+integer, @var{n} can be any number.
+
+Negative @var{k} is supported, and results in
+@math{1/@var{n}^abs(@var{k})} in the usual way.  @math{@var{n}^0} is 1,
+as usual, and that includes @math{0^0} is 1.
+
+@lisp
+(integer-expt 2 5)   @result{} 32
+(integer-expt -3 3)  @result{} -27
+(integer-expt 5 -3)  @result{} 1/125
+(integer-expt 0 0)   @result{} 1
+@end lisp"
+  (cond
+   ((not (exact-integer? k))
+    (scm-error 'wrong-type-arg "integer-expt"
+               "Wrong type (expected an exact integer): ~S"
+               (list k) #f))
+   ((negative? k)
+    (if (and (number? n) (zero? n))
+        +nan.0
+        (integer-expt (/ n) (- k))))
+   (else
+    (let lp ((acc 1) (k k) (n n))
+      (cond
+       ((eqv? k 0) acc)
+       ((eqv? k 1) (* acc n))
+       (else
+        (lp (if (odd? k) (* acc n) acc)
+            (ash k -1)
+            (* n n))))))))
 
 
 

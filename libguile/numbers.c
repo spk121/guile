@@ -61,6 +61,7 @@
 #include "boolean.h"
 #include "deprecation.h"
 #include "eq.h"
+#include "eval.h"
 #include "feature.h"
 #include "finalizers.h"
 #include "goops.h"
@@ -72,6 +73,8 @@
 #include "simpos.h"
 #include "smob.h"
 #include "strings.h"
+#include "threads.h"
+#include "variable.h"
 #include "values.h"
 
 #include "numbers.h"
@@ -3208,128 +3211,23 @@ SCM_DEFINE (scm_modulo_expt, "modulo-expt", 3, 0, 0,
 }
 #undef FUNC_NAME
 
-SCM_DEFINE (scm_integer_expt, "integer-expt", 2, 0, 0,
-            (SCM n, SCM k),
-	    "Return @var{n} raised to the power @var{k}.  @var{k} must be an\n"
-	    "exact integer, @var{n} can be any number.\n"
-	    "\n"
-	    "Negative @var{k} is supported, and results in\n"
-	    "@math{1/@var{n}^abs(@var{k})} in the usual way.\n"
-	    "@math{@var{n}^0} is 1, as usual, and that\n"
-	    "includes @math{0^0} is 1.\n"
-	    "\n"
-	    "@lisp\n"
-	    "(integer-expt 2 5)   @result{} 32\n"
-	    "(integer-expt -3 3)  @result{} -27\n"
-	    "(integer-expt 5 -3)  @result{} 1/125\n"
-	    "(integer-expt 0 0)   @result{} 1\n"
-	    "@end lisp")
-#define FUNC_NAME s_scm_integer_expt
+static SCM integer_expt_var;
+
+static void
+init_integer_expt_var (void)
 {
-  scm_t_inum i2 = 0;
-  SCM z_i2 = SCM_BOOL_F;
-  int i2_is_big = 0;
-  SCM acc = SCM_I_MAKINUM (1L);
-
-  /* Specifically refrain from checking the type of the first argument.
-     This allows us to exponentiate any object that can be multiplied.
-     If we must raise to a negative power, we must also be able to
-     take its reciprocal. */
-  if (!SCM_LIKELY (SCM_I_INUMP (k)) && !SCM_LIKELY (SCM_BIGP (k)))
-    SCM_WRONG_TYPE_ARG (2, k);
-
-  if (SCM_UNLIKELY (scm_is_eq (k, SCM_INUM0)))
-    return SCM_INUM1;  /* n^(exact0) is exact 1, regardless of n */
-  else if (SCM_UNLIKELY (scm_is_eq (n, SCM_I_MAKINUM (-1L))))
-    return scm_is_false (scm_even_p (k)) ? n : SCM_INUM1;
-  /* The next check is necessary only because R6RS specifies different
-     behavior for 0^(-k) than for (/ 0).  If n is not a scheme number,
-     we simply skip this case and move on. */
-  else if (SCM_NUMBERP (n) && scm_is_true (scm_zero_p (n)))
-    {
-      /* k cannot be 0 at this point, because we
-	 have already checked for that case above */
-      if (scm_is_true (scm_positive_p (k)))
-	return n;
-      else  /* return NaN for (0 ^ k) for negative k per R6RS */
-	return scm_nan ();
-    }
-  else if (SCM_FRACTIONP (n))
-    {
-      /* Optimize the fraction case by (a/b)^k ==> (a^k)/(b^k), to avoid
-         needless reduction of intermediate products to lowest terms.
-         If a and b have no common factors, then a^k and b^k have no
-         common factors.  Use 'scm_i_make_ratio_already_reduced' to
-         construct the final result, so that no gcd computations are
-         needed to exponentiate a fraction.  */
-      if (scm_is_true (scm_positive_p (k)))
-	return scm_i_make_ratio_already_reduced
-	  (scm_integer_expt (SCM_FRACTION_NUMERATOR (n), k),
-	   scm_integer_expt (SCM_FRACTION_DENOMINATOR (n), k));
-      else
-	{
-	  k = scm_difference (k, SCM_UNDEFINED);
-	  return scm_i_make_ratio_already_reduced
-	    (scm_integer_expt (SCM_FRACTION_DENOMINATOR (n), k),
-	     scm_integer_expt (SCM_FRACTION_NUMERATOR (n), k));
-	}
-    }
-
-  if (SCM_I_INUMP (k))
-    i2 = SCM_I_INUM (k);
-  else if (SCM_BIGP (k))
-    {
-      z_i2 = scm_i_clonebig (k, 1);
-      scm_remember_upto_here_1 (k);
-      i2_is_big = 1;
-    }
-  else
-    SCM_WRONG_TYPE_ARG (2, k);
-  
-  if (i2_is_big)
-    {
-      if (mpz_sgn(SCM_I_BIG_MPZ (z_i2)) == -1)
-        {
-          mpz_neg (SCM_I_BIG_MPZ (z_i2), SCM_I_BIG_MPZ (z_i2));
-          n = scm_divide (n, SCM_UNDEFINED);
-        }
-      while (1)
-        {
-          if (mpz_sgn(SCM_I_BIG_MPZ (z_i2)) == 0)
-            {
-              return acc;
-            }
-          if (mpz_cmp_ui(SCM_I_BIG_MPZ (z_i2), 1) == 0)
-            {
-              return scm_product (acc, n);
-            }
-          if (mpz_tstbit(SCM_I_BIG_MPZ (z_i2), 0))
-            acc = scm_product (acc, n);
-          n = scm_product (n, n);
-          mpz_fdiv_q_2exp (SCM_I_BIG_MPZ (z_i2), SCM_I_BIG_MPZ (z_i2), 1);
-        }
-    }
-  else
-    {
-      if (i2 < 0)
-        {
-          i2 = -i2;
-          n = scm_divide (n, SCM_UNDEFINED);
-        }
-      while (1)
-        {
-          if (0 == i2)
-            return acc;
-          if (1 == i2)
-            return scm_product (acc, n);
-          if (i2 & 1)
-            acc = scm_product (acc, n);
-          n = scm_product (n, n);
-          i2 >>= 1;
-        }
-    }
+  integer_expt_var = scm_c_module_lookup (scm_the_root_module (),
+                                          "integer-expt");
 }
-#undef FUNC_NAME
+
+SCM
+scm_integer_expt (SCM n, SCM k)
+{
+  static scm_i_pthread_once_t once = SCM_I_PTHREAD_ONCE_INIT;
+  scm_i_pthread_once (&once, init_integer_expt_var);
+
+  return scm_call_2 (scm_variable_ref (integer_expt_var), n, k);
+}
 
 /* Efficiently compute (N * 2^COUNT),
    where N is an exact integer, and COUNT > 0. */
