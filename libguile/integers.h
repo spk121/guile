@@ -1,7 +1,7 @@
 #ifndef SCM_INTEGERS_H
 #define SCM_INTEGERS_H
 
-/* Copyright 2021 Free Software Foundation, Inc.
+/* Copyright 2021, 2022 Free Software Foundation, Inc.
 
    This file is part of Guile.
 
@@ -140,6 +140,9 @@ SCM_INTERNAL SCM scm_integer_bit_extract_z (struct scm_bignum *n,
 
 SCM_INTERNAL SCM scm_integer_logcount_i (scm_t_inum n);
 SCM_INTERNAL SCM scm_integer_logcount_z (struct scm_bignum *n);
+
+SCM_INTERNAL SCM scm_integer_length_i (scm_t_inum n);
+SCM_INTERNAL SCM scm_integer_length_z (struct scm_bignum *n);
 
 
 

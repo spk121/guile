@@ -2291,3 +2291,39 @@ scm_integer_logcount_z (struct scm_bignum *n)
   scm_remember_upto_here_1 (n);
   return scm_from_ulong (count);
 }
+
+static const char scm_ilentab[] = {
+  0, 1, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 4, 4
+};
+
+SCM
+scm_integer_length_i (scm_t_inum n)
+{
+  unsigned long c = 0;
+  unsigned int l = 4;
+  if (n < 0)
+    n = -1 - n;
+  while (n)
+    {
+      c += 4;
+      l = scm_ilentab [15 & n];
+      n >>= 4;
+    }
+  return SCM_I_MAKINUM (c - 4 + l);
+}
+
+SCM
+scm_integer_length_z (struct scm_bignum *n)
+{
+  /* mpz_sizeinbase looks at the absolute value of negatives, whereas we
+     want a ones-complement.  If n is ...111100..00 then mpz_sizeinbase is
+     1 too big, so check for that and adjust.  */
+  mpz_t zn;
+  alias_bignum_to_mpz (n, zn);
+  size_t size = mpz_sizeinbase (zn, 2);
+  /* If negative and no 0 bits above the lowest 1, adjust result.  */
+  if (mpz_sgn (zn) < 0 && mpz_scan0 (zn, mpz_scan1 (zn, 0)) == ULONG_MAX)
+    size--;
+  scm_remember_upto_here_1 (n);
+  return scm_from_size_t (size);
+}

@@ -3409,12 +3409,6 @@ SCM_DEFINE (scm_logcount, "logcount", 1, 0, 0,
 }
 #undef FUNC_NAME
 
-
-static const char scm_ilentab[] = {
-  0, 1, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 4, 4
-};
-
-
 SCM_DEFINE (scm_integer_length, "integer-length", 1, 0, 0,
             (SCM n),
 	    "Return the number of bits necessary to represent @var{n}.\n"
@@ -3430,33 +3424,9 @@ SCM_DEFINE (scm_integer_length, "integer-length", 1, 0, 0,
 #define FUNC_NAME s_scm_integer_length
 {
   if (SCM_I_INUMP (n))
-    {
-      unsigned long c = 0;
-      unsigned int l = 4;
-      scm_t_inum nn = SCM_I_INUM (n);
-      if (nn < 0)
-	nn = -1 - nn;
-      while (nn)
-	{
-	  c += 4;
-	  l = scm_ilentab [15 & nn];
-	  nn >>= 4;
-	}
-      return SCM_I_MAKINUM (c - 4 + l);
-    }
+    return scm_integer_length_i (SCM_I_INUM (n));
   else if (SCM_BIGP (n))
-    {
-      /* mpz_sizeinbase looks at the absolute value of negatives, whereas we
-	 want a ones-complement.  If n is ...111100..00 then mpz_sizeinbase is
-	 1 too big, so check for that and adjust.  */
-      size_t size = mpz_sizeinbase (SCM_I_BIG_MPZ (n), 2);
-      if (mpz_sgn (SCM_I_BIG_MPZ (n)) < 0
-	  && mpz_scan0 (SCM_I_BIG_MPZ (n),  /* no 0 bits above the lowest 1 */
-			mpz_scan1 (SCM_I_BIG_MPZ (n), 0)) == ULONG_MAX)
-	size--;
-      scm_remember_upto_here_1 (n);
-      return SCM_I_MAKINUM (size);
-    }
+    return scm_integer_length_z (scm_bignum (n));
   else
     SCM_WRONG_TYPE_ARG (SCM_ARG1, n);
 }
