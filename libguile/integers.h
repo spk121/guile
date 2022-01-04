@@ -147,6 +147,15 @@ SCM_INTERNAL SCM scm_integer_length_z (struct scm_bignum *n);
 SCM_INTERNAL SCM scm_integer_to_string_i (scm_t_inum n, int base);
 SCM_INTERNAL SCM scm_integer_to_string_z (struct scm_bignum *n, int base);
 
+SCM_INTERNAL int scm_is_integer_equal_ir (scm_t_inum x, double y);
+SCM_INTERNAL int scm_is_integer_equal_ic (scm_t_inum x,
+                                          double real, double imag);
+SCM_INTERNAL int scm_is_integer_equal_zz (struct scm_bignum *x,
+                                          struct scm_bignum *y);
+SCM_INTERNAL int scm_is_integer_equal_zr (struct scm_bignum *x, double y);
+SCM_INTERNAL int scm_is_integer_equal_zc (struct scm_bignum *x,
+                                          double real, double imag);
+
 
 
 #endif  /* SCM_INTEGERS_H */

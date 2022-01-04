@@ -23,6 +23,7 @@
 # include <config.h>
 #endif
 
+#include <math.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -2352,4 +2353,61 @@ scm_integer_to_string_z (struct scm_bignum *n, int base)
   SCM ret = scm_from_latin1_stringn (str, len);
   freefunc (str, len + 1);
   return ret;
+}
+
+int
+scm_is_integer_equal_ir (scm_t_inum x, double y)
+{
+  /* On a 32-bit system an inum fits a double, we can cast the inum
+     to a double and compare.
+
+     But on a 64-bit system an inum is bigger than a double and casting
+     it to a double (call that dx) will round.  Although dxx will not in
+     general be equal to x, dx will always be an integer and within a
+     factor of 2 of x, so if dx==y, we know that y is an integer and
+     fits in scm_t_signed_bits.  So we cast y to scm_t_signed_bits and
+     compare with plain x.
+
+     An alternative (for any size system actually) would be to check y
+     is an integer (with floor) and is in range of an inum (compare
+     against appropriate powers of 2) then test x==(scm_t_inum)y.  It's
+     just a matter of which casts/comparisons might be fastest or
+     easiest for the cpu.  */
+  return (double) x == y
+    && (DBL_MANT_DIG >= SCM_I_FIXNUM_BIT-1 || x == (scm_t_inum) y);
+}
+
+int
+scm_is_integer_equal_ic (scm_t_inum x, double real, double imag)
+{
+  return imag == 0.0 && scm_is_integer_equal_ir (x, real);
+}
+
+int
+scm_is_integer_equal_zz (struct scm_bignum *x, struct scm_bignum *y)
+{
+  mpz_t zx, zy;
+  alias_bignum_to_mpz (x, zx);
+  alias_bignum_to_mpz (y, zy);
+  int cmp = mpz_cmp (zx, zy);
+  scm_remember_upto_here_2 (x, y);
+  return 0 == cmp;
+}
+
+int
+scm_is_integer_equal_zr (struct scm_bignum *x, double y)
+{
+  if (isnan (y))
+    return 0;
+  mpz_t zx;
+  alias_bignum_to_mpz (x, zx);
+  int cmp = mpz_cmp_d (zx, y);
+  scm_remember_upto_here_1 (x);
+  return 0 == cmp;
+}
+
+int
+scm_is_integer_equal_zc (struct scm_bignum *x, double real, double imag)
+{
+  return imag == 0.0 && scm_is_integer_equal_zr (x, real);
 }

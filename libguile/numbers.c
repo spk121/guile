@@ -4639,205 +4639,83 @@ SCM_PRIMITIVE_GENERIC (scm_i_num_eq_p, "=", 0, 2, 1,
   return scm_num_eq_p (x, y);
 }
 #undef FUNC_NAME
+
 SCM
 scm_num_eq_p (SCM x, SCM y)
 {
- again:
   if (SCM_I_INUMP (x))
     {
-      scm_t_signed_bits xx = SCM_I_INUM (x);
       if (SCM_I_INUMP (y))
-	{
-	  scm_t_signed_bits yy = SCM_I_INUM (y);
-	  return scm_from_bool (xx == yy);
-	}
+	return scm_eq_p (x, y);
       else if (SCM_BIGP (y))
 	return SCM_BOOL_F;
       else if (SCM_REALP (y))
-        {
-          /* On a 32-bit system an inum fits a double, we can cast the inum
-             to a double and compare.
-
-             But on a 64-bit system an inum is bigger than a double and
-             casting it to a double (call that dxx) will round.
-             Although dxx will not in general be equal to xx, dxx will
-             always be an integer and within a factor of 2 of xx, so if
-             dxx==yy, we know that yy is an integer and fits in
-             scm_t_signed_bits.  So we cast yy to scm_t_signed_bits and
-             compare with plain xx.
-
-             An alternative (for any size system actually) would be to check
-             yy is an integer (with floor) and is in range of an inum
-             (compare against appropriate powers of 2) then test
-             xx==(scm_t_signed_bits)yy.  It's just a matter of which
-             casts/comparisons might be fastest or easiest for the cpu.  */
-
-          double yy = SCM_REAL_VALUE (y);
-          return scm_from_bool ((double) xx == yy
-				&& (DBL_MANT_DIG >= SCM_I_FIXNUM_BIT-1
-				    || xx == (scm_t_signed_bits) yy));
-        }
+        return scm_from_bool
+          (scm_is_integer_equal_ir (SCM_I_INUM (x), SCM_REAL_VALUE (y)));
       else if (SCM_COMPLEXP (y))
-        {
-          /* see comments with inum/real above */
-          double ry = SCM_COMPLEX_REAL (y);
-          return scm_from_bool ((double) xx == ry
-                                && 0.0 == SCM_COMPLEX_IMAG (y)
-                                && (DBL_MANT_DIG >= SCM_I_FIXNUM_BIT-1
-                                    || xx == (scm_t_signed_bits) ry));
-        }
+        return scm_from_bool
+          (scm_is_integer_equal_ic (SCM_I_INUM (x), SCM_COMPLEX_REAL (y),
+                                    SCM_COMPLEX_IMAG (y)));
       else if (SCM_FRACTIONP (y))
 	return SCM_BOOL_F;
       else
-	return scm_wta_dispatch_2 (g_scm_i_num_eq_p, x, y, SCM_ARGn,
-                                   s_scm_i_num_eq_p);
+        return scm_num_eq_p (y, x);
     }
   else if (SCM_BIGP (x))
     {
-      if (SCM_I_INUMP (y))
-	return SCM_BOOL_F;
-      else if (SCM_BIGP (y))
-	{
-	  int cmp = mpz_cmp (SCM_I_BIG_MPZ (x), SCM_I_BIG_MPZ (y));
-	  scm_remember_upto_here_2 (x, y);
-	  return scm_from_bool (0 == cmp);
-	}
+      if (SCM_BIGP (y))
+        return scm_from_bool
+          (scm_is_integer_equal_zz (scm_bignum (x), scm_bignum (y)));
       else if (SCM_REALP (y))
-	{
-	  int cmp;
-	  if (isnan (SCM_REAL_VALUE (y)))
-	    return SCM_BOOL_F;
-	  cmp = xmpz_cmp_d (SCM_I_BIG_MPZ (x), SCM_REAL_VALUE (y));
-	  scm_remember_upto_here_1 (x);
-	  return scm_from_bool (0 == cmp);
-	}
+        return scm_from_bool
+          (scm_is_integer_equal_zr (scm_bignum (x), SCM_REAL_VALUE (y)));
       else if (SCM_COMPLEXP (y))
-	{
-	  int cmp;
-	  if (0.0 != SCM_COMPLEX_IMAG (y))
-	    return SCM_BOOL_F;
-	  if (isnan (SCM_COMPLEX_REAL (y)))
-	    return SCM_BOOL_F;
-	  cmp = xmpz_cmp_d (SCM_I_BIG_MPZ (x), SCM_COMPLEX_REAL (y));
-	  scm_remember_upto_here_1 (x);
-	  return scm_from_bool (0 == cmp);
-	}
+        return scm_from_bool
+          (scm_is_integer_equal_zc (scm_bignum (x), SCM_COMPLEX_REAL (y),
+                                    SCM_COMPLEX_IMAG (y)));
       else if (SCM_FRACTIONP (y))
 	return SCM_BOOL_F;
       else
-	return scm_wta_dispatch_2 (g_scm_i_num_eq_p, x, y, SCM_ARGn,
-                                   s_scm_i_num_eq_p);
+        return scm_num_eq_p (y, x);
     }
   else if (SCM_REALP (x))
     {
-      double xx = SCM_REAL_VALUE (x);
-      if (SCM_I_INUMP (y))
-        {
-          /* see comments with inum/real above */
-          scm_t_signed_bits yy = SCM_I_INUM (y);
-          return scm_from_bool (xx == (double) yy
-				&& (DBL_MANT_DIG >= SCM_I_FIXNUM_BIT-1
-				    || (scm_t_signed_bits) xx == yy));
-        }
-      else if (SCM_BIGP (y))
-	{
-	  int cmp;
-	  if (isnan (xx))
-	    return SCM_BOOL_F;
-	  cmp = xmpz_cmp_d (SCM_I_BIG_MPZ (y), xx);
-	  scm_remember_upto_here_1 (y);
-	  return scm_from_bool (0 == cmp);
-	}
-      else if (SCM_REALP (y))
-	return scm_from_bool (xx == SCM_REAL_VALUE (y));
+      if (SCM_REALP (y))
+	return scm_from_bool (SCM_REAL_VALUE (x) == SCM_REAL_VALUE (y));
       else if (SCM_COMPLEXP (y))
-	return scm_from_bool ((xx == SCM_COMPLEX_REAL (y))
-                              && (0.0 == SCM_COMPLEX_IMAG (y)));
+	return scm_from_bool (SCM_COMPLEX_IMAG (y) == 0.0
+                              && SCM_REAL_VALUE (x) == SCM_COMPLEX_REAL (y));
       else if (SCM_FRACTIONP (y))
         {
-          if (isnan (xx) || isinf (xx))
+          if (isnan (SCM_REAL_VALUE (x)) || isinf (SCM_REAL_VALUE (x)))
             return SCM_BOOL_F;
-          x = scm_inexact_to_exact (x);  /* with x as frac or int */
-          goto again;
+          return scm_num_eq_p (scm_inexact_to_exact (x), y);
         }
       else
-	return scm_wta_dispatch_2 (g_scm_i_num_eq_p, x, y, SCM_ARGn,
-                                   s_scm_i_num_eq_p);
+        return scm_num_eq_p (y, x);
     }
   else if (SCM_COMPLEXP (x))
     {
-      if (SCM_I_INUMP (y))
-        {
-          /* see comments with inum/real above */
-          double rx = SCM_COMPLEX_REAL (x);
-          scm_t_signed_bits yy = SCM_I_INUM (y);
-          return scm_from_bool (rx == (double) yy
-                                && 0.0 == SCM_COMPLEX_IMAG (x)
-                                && (DBL_MANT_DIG >= SCM_I_FIXNUM_BIT-1
-                                    || (scm_t_signed_bits) rx == yy));
-        }
-      else if (SCM_BIGP (y))
-	{
-	  int cmp;
-	  if (0.0 != SCM_COMPLEX_IMAG (x))
-	    return SCM_BOOL_F;
-	  if (isnan (SCM_COMPLEX_REAL (x)))
-	    return SCM_BOOL_F;
-	  cmp = xmpz_cmp_d (SCM_I_BIG_MPZ (y), SCM_COMPLEX_REAL (x));
-	  scm_remember_upto_here_1 (y);
-	  return scm_from_bool (0 == cmp);
-	}
-      else if (SCM_REALP (y))
-	return scm_from_bool ((SCM_COMPLEX_REAL (x) == SCM_REAL_VALUE (y))
-                              && (SCM_COMPLEX_IMAG (x) == 0.0));
-      else if (SCM_COMPLEXP (y))
+      if (SCM_COMPLEXP (y))
 	return scm_from_bool ((SCM_COMPLEX_REAL (x) == SCM_COMPLEX_REAL (y))
                               && (SCM_COMPLEX_IMAG (x) == SCM_COMPLEX_IMAG (y)));
       else if (SCM_FRACTIONP (y))
         {
-          double  xx;
-          if (SCM_COMPLEX_IMAG (x) != 0.0)
+          if (SCM_COMPLEX_IMAG (x) != 0.0
+              || isnan (SCM_COMPLEX_REAL (x))
+              || isinf (SCM_COMPLEX_REAL (x)))
             return SCM_BOOL_F;
-          xx = SCM_COMPLEX_REAL (x);
-          if (isnan (xx) || isinf (xx))
-            return SCM_BOOL_F;
-          x = scm_inexact_to_exact (x);  /* with x as frac or int */
-          goto again;
+          return scm_num_eq_p (scm_inexact_to_exact (x), y);
         }
       else
-	return scm_wta_dispatch_2 (g_scm_i_num_eq_p, x, y, SCM_ARGn,
-                                   s_scm_i_num_eq_p);
+        return scm_num_eq_p (y, x);
     }
   else if (SCM_FRACTIONP (x))
     {
-      if (SCM_I_INUMP (y))
-	return SCM_BOOL_F;
-      else if (SCM_BIGP (y))
-	return SCM_BOOL_F;
-      else if (SCM_REALP (y))
-        {
-          double yy = SCM_REAL_VALUE (y);
-          if (isnan (yy) || isinf (yy))
-            return SCM_BOOL_F;
-          y = scm_inexact_to_exact (y);  /* with y as frac or int */
-          goto again;
-        }
-      else if (SCM_COMPLEXP (y))
-        {
-          double yy;
-          if (SCM_COMPLEX_IMAG (y) != 0.0)
-            return SCM_BOOL_F;
-          yy = SCM_COMPLEX_REAL (y);
-          if (isnan (yy) || isinf(yy))
-            return SCM_BOOL_F;
-          y = scm_inexact_to_exact (y);  /* with y as frac or int */
-          goto again;
-        }
-      else if (SCM_FRACTIONP (y))
+      if (SCM_FRACTIONP (y))
 	return scm_i_fraction_equalp (x, y);
       else
-	return scm_wta_dispatch_2 (g_scm_i_num_eq_p, x, y, SCM_ARGn,
-                                   s_scm_i_num_eq_p);
+        return scm_num_eq_p (y, x);
     }
   else
     return scm_wta_dispatch_2 (g_scm_i_num_eq_p, x, y, SCM_ARG1,
