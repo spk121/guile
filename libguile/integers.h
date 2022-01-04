@@ -163,6 +163,11 @@ SCM_INTERNAL SCM scm_integer_floor_rsh_zu (SCM n, unsigned long count);
 SCM_INTERNAL SCM scm_integer_round_rsh_iu (scm_t_inum n, unsigned long count);
 SCM_INTERNAL SCM scm_integer_round_rsh_zu (SCM n, unsigned long count);
 
+SCM_INTERNAL SCM scm_integer_bit_extract_i (scm_t_inum n, unsigned long start,
+                                            unsigned long bits);
+SCM_INTERNAL SCM scm_integer_bit_extract_z (SCM n, unsigned long start,
+                                            unsigned long bits);
+
 
 
 #endif  /* SCM_INTEGERS_H */

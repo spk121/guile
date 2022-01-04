@@ -2204,3 +2204,53 @@ scm_integer_round_rsh_zu (SCM n, unsigned long count)
   scm_remember_upto_here_1 (n);
   return take_mpz (q);
 }
+
+#define MIN(A, B) ((A) <= (B) ? (A) : (B))
+
+SCM
+scm_integer_bit_extract_i (scm_t_inum n, unsigned long start,
+                           unsigned long bits)
+{
+  /* When istart>=SCM_I_FIXNUM_BIT we can just limit the shift to
+     SCM_I_FIXNUM_BIT-1 to get either 0 or -1 per the sign of "n". */
+  n = SCM_SRS (n, MIN (start, SCM_I_FIXNUM_BIT-1));
+
+  if (n < 0 && bits >= SCM_I_FIXNUM_BIT)
+    {
+      /* Since we emulate two's complement encoded numbers, this special
+         case requires us to produce a result that has more bits than
+         can be stored in a fixnum.  */
+      mpz_t result;
+      mpz_init_set_si (result, n);
+      mpz_fdiv_r_2exp (result, result, bits);
+      return take_mpz (result);
+    }
+
+  /* mask down to requisite bits */
+  bits = MIN (bits, SCM_I_FIXNUM_BIT);
+  return SCM_I_MAKINUM (n & ((1L << bits) - 1));
+}
+
+SCM
+scm_integer_bit_extract_z (SCM n, unsigned long start, unsigned long bits)
+{
+  mpz_t zn;
+  alias_bignum_to_mpz (scm_bignum (n), zn);
+
+  if (bits == 1)
+    {
+      int bit = mpz_tstbit (zn, start);
+      scm_remember_upto_here_1 (n);
+      return SCM_I_MAKINUM (bit);
+    }
+
+  /* ENHANCE-ME: It'd be nice not to allocate a new bignum when
+     bits<SCM_I_FIXNUM_BIT.  Would want some help from GMP to get
+     such bits into a ulong.  */
+  mpz_t result;
+  mpz_init (result);
+  mpz_fdiv_q_2exp (result, zn, start);
+  mpz_fdiv_r_2exp (result, result, bits);
+  scm_remember_upto_here_1 (n);
+  return take_mpz (result);
+}

@@ -3340,9 +3340,6 @@ SCM_DEFINE (scm_round_ash, "round-ash", 2, 0, 0,
 }
 #undef FUNC_NAME
 
-
-#define MIN(A, B) ((A) <= (B) ? (A) : (B))
-
 SCM_DEFINE (scm_bit_extract, "bit-extract", 3, 0, 0,
             (SCM n, SCM start, SCM end),
 	    "Return the integer composed of the @var{start} (inclusive)\n"
@@ -3357,60 +3354,18 @@ SCM_DEFINE (scm_bit_extract, "bit-extract", 3, 0, 0,
 	    "@end lisp")
 #define FUNC_NAME s_scm_bit_extract
 {
-  unsigned long int istart, iend, bits;
-  istart = scm_to_ulong (start);
-  iend = scm_to_ulong (end);
-  SCM_ASSERT_RANGE (3, end, (iend >= istart));
+  if (!scm_is_exact_integer (n))
+    SCM_WRONG_TYPE_ARG (SCM_ARG1, n);
 
-  /* how many bits to keep */
-  bits = iend - istart;
+  unsigned long istart = scm_to_ulong (start);
+  unsigned long iend = scm_to_ulong (end);
+  SCM_ASSERT_RANGE (3, end, (iend >= istart));
+  unsigned long bits = iend - istart;
 
   if (SCM_I_INUMP (n))
-    {
-      scm_t_inum in = SCM_I_INUM (n);
-
-      /* When istart>=SCM_I_FIXNUM_BIT we can just limit the shift to
-         SCM_I_FIXNUM_BIT-1 to get either 0 or -1 per the sign of "in". */
-      in = SCM_SRS (in, MIN (istart, SCM_I_FIXNUM_BIT-1));
-
-      if (in < 0 && bits >= SCM_I_FIXNUM_BIT)
-	{
-	  /* Since we emulate two's complement encoded numbers, this
-	   * special case requires us to produce a result that has
-	   * more bits than can be stored in a fixnum.
-	   */
-          SCM result = scm_i_inum2big (in);
-          mpz_fdiv_r_2exp (SCM_I_BIG_MPZ (result), SCM_I_BIG_MPZ (result),
-                           bits);
-          return result;
-	}
-
-      /* mask down to requisite bits */
-      bits = MIN (bits, SCM_I_FIXNUM_BIT);
-      return SCM_I_MAKINUM (in & ((1L << bits) - 1));
-    }
-  else if (SCM_BIGP (n))
-    {
-      SCM result;
-      if (bits == 1)
-        {
-          result = SCM_I_MAKINUM (mpz_tstbit (SCM_I_BIG_MPZ (n), istart));
-        }
-      else
-        {
-          /* ENHANCE-ME: It'd be nice not to allocate a new bignum when
-             bits<SCM_I_FIXNUM_BIT.  Would want some help from GMP to get
-             such bits into a ulong.  */
-          result = scm_i_mkbig ();
-          mpz_fdiv_q_2exp (SCM_I_BIG_MPZ(result), SCM_I_BIG_MPZ(n), istart);
-          mpz_fdiv_r_2exp (SCM_I_BIG_MPZ(result), SCM_I_BIG_MPZ(result), bits);
-          result = scm_i_normbig (result);
-        }
-      scm_remember_upto_here_1 (n);
-      return result;
-    }
+    return scm_integer_bit_extract_i (SCM_I_INUM (n), istart, bits);
   else
-    SCM_WRONG_TYPE_ARG (SCM_ARG1, n);
+    return scm_integer_bit_extract_z (n, istart, bits);
 }
 #undef FUNC_NAME
 
