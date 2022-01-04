@@ -1,4 +1,4 @@
-/* Copyright 1995-2016,2018-2021
+/* Copyright 1995-2016,2018-2022
      Free Software Foundation, Inc.
 
    This file is part of Guile.
@@ -2101,4 +2101,106 @@ scm_integer_modulo_expt_nnn (SCM n, SCM k, SCM m)
   mpz_clear (k_tmp);
 
   return take_mpz (n_tmp);
+}
+
+/* Efficiently compute (N * 2^COUNT), where N is an exact integer, and
+   COUNT > 0. */
+SCM
+scm_integer_lsh_iu (scm_t_inum n, unsigned long count)
+{
+  ASSERT (count > 0);
+  /* Left shift of count >= SCM_I_FIXNUM_BIT-1 will almost[*] always
+     overflow a non-zero fixnum.  For smaller shifts we check the
+     bits going into positions above SCM_I_FIXNUM_BIT-1.  If they're
+     all 0s for nn>=0, or all 1s for nn<0 then there's no overflow.
+     Those bits are "nn >> (SCM_I_FIXNUM_BIT-1 - count)".
+
+     [*] There's one exception:
+     (-1) << SCM_I_FIXNUM_BIT-1 == SCM_MOST_NEGATIVE_FIXNUM  */
+
+  if (n == 0)
+    return SCM_I_MAKINUM (n);
+  else if (count < SCM_I_FIXNUM_BIT-1 &&
+           ((scm_t_bits) (SCM_SRS (n, (SCM_I_FIXNUM_BIT-1 - count)) + 1)
+            <= 1))
+    return SCM_I_MAKINUM (n < 0 ? -(-n << count) : (n << count));
+  else
+    {
+      mpz_t result;
+      mpz_init_set_si (result, n);
+      mpz_mul_2exp (result, result, count);
+      return take_mpz (result);
+    }
+}
+
+SCM
+scm_integer_lsh_zu (SCM n, unsigned long count)
+{
+  ASSERT (count > 0);
+  mpz_t result, zn;
+  mpz_init (result);
+  alias_bignum_to_mpz (scm_bignum (n), zn);
+  mpz_mul_2exp (result, zn, count);
+  scm_remember_upto_here_1 (n);
+  return take_mpz (result);
+}
+
+/* Efficiently compute floor (N / 2^COUNT), where N is an exact integer
+   and COUNT > 0. */
+SCM
+scm_integer_floor_rsh_iu (scm_t_inum n, unsigned long count)
+{
+  ASSERT (count > 0);
+  if (count >= SCM_I_FIXNUM_BIT)
+    return (n >= 0 ? SCM_INUM0 : SCM_I_MAKINUM (-1));
+  else
+    return SCM_I_MAKINUM (SCM_SRS (n, count));
+}
+
+SCM
+scm_integer_floor_rsh_zu (SCM n, unsigned long count)
+{
+  ASSERT (count > 0);
+  mpz_t result, zn;
+  mpz_init (result);
+  alias_bignum_to_mpz (scm_bignum (n), zn);
+  mpz_fdiv_q_2exp (result, zn, count);
+  scm_remember_upto_here_1 (n);
+  return take_mpz (result);
+}
+
+/* Efficiently compute round (N / 2^COUNT), where N is an exact integer
+   and COUNT > 0. */
+SCM
+scm_integer_round_rsh_iu (scm_t_inum n, unsigned long count)
+{
+  ASSERT (count > 0);
+  if (count >= SCM_I_FIXNUM_BIT)
+    return SCM_INUM0;
+  else
+    {
+      scm_t_inum q = SCM_SRS (n, count);
+
+      if (0 == (n & (1L << (count-1))))
+        return SCM_I_MAKINUM (q);                /* round down */
+      else if (n & ((1L << (count-1)) - 1))
+        return SCM_I_MAKINUM (q + 1);            /* round up */
+      else
+        return SCM_I_MAKINUM ((~1L) & (q + 1));  /* round to even */
+    }
+}
+
+SCM
+scm_integer_round_rsh_zu (SCM n, unsigned long count)
+{
+  ASSERT (count > 0);
+  mpz_t q, zn;
+  mpz_init (q);
+  alias_bignum_to_mpz (scm_bignum (n), zn);
+  mpz_fdiv_q_2exp (q, zn, count);
+  if (mpz_tstbit (zn, count-1)
+      && (mpz_odd_p (q) || mpz_scan1 (zn, 0) < count-1))
+    mpz_add_ui (q, q, 1);
+  scm_remember_upto_here_1 (n);
+  return take_mpz (q);
 }

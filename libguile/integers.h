@@ -156,6 +156,13 @@ SCM_INTERNAL SCM scm_integer_lognot_z (SCM n);
 
 SCM_INTERNAL SCM scm_integer_modulo_expt_nnn (SCM n, SCM k, SCM m);
 
+SCM_INTERNAL SCM scm_integer_lsh_iu (scm_t_inum n, unsigned long count);
+SCM_INTERNAL SCM scm_integer_lsh_zu (SCM n, unsigned long count);
+SCM_INTERNAL SCM scm_integer_floor_rsh_iu (scm_t_inum n, unsigned long count);
+SCM_INTERNAL SCM scm_integer_floor_rsh_zu (SCM n, unsigned long count);
+SCM_INTERNAL SCM scm_integer_round_rsh_iu (scm_t_inum n, unsigned long count);
+SCM_INTERNAL SCM scm_integer_round_rsh_zu (SCM n, unsigned long count);
+
 
 
 #endif  /* SCM_INTEGERS_H */

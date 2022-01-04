@@ -387,7 +387,7 @@ scm_i_dbl2num (double u)
     return scm_i_dbl2big (u);
 }
 
-static SCM round_right_shift_exact_integer (SCM n, long count);
+static SCM round_rsh (SCM n, SCM count);
 
 /* scm_i_big2dbl_2exp() is like frexp for bignums: it converts the
    bignum b into a normalized significand and exponent such that
@@ -406,7 +406,7 @@ scm_i_big2dbl_2exp (SCM b, long *expon_p)
   if (bits > DBL_MANT_DIG)
     {
       shift = bits - DBL_MANT_DIG;
-      b = round_right_shift_exact_integer (b, shift);
+      b = round_rsh (b, scm_from_size_t (shift));
       if (SCM_I_INUMP (b))
         {
           int expon;
@@ -3229,117 +3229,51 @@ scm_integer_expt (SCM n, SCM k)
   return scm_call_2 (scm_variable_ref (integer_expt_var), n, k);
 }
 
-/* Efficiently compute (N * 2^COUNT),
-   where N is an exact integer, and COUNT > 0. */
 static SCM
-left_shift_exact_integer (SCM n, long count)
+lsh (SCM n, SCM count, const char *fn)
 {
+  if (scm_is_eq (n, SCM_INUM0))
+    return n;
+  if (!scm_is_unsigned_integer (count, 0, ULONG_MAX))
+    scm_num_overflow (fn);
+
+  unsigned long ucount = scm_to_ulong (count);
+  if (ucount == 0)
+    return n;
+  if (ucount / (sizeof (int) * 8) >= (unsigned long) INT_MAX)
+    scm_num_overflow (fn);
   if (SCM_I_INUMP (n))
-    {
-      scm_t_inum nn = SCM_I_INUM (n);
-
-      /* Left shift of count >= SCM_I_FIXNUM_BIT-1 will almost[*] always
-         overflow a non-zero fixnum.  For smaller shifts we check the
-         bits going into positions above SCM_I_FIXNUM_BIT-1.  If they're
-         all 0s for nn>=0, or all 1s for nn<0 then there's no overflow.
-         Those bits are "nn >> (SCM_I_FIXNUM_BIT-1 - count)".
-
-         [*] There's one exception:
-             (-1) << SCM_I_FIXNUM_BIT-1 == SCM_MOST_NEGATIVE_FIXNUM  */
-
-      if (nn == 0)
-        return n;
-      else if (count < SCM_I_FIXNUM_BIT-1 &&
-               ((scm_t_bits) (SCM_SRS (nn, (SCM_I_FIXNUM_BIT-1 - count)) + 1)
-                <= 1))
-        return SCM_I_MAKINUM (nn < 0 ? -(-nn << count) : (nn << count));
-      else
-        {
-          SCM result = scm_i_inum2big (nn);
-          mpz_mul_2exp (SCM_I_BIG_MPZ (result), SCM_I_BIG_MPZ (result),
-                        count);
-          return scm_i_normbig (result);
-        }
-    }
-  else if (SCM_BIGP (n))
-    {
-      SCM result = scm_i_mkbig ();
-      mpz_mul_2exp (SCM_I_BIG_MPZ (result), SCM_I_BIG_MPZ (n), count);
-      scm_remember_upto_here_1 (n);
-      return result;
-    }
-  else
-    assert (0);
+    return scm_integer_lsh_iu (SCM_I_INUM (n), ucount);
+  return scm_integer_lsh_zu (n, ucount);
 }
 
-/* Efficiently compute floor (N / 2^COUNT),
-   where N is an exact integer and COUNT > 0. */
 static SCM
-floor_right_shift_exact_integer (SCM n, long count)
+floor_rsh (SCM n, SCM count)
 {
-  if (SCM_I_INUMP (n))
-    {
-      scm_t_inum nn = SCM_I_INUM (n);
+  if (!scm_is_unsigned_integer (count, 0, ULONG_MAX))
+    return scm_is_false (scm_negative_p (n)) ? SCM_INUM0 : SCM_I_MAKINUM (-1);
 
-      if (count >= SCM_I_FIXNUM_BIT)
-        return (nn >= 0 ? SCM_INUM0 : SCM_I_MAKINUM (-1));
-      else
-        return SCM_I_MAKINUM (SCM_SRS (nn, count));
-    }
-  else if (SCM_BIGP (n))
-    {
-      SCM result = scm_i_mkbig ();
-      mpz_fdiv_q_2exp (SCM_I_BIG_MPZ (result), SCM_I_BIG_MPZ (n),
-                       count);
-      scm_remember_upto_here_1 (n);
-      return scm_i_normbig (result);
-    }
-  else
-    assert (0);
+  unsigned long ucount = scm_to_ulong (count);
+  if (ucount == 0)
+    return n;
+  if (SCM_I_INUMP (n))
+    return scm_integer_floor_rsh_iu (SCM_I_INUM (n), ucount);
+  return scm_integer_floor_rsh_zu (n, ucount);
 }
 
-/* Efficiently compute round (N / 2^COUNT),
-   where N is an exact integer and COUNT > 0. */
 static SCM
-round_right_shift_exact_integer (SCM n, long count)
+round_rsh (SCM n, SCM count)
 {
+  if (!scm_is_unsigned_integer (count, 0, ULONG_MAX))
+    return SCM_INUM0;
+
+  unsigned long ucount = scm_to_ulong (count);
+  if (ucount == 0)
+    return n;
   if (SCM_I_INUMP (n))
-    {
-      if (count >= SCM_I_FIXNUM_BIT)
-        return SCM_INUM0;
-      else
-        {
-          scm_t_inum nn = SCM_I_INUM (n);
-          scm_t_inum qq = SCM_SRS (nn, count);
-
-          if (0 == (nn & (1L << (count-1))))
-            return SCM_I_MAKINUM (qq);                /* round down */
-          else if (nn & ((1L << (count-1)) - 1))
-            return SCM_I_MAKINUM (qq + 1);            /* round up */
-          else
-            return SCM_I_MAKINUM ((~1L) & (qq + 1));  /* round to even */
-        }
-    }
-  else if (SCM_BIGP (n))
-    {
-      SCM q = scm_i_mkbig ();
-
-      mpz_fdiv_q_2exp (SCM_I_BIG_MPZ (q), SCM_I_BIG_MPZ (n), count);
-      if (mpz_tstbit (SCM_I_BIG_MPZ (n), count-1)
-          && (mpz_odd_p (SCM_I_BIG_MPZ (q))
-              || (mpz_scan1 (SCM_I_BIG_MPZ (n), 0) < count-1)))
-        mpz_add_ui (SCM_I_BIG_MPZ (q), SCM_I_BIG_MPZ (q), 1);
-      scm_remember_upto_here_1 (n);
-      return scm_i_normbig (q);
-    }
-  else
-    assert (0);
+    return scm_integer_round_rsh_iu (SCM_I_INUM (n), ucount);
+  return scm_integer_round_rsh_zu (n, ucount);
 }
-
-/* 'scm_ash' and 'scm_round_ash' assume that fixnums fit within a long,
-   and moreover that they can be negated without overflow. */
-verify (SCM_MOST_NEGATIVE_FIXNUM >= LONG_MIN + 1
-        && SCM_MOST_POSITIVE_FIXNUM <= LONG_MAX);
 
 SCM_DEFINE (scm_ash, "ash", 2, 0, 0,
             (SCM n, SCM count),
@@ -3360,30 +3294,15 @@ SCM_DEFINE (scm_ash, "ash", 2, 0, 0,
 	    "@end lisp")
 #define FUNC_NAME s_scm_ash
 {
-  if (!SCM_I_INUMP (n) && !SCM_BIGP (n))
+  if (!scm_is_exact_integer (n))
     SCM_WRONG_TYPE_ARG (SCM_ARG1, n);
+  if (!scm_is_exact_integer (count))
+    SCM_WRONG_TYPE_ARG (SCM_ARG2, count);
   
-  if (scm_is_false (scm_positive_p (scm_sum (scm_integer_length (n),
-                                             count))))
-    /* Huge right shift that eliminates all but the sign bit */
-    return scm_is_false (scm_negative_p (n))
-      ? SCM_INUM0 : SCM_I_MAKINUM (-1);
-  else if (scm_is_true (scm_zero_p (n)))
-    return SCM_INUM0;
-  else if (scm_is_signed_integer (count, INT32_MIN + 1, INT32_MAX))
-    {
-      /* We exclude MIN to ensure that 'bits_to_shift' can be
-         negated without overflowing, if INT32_MIN happens to be LONG_MIN */
-      long bits_to_shift = scm_to_long (count);
-      if (bits_to_shift > 0)
-        return left_shift_exact_integer (n, bits_to_shift);
-      else if (SCM_LIKELY (bits_to_shift < 0))
-        return floor_right_shift_exact_integer (n, -bits_to_shift);
-      else
-        return n;
-    }
-  else
-    scm_num_overflow ("ash");
+  if (scm_is_false (scm_negative_p (count)))
+    return lsh (n, count, "ash");
+
+  return floor_rsh (n, scm_difference (count, SCM_UNDEFINED));
 }
 #undef FUNC_NAME
 
@@ -3409,29 +3328,15 @@ SCM_DEFINE (scm_round_ash, "round-ash", 2, 0, 0,
 	    "@end lisp")
 #define FUNC_NAME s_scm_round_ash
 {
-  if (!SCM_I_INUMP (n) && !SCM_BIGP (n))
+  if (!scm_is_exact_integer (n))
     SCM_WRONG_TYPE_ARG (SCM_ARG1, n);
+  if (!scm_is_exact_integer (count))
+    SCM_WRONG_TYPE_ARG (SCM_ARG2, count);
   
-  if (scm_is_true (scm_negative_p (scm_sum (scm_integer_length (n),
-                                            count)))
-      || scm_is_true (scm_zero_p (n)))
-    /* If N is zero, or the right shift count exceeds the integer
-       length, the result is zero. */
-    return SCM_INUM0;
-  else if (scm_is_signed_integer (count, INT32_MIN + 1, INT32_MAX))
-    {
-      /* We exclude MIN to ensure that 'bits_to_shift' can be
-         negated without overflowing, if INT32_MIN happens to be LONG_MIN */
-      long bits_to_shift = scm_to_long (count);
-      if (bits_to_shift > 0)
-        return left_shift_exact_integer (n, bits_to_shift);
-      else if (SCM_LIKELY (bits_to_shift < 0))
-        return round_right_shift_exact_integer (n, -bits_to_shift);
-      else
-        return n;
-    }
-  else 
-    scm_num_overflow ("round-ash");
+  if (scm_is_false (scm_negative_p (count)))
+    return lsh (n, count, "round-ash");
+
+  return round_rsh (n, scm_difference (count, SCM_UNDEFINED));
 }
 #undef FUNC_NAME
 
@@ -7696,9 +7601,9 @@ SCM_PRIMITIVE_GENERIC (scm_inexact_to_exact, "inexact->exact", 1, 0, 0,
           numerator = scm_i_normbig (numerator);
           if (expon < 0)
             return scm_i_make_ratio_already_reduced
-              (numerator, left_shift_exact_integer (SCM_INUM1, -expon));
+              (numerator, scm_integer_lsh_iu (1, -expon));
           else if (expon > 0)
-            return left_shift_exact_integer (numerator, expon);
+            return lsh (numerator, scm_from_int (expon), FUNC_NAME);
           else
             return numerator;
 	}
@@ -8621,9 +8526,9 @@ SCM_PRIMITIVE_GENERIC (scm_sqrt, "sqrt", 1, 0, 0,
                   shift = (scm_to_long (scm_integer_length (n))
                            - scm_to_long (scm_integer_length (d))) / 2;
                   if (shift > 0)
-                    d = left_shift_exact_integer (d, 2 * shift);
+                    d = lsh (d, scm_from_long (2 * shift), FUNC_NAME);
                   else
-                    n = left_shift_exact_integer (n, -2 * shift);
+                    n = lsh (n, scm_from_long (-2 * shift), FUNC_NAME);
                   xx = scm_i_divide2double (n, d);
                 }
 
