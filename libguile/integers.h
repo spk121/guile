@@ -144,6 +144,9 @@ SCM_INTERNAL SCM scm_integer_logcount_z (struct scm_bignum *n);
 SCM_INTERNAL SCM scm_integer_length_i (scm_t_inum n);
 SCM_INTERNAL SCM scm_integer_length_z (struct scm_bignum *n);
 
+SCM_INTERNAL SCM scm_integer_to_string_i (scm_t_inum n, int base);
+SCM_INTERNAL SCM scm_integer_to_string_z (struct scm_bignum *n, int base);
+
 
 
 #endif  /* SCM_INTEGERS_H */

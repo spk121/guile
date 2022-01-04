@@ -25,10 +25,12 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 #include <verify.h>
 
 #include "boolean.h"
 #include "numbers.h"
+#include "strings.h"
 
 #include "integers.h"
 
@@ -2326,4 +2328,28 @@ scm_integer_length_z (struct scm_bignum *n)
     size--;
   scm_remember_upto_here_1 (n);
   return scm_from_size_t (size);
+}
+
+SCM
+scm_integer_to_string_i (scm_t_inum n, int base)
+{
+  // FIXME: Use mpn_get_str instead.
+  char num_buf [SCM_INTBUFLEN];
+  size_t length = scm_iint2str (n, base, num_buf);
+  return scm_from_latin1_stringn (num_buf, length);
+}
+
+SCM
+scm_integer_to_string_z (struct scm_bignum *n, int base)
+{
+  mpz_t zn;
+  alias_bignum_to_mpz (n, zn);
+  char *str = mpz_get_str (NULL, base, zn);
+  scm_remember_upto_here_1 (n);
+  size_t len = strlen (str);
+  void (*freefunc) (void *, size_t);
+  mp_get_memory_functions (NULL, NULL, &freefunc);
+  SCM ret = scm_from_latin1_stringn (str, len);
+  freefunc (str, len + 1);
+  return ret;
 }

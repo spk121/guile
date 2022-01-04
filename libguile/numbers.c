@@ -3754,29 +3754,14 @@ SCM_DEFINE (scm_number_to_string, "number->string", 1, 1, 0,
     base = scm_to_signed_integer (radix, 2, 36);
 
   if (SCM_I_INUMP (n))
-    {
-      char num_buf [SCM_INTBUFLEN];
-      size_t length = scm_iint2str (SCM_I_INUM (n), base, num_buf);
-      return scm_from_latin1_stringn (num_buf, length);
-    }
+    return scm_integer_to_string_i (SCM_I_INUM (n), base);
   else if (SCM_BIGP (n))
-    {
-      char *str = mpz_get_str (NULL, base, SCM_I_BIG_MPZ (n));
-      size_t len = strlen (str);
-      void (*freefunc) (void *, size_t);
-      SCM ret;
-      mp_get_memory_functions (NULL, NULL, &freefunc);
-      scm_remember_upto_here_1 (n);
-      ret = scm_from_latin1_stringn (str, len);
-      freefunc (str, len + 1);
-      return ret;
-    }
+    return scm_integer_to_string_z (scm_bignum (n), base);
   else if (SCM_FRACTIONP (n))
-    {
-      return scm_string_append (scm_list_3 (scm_number_to_string (SCM_FRACTION_NUMERATOR (n), radix),
-					    scm_from_latin1_string ("/"),
-					    scm_number_to_string (SCM_FRACTION_DENOMINATOR (n), radix)));
-    }
+    return scm_string_append
+      (scm_list_3 (scm_number_to_string (SCM_FRACTION_NUMERATOR (n), radix),
+                   scm_from_latin1_string ("/"),
+                   scm_number_to_string (SCM_FRACTION_DENOMINATOR (n), radix)));
   else if (SCM_INEXACTP (n))
     {
       char num_buf [FLOBUFLEN];
