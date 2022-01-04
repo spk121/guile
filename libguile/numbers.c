@@ -5025,171 +5025,42 @@ SCM_PRIMITIVE_GENERIC (scm_i_max, "max", 0, 2, 1,
 }
 #undef FUNC_NAME
                        
-#define s_max s_scm_i_max
-#define g_max g_scm_i_max
-
 SCM
 scm_max (SCM x, SCM y)
 {
   if (SCM_UNBNDP (y))
     {
       if (SCM_UNBNDP (x))
-	return scm_wta_dispatch_0 (g_max, s_max);
-      else if (SCM_I_INUMP(x) || SCM_BIGP(x) || SCM_REALP(x) || SCM_FRACTIONP(x))
+	return scm_wta_dispatch_0 (g_scm_i_max, s_scm_i_max);
+      else if (scm_is_real (x))
 	return x;
       else
-	return scm_wta_dispatch_1 (g_max, x, SCM_ARG1, s_max);
+	return scm_wta_dispatch_1 (g_scm_i_max, x, SCM_ARG1, s_scm_i_max);
     }
   
-  if (SCM_I_INUMP (x))
-    {
-      scm_t_inum xx = SCM_I_INUM (x);
-      if (SCM_I_INUMP (y))
-	{
-	  scm_t_inum yy = SCM_I_INUM (y);
-	  return (xx < yy) ? y : x;
-	}
-      else if (SCM_BIGP (y))
-	{
-	  int sgn = mpz_sgn (SCM_I_BIG_MPZ (y));
-	  scm_remember_upto_here_1 (y);
-	  return (sgn < 0) ? x : y;
-	}
-      else if (SCM_REALP (y))
-	{
-	  double xxd = xx;
-	  double yyd = SCM_REAL_VALUE (y);
+  if (!scm_is_real (x))
+    return scm_wta_dispatch_2 (g_scm_i_max, x, y, SCM_ARG1, s_scm_i_max);
+  if (!scm_is_real (y))
+    return scm_wta_dispatch_2 (g_scm_i_max, x, y, SCM_ARG2, s_scm_i_max);
 
-	  if (xxd > yyd)
-	    return scm_i_from_double (xxd);
-	  /* If y is a NaN, then "==" is false and we return the NaN */
-	  else if (SCM_LIKELY (!(xxd == yyd)))
-	    return y;
-	  /* Handle signed zeroes properly */
-	  else if (xx == 0)
-	    return flo0;
-	  else
-	    return y;
-	}
-      else if (SCM_FRACTIONP (y))
-	{
-        use_less:
-          return (scm_is_false (scm_less_p (x, y)) ? x : y);
-	}
-      else
-	return scm_wta_dispatch_2 (g_max, x, y, SCM_ARGn, s_max);
-    }
-  else if (SCM_BIGP (x))
-    {
-      if (SCM_I_INUMP (y))
-	{
-	  int sgn = mpz_sgn (SCM_I_BIG_MPZ (x));
-	  scm_remember_upto_here_1 (x);
-	  return (sgn < 0) ? y : x;
-	}
-      else if (SCM_BIGP (y))
-	{
-	  int cmp = mpz_cmp (SCM_I_BIG_MPZ (x), SCM_I_BIG_MPZ (y));
-	  scm_remember_upto_here_2 (x, y);
-	  return (cmp > 0) ? x : y;
-	}
-      else if (SCM_REALP (y))
-	{
-          /* if y==NaN then xx>yy is false, so we return the NaN y */
-          double xx, yy;
-        big_real:
-          xx = scm_i_big2dbl (x);
-          yy = SCM_REAL_VALUE (y);
-	  return (xx > yy ? scm_i_from_double (xx) : y);
-	}
-      else if (SCM_FRACTIONP (y))
-	{
-          goto use_less;
-	}
-      else
-	return scm_wta_dispatch_2 (g_max, x, y, SCM_ARGn, s_max);
-    }
-  else if (SCM_REALP (x))
-    {
-      if (SCM_I_INUMP (y))
-	{
-	  scm_t_inum yy = SCM_I_INUM (y);
-	  double xxd = SCM_REAL_VALUE (x);
-	  double yyd = yy;
+  if (scm_is_exact (x) && scm_is_exact (y))
+    return scm_is_less_than (x, y) ? y : x;
 
-	  if (yyd > xxd)
-	    return scm_i_from_double (yyd);
-	  /* If x is a NaN, then "==" is false and we return the NaN */
-	  else if (SCM_LIKELY (!(xxd == yyd)))
-	    return x;
-	  /* Handle signed zeroes properly */
-	  else if (yy == 0)
-	    return flo0;
-	  else
-	    return x;
-	}
-      else if (SCM_BIGP (y))
-	{
-          SCM_SWAP (x, y);
-          goto big_real;
-	}
-      else if (SCM_REALP (y))
-	{
-	  double xx = SCM_REAL_VALUE (x);
-	  double yy = SCM_REAL_VALUE (y);
-
-	  /* For purposes of max: nan > +inf.0 > everything else,
-             per the R6RS errata */
-	  if (xx > yy)
-	    return x;
-	  else if (SCM_LIKELY (xx < yy))
-	    return y;
-	  /* If neither (xx > yy) nor (xx < yy), then
-	     either they're equal or one is a NaN */
-	  else if (SCM_UNLIKELY (xx != yy))
-	    return (xx != xx) ? x : y;  /* Return the NaN */
-	  /* xx == yy, but handle signed zeroes properly */
-	  else if (copysign (1.0, yy) < 0.0)
-	    return x;
-	  else
-	    return y;
-	}
-      else if (SCM_FRACTIONP (y))
-	{
-	  double yy = scm_i_fraction2double (y);
-	  double xx = SCM_REAL_VALUE (x);
-	  return (xx < yy) ? scm_i_from_double (yy) : x;
-	}
-      else
-	return scm_wta_dispatch_2 (g_max, x, y, SCM_ARGn, s_max);
-    }
-  else if (SCM_FRACTIONP (x))
-    {
-      if (SCM_I_INUMP (y))
-	{
-          goto use_less;
-	}
-      else if (SCM_BIGP (y))
-	{
-          goto use_less;
-	}
-      else if (SCM_REALP (y))
-	{
-	  double xx = scm_i_fraction2double (x);
-	  /* if y==NaN then ">" is false, so we return the NaN y */
-	  return (xx > SCM_REAL_VALUE (y)) ? scm_i_from_double (xx) : y;
-	}
-      else if (SCM_FRACTIONP (y))
-	{
-          goto use_less;
-	}
-      else
-	return scm_wta_dispatch_2 (g_max, x, y, SCM_ARGn, s_max);
-    }
-  else
-    return scm_wta_dispatch_2 (g_max, x, y, SCM_ARG1, s_max);
+  x = SCM_REALP (x) ? x : scm_exact_to_inexact (x);
+  y = SCM_REALP (y) ? y : scm_exact_to_inexact (y);
+  double xx = SCM_REAL_VALUE (x);
+  double yy = SCM_REAL_VALUE (y);
+  if (isnan (xx))
+    return x;
+  if (isnan (yy))
+    return y;
+  if (xx < yy)
+    return y;
+  if (xx > yy)
+    return x;
+  // Distinguish -0.0 from 0.0.
+  return (copysign (1.0, xx) < 0) ? y : x;
 }
-
 
 SCM_PRIMITIVE_GENERIC (scm_i_min, "min", 0, 2, 1,
                        (SCM x, SCM y, SCM rest),
@@ -5205,148 +5076,41 @@ SCM_PRIMITIVE_GENERIC (scm_i_min, "min", 0, 2, 1,
 }
 #undef FUNC_NAME
                        
-#define s_min s_scm_i_min
-#define g_min g_scm_i_min
-
 SCM
 scm_min (SCM x, SCM y)
 {
   if (SCM_UNBNDP (y))
     {
       if (SCM_UNBNDP (x))
-	return scm_wta_dispatch_0 (g_min, s_min);
-      else if (SCM_I_INUMP(x) || SCM_BIGP(x) || SCM_REALP(x) || SCM_FRACTIONP(x))
+	return scm_wta_dispatch_0 (g_scm_i_min, s_scm_i_min);
+      else if (scm_is_real (x))
 	return x;
       else
-	return scm_wta_dispatch_1 (g_min, x, SCM_ARG1, s_min);
+	return scm_wta_dispatch_1 (g_scm_i_min, x, SCM_ARG1, s_scm_i_min);
     }
   
-  if (SCM_I_INUMP (x))
-    {
-      scm_t_inum xx = SCM_I_INUM (x);
-      if (SCM_I_INUMP (y))
-	{
-	  scm_t_inum yy = SCM_I_INUM (y);
-	  return (xx < yy) ? x : y;
-	}
-      else if (SCM_BIGP (y))
-	{
-	  int sgn = mpz_sgn (SCM_I_BIG_MPZ (y));
-	  scm_remember_upto_here_1 (y);
-	  return (sgn < 0) ? y : x;
-	}
-      else if (SCM_REALP (y))
-	{
-	  double z = xx;
-	  /* if y==NaN then "<" is false and we return NaN */
-	  return (z < SCM_REAL_VALUE (y)) ? scm_i_from_double (z) : y;
-	}
-      else if (SCM_FRACTIONP (y))
-	{
-        use_less:
-          return (scm_is_false (scm_less_p (x, y)) ? y : x);
-	}
-      else
-	return scm_wta_dispatch_2 (g_min, x, y, SCM_ARGn, s_min);
-    }
-  else if (SCM_BIGP (x))
-    {
-      if (SCM_I_INUMP (y))
-	{
-	  int sgn = mpz_sgn (SCM_I_BIG_MPZ (x));
-	  scm_remember_upto_here_1 (x);
-	  return (sgn < 0) ? x : y;
-	}
-      else if (SCM_BIGP (y))
-	{
-	  int cmp = mpz_cmp (SCM_I_BIG_MPZ (x), SCM_I_BIG_MPZ (y));
-	  scm_remember_upto_here_2 (x, y);
-	  return (cmp > 0) ? y : x;
-	}
-      else if (SCM_REALP (y))
-	{
-          /* if y==NaN then xx<yy is false, so we return the NaN y */
-          double xx, yy;
-        big_real:
-          xx = scm_i_big2dbl (x);
-          yy = SCM_REAL_VALUE (y);
-	  return (xx < yy ? scm_i_from_double (xx) : y);
-	}
-      else if (SCM_FRACTIONP (y))
-	{
-          goto use_less;
-	}
-      else
-	return scm_wta_dispatch_2 (g_min, x, y, SCM_ARGn, s_min);
-    }
-  else if (SCM_REALP (x))
-    {
-      if (SCM_I_INUMP (y))
-	{
-	  double z = SCM_I_INUM (y);
-	  /* if x==NaN then "<" is false and we return NaN */
-	  return (z < SCM_REAL_VALUE (x)) ? scm_i_from_double (z) : x;
-	}
-      else if (SCM_BIGP (y))
-	{
-          SCM_SWAP (x, y);
-          goto big_real;
-	}
-      else if (SCM_REALP (y))
-	{
-	  double xx = SCM_REAL_VALUE (x);
-	  double yy = SCM_REAL_VALUE (y);
+  if (!scm_is_real (x))
+    return scm_wta_dispatch_2 (g_scm_i_min, x, y, SCM_ARG1, s_scm_i_min);
+  if (!scm_is_real (y))
+    return scm_wta_dispatch_2 (g_scm_i_min, x, y, SCM_ARG2, s_scm_i_min);
 
-	  /* For purposes of min: nan < -inf.0 < everything else,
-             per the R6RS errata */
-	  if (xx < yy)
-	    return x;
-	  else if (SCM_LIKELY (xx > yy))
-	    return y;
-	  /* If neither (xx < yy) nor (xx > yy), then
-	     either they're equal or one is a NaN */
-	  else if (SCM_UNLIKELY (xx != yy))
-	    return (xx != xx) ? x : y;  /* Return the NaN */
-	  /* xx == yy, but handle signed zeroes properly */
-	  else if (copysign (1.0, xx) < 0.0)
-	    return x;
-	  else
-	    return y;
-	}
-      else if (SCM_FRACTIONP (y))
-	{
-	  double yy = scm_i_fraction2double (y);
-	  double xx = SCM_REAL_VALUE (x);
-	  return (yy < xx) ? scm_i_from_double (yy) : x;
-	}
-      else
-	return scm_wta_dispatch_2 (g_min, x, y, SCM_ARGn, s_min);
-    }
-  else if (SCM_FRACTIONP (x))
-    {
-      if (SCM_I_INUMP (y))
-	{
-          goto use_less;
-	}
-      else if (SCM_BIGP (y))
-	{
-          goto use_less;
-	}
-      else if (SCM_REALP (y))
-	{
-	  double xx = scm_i_fraction2double (x);
-	  /* if y==NaN then "<" is false, so we return the NaN y */
-	  return (xx < SCM_REAL_VALUE (y)) ? scm_i_from_double (xx) : y;
-	}
-      else if (SCM_FRACTIONP (y))
-	{
-          goto use_less;
-	}
-      else
-	return scm_wta_dispatch_2 (g_min, x, y, SCM_ARGn, s_min);
-    }
-  else
-    return scm_wta_dispatch_2 (g_min, x, y, SCM_ARG1, s_min);
+  if (scm_is_exact (x) && scm_is_exact (y))
+    return scm_is_less_than (x, y) ? x : y;
+
+  x = SCM_REALP (x) ? x : scm_exact_to_inexact (x);
+  y = SCM_REALP (y) ? y : scm_exact_to_inexact (y);
+  double xx = SCM_REAL_VALUE (x);
+  double yy = SCM_REAL_VALUE (y);
+  if (isnan (xx))
+    return x;
+  if (isnan (yy))
+    return y;
+  if (xx < yy)
+    return x;
+  if (xx > yy)
+    return y;
+  // Distinguish -0.0 from 0.0.
+  return (copysign (1.0, xx) < 0) ? x : y;
 }
 
 
