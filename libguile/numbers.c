@@ -4605,15 +4605,7 @@ SCM_DEFINE (scm_integer_p, "integer?", 1, 0, 0,
 	    "else return @code{#f}.")
 #define FUNC_NAME s_scm_integer_p
 {
-  if (SCM_I_INUMP (x) || SCM_BIGP (x))
-    return SCM_BOOL_T;
-  else if (SCM_REALP (x))
-    {
-      double val = SCM_REAL_VALUE (x);
-      return scm_from_bool (!isinf (val) && (val == floor (val)));
-    }
-  else
-    return SCM_BOOL_F;
+  return scm_from_bool (scm_is_integer (x));
 }
 #undef FUNC_NAME
 
@@ -4623,10 +4615,7 @@ SCM_DEFINE (scm_exact_integer_p, "exact-integer?", 1, 0, 0,
 	    "else return @code{#f}.")
 #define FUNC_NAME s_scm_exact_integer_p
 {
-  if (SCM_I_INUMP (x) || SCM_BIGP (x))
-    return SCM_BOOL_T;
-  else
-    return SCM_BOOL_F;
+  return scm_from_bool (scm_is_exact_integer (x));
 }
 #undef FUNC_NAME
 
@@ -7716,13 +7705,20 @@ SCM_DEFINE (scm_rationalize, "rationalize", 2, 0, 0,
 int
 scm_is_integer (SCM val)
 {
-  return scm_is_true (scm_integer_p (val));
+  if (scm_is_exact_integer (val))
+    return 1;
+  if (SCM_REALP (val))
+    {
+      double x = SCM_REAL_VALUE (val);
+      return !isinf (x) && (x == floor (x));
+    }
+  return 0;
 }
 
 int
 scm_is_exact_integer (SCM val)
 {
-  return scm_is_true (scm_exact_integer_p (val));
+  return SCM_I_INUMP (val) || SCM_BIGP (val);
 }
 
 int
