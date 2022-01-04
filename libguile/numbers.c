@@ -4974,11 +4974,7 @@ SCM_PRIMITIVE_GENERIC (scm_positive_p, "positive?", 1, 0, 0,
   if (SCM_I_INUMP (x))
     return scm_from_bool (SCM_I_INUM (x) > 0);
   else if (SCM_BIGP (x))
-    {
-      int sgn = mpz_sgn (SCM_I_BIG_MPZ (x));
-      scm_remember_upto_here_1 (x);
-      return scm_from_bool (sgn > 0);
-    }
+    return scm_from_bool (scm_is_integer_positive_z (scm_bignum (x)));
   else if (SCM_REALP (x))
     return scm_from_bool(SCM_REAL_VALUE (x) > 0.0);
   else if (SCM_FRACTIONP (x))
@@ -4998,11 +4994,7 @@ SCM_PRIMITIVE_GENERIC (scm_negative_p, "negative?", 1, 0, 0,
   if (SCM_I_INUMP (x))
     return scm_from_bool (SCM_I_INUM (x) < 0);
   else if (SCM_BIGP (x))
-    {
-      int sgn = mpz_sgn (SCM_I_BIG_MPZ (x));
-      scm_remember_upto_here_1 (x);
-      return scm_from_bool (sgn < 0);
-    }
+    return scm_from_bool (scm_is_integer_negative_z (scm_bignum (x)));
   else if (SCM_REALP (x))
     return scm_from_bool(SCM_REAL_VALUE (x) < 0.0);
   else if (SCM_FRACTIONP (x))
