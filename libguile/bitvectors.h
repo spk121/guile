@@ -34,6 +34,7 @@
 
 SCM_API SCM scm_list_to_bitvector (SCM list);
 SCM_API SCM scm_bitvector_to_list (SCM vec);
+SCM_API SCM scm_bitvector_copy (SCM vec, SCM start, SCM end);
 
 SCM_API SCM scm_bitvector_position (SCM v, SCM item, SCM start);
 

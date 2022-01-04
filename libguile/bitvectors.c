@@ -685,6 +685,53 @@ SCM_DEFINE_STATIC (scm_bitvector_clear_bits_x, "bitvector-clear-bits!", 2, 0, 0,
 }
 #undef FUNC_NAME
 
+SCM_DEFINE (scm_bitvector_copy, "bitvector-copy", 1, 2, 0,
+	    (SCM bv, SCM start, SCM end),
+            "Returns a freshly allocated bitvector containing the elements\n"
+            "of bitvector @var{bv} between @var{start} and @var{end}.\n\n"
+            "@var{start} defaults to 0 and @var{end} defaults to the\n"
+            "length of @var{bv}.")
+#define FUNC_NAME s_scm_bitvector_copy
+{
+  VALIDATE_BITVECTOR (1, bv);
+
+  /* cf scm_vector_copy */
+
+  size_t cstart = 0, cend = BITVECTOR_LENGTH (bv);
+  if (!SCM_UNBNDP (start))
+    {
+      cstart = scm_to_size_t (start);
+      SCM_ASSERT_RANGE (SCM_ARG2, start, cstart<=cend);
+
+      if (!SCM_UNBNDP (end))
+        {
+          size_t e = scm_to_size_t (end);
+          SCM_ASSERT_RANGE (SCM_ARG3, end, e>=cstart && e<=cend);
+          cend = e;
+        }
+    }
+
+  size_t len = cend-cstart;
+  SCM result = scm_c_make_bitvector (len, SCM_BOOL_F);
+  const uint32_t *kv_bits = BITVECTOR_BITS (bv);
+  uint32_t *v_bits = BITVECTOR_BITS (result);
+
+  if (len > 0)
+    {
+      size_t wlen = (len + 31u) / 32u;
+      size_t wshift = cstart / 32u;
+      size_t bshift = cstart % 32u;
+      if (0 == bshift)
+        memcpy (v_bits, kv_bits + wshift, wlen*sizeof(uint32_t));
+      else
+        for (size_t i = 0; i < wlen; ++i)
+          v_bits[i] = (kv_bits[i + wshift] >> bshift) | (kv_bits[i + wshift + 1] << (32-bshift));
+    }
+
+  return result;
+}
+#undef FUNC_NAME
+
 size_t
 scm_c_bitvector_count_bits (SCM bv, SCM bits)
 #define FUNC_NAME "bitvector-count-bits"

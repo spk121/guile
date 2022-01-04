@@ -17,8 +17,9 @@
 ;;;; Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
 (define-module (test-suite test-bitvectors)
-  #:use-module (test-suite lib))
-
+  #:use-module (test-suite lib)
+  #:use-module (srfi srfi-1)
+  #:use-module (srfi srfi-26))
 
 (with-test-prefix "predicates"
   (pass-if (bitvector? #*1010101010))
@@ -103,3 +104,21 @@
 
 (with-test-prefix "bitvector-count-bits"
   (pass-if-equal 3 (bitvector-count-bits #*01110111 #*11001101)))
+
+(with-test-prefix "bitector-copy"
+  (define bv #*100110001011001100011001010010101100000110010000100111101110101111000011101001101100110100100010011101110001001000101010010101111000100001010000101001110100001101001110001101001000010111101111100111011100111010011101100011010111111101110100011100011100)
+
+  (define* (test bv #:optional start end)
+    (equal? (drop (take (bitvector->list bv) (or end (bitvector-length bv))) (or start 0))
+            (bitvector->list (cond (end (bitvector-copy bv start end))
+                                   (start (bitvector-copy bv start))
+                                   (else (bitvector-copy bv))))))
+  
+  (pass-if "def args 0" (test bv))
+  (pass-if "def args 1" (test bv 0))
+  (pass-if "def args 2" (test bv 0 (bitvector-length bv)))
+  (pass-if "start" (every (cut test bv <>) '(1 4 15 16 31 32 33 64 65 130 250 252)))
+  (pass-if "end-3" (every (cut test bv 3 <>) '(4 15 16 31 32 33 64 65 130 250 252)))
+  (pass-if "end-16" (every (cut test bv 16 <>) '(16 31 32 33 64 65 130 250 252)))
+  (pass-if "empty def args 1" (test bv 252))
+  (pass-if "empty def args 2" (test bv 252 252)))

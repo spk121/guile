@@ -53,6 +53,10 @@ Bytevectors" in the manual.
 Compared to the previous versions, these accept range arguments. See
 "Accessing and Modifying Vector Contents" in the manual.
 
+** New function bitvector-copy
+
+See "Bit vectors" in the manual.
+
 ** (system foreign) supports C99 complex types
 
 The types `complex-float' and `complex-double' stand for C99 `float
