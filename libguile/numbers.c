@@ -4729,6 +4729,89 @@ scm_num_eq_p (SCM x, SCM y)
    mpq_cmp.  flonum/frac compares likewise, but with the slight complication
    of the float exponent to take into account.  */
 
+static int scm_is_less_than (SCM x, SCM y);
+static int scm_is_greater_than (SCM x, SCM y);
+static int scm_is_less_than_or_equal (SCM x, SCM y);
+static int scm_is_greater_than_or_equal (SCM x, SCM y);
+
+static int
+scm_is_less_than (SCM x, SCM y)
+{
+  if (SCM_I_INUMP (x))
+    {
+      if (SCM_I_INUMP (y))
+        return SCM_I_INUM (x) < SCM_I_INUM (y);
+      else if (SCM_BIGP (y))
+        return scm_is_integer_positive_z (scm_bignum (y));
+      else if (SCM_REALP (y))
+        return scm_is_integer_less_than_ir (SCM_I_INUM (x), SCM_REAL_VALUE (y));
+      if (!SCM_FRACTIONP (y))
+        abort ();
+      /* "x < a/b" becomes "x*b < a" */
+      return scm_is_less_than (scm_product (x, SCM_FRACTION_DENOMINATOR (y)),
+                               SCM_FRACTION_NUMERATOR (y));
+    }
+  else if (SCM_BIGP (x))
+    {
+      if (SCM_I_INUMP (y))
+        return scm_is_integer_negative_z (scm_bignum (x));
+      else if (SCM_BIGP (y))
+        return scm_is_integer_less_than_zz (scm_bignum (x), scm_bignum (y));
+      else if (SCM_REALP (y))
+        return scm_is_integer_less_than_zr (scm_bignum (x), SCM_REAL_VALUE (y));
+      if (!SCM_FRACTIONP (y))
+        abort ();
+      /* "x < a/b" becomes "x*b < a" */
+      return scm_is_less_than (scm_product (x, SCM_FRACTION_DENOMINATOR (y)),
+                               SCM_FRACTION_NUMERATOR (y));
+    }
+  else if (SCM_REALP (x))
+    {
+      if (SCM_I_INUMP (y))
+        return scm_is_integer_less_than_ri (SCM_REAL_VALUE (x), SCM_I_INUM (y));
+      else if (SCM_BIGP (y))
+        return scm_is_integer_less_than_rz (SCM_REAL_VALUE (x), scm_bignum (y));
+      else if (SCM_REALP (y))
+	return SCM_REAL_VALUE (x) < SCM_REAL_VALUE (y);
+      if (!SCM_FRACTIONP (y))
+        abort ();
+      if (isnan (SCM_REAL_VALUE (x)))
+        return 0;
+      if (isinf (SCM_REAL_VALUE (x)))
+        return SCM_REAL_VALUE (x) < 0.0;
+      return scm_is_less_than (scm_inexact_to_exact (x), y);
+    }
+
+  if (!SCM_FRACTIONP (x))
+    abort ();
+
+  /* "a/b < " becomes "a < y*b" */
+  return scm_is_less_than (SCM_FRACTION_NUMERATOR (x),
+                           scm_product (y, SCM_FRACTION_DENOMINATOR (x)));
+}
+
+static int
+scm_is_greater_than (SCM x, SCM y)
+{
+  return scm_is_less_than (y, x);
+}
+
+static int
+scm_is_less_than_or_equal (SCM x, SCM y)
+{
+  if ((SCM_REALP (x) && isnan (SCM_REAL_VALUE (x)))
+      || (SCM_REALP (y) && isnan (SCM_REAL_VALUE (y))))
+    return 0;
+
+  return !scm_is_less_than (y, x);
+}
+
+static int
+scm_is_greater_than_or_equal (SCM x, SCM y)
+{
+  return scm_is_less_than_or_equal (y, x);
+}
+
 SCM_INTERNAL SCM scm_i_num_less_p (SCM, SCM, SCM);
 SCM_PRIMITIVE_GENERIC (scm_i_num_less_p, "<", 0, 2, 1,
                        (SCM x, SCM y, SCM rest),
@@ -4749,171 +4832,17 @@ SCM_PRIMITIVE_GENERIC (scm_i_num_less_p, "<", 0, 2, 1,
   return scm_less_p (x, y);
 }
 #undef FUNC_NAME
+#define FUNC_NAME s_scm_i_num_less_p
 SCM
 scm_less_p (SCM x, SCM y)
 {
- again:
-  if (SCM_I_INUMP (x))
-    {
-      scm_t_inum xx = SCM_I_INUM (x);
-      if (SCM_I_INUMP (y))
-	{
-	  scm_t_inum yy = SCM_I_INUM (y);
-	  return scm_from_bool (xx < yy);
-	}
-      else if (SCM_BIGP (y))
-	{
-	  int sgn = mpz_sgn (SCM_I_BIG_MPZ (y));
-	  scm_remember_upto_here_1 (y);
-	  return scm_from_bool (sgn > 0);
-	}
-      else if (SCM_REALP (y))
-        {
-          /* We can safely take the ceiling of y without changing the
-             result of x<y, given that x is an integer. */
-          double yy = ceil (SCM_REAL_VALUE (y));
-
-          /* In the following comparisons, it's important that the right
-             hand side always be a power of 2, so that it can be
-             losslessly converted to a double even on 64-bit
-             machines. */
-          if (yy >= (double) (SCM_MOST_POSITIVE_FIXNUM+1))
-            return SCM_BOOL_T;
-          else if (!(yy > (double) SCM_MOST_NEGATIVE_FIXNUM))
-            /* The condition above is carefully written to include the
-               case where yy==NaN. */
-            return SCM_BOOL_F;
-          else
-            /* yy is a finite integer that fits in an inum. */
-            return scm_from_bool (xx < (scm_t_inum) yy);
-        }
-      else if (SCM_FRACTIONP (y))
-        {
-          /* "x < a/b" becomes "x*b < a" */
-        int_frac:
-          x = scm_product (x, SCM_FRACTION_DENOMINATOR (y));
-          y = SCM_FRACTION_NUMERATOR (y);
-          goto again;
-        }
-      else
-	return scm_wta_dispatch_2 (g_scm_i_num_less_p, x, y, SCM_ARGn,
-                                   s_scm_i_num_less_p);
-    }
-  else if (SCM_BIGP (x))
-    {
-      if (SCM_I_INUMP (y))
-	{
-	  int sgn = mpz_sgn (SCM_I_BIG_MPZ (x));
-	  scm_remember_upto_here_1 (x);
-	  return scm_from_bool (sgn < 0);
-	}
-      else if (SCM_BIGP (y))
-	{
-	  int cmp = mpz_cmp (SCM_I_BIG_MPZ (x), SCM_I_BIG_MPZ (y));
-	  scm_remember_upto_here_2 (x, y);
-	  return scm_from_bool (cmp < 0);
-	}
-      else if (SCM_REALP (y))
-	{
-	  int cmp;
-	  if (isnan (SCM_REAL_VALUE (y)))
-	    return SCM_BOOL_F;
-	  cmp = xmpz_cmp_d (SCM_I_BIG_MPZ (x), SCM_REAL_VALUE (y));
-	  scm_remember_upto_here_1 (x);
-	  return scm_from_bool (cmp < 0);
-	}
-      else if (SCM_FRACTIONP (y))
-        goto int_frac;
-      else
-	return scm_wta_dispatch_2 (g_scm_i_num_less_p, x, y, SCM_ARGn,
-                                   s_scm_i_num_less_p);
-    }
-  else if (SCM_REALP (x))
-    {
-      if (SCM_I_INUMP (y))
-        {
-          /* We can safely take the floor of x without changing the
-             result of x<y, given that y is an integer. */
-          double xx = floor (SCM_REAL_VALUE (x));
-
-          /* In the following comparisons, it's important that the right
-             hand side always be a power of 2, so that it can be
-             losslessly converted to a double even on 64-bit
-             machines. */
-          if (xx < (double) SCM_MOST_NEGATIVE_FIXNUM)
-            return SCM_BOOL_T;
-          else if (!(xx < (double) (SCM_MOST_POSITIVE_FIXNUM+1)))
-            /* The condition above is carefully written to include the
-               case where xx==NaN. */
-            return SCM_BOOL_F;
-          else
-            /* xx is a finite integer that fits in an inum. */
-            return scm_from_bool ((scm_t_inum) xx < SCM_I_INUM (y));
-        }
-      else if (SCM_BIGP (y))
-	{
-	  int cmp;
-	  if (isnan (SCM_REAL_VALUE (x)))
-	    return SCM_BOOL_F;
-	  cmp = xmpz_cmp_d (SCM_I_BIG_MPZ (y), SCM_REAL_VALUE (x));
-	  scm_remember_upto_here_1 (y);
-	  return scm_from_bool (cmp > 0);
-	}
-      else if (SCM_REALP (y))
-	return scm_from_bool (SCM_REAL_VALUE (x) < SCM_REAL_VALUE (y));
-      else if (SCM_FRACTIONP (y))
-        {
-          double  xx = SCM_REAL_VALUE (x);
-	  if (isnan (xx))
-	    return SCM_BOOL_F;
-          if (isinf (xx))
-            return scm_from_bool (xx < 0.0);
-          x = scm_inexact_to_exact (x);  /* with x as frac or int */
-          goto again;
-        }
-      else
-	return scm_wta_dispatch_2 (g_scm_i_num_less_p, x, y, SCM_ARGn,
-                                   s_scm_i_num_less_p);
-    }
-  else if (SCM_FRACTIONP (x))
-    {
-      if (SCM_I_INUMP (y) || SCM_BIGP (y))
-        {
-          /* "a/b < y" becomes "a < y*b" */
-          y = scm_product (y, SCM_FRACTION_DENOMINATOR (x));
-          x = SCM_FRACTION_NUMERATOR (x);
-          goto again;
-        }
-      else if (SCM_REALP (y))
-        {
-          double yy = SCM_REAL_VALUE (y);
-          if (isnan (yy))
-            return SCM_BOOL_F;
-          if (isinf (yy))
-            return scm_from_bool (0.0 < yy);
-          y = scm_inexact_to_exact (y);  /* with y as frac or int */
-          goto again;
-        }
-      else if (SCM_FRACTIONP (y))
-        {
-          /* "a/b < c/d" becomes "a*d < c*b" */
-          SCM new_x = scm_product (SCM_FRACTION_NUMERATOR (x),
-                                   SCM_FRACTION_DENOMINATOR (y));
-          SCM new_y = scm_product (SCM_FRACTION_NUMERATOR (y),
-                                   SCM_FRACTION_DENOMINATOR (x));
-          x = new_x;
-          y = new_y;
-          goto again;
-        }
-      else
-	return scm_wta_dispatch_2 (g_scm_i_num_less_p, x, y, SCM_ARGn,
-                                   s_scm_i_num_less_p);
-    }
-  else
-    return scm_wta_dispatch_2 (g_scm_i_num_less_p, x, y, SCM_ARG1,
-                               s_scm_i_num_less_p);
+  if (!scm_is_real (x))
+    return scm_wta_dispatch_2 (g_scm_i_num_less_p, x, y, SCM_ARG1, FUNC_NAME);
+  if (!scm_is_real (y))
+    return scm_wta_dispatch_2 (g_scm_i_num_less_p, x, y, SCM_ARG2, FUNC_NAME);
+  return scm_from_bool (scm_is_less_than (x, y));
 }
-
+#undef FUNC_NAME
 
 SCM scm_i_num_gr_p (SCM, SCM, SCM);
 SCM_PRIMITIVE_GENERIC (scm_i_num_gr_p, ">", 0, 2, 1,
@@ -4939,15 +4868,13 @@ SCM_PRIMITIVE_GENERIC (scm_i_num_gr_p, ">", 0, 2, 1,
 SCM
 scm_gr_p (SCM x, SCM y)
 {
-  if (!SCM_NUMBERP (x))
+  if (!scm_is_real (x))
     return scm_wta_dispatch_2 (g_scm_i_num_gr_p, x, y, SCM_ARG1, FUNC_NAME);
-  else if (!SCM_NUMBERP (y))
+  if (!scm_is_real (y))
     return scm_wta_dispatch_2 (g_scm_i_num_gr_p, x, y, SCM_ARG2, FUNC_NAME);
-  else
-    return scm_less_p (y, x);
+  return scm_from_bool (scm_is_greater_than (x, y));
 }
 #undef FUNC_NAME
-
 
 SCM scm_i_num_leq_p (SCM, SCM, SCM);
 SCM_PRIMITIVE_GENERIC (scm_i_num_leq_p, "<=", 0, 2, 1,
@@ -4973,14 +4900,11 @@ SCM_PRIMITIVE_GENERIC (scm_i_num_leq_p, "<=", 0, 2, 1,
 SCM
 scm_leq_p (SCM x, SCM y)
 {
-  if (!SCM_NUMBERP (x))
+  if (!scm_is_real (x))
     return scm_wta_dispatch_2 (g_scm_i_num_leq_p, x, y, SCM_ARG1, FUNC_NAME);
-  else if (!SCM_NUMBERP (y))
+  if (!scm_is_real (y))
     return scm_wta_dispatch_2 (g_scm_i_num_leq_p, x, y, SCM_ARG2, FUNC_NAME);
-  else if (scm_is_true (scm_nan_p (x)) || scm_is_true (scm_nan_p (y)))
-    return SCM_BOOL_F;
-  else
-    return scm_not (scm_less_p (y, x));
+  return scm_from_bool (scm_is_less_than_or_equal (x, y));
 }
 #undef FUNC_NAME
 
@@ -5009,14 +4933,11 @@ SCM_PRIMITIVE_GENERIC (scm_i_num_geq_p, ">=", 0, 2, 1,
 SCM
 scm_geq_p (SCM x, SCM y)
 {
-  if (!SCM_NUMBERP (x))
+  if (!scm_is_real (x))
     return scm_wta_dispatch_2 (g_scm_i_num_geq_p, x, y, SCM_ARG1, FUNC_NAME);
-  else if (!SCM_NUMBERP (y))
+  if (!scm_is_real (y))
     return scm_wta_dispatch_2 (g_scm_i_num_geq_p, x, y, SCM_ARG2, FUNC_NAME);
-  else if (scm_is_true (scm_nan_p (x)) || scm_is_true (scm_nan_p (y)))
-    return SCM_BOOL_F;
-  else
-    return scm_not (scm_less_p (x, y));
+  return scm_from_bool (scm_is_greater_than_or_equal (x, y));
 }
 #undef FUNC_NAME
 

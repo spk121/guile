@@ -2411,3 +2411,94 @@ scm_is_integer_equal_zc (struct scm_bignum *x, double real, double imag)
 {
   return imag == 0.0 && scm_is_integer_equal_zr (x, real);
 }
+
+int
+scm_is_integer_less_than_ir (scm_t_inum x, double y)
+{
+  /* We can safely take the ceiling of y without changing the
+     result of x<y, given that x is an integer. */
+  y = ceil (y);
+
+  /* In the following comparisons, it's important that the right
+     hand side always be a power of 2, so that it can be
+     losslessly converted to a double even on 64-bit
+     machines. */
+  if (y >= (double) (SCM_MOST_POSITIVE_FIXNUM+1))
+    return 1;
+  else if (!(y > (double) SCM_MOST_NEGATIVE_FIXNUM))
+    /* The condition above is carefully written to include the
+       case where y==NaN. */
+    return 0;
+  else
+    /* y is a finite integer that fits in an inum. */
+    return x < (scm_t_inum) y;
+}
+
+int
+scm_is_integer_less_than_ri (double x, scm_t_inum y)
+{
+  /* We can safely take the floor of x without changing the
+     result of x<y, given that y is an integer. */
+  x = floor (x);
+
+  /* In the following comparisons, it's important that the right
+     hand side always be a power of 2, so that it can be
+     losslessly converted to a double even on 64-bit
+     machines. */
+  if (x < (double) SCM_MOST_NEGATIVE_FIXNUM)
+    return 1;
+  else if (!(x < (double) (SCM_MOST_POSITIVE_FIXNUM+1)))
+    /* The condition above is carefully written to include the
+       case where x==NaN. */
+    return 0;
+  else
+    /* x is a finite integer that fits in an inum. */
+    return (scm_t_inum) x < y;
+}
+
+int
+scm_is_integer_less_than_zz (struct scm_bignum *x, struct scm_bignum *y)
+{
+  mpz_t zx, zy;
+  alias_bignum_to_mpz (x, zx);
+  alias_bignum_to_mpz (y, zy);
+  int cmp = mpz_cmp (zx, zy);
+  scm_remember_upto_here_2 (x, y);
+  return cmp < 0;
+}
+
+int
+scm_is_integer_less_than_zr (struct scm_bignum *x, double y)
+{
+  if (isnan (y))
+    return 0;
+  mpz_t zx;
+  alias_bignum_to_mpz (x, zx);
+  int cmp = mpz_cmp_d (zx, y);
+  scm_remember_upto_here_1 (x);
+  return cmp < 0;
+}
+
+int
+scm_is_integer_less_than_rz (double x, struct scm_bignum *y)
+{
+  if (isnan (x))
+    return 0;
+  mpz_t zy;
+  alias_bignum_to_mpz (y, zy);
+  int cmp = mpz_cmp_d (zy, x);
+  scm_remember_upto_here_1 (y);
+  return cmp > 0;
+}
+
+int
+scm_is_integer_positive_z (struct scm_bignum *x)
+{
+  return bignum_is_positive (x);
+}
+
+int
+scm_is_integer_negative_z (struct scm_bignum *x)
+{
+  return bignum_is_negative (x);
+}
