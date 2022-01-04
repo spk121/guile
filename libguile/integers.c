@@ -2559,3 +2559,47 @@ scm_integer_add_zz (struct scm_bignum *x, struct scm_bignum *y)
   // if result is fixable.
   return take_mpz (result);
 }
+
+SCM
+scm_integer_negate_i (scm_t_inum x)
+{
+  return long_to_scm (-x);
+}
+
+SCM
+scm_integer_negate_z (struct scm_bignum *x)
+{
+  /* Must normalize here because -SCM_MOST_NEGATIVE_FIXNUM is a bignum,
+     but negating that gives a fixnum.  */
+  return normalize_bignum (negate_bignum (clone_bignum (x)));
+}
+
+SCM
+scm_integer_sub_ii (scm_t_inum x, scm_t_inum y)
+{
+  // Assumes that -INUM_MIN can fit in a scm_t_inum, even if that
+  // scm_t_inum is not fixable, and that scm_integer_add_ii can handle
+  // scm_t_inum inputs outside the fixable range.
+  return scm_integer_add_ii (x, -y);
+}
+
+SCM
+scm_integer_sub_iz (scm_t_inum x, struct scm_bignum *y)
+{
+  return scm_integer_add_zi (negate_bignum (clone_bignum (y)), x);
+}
+
+SCM
+scm_integer_sub_zi (struct scm_bignum *x, scm_t_inum y)
+{
+  // Assumes that -INUM_MIN can fit in a scm_t_inum, even if that
+  // scm_t_inum is not fixable, and that scm_integer_add_ii can handle
+  // scm_t_inum inputs outside the fixable range.
+  return scm_integer_add_zi (x, -y);
+}
+
+SCM
+scm_integer_sub_zz (struct scm_bignum *x, struct scm_bignum *y)
+{
+  return scm_integer_add_zz (x, negate_bignum (clone_bignum (y)));
+}
