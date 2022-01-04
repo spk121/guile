@@ -1,4 +1,4 @@
-/* Copyright 1995-2016,2018-2021
+/* Copyright 1995-2016,2018-2022
      Free Software Foundation, Inc.
 
    Portions Copyright 1990-1993 by AT&T Bell Laboratories and Bellcore.
@@ -5549,12 +5549,6 @@ scm_product (SCM x, SCM y)
   return product (x, y);
 }
 
-#if ((defined (HAVE_ISINF) && defined (HAVE_ISNAN)) \
-     || (defined (HAVE_FINITE) && defined (HAVE_ISNAN)))
-#define ALLOW_DIVIDE_BY_ZERO
-/* #define ALLOW_DIVIDE_BY_EXACT_ZERO */
-#endif
-
 /* The code below for complex division is adapted from the GNU
    libstdc++, which adapted it from f2c's libF77, and is subject to
    this copyright:  */
@@ -5616,25 +5610,15 @@ scm_divide (SCM x, SCM y)
 	  scm_t_inum xx = SCM_I_INUM (x);
 	  if (xx == 1 || xx == -1)
 	    return x;
-#ifndef ALLOW_DIVIDE_BY_EXACT_ZERO
 	  else if (xx == 0)
 	    scm_num_overflow (s_divide);
-#endif
 	  else
 	    return scm_i_make_ratio_already_reduced (SCM_INUM1, x);
 	}
       else if (SCM_BIGP (x))
 	return scm_i_make_ratio_already_reduced (SCM_INUM1, x);
       else if (SCM_REALP (x))
-	{
-	  double xx = SCM_REAL_VALUE (x);
-#ifndef ALLOW_DIVIDE_BY_ZERO
-	  if (xx == 0.0)
-	    scm_num_overflow (s_divide);
-	  else
-#endif
-	    return scm_i_from_double (1.0 / xx);
-	}
+        return scm_i_from_double (1.0 / SCM_REAL_VALUE (x));
       else if (SCM_COMPLEXP (x))
 	{
 	  double r = SCM_COMPLEX_REAL (x);
@@ -5666,13 +5650,7 @@ scm_divide (SCM x, SCM y)
 	{
 	  scm_t_inum yy = SCM_I_INUM (y);
 	  if (yy == 0)
-	    {
-#ifndef ALLOW_DIVIDE_BY_EXACT_ZERO
-	      scm_num_overflow (s_divide);
-#else
-	      return scm_i_from_double ((double) xx / (double) yy);
-#endif
-	    }
+            scm_num_overflow (s_divide);
 	  else if (xx % yy != 0)
 	    return scm_i_make_ratio (x, y);
 	  else
@@ -5687,18 +5665,10 @@ scm_divide (SCM x, SCM y)
       else if (SCM_BIGP (y))
 	return scm_i_make_ratio (x, y);
       else if (SCM_REALP (y))
-	{
-	  double yy = SCM_REAL_VALUE (y);
-#ifndef ALLOW_DIVIDE_BY_ZERO
-	  if (yy == 0.0)
-	    scm_num_overflow (s_divide);
-	  else
-#endif
-            /* FIXME: Precision may be lost here due to:
-               (1) The cast from 'scm_t_inum' to 'double'
-               (2) Double rounding */
-	    return scm_i_from_double ((double) xx / yy);
-	}
+        /* FIXME: Precision may be lost here due to:
+           (1) The cast from 'scm_t_inum' to 'double'
+           (2) Double rounding */
+        return scm_i_from_double ((double) xx / SCM_REAL_VALUE (y));
       else if (SCM_COMPLEXP (y))
 	{
 	  a = xx;
@@ -5733,15 +5703,7 @@ scm_divide (SCM x, SCM y)
 	{
 	  scm_t_inum yy = SCM_I_INUM (y);
 	  if (yy == 0)
-	    {
-#ifndef ALLOW_DIVIDE_BY_EXACT_ZERO
-	      scm_num_overflow (s_divide);
-#else
-	      int sgn = mpz_sgn (SCM_I_BIG_MPZ (x));
-	      scm_remember_upto_here_1 (x);
-	      return (sgn == 0) ? scm_nan () : scm_inf ();
-#endif
-	    }
+            scm_num_overflow (s_divide);
 	  else if (yy == 1)
 	    return x;
 	  else
@@ -5787,17 +5749,9 @@ scm_divide (SCM x, SCM y)
             return scm_i_make_ratio (x, y);
 	}
       else if (SCM_REALP (y))
-	{
-	  double yy = SCM_REAL_VALUE (y);
-#ifndef ALLOW_DIVIDE_BY_ZERO
-	  if (yy == 0.0)
-	    scm_num_overflow (s_divide);
-	  else
-#endif
-            /* FIXME: Precision may be lost here due to:
-               (1) scm_i_big2dbl (2) Double rounding */
-	    return scm_i_from_double (scm_i_big2dbl (x) / yy);
-	}
+        /* FIXME: Precision may be lost here due to:
+           (1) scm_i_big2dbl (2) Double rounding */
+        return scm_i_from_double (scm_i_big2dbl (x) / SCM_REAL_VALUE (y));
       else if (SCM_COMPLEXP (y))
 	{
 	  a = scm_i_big2dbl (x);
@@ -5815,11 +5769,9 @@ scm_divide (SCM x, SCM y)
       if (SCM_I_INUMP (y))
 	{
 	  scm_t_inum yy = SCM_I_INUM (y);
-#ifndef ALLOW_DIVIDE_BY_EXACT_ZERO
 	  if (yy == 0)
 	    scm_num_overflow (s_divide);
 	  else
-#endif
             /* FIXME: Precision may be lost here due to:
                (1) The cast from 'scm_t_inum' to 'double'
                (2) Double rounding */
@@ -5835,15 +5787,7 @@ scm_divide (SCM x, SCM y)
 	  return scm_i_from_double (rx / dby);
 	}
       else if (SCM_REALP (y))
-	{
-	  double yy = SCM_REAL_VALUE (y);
-#ifndef ALLOW_DIVIDE_BY_ZERO
-	  if (yy == 0.0)
-	    scm_num_overflow (s_divide);
-	  else
-#endif
-	    return scm_i_from_double (rx / yy);
-	}
+        return scm_i_from_double (rx / SCM_REAL_VALUE (y));
       else if (SCM_COMPLEXP (y))
 	{
 	  a = rx;
@@ -5861,11 +5805,9 @@ scm_divide (SCM x, SCM y)
       if (SCM_I_INUMP (y))
 	{
 	  scm_t_inum yy = SCM_I_INUM (y);
-#ifndef ALLOW_DIVIDE_BY_EXACT_ZERO
 	  if (yy == 0)
 	    scm_num_overflow (s_divide);
 	  else
-#endif
 	    {
               /* FIXME: Precision may be lost here due to:
                  (1) The conversion from 'scm_t_inum' to double
@@ -5886,12 +5828,7 @@ scm_divide (SCM x, SCM y)
       else if (SCM_REALP (y))
 	{
 	  double yy = SCM_REAL_VALUE (y);
-#ifndef ALLOW_DIVIDE_BY_ZERO
-	  if (yy == 0.0)
-	    scm_num_overflow (s_divide);
-	  else
-#endif
-	    return scm_c_make_rectangular (rx / yy, ix / yy);
+          return scm_c_make_rectangular (rx / yy, ix / yy);
 	}
       else if (SCM_COMPLEXP (y))
 	{
@@ -5926,11 +5863,9 @@ scm_divide (SCM x, SCM y)
       if (SCM_I_INUMP (y)) 
 	{
 	  scm_t_inum yy = SCM_I_INUM (y);
-#ifndef ALLOW_DIVIDE_BY_EXACT_ZERO
 	  if (yy == 0)
 	    scm_num_overflow (s_divide);
 	  else
-#endif
 	    return scm_i_make_ratio (SCM_FRACTION_NUMERATOR (x),
                                      scm_product (SCM_FRACTION_DENOMINATOR (x), y));
 	} 
@@ -5940,18 +5875,11 @@ scm_divide (SCM x, SCM y)
                                    scm_product (SCM_FRACTION_DENOMINATOR (x), y));
 	} 
       else if (SCM_REALP (y)) 
-	{
-	  double yy = SCM_REAL_VALUE (y);
-#ifndef ALLOW_DIVIDE_BY_ZERO
-	  if (yy == 0.0)
-	    scm_num_overflow (s_divide);
-	  else
-#endif
-            /* FIXME: Precision may be lost here due to:
-               (1) The conversion from fraction to double
-               (2) Double rounding */
-	    return scm_i_from_double (scm_i_fraction2double (x) / yy);
-	}
+        /* FIXME: Precision may be lost here due to:
+           (1) The conversion from fraction to double
+           (2) Double rounding */
+        return scm_i_from_double (scm_i_fraction2double (x) /
+                                  SCM_REAL_VALUE (y));
       else if (SCM_COMPLEXP (y)) 
 	{
           /* FIXME: Precision may be lost here due to:
@@ -6195,10 +6123,6 @@ SCM_PRIMITIVE_GENERIC (scm_tan, "tan", 1, 0, 0,
       x = 2.0 * SCM_COMPLEX_REAL (z);
       y = 2.0 * SCM_COMPLEX_IMAG (z);
       w = cos (x) + cosh (y);
-#ifndef ALLOW_DIVIDE_BY_ZERO
-      if (w == 0.0)
-        scm_num_overflow (s_scm_tan);
-#endif
       return scm_c_make_rectangular (sin (x) / w, sinh (y) / w);
     }
   else
@@ -6262,10 +6186,6 @@ SCM_PRIMITIVE_GENERIC (scm_tanh, "tanh", 1, 0, 0,
       x = 2.0 * SCM_COMPLEX_REAL (z);
       y = 2.0 * SCM_COMPLEX_IMAG (z);
       w = cosh (x) + cos (y);
-#ifndef ALLOW_DIVIDE_BY_ZERO
-      if (w == 0.0)
-        scm_num_overflow (s_scm_tanh);
-#endif
       return scm_c_make_rectangular (sinh (x) / w, sin (y) / w);
     }
   else
@@ -7363,10 +7283,8 @@ SCM_PRIMITIVE_GENERIC (scm_log, "log", 1, 0, 0,
     return log_of_shifted_double (SCM_REAL_VALUE (z), 0);
   else if (SCM_I_INUMP (z))
     {
-#ifndef ALLOW_DIVIDE_BY_EXACT_ZERO
       if (scm_is_eq (z, SCM_INUM0))
 	scm_num_overflow (s_scm_log);
-#endif
       return log_of_shifted_double (SCM_I_INUM (z), 0);
     }
   else if (SCM_BIGP (z))
@@ -7402,10 +7320,8 @@ SCM_PRIMITIVE_GENERIC (scm_log10, "log10", 1, 0, 0,
     }
   else if (SCM_REALP (z) || SCM_I_INUMP (z))
     {
-#ifndef ALLOW_DIVIDE_BY_EXACT_ZERO
       if (scm_is_eq (z, SCM_INUM0))
 	scm_num_overflow (s_scm_log10);
-#endif
       {
 	double re = scm_to_double (z);
 	double l = log10 (fabs (re));
