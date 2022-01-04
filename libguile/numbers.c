@@ -3820,13 +3820,8 @@ scm_i_print_fraction (SCM sexp, SCM port, scm_print_state *pstate SCM_UNUSED)
 int
 scm_bigprint (SCM exp, SCM port, scm_print_state *pstate SCM_UNUSED)
 {
-  char *str = mpz_get_str (NULL, 10, SCM_I_BIG_MPZ (exp));
-  size_t len = strlen (str);
-  void (*freefunc) (void *, size_t);
-  mp_get_memory_functions (NULL, NULL, &freefunc);
-  scm_remember_upto_here_1 (exp);
-  scm_lfwrite (str, len, port);
-  freefunc (str, len + 1);
+  SCM str = scm_integer_to_string_z (scm_bignum (exp), 10);
+  scm_c_put_string (port, str, 0, scm_c_string_length (str));
   return !0;
 }
 /*** END nums->strs ***/
