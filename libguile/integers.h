@@ -166,6 +166,12 @@ SCM_INTERNAL int scm_is_integer_less_than_rz (double y, struct scm_bignum *x);
 SCM_INTERNAL int scm_is_integer_positive_z (struct scm_bignum *x);
 SCM_INTERNAL int scm_is_integer_negative_z (struct scm_bignum *x);
 
+SCM_INTERNAL double scm_integer_to_double_z (struct scm_bignum *x);
+
+SCM_INTERNAL SCM scm_integer_add_ii (scm_t_inum x, scm_t_inum y);
+SCM_INTERNAL SCM scm_integer_add_zi (struct scm_bignum *x, scm_t_inum y);
+SCM_INTERNAL SCM scm_integer_add_zz (struct scm_bignum *x, struct scm_bignum *y);
+
 
 
 #endif  /* SCM_INTEGERS_H */

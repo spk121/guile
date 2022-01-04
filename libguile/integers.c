@@ -2502,3 +2502,60 @@ scm_is_integer_negative_z (struct scm_bignum *x)
 {
   return bignum_is_negative (x);
 }
+
+double
+scm_integer_to_double_z (struct scm_bignum *x)
+{
+  mpz_t zx;
+  alias_bignum_to_mpz (x, zx);
+  double result = mpz_get_d (zx);
+  scm_remember_upto_here_1 (x);
+  return result;
+}
+
+SCM
+scm_integer_add_ii (scm_t_inum x, scm_t_inum y)
+{
+  return long_to_scm (x + y);
+}
+
+SCM
+scm_integer_add_zi (struct scm_bignum *x, scm_t_inum y)
+{
+  if (y == 0)
+    return scm_from_bignum (x);
+
+  mpz_t result, zx;
+  mpz_init (result);
+  alias_bignum_to_mpz (x, zx);
+  if (y < 0)
+    {
+      mpz_sub_ui (result, zx, - y);
+      scm_remember_upto_here_1 (x);
+      // FIXME: We know that if X is negative, no need to check if
+      // result is fixable.
+      return take_mpz (result);
+    }
+  else
+    {
+      mpz_add_ui (result, zx, y);
+      scm_remember_upto_here_1 (x);
+      // FIXME: We know that if X is positive, no need to check if
+      // result is fixable.
+      return take_mpz (result);
+    }
+}
+
+SCM
+scm_integer_add_zz (struct scm_bignum *x, struct scm_bignum *y)
+{
+  mpz_t result, zx, zy;
+  mpz_init (result);
+  alias_bignum_to_mpz (x, zx);
+  alias_bignum_to_mpz (y, zy);
+  mpz_add (result, zx, zy);
+  scm_remember_upto_here_2 (x, y);
+  // FIXME: We know that if X and Y have the same sign, no need to check
+  // if result is fixable.
+  return take_mpz (result);
+}
