@@ -23,153 +23,123 @@
 
 #include "libguile/numbers.h"
 
+struct scm_bignum;
+
+static inline struct scm_bignum *
+scm_bignum (SCM x)
+{
+  if (!SCM_BIGP (x)) abort ();
+  return (struct scm_bignum *) SCM_UNPACK (x);
+}
+
 SCM_INTERNAL int scm_is_integer_odd_i (scm_t_inum i);
-SCM_INTERNAL int scm_is_integer_odd_z (SCM z);
+SCM_INTERNAL int scm_is_integer_odd_z (struct scm_bignum *z);
 
 SCM_INTERNAL SCM scm_integer_abs_i (scm_t_inum i);
-SCM_INTERNAL SCM scm_integer_abs_z (SCM z);
+SCM_INTERNAL SCM scm_integer_abs_z (struct scm_bignum *z);
 
-SCM_INTERNAL SCM scm_integer_floor_quotient_ii (scm_t_inum x, scm_t_inum y);
-SCM_INTERNAL SCM scm_integer_floor_quotient_iz (scm_t_inum x, SCM y);
-SCM_INTERNAL SCM scm_integer_floor_quotient_zi (SCM x, scm_t_inum y);
-SCM_INTERNAL SCM scm_integer_floor_quotient_zz (SCM x, SCM y);
+#define DECLARE_QUOTIENT_OPERATORS(stem)                                \
+  SCM_INTERNAL SCM scm_integer_##stem##_quotient_ii (scm_t_inum x,      \
+                                                     scm_t_inum y);     \
+  SCM_INTERNAL SCM scm_integer_##stem##_quotient_iz (scm_t_inum x,      \
+                                                     struct scm_bignum *y); \
+  SCM_INTERNAL SCM scm_integer_##stem##_quotient_zi (struct scm_bignum *x, \
+                                                     scm_t_inum y);     \
+  SCM_INTERNAL SCM scm_integer_##stem##_quotient_zz (struct scm_bignum *x, \
+                                                     struct scm_bignum *y);
 
-SCM_INTERNAL SCM scm_integer_floor_remainder_ii (scm_t_inum x, scm_t_inum y);
-SCM_INTERNAL SCM scm_integer_floor_remainder_iz (scm_t_inum x, SCM y);
-SCM_INTERNAL SCM scm_integer_floor_remainder_zi (SCM x, scm_t_inum y);
-SCM_INTERNAL SCM scm_integer_floor_remainder_zz (SCM x, SCM y);
+#define DECLARE_REMAINDER_OPERATORS(stem)                               \
+  SCM_INTERNAL SCM scm_integer_##stem##_remainder_ii (scm_t_inum x,     \
+                                                      scm_t_inum y);    \
+  SCM_INTERNAL SCM scm_integer_##stem##_remainder_iz (scm_t_inum x,     \
+                                                      struct scm_bignum *y); \
+  SCM_INTERNAL SCM scm_integer_##stem##_remainder_zi (struct scm_bignum *x, \
+                                                      scm_t_inum y);    \
+  SCM_INTERNAL SCM scm_integer_##stem##_remainder_zz (struct scm_bignum *x, \
+                                                      struct scm_bignum *y);
 
-SCM_INTERNAL void scm_integer_floor_divide_ii (scm_t_inum x, scm_t_inum y,
-                                               SCM *qp, SCM *rp);
-SCM_INTERNAL void scm_integer_floor_divide_iz (scm_t_inum x, SCM y,
-                                               SCM *qp, SCM *rp);
-SCM_INTERNAL void scm_integer_floor_divide_zi (SCM x, scm_t_inum y,
-                                               SCM *qp, SCM *rp);
-SCM_INTERNAL void scm_integer_floor_divide_zz (SCM x, SCM y,
-                                               SCM *qp, SCM *rp);
+#define DECLARE_DIVIDE_OPERATORS(stem)                                  \
+  SCM_INTERNAL void scm_integer_##stem##_divide_ii (scm_t_inum x,       \
+                                                    scm_t_inum y,       \
+                                                    SCM *qp, SCM *rp);  \
+  SCM_INTERNAL void scm_integer_##stem##_divide_iz (scm_t_inum x,       \
+                                                    struct scm_bignum *y, \
+                                                    SCM *qp, SCM *rp);  \
+  SCM_INTERNAL void scm_integer_##stem##_divide_zi (struct scm_bignum *x, \
+                                                    scm_t_inum y,       \
+                                                    SCM *qp, SCM *rp);  \
+  SCM_INTERNAL void scm_integer_##stem##_divide_zz (struct scm_bignum *x, \
+                                                    struct scm_bignum *y, \
+                                                    SCM *qp, SCM *rp);
 
-SCM_INTERNAL SCM scm_integer_ceiling_quotient_ii (scm_t_inum x, scm_t_inum y);
-SCM_INTERNAL SCM scm_integer_ceiling_quotient_iz (scm_t_inum x, SCM y);
-SCM_INTERNAL SCM scm_integer_ceiling_quotient_zi (SCM x, scm_t_inum y);
-SCM_INTERNAL SCM scm_integer_ceiling_quotient_zz (SCM x, SCM y);
+#define DECLARE_DIVISION_OPERATORS(stem)                                \
+  DECLARE_QUOTIENT_OPERATORS(stem);                                     \
+  DECLARE_REMAINDER_OPERATORS(stem);                                    \
+  DECLARE_DIVIDE_OPERATORS(stem)
 
-SCM_INTERNAL SCM scm_integer_ceiling_remainder_ii (scm_t_inum x, scm_t_inum y);
-SCM_INTERNAL SCM scm_integer_ceiling_remainder_iz (scm_t_inum x, SCM y);
-SCM_INTERNAL SCM scm_integer_ceiling_remainder_zi (SCM x, scm_t_inum y);
-SCM_INTERNAL SCM scm_integer_ceiling_remainder_zz (SCM x, SCM y);
-
-SCM_INTERNAL void scm_integer_ceiling_divide_ii (scm_t_inum x, scm_t_inum y,
-                                                 SCM *qp, SCM *rp);
-SCM_INTERNAL void scm_integer_ceiling_divide_iz (scm_t_inum x, SCM y,
-                                                 SCM *qp, SCM *rp);
-SCM_INTERNAL void scm_integer_ceiling_divide_zi (SCM x, scm_t_inum y,
-                                                 SCM *qp, SCM *rp);
-SCM_INTERNAL void scm_integer_ceiling_divide_zz (SCM x, SCM y,
-                                                 SCM *qp, SCM *rp);
-
-SCM_INTERNAL SCM scm_integer_truncate_quotient_ii (scm_t_inum x, scm_t_inum y);
-SCM_INTERNAL SCM scm_integer_truncate_quotient_iz (scm_t_inum x, SCM y);
-SCM_INTERNAL SCM scm_integer_truncate_quotient_zi (SCM x, scm_t_inum y);
-SCM_INTERNAL SCM scm_integer_truncate_quotient_zz (SCM x, SCM y);
-
-SCM_INTERNAL SCM scm_integer_truncate_remainder_ii (scm_t_inum x, scm_t_inum y);
-SCM_INTERNAL SCM scm_integer_truncate_remainder_iz (scm_t_inum x, SCM y);
-SCM_INTERNAL SCM scm_integer_truncate_remainder_zi (SCM x, scm_t_inum y);
-SCM_INTERNAL SCM scm_integer_truncate_remainder_zz (SCM x, SCM y);
-
-SCM_INTERNAL void scm_integer_truncate_divide_ii (scm_t_inum x, scm_t_inum y,
-                                                  SCM *qp, SCM *rp);
-SCM_INTERNAL void scm_integer_truncate_divide_iz (scm_t_inum x, SCM y,
-                                                  SCM *qp, SCM *rp);
-SCM_INTERNAL void scm_integer_truncate_divide_zi (SCM x, scm_t_inum y,
-                                                  SCM *qp, SCM *rp);
-SCM_INTERNAL void scm_integer_truncate_divide_zz (SCM x, SCM y,
-                                                  SCM *qp, SCM *rp);
-
-SCM_INTERNAL SCM scm_integer_centered_quotient_ii (scm_t_inum x, scm_t_inum y);
-SCM_INTERNAL SCM scm_integer_centered_quotient_iz (scm_t_inum x, SCM y);
-SCM_INTERNAL SCM scm_integer_centered_quotient_zi (SCM x, scm_t_inum y);
-SCM_INTERNAL SCM scm_integer_centered_quotient_zz (SCM x, SCM y);
-
-SCM_INTERNAL SCM scm_integer_centered_remainder_ii (scm_t_inum x, scm_t_inum y);
-SCM_INTERNAL SCM scm_integer_centered_remainder_iz (scm_t_inum x, SCM y);
-SCM_INTERNAL SCM scm_integer_centered_remainder_zi (SCM x, scm_t_inum y);
-SCM_INTERNAL SCM scm_integer_centered_remainder_zz (SCM x, SCM y);
-
-SCM_INTERNAL void scm_integer_centered_divide_ii (scm_t_inum x, scm_t_inum y,
-                                                  SCM *qp, SCM *rp);
-SCM_INTERNAL void scm_integer_centered_divide_iz (scm_t_inum x, SCM y,
-                                                  SCM *qp, SCM *rp);
-SCM_INTERNAL void scm_integer_centered_divide_zi (SCM x, scm_t_inum y,
-                                                  SCM *qp, SCM *rp);
-SCM_INTERNAL void scm_integer_centered_divide_zz (SCM x, SCM y,
-                                                  SCM *qp, SCM *rp);
-
-SCM_INTERNAL SCM scm_integer_round_quotient_ii (scm_t_inum x, scm_t_inum y);
-SCM_INTERNAL SCM scm_integer_round_quotient_iz (scm_t_inum x, SCM y);
-SCM_INTERNAL SCM scm_integer_round_quotient_zi (SCM x, scm_t_inum y);
-SCM_INTERNAL SCM scm_integer_round_quotient_zz (SCM x, SCM y);
-
-SCM_INTERNAL SCM scm_integer_round_remainder_ii (scm_t_inum x, scm_t_inum y);
-SCM_INTERNAL SCM scm_integer_round_remainder_iz (scm_t_inum x, SCM y);
-SCM_INTERNAL SCM scm_integer_round_remainder_zi (SCM x, scm_t_inum y);
-SCM_INTERNAL SCM scm_integer_round_remainder_zz (SCM x, SCM y);
-
-SCM_INTERNAL void scm_integer_round_divide_ii (scm_t_inum x, scm_t_inum y,
-                                               SCM *qp, SCM *rp);
-SCM_INTERNAL void scm_integer_round_divide_iz (scm_t_inum x, SCM y,
-                                               SCM *qp, SCM *rp);
-SCM_INTERNAL void scm_integer_round_divide_zi (SCM x, scm_t_inum y,
-                                               SCM *qp, SCM *rp);
-SCM_INTERNAL void scm_integer_round_divide_zz (SCM x, SCM y,
-                                               SCM *qp, SCM *rp);
+DECLARE_DIVISION_OPERATORS(floor);
+DECLARE_DIVISION_OPERATORS(ceiling);
+DECLARE_DIVISION_OPERATORS(truncate);
+DECLARE_DIVISION_OPERATORS(centered);
+DECLARE_DIVISION_OPERATORS(round);
 
 SCM_INTERNAL SCM scm_integer_gcd_ii (scm_t_inum x, scm_t_inum y);
-SCM_INTERNAL SCM scm_integer_gcd_zi (SCM x, scm_t_inum y);
-SCM_INTERNAL SCM scm_integer_gcd_zz (SCM x, SCM y);
+SCM_INTERNAL SCM scm_integer_gcd_zi (struct scm_bignum *x, scm_t_inum y);
+SCM_INTERNAL SCM scm_integer_gcd_zz (struct scm_bignum *x,
+                                     struct scm_bignum *y);
 
 SCM_INTERNAL SCM scm_integer_lcm_ii (scm_t_inum x, scm_t_inum y);
-SCM_INTERNAL SCM scm_integer_lcm_zi (SCM x, scm_t_inum y);
-SCM_INTERNAL SCM scm_integer_lcm_zz (SCM x, SCM y);
+SCM_INTERNAL SCM scm_integer_lcm_zi (struct scm_bignum *x, scm_t_inum y);
+SCM_INTERNAL SCM scm_integer_lcm_zz (struct scm_bignum *x,
+                                     struct scm_bignum *y);
 
 SCM_INTERNAL SCM scm_integer_logand_ii (scm_t_inum x, scm_t_inum y);
-SCM_INTERNAL SCM scm_integer_logand_zi (SCM x, scm_t_inum y);
-SCM_INTERNAL SCM scm_integer_logand_zz (SCM x, SCM y);
+SCM_INTERNAL SCM scm_integer_logand_zi (struct scm_bignum *x, scm_t_inum y);
+SCM_INTERNAL SCM scm_integer_logand_zz (struct scm_bignum *x,
+                                        struct scm_bignum *y);
 
 SCM_INTERNAL SCM scm_integer_logior_ii (scm_t_inum x, scm_t_inum y);
-SCM_INTERNAL SCM scm_integer_logior_zi (SCM x, scm_t_inum y);
-SCM_INTERNAL SCM scm_integer_logior_zz (SCM x, SCM y);
+SCM_INTERNAL SCM scm_integer_logior_zi (struct scm_bignum *x, scm_t_inum y);
+SCM_INTERNAL SCM scm_integer_logior_zz (struct scm_bignum *x,
+                                        struct scm_bignum *y);
 
 SCM_INTERNAL SCM scm_integer_logxor_ii (scm_t_inum x, scm_t_inum y);
-SCM_INTERNAL SCM scm_integer_logxor_zi (SCM x, scm_t_inum y);
-SCM_INTERNAL SCM scm_integer_logxor_zz (SCM x, SCM y);
+SCM_INTERNAL SCM scm_integer_logxor_zi (struct scm_bignum *x, scm_t_inum y);
+SCM_INTERNAL SCM scm_integer_logxor_zz (struct scm_bignum *x,
+                                        struct scm_bignum *y);
 
 SCM_INTERNAL int scm_integer_logtest_ii (scm_t_inum x, scm_t_inum y);
-SCM_INTERNAL int scm_integer_logtest_zi (SCM x, scm_t_inum y);
-SCM_INTERNAL int scm_integer_logtest_zz (SCM x, SCM y);
+SCM_INTERNAL int scm_integer_logtest_zi (struct scm_bignum *x, scm_t_inum y);
+SCM_INTERNAL int scm_integer_logtest_zz (struct scm_bignum *x,
+                                         struct scm_bignum *y);
 
 SCM_INTERNAL int scm_integer_logbit_ui (unsigned long bit, scm_t_inum n);
-SCM_INTERNAL int scm_integer_logbit_uz (unsigned long bit, SCM n);
+SCM_INTERNAL int scm_integer_logbit_uz (unsigned long bit,
+                                        struct scm_bignum *n);
 
 SCM_INTERNAL SCM scm_integer_lognot_i (scm_t_inum n);
-SCM_INTERNAL SCM scm_integer_lognot_z (SCM n);
+SCM_INTERNAL SCM scm_integer_lognot_z (struct scm_bignum *n);
 
 SCM_INTERNAL SCM scm_integer_modulo_expt_nnn (SCM n, SCM k, SCM m);
 
 SCM_INTERNAL SCM scm_integer_lsh_iu (scm_t_inum n, unsigned long count);
-SCM_INTERNAL SCM scm_integer_lsh_zu (SCM n, unsigned long count);
+SCM_INTERNAL SCM scm_integer_lsh_zu (struct scm_bignum *n,
+                                     unsigned long count);
 SCM_INTERNAL SCM scm_integer_floor_rsh_iu (scm_t_inum n, unsigned long count);
-SCM_INTERNAL SCM scm_integer_floor_rsh_zu (SCM n, unsigned long count);
+SCM_INTERNAL SCM scm_integer_floor_rsh_zu (struct scm_bignum *n,
+                                           unsigned long count);
 SCM_INTERNAL SCM scm_integer_round_rsh_iu (scm_t_inum n, unsigned long count);
-SCM_INTERNAL SCM scm_integer_round_rsh_zu (SCM n, unsigned long count);
+SCM_INTERNAL SCM scm_integer_round_rsh_zu (struct scm_bignum *n,
+                                           unsigned long count);
 
 SCM_INTERNAL SCM scm_integer_bit_extract_i (scm_t_inum n, unsigned long start,
                                             unsigned long bits);
-SCM_INTERNAL SCM scm_integer_bit_extract_z (SCM n, unsigned long start,
+SCM_INTERNAL SCM scm_integer_bit_extract_z (struct scm_bignum *n,
+                                            unsigned long start,
                                             unsigned long bits);
 
 SCM_INTERNAL SCM scm_integer_logcount_i (scm_t_inum n);
-SCM_INTERNAL SCM scm_integer_logcount_z (SCM n);
+SCM_INTERNAL SCM scm_integer_logcount_z (struct scm_bignum *n);
 
 
 

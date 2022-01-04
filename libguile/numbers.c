@@ -743,7 +743,7 @@ SCM_PRIMITIVE_GENERIC (scm_odd_p, "odd?", 1, 0, 0,
   if (SCM_I_INUMP (n))
     return scm_from_bool (scm_is_integer_odd_i (SCM_I_INUM (n)));
   else if (SCM_BIGP (n))
-    return scm_from_bool (scm_is_integer_odd_z (n));
+    return scm_from_bool (scm_is_integer_odd_z (scm_bignum (n)));
   else if (SCM_REALP (n))
     {
       double val = SCM_REAL_VALUE (n);
@@ -770,7 +770,7 @@ SCM_PRIMITIVE_GENERIC (scm_even_p, "even?", 1, 0, 0,
   if (SCM_I_INUMP (n))
     return scm_from_bool (!scm_is_integer_odd_i (SCM_I_INUM (n)));
   else if (SCM_BIGP (n))
-    return scm_from_bool (!scm_is_integer_odd_z (n));
+    return scm_from_bool (!scm_is_integer_odd_z (scm_bignum (n)));
   else if (SCM_REALP (n))
     {
       double val = SCM_REAL_VALUE (n);
@@ -932,7 +932,7 @@ SCM_PRIMITIVE_GENERIC (scm_abs, "abs", 1, 0, 0,
         return x;
     }
   else if (SCM_BIGP (x))
-    return scm_integer_abs_z (x);
+    return scm_integer_abs_z (scm_bignum (x));
   else if (SCM_FRACTIONP (x))
     {
       if (scm_is_false (scm_negative_p (SCM_FRACTION_NUMERATOR (x))))
@@ -1204,7 +1204,7 @@ SCM_PRIMITIVE_GENERIC (scm_floor_quotient, "floor-quotient", 2, 0, 0,
       if (SCM_I_INUMP (y))
         return scm_integer_floor_quotient_ii (SCM_I_INUM (x), SCM_I_INUM (y));
       else if (SCM_BIGP (y))
-        return scm_integer_floor_quotient_iz (SCM_I_INUM (x), y);
+        return scm_integer_floor_quotient_iz (SCM_I_INUM (x), scm_bignum (y));
       else if (SCM_REALP (y))
 	return scm_i_inexact_floor_quotient (SCM_I_INUM (x), SCM_REAL_VALUE (y));
       else if (SCM_FRACTIONP (y))
@@ -1216,9 +1216,9 @@ SCM_PRIMITIVE_GENERIC (scm_floor_quotient, "floor-quotient", 2, 0, 0,
   else if (SCM_BIGP (x))
     {
       if (SCM_I_INUMP (y))
-        return scm_integer_floor_quotient_zi (x, SCM_I_INUM (y));
+        return scm_integer_floor_quotient_zi (scm_bignum (x), SCM_I_INUM (y));
       else if (SCM_BIGP (y))
-        return scm_integer_floor_quotient_zz (x, y);
+        return scm_integer_floor_quotient_zz (scm_bignum (x), scm_bignum (y));
       else if (SCM_REALP (y))
 	return scm_i_inexact_floor_quotient
 	  (scm_i_big2dbl (x), SCM_REAL_VALUE (y));
@@ -1295,7 +1295,7 @@ SCM_PRIMITIVE_GENERIC (scm_floor_remainder, "floor-remainder", 2, 0, 0,
       if (SCM_I_INUMP (y))
         return scm_integer_floor_remainder_ii (SCM_I_INUM (x), SCM_I_INUM (y));
       else if (SCM_BIGP (y))
-        return scm_integer_floor_remainder_iz (SCM_I_INUM (x), y);
+        return scm_integer_floor_remainder_iz (SCM_I_INUM (x), scm_bignum (y));
       else if (SCM_REALP (y))
 	return scm_i_inexact_floor_remainder (SCM_I_INUM (x),
                                               SCM_REAL_VALUE (y));
@@ -1308,9 +1308,9 @@ SCM_PRIMITIVE_GENERIC (scm_floor_remainder, "floor-remainder", 2, 0, 0,
   else if (SCM_BIGP (x))
     {
       if (SCM_I_INUMP (y))
-        return scm_integer_floor_remainder_zi (x, SCM_I_INUM (y));
+        return scm_integer_floor_remainder_zi (scm_bignum (x), SCM_I_INUM (y));
       else if (SCM_BIGP (y))
-        return scm_integer_floor_remainder_zz (x, y);
+        return scm_integer_floor_remainder_zz (scm_bignum (x), scm_bignum (y));
       else if (SCM_REALP (y))
 	return scm_i_inexact_floor_remainder
 	  (scm_i_big2dbl (x), SCM_REAL_VALUE (y));
@@ -1413,7 +1413,7 @@ scm_floor_divide (SCM x, SCM y, SCM *qp, SCM *rp)
       if (SCM_I_INUMP (y))
         scm_integer_floor_divide_ii (SCM_I_INUM (x), SCM_I_INUM (y), qp, rp);
       else if (SCM_BIGP (y))
-        scm_integer_floor_divide_iz (SCM_I_INUM (x), y, qp, rp);
+        scm_integer_floor_divide_iz (SCM_I_INUM (x), scm_bignum (y), qp, rp);
       else if (SCM_REALP (y))
 	scm_i_inexact_floor_divide (SCM_I_INUM (x), SCM_REAL_VALUE (y), qp, rp);
       else if (SCM_FRACTIONP (y))
@@ -1425,9 +1425,9 @@ scm_floor_divide (SCM x, SCM y, SCM *qp, SCM *rp)
   else if (SCM_BIGP (x))
     {
       if (SCM_I_INUMP (y))
-        scm_integer_floor_divide_zi (x, SCM_I_INUM (y), qp, rp);
+        scm_integer_floor_divide_zi (scm_bignum (x), SCM_I_INUM (y), qp, rp);
       else if (SCM_BIGP (y))
-        scm_integer_floor_divide_zz (x, y, qp, rp);
+        scm_integer_floor_divide_zz (scm_bignum (x), scm_bignum (y), qp, rp);
       else if (SCM_REALP (y))
 	scm_i_inexact_floor_divide (scm_i_big2dbl (x), SCM_REAL_VALUE (y),
                                     qp, rp);
@@ -1511,7 +1511,7 @@ SCM_PRIMITIVE_GENERIC (scm_ceiling_quotient, "ceiling-quotient", 2, 0, 0,
       if (SCM_I_INUMP (y))
         return scm_integer_ceiling_quotient_ii (SCM_I_INUM (x), SCM_I_INUM (y));
       else if (SCM_BIGP (y))
-        return scm_integer_ceiling_quotient_iz (SCM_I_INUM (x), y);
+        return scm_integer_ceiling_quotient_iz (SCM_I_INUM (x), scm_bignum (y));
       else if (SCM_REALP (y))
 	return scm_i_inexact_ceiling_quotient (SCM_I_INUM (x),
                                                SCM_REAL_VALUE (y));
@@ -1524,9 +1524,9 @@ SCM_PRIMITIVE_GENERIC (scm_ceiling_quotient, "ceiling-quotient", 2, 0, 0,
   else if (SCM_BIGP (x))
     {
       if (SCM_I_INUMP (y))
-        return scm_integer_ceiling_quotient_zi (x, SCM_I_INUM (y));
+        return scm_integer_ceiling_quotient_zi (scm_bignum (x), SCM_I_INUM (y));
       else if (SCM_BIGP (y))
-        return scm_integer_ceiling_quotient_zz (x, y);
+        return scm_integer_ceiling_quotient_zz (scm_bignum (x), scm_bignum (y));
       else if (SCM_REALP (y))
 	return scm_i_inexact_ceiling_quotient
 	  (scm_i_big2dbl (x), SCM_REAL_VALUE (y));
@@ -1604,7 +1604,8 @@ SCM_PRIMITIVE_GENERIC (scm_ceiling_remainder, "ceiling-remainder", 2, 0, 0,
         return scm_integer_ceiling_remainder_ii (SCM_I_INUM (x),
                                                  SCM_I_INUM (y));
       else if (SCM_BIGP (y))
-        return scm_integer_ceiling_remainder_iz (SCM_I_INUM (x), y);
+        return scm_integer_ceiling_remainder_iz (SCM_I_INUM (x),
+                                                 scm_bignum (y));
       else if (SCM_REALP (y))
 	return scm_i_inexact_ceiling_remainder (SCM_I_INUM (x),
                                                 SCM_REAL_VALUE (y));
@@ -1617,9 +1618,11 @@ SCM_PRIMITIVE_GENERIC (scm_ceiling_remainder, "ceiling-remainder", 2, 0, 0,
   else if (SCM_BIGP (x))
     {
       if (SCM_I_INUMP (y))
-        return scm_integer_ceiling_remainder_zi (x, SCM_I_INUM (y));
+        return scm_integer_ceiling_remainder_zi (scm_bignum (x),
+                                                 SCM_I_INUM (y));
       else if (SCM_BIGP (y))
-        return scm_integer_ceiling_remainder_zz (x, y);
+        return scm_integer_ceiling_remainder_zz (scm_bignum (x),
+                                                 scm_bignum (y));
       else if (SCM_REALP (y))
 	return scm_i_inexact_ceiling_remainder
 	  (scm_i_big2dbl (x), SCM_REAL_VALUE (y));
@@ -1721,7 +1724,7 @@ scm_ceiling_divide (SCM x, SCM y, SCM *qp, SCM *rp)
       if (SCM_I_INUMP (y))
         scm_integer_ceiling_divide_ii (SCM_I_INUM (x), SCM_I_INUM (y), qp, rp);
       else if (SCM_BIGP (y))
-        scm_integer_ceiling_divide_iz (SCM_I_INUM (x), y, qp, rp);
+        scm_integer_ceiling_divide_iz (SCM_I_INUM (x), scm_bignum (y), qp, rp);
       else if (SCM_REALP (y))
 	scm_i_inexact_ceiling_divide (SCM_I_INUM (x), SCM_REAL_VALUE (y), qp, rp);
       else if (SCM_FRACTIONP (y))
@@ -1733,9 +1736,9 @@ scm_ceiling_divide (SCM x, SCM y, SCM *qp, SCM *rp)
   else if (SCM_BIGP (x))
     {
       if (SCM_I_INUMP (y))
-        scm_integer_ceiling_divide_zi (x, SCM_I_INUM (y), qp, rp);
+        scm_integer_ceiling_divide_zi (scm_bignum (x), SCM_I_INUM (y), qp, rp);
       else if (SCM_BIGP (y))
-        scm_integer_ceiling_divide_zz (x, y, qp, rp);
+        scm_integer_ceiling_divide_zz (scm_bignum (x), scm_bignum (y), qp, rp);
       else if (SCM_REALP (y))
 	scm_i_inexact_ceiling_divide (scm_i_big2dbl (x), SCM_REAL_VALUE (y),
                                       qp, rp);
@@ -1820,7 +1823,8 @@ SCM_PRIMITIVE_GENERIC (scm_truncate_quotient, "truncate-quotient", 2, 0, 0,
         return scm_integer_truncate_quotient_ii (SCM_I_INUM (x),
                                                  SCM_I_INUM (y));
       else if (SCM_BIGP (y))
-        return scm_integer_truncate_quotient_iz (SCM_I_INUM (x), y);
+        return scm_integer_truncate_quotient_iz (SCM_I_INUM (x),
+                                                 scm_bignum (y));
       else if (SCM_REALP (y))
 	return scm_i_inexact_truncate_quotient (SCM_I_INUM (x),
                                                 SCM_REAL_VALUE (y));
@@ -1833,9 +1837,11 @@ SCM_PRIMITIVE_GENERIC (scm_truncate_quotient, "truncate-quotient", 2, 0, 0,
   else if (SCM_BIGP (x))
     {
       if (SCM_I_INUMP (y))
-        return scm_integer_truncate_quotient_zi (x, SCM_I_INUM (y));
+        return scm_integer_truncate_quotient_zi (scm_bignum (x),
+                                                 SCM_I_INUM (y));
       else if (SCM_BIGP (y))
-        return scm_integer_truncate_quotient_zz (x, y);
+        return scm_integer_truncate_quotient_zz (scm_bignum (x),
+                                                 scm_bignum (y));
       else if (SCM_REALP (y))
 	return scm_i_inexact_truncate_quotient
 	  (scm_i_big2dbl (x), SCM_REAL_VALUE (y));
@@ -1913,7 +1919,8 @@ SCM_PRIMITIVE_GENERIC (scm_truncate_remainder, "truncate-remainder", 2, 0, 0,
         return scm_integer_truncate_remainder_ii (SCM_I_INUM (x),
                                                   SCM_I_INUM (y));
       else if (SCM_BIGP (y))
-        return scm_integer_truncate_remainder_iz (SCM_I_INUM (x), y);
+        return scm_integer_truncate_remainder_iz (SCM_I_INUM (x),
+                                                  scm_bignum (y));
       else if (SCM_REALP (y))
 	return scm_i_inexact_truncate_remainder (SCM_I_INUM (x),
                                                  SCM_REAL_VALUE (y));
@@ -1926,9 +1933,11 @@ SCM_PRIMITIVE_GENERIC (scm_truncate_remainder, "truncate-remainder", 2, 0, 0,
   else if (SCM_BIGP (x))
     {
       if (SCM_I_INUMP (y))
-        return scm_integer_truncate_remainder_zi (x, SCM_I_INUM (y));
+        return scm_integer_truncate_remainder_zi (scm_bignum (x),
+                                                  SCM_I_INUM (y));
       else if (SCM_BIGP (y))
-        return scm_integer_truncate_remainder_zz (x, y);
+        return scm_integer_truncate_remainder_zz (scm_bignum (x),
+                                                  scm_bignum (y));
       else if (SCM_REALP (y))
 	return scm_i_inexact_truncate_remainder
 	  (scm_i_big2dbl (x), SCM_REAL_VALUE (y));
@@ -2031,7 +2040,8 @@ scm_truncate_divide (SCM x, SCM y, SCM *qp, SCM *rp)
         scm_integer_truncate_divide_ii (SCM_I_INUM (x), SCM_I_INUM (y),
                                         qp, rp);
       else if (SCM_BIGP (y))
-        scm_integer_truncate_divide_iz (SCM_I_INUM (x), y, qp, rp);
+        scm_integer_truncate_divide_iz (SCM_I_INUM (x), scm_bignum (y),
+                                        qp, rp);
       else if (SCM_REALP (y))
 	scm_i_inexact_truncate_divide (SCM_I_INUM (x), SCM_REAL_VALUE (y),
                                        qp, rp);
@@ -2044,9 +2054,9 @@ scm_truncate_divide (SCM x, SCM y, SCM *qp, SCM *rp)
   else if (SCM_BIGP (x))
     {
       if (SCM_I_INUMP (y))
-        scm_integer_truncate_divide_zi (x, SCM_I_INUM (y), qp, rp);
+        scm_integer_truncate_divide_zi (scm_bignum (x), SCM_I_INUM (y), qp, rp);
       else if (SCM_BIGP (y))
-        scm_integer_truncate_divide_zz (x, y, qp, rp);
+        scm_integer_truncate_divide_zz (scm_bignum (x), scm_bignum (y), qp, rp);
       else if (SCM_REALP (y))
 	scm_i_inexact_truncate_divide (scm_i_big2dbl (x), SCM_REAL_VALUE (y),
                                        qp, rp);
@@ -2133,7 +2143,7 @@ SCM_PRIMITIVE_GENERIC (scm_centered_quotient, "centered-quotient", 2, 0, 0,
         return scm_integer_centered_quotient_ii (SCM_I_INUM (x),
                                                  SCM_I_INUM (y));
       else if (SCM_BIGP (y))
-        return scm_integer_centered_quotient_iz (SCM_I_INUM (x), y);
+        return scm_integer_centered_quotient_iz (SCM_I_INUM (x), scm_bignum (y));
       else if (SCM_REALP (y))
 	return scm_i_inexact_centered_quotient (SCM_I_INUM (x),
                                                 SCM_REAL_VALUE (y));
@@ -2146,9 +2156,11 @@ SCM_PRIMITIVE_GENERIC (scm_centered_quotient, "centered-quotient", 2, 0, 0,
   else if (SCM_BIGP (x))
     {
       if (SCM_I_INUMP (y))
-        return scm_integer_centered_quotient_zi (x, SCM_I_INUM (y));
+        return scm_integer_centered_quotient_zi (scm_bignum (x),
+                                                 SCM_I_INUM (y));
       else if (SCM_BIGP (y))
-        return scm_integer_centered_quotient_zz (x, y);
+        return scm_integer_centered_quotient_zz (scm_bignum (x),
+                                                 scm_bignum (y));
       else if (SCM_REALP (y))
 	return scm_i_inexact_centered_quotient
 	  (scm_i_big2dbl (x), SCM_REAL_VALUE (y));
@@ -2231,7 +2243,8 @@ SCM_PRIMITIVE_GENERIC (scm_centered_remainder, "centered-remainder", 2, 0, 0,
         return scm_integer_centered_remainder_ii (SCM_I_INUM (x),
                                                   SCM_I_INUM (y));
       else if (SCM_BIGP (y))
-        return scm_integer_centered_remainder_iz (SCM_I_INUM (x), y);
+        return scm_integer_centered_remainder_iz (SCM_I_INUM (x),
+                                                  scm_bignum (y));
       else if (SCM_REALP (y))
 	return scm_i_inexact_centered_remainder (SCM_I_INUM (x),
                                                  SCM_REAL_VALUE (y));
@@ -2244,9 +2257,11 @@ SCM_PRIMITIVE_GENERIC (scm_centered_remainder, "centered-remainder", 2, 0, 0,
   else if (SCM_BIGP (x))
     {
       if (SCM_I_INUMP (y))
-        return scm_integer_centered_remainder_zi (x, SCM_I_INUM (y));
+        return scm_integer_centered_remainder_zi (scm_bignum (x),
+                                                  SCM_I_INUM (y));
       else if (SCM_BIGP (y))
-        return scm_integer_centered_remainder_zz (x, y);
+        return scm_integer_centered_remainder_zz (scm_bignum (x),
+                                                  scm_bignum (y));
       else if (SCM_REALP (y))
 	return scm_i_inexact_centered_remainder
 	  (scm_i_big2dbl (x), SCM_REAL_VALUE (y));
@@ -2355,7 +2370,7 @@ scm_centered_divide (SCM x, SCM y, SCM *qp, SCM *rp)
       if (SCM_I_INUMP (y))
         scm_integer_centered_divide_ii (SCM_I_INUM (x), SCM_I_INUM (y), qp, rp);
       else if (SCM_BIGP (y))
-        scm_integer_centered_divide_iz (SCM_I_INUM (x), y, qp, rp);
+        scm_integer_centered_divide_iz (SCM_I_INUM (x), scm_bignum (y), qp, rp);
       else if (SCM_REALP (y))
 	scm_i_inexact_centered_divide (SCM_I_INUM (x), SCM_REAL_VALUE (y),
                                        qp, rp);
@@ -2368,9 +2383,9 @@ scm_centered_divide (SCM x, SCM y, SCM *qp, SCM *rp)
   else if (SCM_BIGP (x))
     {
       if (SCM_I_INUMP (y))
-        scm_integer_centered_divide_zi (x, SCM_I_INUM (y), qp, rp);
+        scm_integer_centered_divide_zi (scm_bignum (x), SCM_I_INUM (y), qp, rp);
       else if (SCM_BIGP (y))
-        scm_integer_centered_divide_zz (x, y, qp, rp);
+        scm_integer_centered_divide_zz (scm_bignum (x), scm_bignum (y), qp, rp);
       else if (SCM_REALP (y))
 	scm_i_inexact_centered_divide (scm_i_big2dbl (x), SCM_REAL_VALUE (y),
                                        qp, rp);
@@ -2462,7 +2477,7 @@ SCM_PRIMITIVE_GENERIC (scm_round_quotient, "round-quotient", 2, 0, 0,
       if (SCM_I_INUMP (y))
         return scm_integer_round_quotient_ii (SCM_I_INUM (x), SCM_I_INUM (y));
       else if (SCM_BIGP (y))
-        return scm_integer_round_quotient_iz (SCM_I_INUM (x), y);
+        return scm_integer_round_quotient_iz (SCM_I_INUM (x), scm_bignum (y));
       else if (SCM_REALP (y))
 	return scm_i_inexact_round_quotient (SCM_I_INUM (x),
                                              SCM_REAL_VALUE (y));
@@ -2475,9 +2490,9 @@ SCM_PRIMITIVE_GENERIC (scm_round_quotient, "round-quotient", 2, 0, 0,
   else if (SCM_BIGP (x))
     {
       if (SCM_I_INUMP (y))
-        return scm_integer_round_quotient_zi (x, SCM_I_INUM (y));
+        return scm_integer_round_quotient_zi (scm_bignum (x), SCM_I_INUM (y));
       else if (SCM_BIGP (y))
-        return scm_integer_round_quotient_zz (x, y);
+        return scm_integer_round_quotient_zz (scm_bignum (x), scm_bignum (y));
       else if (SCM_REALP (y))
 	return scm_i_inexact_round_quotient
 	  (scm_i_big2dbl (x), SCM_REAL_VALUE (y));
@@ -2559,7 +2574,7 @@ SCM_PRIMITIVE_GENERIC (scm_round_remainder, "round-remainder", 2, 0, 0,
       if (SCM_I_INUMP (y))
         return scm_integer_round_remainder_ii (SCM_I_INUM (x), SCM_I_INUM (y));
       else if (SCM_BIGP (y))
-        return scm_integer_round_remainder_iz (SCM_I_INUM (x), y);
+        return scm_integer_round_remainder_iz (SCM_I_INUM (x), scm_bignum (y));
       else if (SCM_REALP (y))
 	return scm_i_inexact_round_remainder (SCM_I_INUM (x),
                                               SCM_REAL_VALUE (y));
@@ -2572,9 +2587,9 @@ SCM_PRIMITIVE_GENERIC (scm_round_remainder, "round-remainder", 2, 0, 0,
   else if (SCM_BIGP (x))
     {
       if (SCM_I_INUMP (y))
-        return scm_integer_round_remainder_zi (x, SCM_I_INUM (y));
+        return scm_integer_round_remainder_zi (scm_bignum (x), SCM_I_INUM (y));
       else if (SCM_BIGP (y))
-        return scm_integer_round_remainder_zz (x, y);
+        return scm_integer_round_remainder_zz (scm_bignum (x), scm_bignum (y));
       else if (SCM_REALP (y))
 	return scm_i_inexact_round_remainder
 	  (scm_i_big2dbl (x), SCM_REAL_VALUE (y));
@@ -2682,7 +2697,7 @@ scm_round_divide (SCM x, SCM y, SCM *qp, SCM *rp)
       if (SCM_I_INUMP (y))
         scm_integer_round_divide_ii (SCM_I_INUM (x), SCM_I_INUM (y), qp, rp);
       else if (SCM_BIGP (y))
-        scm_integer_round_divide_iz (SCM_I_INUM (x), y, qp, rp);
+        scm_integer_round_divide_iz (SCM_I_INUM (x), scm_bignum (y), qp, rp);
       else if (SCM_REALP (y))
 	scm_i_inexact_round_divide (SCM_I_INUM (x), SCM_REAL_VALUE (y), qp, rp);
       else if (SCM_FRACTIONP (y))
@@ -2694,9 +2709,9 @@ scm_round_divide (SCM x, SCM y, SCM *qp, SCM *rp)
   else if (SCM_BIGP (x))
     {
       if (SCM_I_INUMP (y))
-        scm_integer_round_divide_zi (x, SCM_I_INUM (y), qp, rp);
+        scm_integer_round_divide_zi (scm_bignum (x), SCM_I_INUM (y), qp, rp);
       else if (SCM_BIGP (y))
-        scm_integer_round_divide_zz (x, y, qp, rp);
+        scm_integer_round_divide_zz (scm_bignum (x), scm_bignum (y), qp, rp);
       else if (SCM_REALP (y))
 	scm_i_inexact_round_divide (scm_i_big2dbl (x), SCM_REAL_VALUE (y),
                                     qp, rp);
@@ -2789,7 +2804,7 @@ scm_gcd (SCM x, SCM y)
       if (SCM_I_INUMP (y))
         return scm_integer_gcd_ii (SCM_I_INUM (x), SCM_I_INUM (y));
       else if (SCM_BIGP (y))
-        return scm_integer_gcd_zi (y, SCM_I_INUM (x));
+        return scm_integer_gcd_zi (scm_bignum (y), SCM_I_INUM (x));
       else if (SCM_REALP (y) && scm_is_integer (y))
         goto handle_inexacts;
       else
@@ -2798,9 +2813,9 @@ scm_gcd (SCM x, SCM y)
   else if (SCM_BIGP (x))
     {
       if (SCM_I_INUMP (y))
-        return scm_integer_gcd_zi (x, SCM_I_INUM (y));
+        return scm_integer_gcd_zi (scm_bignum (x), SCM_I_INUM (y));
       else if (SCM_BIGP (y))
-        return scm_integer_gcd_zz (x, y);
+        return scm_integer_gcd_zz (scm_bignum (x), scm_bignum (y));
       else if (SCM_REALP (y) && scm_is_integer (y))
         goto handle_inexacts;
       else
@@ -2851,7 +2866,7 @@ scm_lcm (SCM n1, SCM n2)
       if (SCM_I_INUMP (n2))
         return scm_integer_lcm_ii (SCM_I_INUM (n1), SCM_I_INUM (n2));
       else if (SCM_BIGP (n2))
-        return scm_integer_lcm_zi (n2, SCM_I_INUM (n1));
+        return scm_integer_lcm_zi (scm_bignum (n2), SCM_I_INUM (n1));
       else if (SCM_REALP (n2) && scm_is_integer (n2))
         goto handle_inexacts;
       else
@@ -2860,9 +2875,9 @@ scm_lcm (SCM n1, SCM n2)
   else if (SCM_LIKELY (SCM_BIGP (n1)))
     {
       if (SCM_I_INUMP (n2))
-        return scm_integer_lcm_zi (n1, SCM_I_INUM (n2));
+        return scm_integer_lcm_zi (scm_bignum (n1), SCM_I_INUM (n2));
       else if (SCM_BIGP (n2))
-        return scm_integer_lcm_zz (n1, n2);
+        return scm_integer_lcm_zz (scm_bignum (n1), scm_bignum (n2));
       else if (SCM_REALP (n2) && scm_is_integer (n2))
         goto handle_inexacts;
       else
@@ -2961,16 +2976,16 @@ SCM scm_logand (SCM n1, SCM n2)
       if (SCM_I_INUMP (n2))
         return scm_integer_logand_ii (SCM_I_INUM (n1), SCM_I_INUM (n2));
       else if (SCM_BIGP (n2))
-        return scm_integer_logand_zi (n2, SCM_I_INUM (n1));
+        return scm_integer_logand_zi (scm_bignum (n2), SCM_I_INUM (n1));
       else
 	SCM_WRONG_TYPE_ARG (SCM_ARG2, n2);
     }
   else if (SCM_BIGP (n1))
     {
       if (SCM_I_INUMP (n2))
-        return scm_integer_logand_zi (n1, SCM_I_INUM (n2));
+        return scm_integer_logand_zi (scm_bignum (n1), SCM_I_INUM (n2));
       else if (SCM_BIGP (n2))
-        return scm_integer_logand_zz (n1, n2);
+        return scm_integer_logand_zz (scm_bignum (n1), scm_bignum (n2));
       else
 	SCM_WRONG_TYPE_ARG (SCM_ARG2, n2);
     }
@@ -3019,16 +3034,16 @@ SCM scm_logior (SCM n1, SCM n2)
       if (SCM_I_INUMP (n2))
         return scm_integer_logior_ii (SCM_I_INUM (n1), SCM_I_INUM (n2));
       else if (SCM_BIGP (n2))
-        return scm_integer_logior_zi (n2, SCM_I_INUM (n1));
+        return scm_integer_logior_zi (scm_bignum (n2), SCM_I_INUM (n1));
       else
 	SCM_WRONG_TYPE_ARG (SCM_ARG2, n2);
     }
   else if (SCM_BIGP (n1))
     {
       if (SCM_I_INUMP (n2))
-        return scm_integer_logior_zi (n1, SCM_I_INUM (n2));
+        return scm_integer_logior_zi (scm_bignum (n1), SCM_I_INUM (n2));
       else if (SCM_BIGP (n2))
-        return scm_integer_logior_zz (n1, n2);
+        return scm_integer_logior_zz (scm_bignum (n1), scm_bignum (n2));
       else
 	SCM_WRONG_TYPE_ARG (SCM_ARG2, n2);
     }
@@ -3079,16 +3094,16 @@ SCM scm_logxor (SCM n1, SCM n2)
       if (SCM_I_INUMP (n2))
         return scm_integer_logxor_ii (SCM_I_INUM (n1), SCM_I_INUM (n2));
       else if (SCM_BIGP (n2))
-        return scm_integer_logxor_zi (n2, SCM_I_INUM (n1));
+        return scm_integer_logxor_zi (scm_bignum (n2), SCM_I_INUM (n1));
       else
 	SCM_WRONG_TYPE_ARG (SCM_ARG2, n2);
     }
   else if (SCM_BIGP (n1))
     {
       if (SCM_I_INUMP (n2))
-        return scm_integer_logxor_zi (n1, SCM_I_INUM (n2));
+        return scm_integer_logxor_zi (scm_bignum (n1), SCM_I_INUM (n2));
       else if (SCM_BIGP (n2))
-        return scm_integer_logxor_zz (n1, n2);
+        return scm_integer_logxor_zz (scm_bignum (n1), scm_bignum (n2));
       else
 	SCM_WRONG_TYPE_ARG (SCM_ARG2, n2);
     }
@@ -3117,16 +3132,19 @@ SCM_DEFINE (scm_logtest, "logtest", 2, 0, 0,
         return scm_from_bool (scm_integer_logtest_ii (SCM_I_INUM (j),
                                                       SCM_I_INUM (k)));
       else if (SCM_BIGP (k))
-        return scm_from_bool (scm_integer_logtest_zi (k, SCM_I_INUM (j)));
+        return scm_from_bool (scm_integer_logtest_zi (scm_bignum (k),
+                                                      SCM_I_INUM (j)));
       else
 	SCM_WRONG_TYPE_ARG (SCM_ARG2, k);
     }
   else if (SCM_BIGP (j))
     {
       if (SCM_I_INUMP (k))
-        return scm_from_bool (scm_integer_logtest_zi (j, SCM_I_INUM (k)));
+        return scm_from_bool (scm_integer_logtest_zi (scm_bignum (j),
+                                                      SCM_I_INUM (k)));
       else if (SCM_BIGP (k))
-        return scm_from_bool (scm_integer_logtest_zz (j, k));
+        return scm_from_bool (scm_integer_logtest_zz (scm_bignum (j),
+                                                      scm_bignum (k)));
       else
 	SCM_WRONG_TYPE_ARG (SCM_ARG2, k);
     }
@@ -3156,7 +3174,7 @@ SCM_DEFINE (scm_logbit_p, "logbit?", 2, 0, 0,
   if (SCM_I_INUMP (j))
     return scm_from_bool (scm_integer_logbit_ui (iindex, SCM_I_INUM (j)));
   else if (SCM_BIGP (j))
-    return scm_from_bool (scm_integer_logbit_uz (iindex, j));
+    return scm_from_bool (scm_integer_logbit_uz (iindex, scm_bignum (j)));
   else
     SCM_WRONG_TYPE_ARG (SCM_ARG2, j);
 }
@@ -3179,7 +3197,7 @@ SCM_DEFINE (scm_lognot, "lognot", 1, 0, 0,
   if (SCM_I_INUMP (n))
     return scm_integer_lognot_i (SCM_I_INUM (n));
   else if (SCM_BIGP (n))
-    return scm_integer_lognot_z (n);
+    return scm_integer_lognot_z (scm_bignum (n));
   else
     SCM_WRONG_TYPE_ARG (SCM_ARG1, n);
 }
@@ -3240,7 +3258,7 @@ lsh (SCM n, SCM count, const char *fn)
     scm_num_overflow (fn);
   if (SCM_I_INUMP (n))
     return scm_integer_lsh_iu (SCM_I_INUM (n), ucount);
-  return scm_integer_lsh_zu (n, ucount);
+  return scm_integer_lsh_zu (scm_bignum (n), ucount);
 }
 
 static SCM
@@ -3254,7 +3272,7 @@ floor_rsh (SCM n, SCM count)
     return n;
   if (SCM_I_INUMP (n))
     return scm_integer_floor_rsh_iu (SCM_I_INUM (n), ucount);
-  return scm_integer_floor_rsh_zu (n, ucount);
+  return scm_integer_floor_rsh_zu (scm_bignum (n), ucount);
 }
 
 static SCM
@@ -3268,7 +3286,7 @@ round_rsh (SCM n, SCM count)
     return n;
   if (SCM_I_INUMP (n))
     return scm_integer_round_rsh_iu (SCM_I_INUM (n), ucount);
-  return scm_integer_round_rsh_zu (n, ucount);
+  return scm_integer_round_rsh_zu (scm_bignum (n), ucount);
 }
 
 SCM_DEFINE (scm_ash, "ash", 2, 0, 0,
@@ -3361,7 +3379,7 @@ SCM_DEFINE (scm_bit_extract, "bit-extract", 3, 0, 0,
   if (SCM_I_INUMP (n))
     return scm_integer_bit_extract_i (SCM_I_INUM (n), istart, bits);
   else
-    return scm_integer_bit_extract_z (n, istart, bits);
+    return scm_integer_bit_extract_z (scm_bignum (n), istart, bits);
 }
 #undef FUNC_NAME
 
@@ -3385,7 +3403,7 @@ SCM_DEFINE (scm_logcount, "logcount", 1, 0, 0,
   if (SCM_I_INUMP (n))
     return scm_integer_logcount_i (SCM_I_INUM (n));
   else if (SCM_BIGP (n))
-    return scm_integer_logcount_z (n);
+    return scm_integer_logcount_z (scm_bignum (n));
   else
     SCM_WRONG_TYPE_ARG (SCM_ARG1, n);
 }
