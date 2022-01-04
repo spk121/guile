@@ -180,6 +180,10 @@ SCM_INTERNAL SCM scm_integer_sub_iz (scm_t_inum x, struct scm_bignum *y);
 SCM_INTERNAL SCM scm_integer_sub_zi (struct scm_bignum *x, scm_t_inum y);
 SCM_INTERNAL SCM scm_integer_sub_zz (struct scm_bignum *x, struct scm_bignum *y);
 
+SCM_INTERNAL SCM scm_integer_mul_ii (scm_t_inum x, scm_t_inum y);
+SCM_INTERNAL SCM scm_integer_mul_zi (struct scm_bignum *x, scm_t_inum y);
+SCM_INTERNAL SCM scm_integer_mul_zz (struct scm_bignum *x, struct scm_bignum *y);
+
 
 
 #endif  /* SCM_INTEGERS_H */

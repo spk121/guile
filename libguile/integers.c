@@ -2603,3 +2603,58 @@ scm_integer_sub_zz (struct scm_bignum *x, struct scm_bignum *y)
 {
   return scm_integer_add_zz (x, negate_bignum (clone_bignum (y)));
 }
+
+SCM
+scm_integer_mul_ii (scm_t_inum x, scm_t_inum y)
+{
+#if SCM_I_FIXNUM_BIT < 32
+  int64_t k = x * (int64_t) y;
+  if (SCM_FIXABLE (k))
+    return SCM_I_MAKINUM (k);
+#else
+  if (x == 0)
+    return SCM_INUM0;
+  scm_t_inum ax = (x > 0) ? x : -x;
+  scm_t_inum ay = (y > 0) ? y : -y;
+  if (SCM_MOST_POSITIVE_FIXNUM / ax >= ay)
+    return SCM_I_MAKINUM (x * y);
+#endif
+
+  // FIXME: Use mpn_mul with two-limb result to avoid allocating.
+  return scm_integer_mul_zi (long_to_bignum (x), y);
+}
+
+SCM
+scm_integer_mul_zi (struct scm_bignum *x, scm_t_inum y)
+{
+  switch (y)
+    {
+    case -1:
+      return scm_integer_negate_z (x);
+    case 0:
+      return SCM_INUM0;
+    case 1:
+      return scm_from_bignum (x);
+    default:
+      {
+        mpz_t result, zx;
+        mpz_init (result);
+        alias_bignum_to_mpz (x, zx);
+        mpz_mul_si (result, zx, y);
+        scm_remember_upto_here_1 (x);
+        return take_mpz (result);
+      }
+    }
+}
+
+SCM
+scm_integer_mul_zz (struct scm_bignum *x, struct scm_bignum *y)
+{
+  mpz_t result, zx, zy;
+  mpz_init (result);
+  alias_bignum_to_mpz (x, zx);
+  alias_bignum_to_mpz (y, zy);
+  mpz_mul (result, zx, zy);
+  scm_remember_upto_here_2 (x, y);
+  return take_mpz (result);
+}
