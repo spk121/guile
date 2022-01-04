@@ -2658,3 +2658,88 @@ scm_integer_mul_zz (struct scm_bignum *x, struct scm_bignum *y)
   scm_remember_upto_here_2 (x, y);
   return take_mpz (result);
 }
+
+int
+scm_is_integer_divisible_ii (scm_t_inum x, scm_t_inum y)
+{
+  ASSERT (y != 0);
+  return (x % y) == 0;
+}
+
+int
+scm_is_integer_divisible_zi (struct scm_bignum *x, scm_t_inum y)
+{
+  ASSERT (y != 0);
+  switch (y)
+    {
+    case -1:
+    case 1:
+      return 1;
+    default:
+      {
+        scm_t_inum abs_y = y < 0 ? -y : y;
+        mpz_t zx;
+        alias_bignum_to_mpz (x, zx);
+        int divisible = mpz_divisible_ui_p (zx, abs_y);
+        scm_remember_upto_here_1 (x);
+        return divisible;
+      }
+    }
+}
+
+int
+scm_is_integer_divisible_zz (struct scm_bignum *x, struct scm_bignum *y)
+{
+  mpz_t zx, zy;
+  alias_bignum_to_mpz (x, zx);
+  alias_bignum_to_mpz (y, zy);
+  int divisible_p = mpz_divisible_p (zx, zy);
+  scm_remember_upto_here_2 (x, y);
+  return divisible_p;
+}
+
+SCM
+scm_integer_exact_quotient_ii (scm_t_inum n, scm_t_inum d)
+{
+  return scm_integer_truncate_quotient_ii (n, d);
+}
+
+/* Return the exact integer q such that n = q*d, for exact integers n
+   and d, where d is known in advance to divide n evenly (with zero
+   remainder).  For large integers, this can be computed more
+   efficiently than when the remainder is unknown. */
+SCM
+scm_integer_exact_quotient_zi (struct scm_bignum *n, scm_t_inum d)
+{
+  if (SCM_UNLIKELY (d == 0))
+    scm_num_overflow ("quotient");
+  else if (SCM_UNLIKELY (d == 1))
+    return scm_from_bignum (n);
+
+  mpz_t q, zn;
+  mpz_init (q);
+  alias_bignum_to_mpz (n, zn);
+  if (d > 0)
+    mpz_divexact_ui (q, zn, d);
+  else
+    {
+      mpz_divexact_ui (q, zn, -d);
+      mpz_neg (q, q);
+    }
+  scm_remember_upto_here_1 (n);
+  return take_mpz (q);
+}
+
+SCM
+scm_integer_exact_quotient_zz (struct scm_bignum *n, struct scm_bignum *d)
+{
+  mpz_t q, zn, zd;
+  mpz_init (q);
+  alias_bignum_to_mpz (n, zn);
+  alias_bignum_to_mpz (d, zd);
+
+  mpz_divexact (q, zn, zd);
+  scm_remember_upto_here_2 (n, d);
+  return take_mpz (q);
+}
+

@@ -184,6 +184,18 @@ SCM_INTERNAL SCM scm_integer_mul_ii (scm_t_inum x, scm_t_inum y);
 SCM_INTERNAL SCM scm_integer_mul_zi (struct scm_bignum *x, scm_t_inum y);
 SCM_INTERNAL SCM scm_integer_mul_zz (struct scm_bignum *x, struct scm_bignum *y);
 
+SCM_INTERNAL int scm_is_integer_divisible_ii (scm_t_inum x, scm_t_inum y);
+SCM_INTERNAL int scm_is_integer_divisible_zi (struct scm_bignum *x,
+                                              scm_t_inum y);
+SCM_INTERNAL int scm_is_integer_divisible_zz (struct scm_bignum *x,
+                                              struct scm_bignum *y);
+
+SCM_INTERNAL SCM scm_integer_exact_quotient_ii (scm_t_inum n, scm_t_inum d);
+SCM_INTERNAL SCM scm_integer_exact_quotient_zi (struct scm_bignum *n,
+                                                scm_t_inum d);
+SCM_INTERNAL SCM scm_integer_exact_quotient_zz (struct scm_bignum *n,
+                                                struct scm_bignum *d);
+
 
 
 #endif  /* SCM_INTEGERS_H */

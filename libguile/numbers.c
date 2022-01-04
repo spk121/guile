@@ -5576,6 +5576,222 @@ arising out of or in connection with the use or performance of
 this software.
 ****************************************************************/
 
+static SCM
+invert (SCM x)
+{
+  if (SCM_I_INUMP (x))
+    switch (SCM_I_INUM (x))
+      {
+      case -1: return x;
+      case  0: scm_num_overflow ("divide");
+      case  1: return x;
+      default: return scm_i_make_ratio_already_reduced (SCM_INUM1, x);
+      }
+  else if (SCM_BIGP (x))
+    return scm_i_make_ratio_already_reduced (SCM_INUM1, x);
+  else if (SCM_REALP (x))
+    return scm_i_from_double (1.0 / SCM_REAL_VALUE (x));
+  else if (SCM_COMPLEXP (x))
+    {
+      double r = SCM_COMPLEX_REAL (x);
+      double i = SCM_COMPLEX_IMAG (x);
+      if (fabs(r) <= fabs(i))
+        {
+          double t = r / i;
+          double d = i * (1.0 + t * t);
+          return scm_c_make_rectangular (t / d, -1.0 / d);
+        }
+      else
+        {
+          double t = i / r;
+          double d = r * (1.0 + t * t);
+          return scm_c_make_rectangular (1.0 / d, -t / d);
+        }
+    }
+  else if (SCM_FRACTIONP (x))
+    return scm_i_make_ratio_already_reduced (SCM_FRACTION_DENOMINATOR (x),
+                                             SCM_FRACTION_NUMERATOR (x));
+  else
+    abort (); /* Unreachable.  */
+}
+
+static SCM
+complex_div (double a, SCM y)
+{
+  double r = SCM_COMPLEX_REAL (y);
+  double i = SCM_COMPLEX_IMAG (y);
+  if (fabs(r) <= fabs(i))
+    {
+      double t = r / i;
+      double d = i * (1.0 + t * t);
+      return scm_c_make_rectangular ((a * t) / d,  -a / d);
+    }
+  else
+    {
+      double t = i / r;
+      double d = r * (1.0 + t * t);
+      return scm_c_make_rectangular (a / d,  -(a * t) / d);
+    }
+}
+
+static SCM
+divide (SCM x, SCM y)
+{
+  if (scm_is_eq (y, SCM_INUM0))
+    scm_num_overflow ("divide");
+
+  if (SCM_I_INUMP (x))
+    {
+      if (scm_is_eq (x, SCM_INUM1))
+        return invert (y);
+      if (SCM_I_INUMP (y))
+        return scm_is_integer_divisible_ii (SCM_I_INUM (x), SCM_I_INUM (y))
+          ? scm_integer_exact_quotient_ii (SCM_I_INUM (x), SCM_I_INUM (y))
+          : scm_i_make_ratio (x, y);
+      else if (SCM_BIGP (y))
+	return scm_i_make_ratio (x, y);
+      else if (SCM_REALP (y))
+        /* FIXME: Precision may be lost here due to:
+           (1) The cast from 'scm_t_inum' to 'double'
+           (2) Double rounding */
+        return scm_i_from_double ((double) SCM_I_INUM (x) / SCM_REAL_VALUE (y));
+      else if (SCM_COMPLEXP (y))
+        return complex_div (SCM_I_INUM (x), y);
+      else if (SCM_FRACTIONP (y))
+	/* a / b/c = ac / b */
+	return scm_i_make_ratio (scm_product (x, SCM_FRACTION_DENOMINATOR (y)),
+                                 SCM_FRACTION_NUMERATOR (y));
+      else
+        abort (); /* Unreachable.  */
+    }
+  else if (SCM_BIGP (x))
+    {
+      if (SCM_I_INUMP (y))
+        return scm_is_integer_divisible_zi (scm_bignum (x), SCM_I_INUM (y))
+          ? scm_integer_exact_quotient_zi (scm_bignum (x), SCM_I_INUM (y))
+          : scm_i_make_ratio (x, y);
+      else if (SCM_BIGP (y))
+        return scm_is_integer_divisible_zz (scm_bignum (x), scm_bignum (y))
+          ? scm_integer_exact_quotient_zz (scm_bignum (x), scm_bignum (y))
+          : scm_i_make_ratio (x, y);
+      else if (SCM_REALP (y))
+        /* FIXME: Precision may be lost here due to:
+           (1) scm_integer_to_double_z (2) Double rounding */
+        return scm_i_from_double (scm_integer_to_double_z (scm_bignum (x))
+                                  / SCM_REAL_VALUE (y));
+      else if (SCM_COMPLEXP (y))
+        return complex_div (scm_integer_to_double_z (scm_bignum (x)), y);
+      else if (SCM_FRACTIONP (y))
+	return scm_i_make_ratio (scm_product (x, SCM_FRACTION_DENOMINATOR (y)),
+                                 SCM_FRACTION_NUMERATOR (y));
+      else
+        abort (); /* Unreachable.  */
+    }
+  else if (SCM_REALP (x))
+    {
+      double rx = SCM_REAL_VALUE (x);
+      if (SCM_I_INUMP (y))
+        /* FIXME: Precision may be lost here due to:
+           (1) The cast from 'scm_t_inum' to 'double'
+           (2) Double rounding */
+        return scm_i_from_double (rx / (double) SCM_I_INUM (y));
+      else if (SCM_BIGP (y))
+        /* FIXME: Precision may be lost here due to:
+           (1) The conversion from bignum to double
+           (2) Double rounding */
+        return scm_i_from_double (rx / scm_integer_to_double_z (scm_bignum (y)));
+      else if (SCM_REALP (y))
+        return scm_i_from_double (rx / SCM_REAL_VALUE (y));
+      else if (SCM_COMPLEXP (y))
+        return complex_div (rx, y);
+      else if (SCM_FRACTIONP (y))
+	return scm_i_from_double (rx / scm_i_fraction2double (y));
+      else
+        abort () ; /* Unreachable.  */
+    }
+  else if (SCM_COMPLEXP (x))
+    {
+      double rx = SCM_COMPLEX_REAL (x);
+      double ix = SCM_COMPLEX_IMAG (x);
+      if (SCM_I_INUMP (y))
+        {
+          /* FIXME: Precision may be lost here due to:
+             (1) The conversion from 'scm_t_inum' to double
+             (2) Double rounding */
+          double d = SCM_I_INUM (y);
+          return scm_c_make_rectangular (rx / d, ix / d);
+	}
+      else if (SCM_BIGP (y))
+	{
+          /* FIXME: Precision may be lost here due to:
+             (1) The conversion from bignum to double
+             (2) Double rounding */
+          double d = scm_integer_to_double_z (scm_bignum (y));
+          return scm_c_make_rectangular (rx / d, ix / d);
+	}
+      else if (SCM_REALP (y))
+	{
+	  double d = SCM_REAL_VALUE (y);
+          return scm_c_make_rectangular (rx / d, ix / d);
+	}
+      else if (SCM_COMPLEXP (y))
+	{
+	  double ry = SCM_COMPLEX_REAL (y);
+	  double iy = SCM_COMPLEX_IMAG (y);
+	  if (fabs(ry) <= fabs(iy))
+	    {
+	      double t = ry / iy;
+	      double d = iy * (1.0 + t * t);
+	      return scm_c_make_rectangular ((rx * t + ix) / d,
+                                             (ix * t - rx) / d);
+	    }
+	  else
+	    {
+	      double t = iy / ry;
+	      double d = ry * (1.0 + t * t);
+	      return scm_c_make_rectangular ((rx + ix * t) / d,
+                                             (ix - rx * t) / d);
+	    }
+	}
+      else if (SCM_FRACTIONP (y))
+	{
+          /* FIXME: Precision may be lost here due to:
+             (1) The conversion from fraction to double
+             (2) Double rounding */
+	  double d = scm_i_fraction2double (y);
+	  return scm_c_make_rectangular (rx / d, ix / d);
+	}
+      else
+        abort (); /* Unreachable.  */
+    }
+  else if (SCM_FRACTIONP (x))
+    {
+      if (scm_is_exact_integer (y))
+        return scm_i_make_ratio (SCM_FRACTION_NUMERATOR (x),
+                                 scm_product (SCM_FRACTION_DENOMINATOR (x), y));
+      else if (SCM_REALP (y)) 
+        /* FIXME: Precision may be lost here due to:
+           (1) The conversion from fraction to double
+           (2) Double rounding */
+        return scm_i_from_double (scm_i_fraction2double (x) /
+                                  SCM_REAL_VALUE (y));
+      else if (SCM_COMPLEXP (y)) 
+        /* FIXME: Precision may be lost here due to:
+           (1) The conversion from fraction to double
+           (2) Double rounding */
+        return complex_div (scm_i_fraction2double (x), y);
+      else if (SCM_FRACTIONP (y))
+	return scm_i_make_ratio (scm_product (SCM_FRACTION_NUMERATOR (x),
+                                              SCM_FRACTION_DENOMINATOR (y)),
+                                 scm_product (SCM_FRACTION_NUMERATOR (y),
+                                              SCM_FRACTION_DENOMINATOR (x)));
+      else 
+        abort (); /* Unreachable.  */
+    }
+  else
+    abort (); /* Unreachable.  */
+}
+
 SCM_PRIMITIVE_GENERIC (scm_i_divide, "/", 0, 2, 1,
                        (SCM x, SCM y, SCM rest),
                        "Divide the first argument by the product of the remaining\n"
@@ -5592,313 +5808,29 @@ SCM_PRIMITIVE_GENERIC (scm_i_divide, "/", 0, 2, 1,
 }
 #undef FUNC_NAME
                        
-#define s_divide s_scm_i_divide
-#define g_divide g_scm_i_divide
-
 SCM
 scm_divide (SCM x, SCM y)
-#define FUNC_NAME s_divide
 {
-  double a;
-
-  if (SCM_UNLIKELY (SCM_UNBNDP (y)))
+  if (SCM_UNBNDP (y))
     {
       if (SCM_UNBNDP (x))
-	return scm_wta_dispatch_0 (g_divide, s_divide);
-      else if (SCM_I_INUMP (x))
-	{
-	  scm_t_inum xx = SCM_I_INUM (x);
-	  if (xx == 1 || xx == -1)
-	    return x;
-	  else if (xx == 0)
-	    scm_num_overflow (s_divide);
-	  else
-	    return scm_i_make_ratio_already_reduced (SCM_INUM1, x);
-	}
-      else if (SCM_BIGP (x))
-	return scm_i_make_ratio_already_reduced (SCM_INUM1, x);
-      else if (SCM_REALP (x))
-        return scm_i_from_double (1.0 / SCM_REAL_VALUE (x));
-      else if (SCM_COMPLEXP (x))
-	{
-	  double r = SCM_COMPLEX_REAL (x);
-	  double i = SCM_COMPLEX_IMAG (x);
-	  if (fabs(r) <= fabs(i))
-	    {
-	      double t = r / i;
-	      double d = i * (1.0 + t * t);
-	      return scm_c_make_rectangular (t / d, -1.0 / d);
-	    }
-	  else
-	    {
-	      double t = i / r;
-	      double d = r * (1.0 + t * t);
-	      return scm_c_make_rectangular (1.0 / d, -t / d);
-	    }
-	}
-      else if (SCM_FRACTIONP (x))
-	return scm_i_make_ratio_already_reduced (SCM_FRACTION_DENOMINATOR (x),
-						 SCM_FRACTION_NUMERATOR (x));
+	return scm_wta_dispatch_0 (g_scm_i_divide, s_scm_i_divide);
+      if (SCM_NUMBERP (x))
+        return invert (x);
       else
-	return scm_wta_dispatch_1 (g_divide, x, SCM_ARG1, s_divide);
+	return scm_wta_dispatch_1 (g_scm_i_divide, x, SCM_ARG1,
+                                   s_scm_i_divide);
     }
 
-  if (SCM_LIKELY (SCM_I_INUMP (x)))
-    {
-      scm_t_inum xx = SCM_I_INUM (x);
-      if (SCM_LIKELY (SCM_I_INUMP (y)))
-	{
-	  scm_t_inum yy = SCM_I_INUM (y);
-	  if (yy == 0)
-            scm_num_overflow (s_divide);
-	  else if (xx % yy != 0)
-	    return scm_i_make_ratio (x, y);
-	  else
-	    {
-	      scm_t_inum z = xx / yy;
-	      if (SCM_FIXABLE (z))
-		return SCM_I_MAKINUM (z);
-	      else
-		return scm_i_inum2big (z);
-	    }
-	}
-      else if (SCM_BIGP (y))
-	return scm_i_make_ratio (x, y);
-      else if (SCM_REALP (y))
-        /* FIXME: Precision may be lost here due to:
-           (1) The cast from 'scm_t_inum' to 'double'
-           (2) Double rounding */
-        return scm_i_from_double ((double) xx / SCM_REAL_VALUE (y));
-      else if (SCM_COMPLEXP (y))
-	{
-	  a = xx;
-	complex_div: /* y _must_ be a complex number */
-	  {
-	    double r = SCM_COMPLEX_REAL (y);
-	    double i = SCM_COMPLEX_IMAG (y);
-	    if (fabs(r) <= fabs(i))
-	      {
-		double t = r / i;
-		double d = i * (1.0 + t * t);
-		return scm_c_make_rectangular ((a * t) / d,  -a / d);
-	      }
-	    else
-	      {
-		double t = i / r;
-		double d = r * (1.0 + t * t);
-		return scm_c_make_rectangular (a / d,  -(a * t) / d);
-	      }
-	  }
-	}
-      else if (SCM_FRACTIONP (y))
-	/* a / b/c = ac / b */
-	return scm_i_make_ratio (scm_product (x, SCM_FRACTION_DENOMINATOR (y)),
-                                 SCM_FRACTION_NUMERATOR (y));
-      else
-	return scm_wta_dispatch_2 (g_divide, x, y, SCM_ARGn, s_divide);
-    }
-  else if (SCM_BIGP (x))
-    {
-      if (SCM_I_INUMP (y))
-	{
-	  scm_t_inum yy = SCM_I_INUM (y);
-	  if (yy == 0)
-            scm_num_overflow (s_divide);
-	  else if (yy == 1)
-	    return x;
-	  else
-	    {
-	      /* FIXME: HMM, what are the relative performance issues here?
-		 We need to test.  Is it faster on average to test
-		 divisible_p, then perform whichever operation, or is it
-		 faster to perform the integer div opportunistically and
-		 switch to real if there's a remainder?  For now we take the
-		 middle ground: test, then if divisible, use the faster div
-		 func. */
+  if (!SCM_NUMBERP (x))
+    return scm_wta_dispatch_2 (g_scm_i_divide, x, y, SCM_ARG1,
+                               s_scm_i_divide);
+  if (!SCM_NUMBERP (y))
+    return scm_wta_dispatch_2 (g_scm_i_divide, x, y, SCM_ARG2,
+                               s_scm_i_divide);
 
-	      scm_t_inum abs_yy = yy < 0 ? -yy : yy;
-	      int divisible_p = mpz_divisible_ui_p (SCM_I_BIG_MPZ (x), abs_yy);
-
-	      if (divisible_p)
-		{
-		  SCM result = scm_i_mkbig ();
-		  mpz_divexact_ui (SCM_I_BIG_MPZ (result), SCM_I_BIG_MPZ (x), abs_yy);
-		  scm_remember_upto_here_1 (x);
-		  if (yy < 0)
-		    mpz_neg (SCM_I_BIG_MPZ (result), SCM_I_BIG_MPZ (result));
-		  return scm_i_normbig (result);
-		}
-	      else
-		return scm_i_make_ratio (x, y);
-	    }
-	}
-      else if (SCM_BIGP (y))
-	{
-          int divisible_p = mpz_divisible_p (SCM_I_BIG_MPZ (x),
-                                             SCM_I_BIG_MPZ (y));
-          if (divisible_p)
-            {
-              SCM result = scm_i_mkbig ();
-              mpz_divexact (SCM_I_BIG_MPZ (result),
-                            SCM_I_BIG_MPZ (x),
-                            SCM_I_BIG_MPZ (y));
-              scm_remember_upto_here_2 (x, y);
-              return scm_i_normbig (result);
-            }
-          else
-            return scm_i_make_ratio (x, y);
-	}
-      else if (SCM_REALP (y))
-        /* FIXME: Precision may be lost here due to:
-           (1) scm_i_big2dbl (2) Double rounding */
-        return scm_i_from_double (scm_i_big2dbl (x) / SCM_REAL_VALUE (y));
-      else if (SCM_COMPLEXP (y))
-	{
-	  a = scm_i_big2dbl (x);
-	  goto complex_div;
-	}
-      else if (SCM_FRACTIONP (y))
-	return scm_i_make_ratio (scm_product (x, SCM_FRACTION_DENOMINATOR (y)),
-                                 SCM_FRACTION_NUMERATOR (y));
-      else
-	return scm_wta_dispatch_2 (g_divide, x, y, SCM_ARGn, s_divide);
-    }
-  else if (SCM_REALP (x))
-    {
-      double rx = SCM_REAL_VALUE (x);
-      if (SCM_I_INUMP (y))
-	{
-	  scm_t_inum yy = SCM_I_INUM (y);
-	  if (yy == 0)
-	    scm_num_overflow (s_divide);
-	  else
-            /* FIXME: Precision may be lost here due to:
-               (1) The cast from 'scm_t_inum' to 'double'
-               (2) Double rounding */
-	    return scm_i_from_double (rx / (double) yy);
-	}
-      else if (SCM_BIGP (y))
-	{
-          /* FIXME: Precision may be lost here due to:
-             (1) The conversion from bignum to double
-             (2) Double rounding */
-	  double dby = mpz_get_d (SCM_I_BIG_MPZ (y));
-	  scm_remember_upto_here_1 (y);
-	  return scm_i_from_double (rx / dby);
-	}
-      else if (SCM_REALP (y))
-        return scm_i_from_double (rx / SCM_REAL_VALUE (y));
-      else if (SCM_COMPLEXP (y))
-	{
-	  a = rx;
-	  goto complex_div;
-	}
-      else if (SCM_FRACTIONP (y))
-	return scm_i_from_double (rx / scm_i_fraction2double (y));
-      else
-	return scm_wta_dispatch_2 (g_divide, x, y, SCM_ARGn, s_divide);
-    }
-  else if (SCM_COMPLEXP (x))
-    {
-      double rx = SCM_COMPLEX_REAL (x);
-      double ix = SCM_COMPLEX_IMAG (x);
-      if (SCM_I_INUMP (y))
-	{
-	  scm_t_inum yy = SCM_I_INUM (y);
-	  if (yy == 0)
-	    scm_num_overflow (s_divide);
-	  else
-	    {
-              /* FIXME: Precision may be lost here due to:
-                 (1) The conversion from 'scm_t_inum' to double
-                 (2) Double rounding */
-	      double d = yy;
-	      return scm_c_make_rectangular (rx / d, ix / d);
-	    }
-	}
-      else if (SCM_BIGP (y))
-	{
-          /* FIXME: Precision may be lost here due to:
-             (1) The conversion from bignum to double
-             (2) Double rounding */
-	  double dby = mpz_get_d (SCM_I_BIG_MPZ (y));
-	  scm_remember_upto_here_1 (y);
-	  return scm_c_make_rectangular (rx / dby, ix / dby);
-	}
-      else if (SCM_REALP (y))
-	{
-	  double yy = SCM_REAL_VALUE (y);
-          return scm_c_make_rectangular (rx / yy, ix / yy);
-	}
-      else if (SCM_COMPLEXP (y))
-	{
-	  double ry = SCM_COMPLEX_REAL (y);
-	  double iy = SCM_COMPLEX_IMAG (y);
-	  if (fabs(ry) <= fabs(iy))
-	    {
-	      double t = ry / iy;
-	      double d = iy * (1.0 + t * t);
-	      return scm_c_make_rectangular ((rx * t + ix) / d, (ix * t - rx) / d);
-	    }
-	  else
-	    {
-	      double t = iy / ry;
-	      double d = ry * (1.0 + t * t);
-	      return scm_c_make_rectangular ((rx + ix * t) / d, (ix - rx * t) / d);
-	    }
-	}
-      else if (SCM_FRACTIONP (y))
-	{
-          /* FIXME: Precision may be lost here due to:
-             (1) The conversion from fraction to double
-             (2) Double rounding */
-	  double yy = scm_i_fraction2double (y);
-	  return scm_c_make_rectangular (rx / yy, ix / yy);
-	}
-      else
-	return scm_wta_dispatch_2 (g_divide, x, y, SCM_ARGn, s_divide);
-    }
-  else if (SCM_FRACTIONP (x))
-    {
-      if (SCM_I_INUMP (y)) 
-	{
-	  scm_t_inum yy = SCM_I_INUM (y);
-	  if (yy == 0)
-	    scm_num_overflow (s_divide);
-	  else
-	    return scm_i_make_ratio (SCM_FRACTION_NUMERATOR (x),
-                                     scm_product (SCM_FRACTION_DENOMINATOR (x), y));
-	} 
-      else if (SCM_BIGP (y)) 
-	{
-	  return scm_i_make_ratio (SCM_FRACTION_NUMERATOR (x),
-                                   scm_product (SCM_FRACTION_DENOMINATOR (x), y));
-	} 
-      else if (SCM_REALP (y)) 
-        /* FIXME: Precision may be lost here due to:
-           (1) The conversion from fraction to double
-           (2) Double rounding */
-        return scm_i_from_double (scm_i_fraction2double (x) /
-                                  SCM_REAL_VALUE (y));
-      else if (SCM_COMPLEXP (y)) 
-	{
-          /* FIXME: Precision may be lost here due to:
-             (1) The conversion from fraction to double
-             (2) Double rounding */
-	  a = scm_i_fraction2double (x);
-	  goto complex_div;
-	} 
-      else if (SCM_FRACTIONP (y))
-	return scm_i_make_ratio (scm_product (SCM_FRACTION_NUMERATOR (x), SCM_FRACTION_DENOMINATOR (y)),
-                                 scm_product (SCM_FRACTION_NUMERATOR (y), SCM_FRACTION_DENOMINATOR (x)));
-      else 
-	return scm_wta_dispatch_2 (g_divide, x, y, SCM_ARGn, s_divide);
-    }
-  else
-    return scm_wta_dispatch_2 (g_divide, x, y, SCM_ARG1, s_divide);
+  return divide (x, y);
 }
-#undef FUNC_NAME
-
 
 double
 scm_c_truncate (double x)
