@@ -2254,3 +2254,40 @@ scm_integer_bit_extract_z (SCM n, unsigned long start, unsigned long bits)
   scm_remember_upto_here_1 (n);
   return take_mpz (result);
 }
+
+static const char scm_logtab[] = {
+  0, 1, 1, 2, 1, 2, 2, 3, 1, 2, 2, 3, 2, 3, 3, 4
+};
+
+SCM
+scm_integer_logcount_i (scm_t_inum n)
+{
+  unsigned long c = 0;
+  if (n < 0)
+    n = -1 - n;
+  while (n)
+    {
+      c += scm_logtab[15 & n];
+      n >>= 4;
+    }
+  return SCM_I_MAKINUM (c);
+}
+
+SCM
+scm_integer_logcount_z (SCM n)
+{
+  unsigned long count;
+  mpz_t zn;
+  alias_bignum_to_mpz (scm_bignum (n), zn);
+  if (mpz_sgn (zn) >= 0)
+    count = mpz_popcount (zn);
+  else
+    {
+      mpz_t z_negative_one;
+      mpz_init_set_si (z_negative_one, -1);
+      count = mpz_hamdist (zn, z_negative_one);
+      mpz_clear (z_negative_one);
+    }
+  scm_remember_upto_here_1 (n);
+  return scm_from_ulong (count);
+}

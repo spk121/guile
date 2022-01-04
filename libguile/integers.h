@@ -168,6 +168,9 @@ SCM_INTERNAL SCM scm_integer_bit_extract_i (scm_t_inum n, unsigned long start,
 SCM_INTERNAL SCM scm_integer_bit_extract_z (SCM n, unsigned long start,
                                             unsigned long bits);
 
+SCM_INTERNAL SCM scm_integer_logcount_i (scm_t_inum n);
+SCM_INTERNAL SCM scm_integer_logcount_z (SCM n);
+
 
 
 #endif  /* SCM_INTEGERS_H */

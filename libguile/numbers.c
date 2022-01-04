@@ -234,10 +234,6 @@ scm_from_complex_double (complex double z)
 
 
 
-static mpz_t z_negative_one;
-
-
-
 /* Clear the `mpz_t' embedded in bignum PTR.  */
 static void
 finalize_bignum (void *ptr, void *data)
@@ -3369,11 +3365,6 @@ SCM_DEFINE (scm_bit_extract, "bit-extract", 3, 0, 0,
 }
 #undef FUNC_NAME
 
-
-static const char scm_logtab[] = {
-  0, 1, 1, 2, 1, 2, 2, 3, 1, 2, 2, 3, 2, 3, 3, 4
-};
-
 SCM_DEFINE (scm_logcount, "logcount", 1, 0, 0,
             (SCM n),
 	    "Return the number of bits in integer @var{n}.  If integer is\n"
@@ -3392,28 +3383,9 @@ SCM_DEFINE (scm_logcount, "logcount", 1, 0, 0,
 #define FUNC_NAME s_scm_logcount
 {
   if (SCM_I_INUMP (n))
-    {
-      unsigned long c = 0;
-      scm_t_inum nn = SCM_I_INUM (n);
-      if (nn < 0)
-        nn = -1 - nn;
-      while (nn)
-        {
-          c += scm_logtab[15 & nn];
-          nn >>= 4;
-        }
-      return SCM_I_MAKINUM (c);
-    }
+    return scm_integer_logcount_i (SCM_I_INUM (n));
   else if (SCM_BIGP (n))
-    {
-      unsigned long count;
-      if (mpz_sgn (SCM_I_BIG_MPZ (n)) >= 0)
-        count = mpz_popcount (SCM_I_BIG_MPZ (n));
-      else
-        count = mpz_hamdist (SCM_I_BIG_MPZ (n), z_negative_one);
-      scm_remember_upto_here_1 (n);
-      return SCM_I_MAKINUM (count);
-    }
+    return scm_integer_logcount_z (n);
   else
     SCM_WRONG_TYPE_ARG (SCM_ARG1, n);
 }
@@ -8526,8 +8498,6 @@ scm_init_numbers ()
     mp_set_memory_functions (custom_gmp_malloc,
                              custom_gmp_realloc,
                              custom_gmp_free);
-
-  mpz_init_set_si (z_negative_one, -1);
 
   /* It may be possible to tune the performance of some algorithms by using
    * the following constants to avoid the creation of bignums.  Please, before
