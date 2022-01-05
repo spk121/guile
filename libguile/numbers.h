@@ -1,7 +1,7 @@
 #ifndef SCM_NUMBERS_H
 #define SCM_NUMBERS_H
 
-/* Copyright 1995-1996,1998,2000-2006,2008-2011,2013-2014,2016-2018,2021
+/* Copyright 1995-1996,1998,2000-2006,2008-2011,2013-2014,2016-2018,2021,2022
      Free Software Foundation, Inc.
 
    This file is part of Guile.
@@ -349,9 +349,6 @@ SCM_INTERNAL SCM scm_i_exact_integer_sqrt (SCM k);
 /* bignum internal functions */
 SCM_INTERNAL SCM scm_i_mkbig (void);
 SCM_API /* FIXME: not internal */ SCM scm_i_normbig (SCM x);
-SCM_INTERNAL int scm_i_bigcmp (SCM a, SCM b);
-SCM_INTERNAL SCM scm_i_dbl2big (double d);
-SCM_INTERNAL SCM scm_i_dbl2num (double d);
 SCM_API /* FIXME: not internal */ double scm_i_big2dbl (SCM b);
 SCM_API /* FIXME: not internal */ SCM scm_i_long2big (long n);
 SCM_API /* FIXME: not internal */ SCM scm_i_ulong2big (unsigned long n);

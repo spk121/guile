@@ -1,4 +1,4 @@
-/* Copyright 1995-1998,2000-2001,2003-2004,2006,2009-2011,2017-2018
+/* Copyright 1995-1998,2000-2001,2003-2004,2006,2009-2011,2017-2018,2022
      Free Software Foundation, Inc.
 
    This file is part of Guile.
@@ -129,12 +129,6 @@ scm_real_equalp (SCM x, SCM y)
 {
   return scm_from_bool (real_eqv (SCM_REAL_VALUE (x),
 				  SCM_REAL_VALUE (y)));
-}
-
-SCM
-scm_bigequal (SCM x, SCM y)
-{
-  return scm_from_bool (scm_i_bigcmp (x, y) == 0);
 }
 
 SCM

@@ -286,6 +286,12 @@ bignum_cmp_long (struct scm_bignum *z, long l)
     }
 }
 
+SCM
+scm_integer_from_mpz (mpz_srcptr mpz)
+{
+  return normalize_bignum (make_bignum_from_mpz (mpz));
+}
+
 int
 scm_is_integer_odd_i (scm_t_inum i)
 {
@@ -2503,14 +2509,68 @@ scm_is_integer_negative_z (struct scm_bignum *x)
   return bignum_is_negative (x);
 }
 
-double
-scm_integer_to_double_z (struct scm_bignum *x)
+#if SCM_ENABLE_MINI_GMP
+static double
+mpz_get_d_2exp (long *exp, mpz_srcptr z)
+{
+  double signif = mpz_get_d (z);
+  int iexp;
+  signif = frexp (signif, &iexp);
+  *exp = iexp;
+  return signif;
+}
+#endif
+
+static double
+bignum_frexp (struct scm_bignum *x, long *exp)
 {
   mpz_t zx;
   alias_bignum_to_mpz (x, zx);
-  double result = mpz_get_d (zx);
+
+  size_t bits = mpz_sizeinbase (zx, 2);
+  ASSERT (bits != 0);
+  size_t shift = 0;
+  if (bits > DBL_MANT_DIG)
+    {
+      shift = bits - DBL_MANT_DIG;
+      SCM xx = scm_integer_round_rsh_zu (x, shift);
+      if (SCM_I_INUMP (xx))
+        {
+          int expon;
+          double signif = frexp (SCM_I_INUM (xx), &expon);
+          *exp = expon + shift;
+          return signif;
+        }
+      x = scm_bignum (xx);
+      alias_bignum_to_mpz (x, zx);
+    }
+
+  double significand = mpz_get_d_2exp (exp, zx);
   scm_remember_upto_here_1 (x);
-  return result;
+  *exp += shift;
+  return significand;
+}
+
+double
+scm_integer_to_double_z (struct scm_bignum *x)
+{
+  long exponent;
+  double significand = bignum_frexp (x, &exponent);
+  return ldexp (significand, exponent);
+}
+
+SCM
+scm_integer_from_double (double val)
+{
+  if (!isfinite (val))
+    scm_out_of_range ("inexact->exact", scm_from_double (val));
+
+  if (((double) INT64_MIN) <= val && val <= ((double) INT64_MAX))
+    return scm_from_int64 (val);
+
+  mpz_t result;
+  mpz_init_set_d (result, val);
+  return take_mpz (result);
 }
 
 SCM

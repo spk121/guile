@@ -338,51 +338,6 @@ scm_i_clonebig (SCM src_big, int same_sign_p)
   return z;
 }
 
-int
-scm_i_bigcmp (SCM x, SCM y)
-{
-  /* Return neg if x < y, pos if x > y, and 0 if x == y */
-  /* presume we already know x and y are bignums */
-  int result = mpz_cmp (SCM_I_BIG_MPZ (x), SCM_I_BIG_MPZ (y));
-  scm_remember_upto_here_2 (x, y);
-  return result;
-}
-
-SCM
-scm_i_dbl2big (double d)
-{
-  /* results are only defined if d is an integer */
-  SCM z = make_bignum ();
-  mpz_init_set_d (SCM_I_BIG_MPZ (z), d);
-  return z;
-}
-
-/* Convert a integer in double representation to a SCM number. */
-
-SCM
-scm_i_dbl2num (double u)
-{
-  /* SCM_MOST_POSITIVE_FIXNUM+1 and SCM_MOST_NEGATIVE_FIXNUM are both
-     powers of 2, so there's no rounding when making "double" values
-     from them.  If plain SCM_MOST_POSITIVE_FIXNUM was used it could
-     get rounded on a 64-bit machine, hence the "+1".
-
-     The use of floor() to force to an integer value ensures we get a
-     "numerically closest" value without depending on how a
-     double->long cast or how mpz_set_d will round.  For reference,
-     double->long probably follows the hardware rounding mode,
-     mpz_set_d truncates towards zero.  */
-
-  /* XXX - what happens when SCM_MOST_POSITIVE_FIXNUM etc is not
-     representable as a double? */
-
-  if (u < (double) (SCM_MOST_POSITIVE_FIXNUM+1)
-      && u >= (double) SCM_MOST_NEGATIVE_FIXNUM)
-    return SCM_I_MAKINUM ((scm_t_inum) u);
-  else
-    return scm_i_dbl2big (u);
-}
-
 static SCM round_rsh (SCM n, SCM count);
 
 /* scm_i_big2dbl_2exp() is like frexp for bignums: it converts the
@@ -434,9 +389,7 @@ scm_i_big2dbl_2exp (SCM b, long *expon_p)
 double
 scm_i_big2dbl (SCM b)
 {
-  long expon;
-  double signif = scm_i_big2dbl_2exp (b, &expon);
-  return ldexp (signif, expon);
+  return scm_integer_to_double_z (scm_bignum (b));
 }
 
 SCM
@@ -4619,6 +4572,12 @@ SCM_DEFINE (scm_exact_integer_p, "exact-integer?", 1, 0, 0,
 }
 #undef FUNC_NAME
 
+SCM
+scm_bigequal (SCM x, SCM y)
+{
+  return scm_from_bool
+    (scm_is_integer_equal_zz (scm_bignum (x), scm_bignum (y)));
+}
 
 SCM scm_i_num_eq_p (SCM, SCM, SCM);
 SCM_PRIMITIVE_GENERIC (scm_i_num_eq_p, "=", 0, 2, 1,
@@ -6561,51 +6520,45 @@ SCM_PRIMITIVE_GENERIC (scm_inexact_to_exact, "inexact->exact", 1, 0, 0,
 {
   if (SCM_I_INUMP (z) || SCM_BIGP (z) || SCM_FRACTIONP (z))
     return z;
+
+  double val;
+
+  if (SCM_REALP (z))
+    val = SCM_REAL_VALUE (z);
+  else if (SCM_COMPLEXP (z) && SCM_COMPLEX_IMAG (z) == 0.0)
+    val = SCM_COMPLEX_REAL (z);
   else
+    return scm_wta_dispatch_1 (g_scm_inexact_to_exact, z, 1,
+                               s_scm_inexact_to_exact);
+
+  if (!SCM_LIKELY (isfinite (val)))
+    SCM_OUT_OF_RANGE (1, z);
+  if (val == 0)
+    return SCM_INUM0;
+
+  int expon;
+  mpz_t zn;
+
+  mpz_init_set_d (zn, ldexp (frexp (val, &expon), DBL_MANT_DIG));
+  expon -= DBL_MANT_DIG;
+  if (expon < 0)
     {
-      double val;
+      int shift = mpz_scan1 (zn, 0);
 
-      if (SCM_REALP (z))
-	val = SCM_REAL_VALUE (z);
-      else if (SCM_COMPLEXP (z) && SCM_COMPLEX_IMAG (z) == 0.0)
-	val = SCM_COMPLEX_REAL (z);
-      else
-	return scm_wta_dispatch_1 (g_scm_inexact_to_exact, z, 1,
-                                   s_scm_inexact_to_exact);
-
-      if (!SCM_LIKELY (isfinite (val)))
-	SCM_OUT_OF_RANGE (1, z);
-      else if (val == 0.0)
-        return SCM_INUM0;
-      else
-	{
-          int expon;
-          SCM numerator;
-
-          numerator = scm_i_dbl2big (ldexp (frexp (val, &expon),
-                                            DBL_MANT_DIG));
-          expon -= DBL_MANT_DIG;
-          if (expon < 0)
-            {
-              int shift = mpz_scan1 (SCM_I_BIG_MPZ (numerator), 0);
-
-              if (shift > -expon)
-                shift = -expon;
-              mpz_fdiv_q_2exp (SCM_I_BIG_MPZ (numerator),
-                               SCM_I_BIG_MPZ (numerator),
-                               shift);
-              expon += shift;
-            }
-          numerator = scm_i_normbig (numerator);
-          if (expon < 0)
-            return scm_i_make_ratio_already_reduced
-              (numerator, scm_integer_lsh_iu (1, -expon));
-          else if (expon > 0)
-            return lsh (numerator, scm_from_int (expon), FUNC_NAME);
-          else
-            return numerator;
-	}
+      if (shift > -expon)
+        shift = -expon;
+      mpz_fdiv_q_2exp (zn, zn, shift);
+      expon += shift;
     }
+  SCM numerator = scm_integer_from_mpz (zn);
+  mpz_clear (zn);
+  if (expon < 0)
+    return scm_i_make_ratio_already_reduced
+      (numerator, scm_integer_lsh_iu (1, -expon));
+  else if (expon > 0)
+    return lsh (numerator, scm_from_int (expon), FUNC_NAME);
+  else
+    return numerator;
 }
 #undef FUNC_NAME
 
