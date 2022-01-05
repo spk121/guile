@@ -1,4 +1,4 @@
-/* Copyright 2003-2004,2006,2008-2018,2020,2021
+/* Copyright 2003-2004,2006,2008-2018,2020,2021,2022
      Free Software Foundation, Inc.
 
    This file is part of Guile.
@@ -366,7 +366,7 @@ SCM_DEFINE (scm_bit_count_star, "bit-count*", 3, 0, 0,
   if (scm_is_bitvector (v) && scm_is_bitvector (kv))
     {
       count = scm_c_bitvector_count_bits (v, kv);
-      if (count == 0)
+      if (bit == 0)
         count = scm_c_bitvector_count (kv) - count;
     }
   else
