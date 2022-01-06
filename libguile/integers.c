@@ -3035,3 +3035,12 @@ scm_integer_to_uint64_z (struct scm_bignum *z, uint64_t *val)
 {
   return bignum_to_uint64 (z, val);
 }
+
+void
+scm_integer_to_mpz_z (struct scm_bignum *z, mpz_t n)
+{
+  mpz_t zn;
+  alias_bignum_to_mpz (z, zn);
+  mpz_init_set (n, zn);
+  scm_remember_upto_here_1 (z);
+}

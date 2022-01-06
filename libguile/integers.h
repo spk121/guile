@@ -32,7 +32,8 @@ scm_bignum (SCM x)
   return (struct scm_bignum *) SCM_UNPACK (x);
 }
 
-SCM_INTERNAL SCM scm_integer_from_mpz (mpz_srcptr mpz);
+SCM_INTERNAL SCM scm_integer_from_mpz (const mpz_t n);
+SCM_INTERNAL void scm_integer_to_mpz_z (struct scm_bignum *z, mpz_t n);
 
 SCM_INTERNAL int scm_is_integer_odd_i (scm_t_inum i);
 SCM_INTERNAL int scm_is_integer_odd_z (struct scm_bignum *z);
