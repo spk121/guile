@@ -6958,21 +6958,74 @@ scm_from_uint16 (uint16_t arg)
   return SCM_I_MAKINUM (arg);
 }
 
-#define TYPE                     int32_t
-#define TYPE_MIN                 INT32_MIN
-#define TYPE_MAX                 INT32_MAX
-#define SIZEOF_TYPE              4
-#define SCM_TO_TYPE_PROTO(arg)   scm_to_int32 (arg)
-#define SCM_FROM_TYPE_PROTO(arg) scm_from_int32 (arg)
-#include "conv-integer.i.c"
+int32_t
+scm_to_int32 (SCM arg)
+{
+#if SCM_SIZEOF_LONG == 4
+  if (SCM_I_INUMP (arg))
+    return SCM_I_INUM (arg);
+  else if (!SCM_BIGP (arg))
+    scm_wrong_type_arg_msg (NULL, 0, arg, "exact integer");
+  int32_t ret;
+  if (scm_integer_to_int32_z (scm_bignum (arg), &ret))
+    return ret;
+  range_error (arg, scm_integer_from_int32 (INT32_MIN),
+               scm_integer_from_int32 (INT32_MAX));
+#elif SCM_SIZEOF_LONG == 8
+  return inum_in_range (arg, INT32_MIN, INT32_MAX);
+#else
+#error bad inum size
+#endif
+}
 
-#define TYPE                     uint32_t
-#define TYPE_MIN                 0
-#define TYPE_MAX                 UINT32_MAX
-#define SIZEOF_TYPE              4
-#define SCM_TO_TYPE_PROTO(arg)   scm_to_uint32 (arg)
-#define SCM_FROM_TYPE_PROTO(arg) scm_from_uint32 (arg)
-#include "conv-uinteger.i.c"
+SCM
+scm_from_int32 (int32_t arg)
+{
+#if SCM_SIZEOF_LONG == 4
+  return scm_integer_from_int32 (arg);
+#elif SCM_SIZEOF_LONG == 8
+  return SCM_I_MAKINUM (arg);
+#else
+#error bad inum size
+#endif
+}
+
+uint32_t
+scm_to_uint32 (SCM arg)
+{
+#if SCM_SIZEOF_LONG == 4
+  if (SCM_I_INUMP (arg))
+    {
+      if (SCM_I_INUM (arg) > 0)
+        return SCM_I_INUM (arg);
+    }
+  else if (SCM_BIGP (arg))
+    {
+      uint32_t ret;
+      if (scm_integer_to_uint32_z (scm_bignum (arg), &ret))
+        return ret;
+    }
+  else
+    scm_wrong_type_arg_msg (NULL, 0, arg, "exact integer");
+  range_error (arg, 0, scm_integer_from_uint32 (UINT32_MAX));
+#elif SCM_SIZEOF_LONG == 8
+  return inum_in_range (arg, 0, UINT32_MAX);
+#else
+#error bad inum size
+#endif
+}
+
+SCM
+scm_from_uint32 (uint32_t arg)
+{
+#if SCM_SIZEOF_LONG == 4
+  return scm_integer_from_uint32 (arg);
+#elif SCM_SIZEOF_LONG == 8
+  return SCM_I_MAKINUM (arg);
+#else
+#error bad inum size
+#endif
+}
 
 #define TYPE                     scm_t_wchar
 #define TYPE_MIN                 (int32_t)-1

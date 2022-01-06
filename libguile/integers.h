@@ -199,9 +199,15 @@ SCM_INTERNAL SCM scm_integer_exact_quotient_zi (struct scm_bignum *n,
 SCM_INTERNAL SCM scm_integer_exact_quotient_zz (struct scm_bignum *n,
                                                 struct scm_bignum *d);
 
+#if SCM_SIZEOF_LONG == 4
+SCM_INTERNAL SCM scm_integer_from_int32 (int32_t n);
+SCM_INTERNAL SCM scm_integer_from_uint32 (uint32_t n);
+SCM_INTERNAL int scm_integer_to_int32_z (struct scm_bignum *z, int32_t *val);
+SCM_INTERNAL int scm_integer_to_uint32_z (struct scm_bignum *z, uint32_t *val);
+#endif
+
 SCM_INTERNAL int scm_integer_to_int64_z (struct scm_bignum *z, int64_t *val);
 SCM_INTERNAL int scm_integer_to_uint64_z (struct scm_bignum *z, uint64_t *val);
-
 SCM_INTERNAL SCM scm_integer_from_int64 (int64_t n);
 SCM_INTERNAL SCM scm_integer_from_uint64 (uint64_t n);
 

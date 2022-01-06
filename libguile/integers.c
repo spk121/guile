@@ -182,21 +182,25 @@ make_bignum_1 (int is_negative, mp_limb_t limb)
   return is_negative ? negate_bignum(z) : z;
 }
 
+#if SCM_SIZEOF_LONG == 4
+static struct scm_bignum *
+make_bignum_2 (int is_negative, mp_limb_t lo, mp_limb_t hi)
+{
+  struct scm_bignum *z = allocate_bignum (2);
+  z->limbs[0] = lo;
+  z->limbs[1] = hi;
+  return is_negative ? negate_bignum(z) : z;
+}
+#endif
+
 static struct scm_bignum *
 make_bignum_from_uint64 (uint64_t val)
 {
 #if SCM_SIZEOF_LONG == 4
-  mp_limb_t lo = val, hi = val >> 32;
-  struct scm_bignum *z = allocate_bignum (hi ? 2 : 1);
-  z->limbs[0] = lo;
-  if (hi)
-    z->limbs[1] = hi;
-  return z;
-#else
-  struct scm_bignum *z = allocate_bignum (1);
-  z->limbs[0] = val;
-  return z;
+  if (val > UINT32_MAX)
+    return make_bignum_2 (0, val, val >> 32);
 #endif
+  return make_bignum_1 (0, val);
 }
 
 static struct scm_bignum *
@@ -383,6 +387,59 @@ bignum_to_uint64 (struct scm_bignum *z, uint64_t *val)
       return 0;
     }
 }
+
+#if SCM_SIZEOF_LONG == 4
+static int
+negative_uint32_to_int32 (uint32_t magnitude, int32_t *val)
+{
+  if (magnitude > long_magnitude (INT32_MIN))
+    return 0;
+  *val = negative_long (magnitude);
+  return 1;
+}
+
+static int
+positive_uint32_to_int32 (uint32_t magnitude, int32_t *val)
+{
+  if (magnitude > INT32_MAX)
+    return 0;
+  *val = magnitude;
+  return 1;
+}
+
+static int
+bignum_to_int32 (struct scm_bignum *z, int32_t *val)
+{
+  switch (bignum_size (z))
+    {
+    case -1:
+      return negative_uint32_to_int32 (bignum_limbs (z)[0], val);
+    case 0:
+      *val = 0;
+      return 1;
+    case 1:
+      return positive_uint32_to_int32 (bignum_limbs (z)[0], val);
+    default:
+      return 0;
+    }
+}
+
+static int
+bignum_to_uint32 (struct scm_bignum *z, uint32_t *val)
+{
+  switch (bignum_size (z))
+    {
+    case 0:
+      *val = 0;
+      return 1;
+    case 1:
+      *val = bignum_limbs (z)[0];
+      return 1;
+    default:
+      return 0;
+    }
+}
+#endif
 
 static int
 bignum_cmp_long (struct scm_bignum *z, long l)
@@ -2920,6 +2977,36 @@ scm_integer_exact_quotient_zz (struct scm_bignum *n, struct scm_bignum *d)
   scm_remember_upto_here_2 (n, d);
   return take_mpz (q);
 }
+
+#if SCM_SIZEOF_LONG == 4
+SCM
+scm_integer_from_int32 (int32_t n)
+{
+  if (SCM_FIXABLE (n))
+    return SCM_I_MAKINUM (n);
+  return scm_from_bignum (long_to_bignum (n));
+}
+
+SCM
+scm_integer_from_uint32 (uint32_t n)
+{
+  if (SCM_POSFIXABLE (n))
+    return SCM_I_MAKINUM (n);
+  return scm_from_bignum (ulong_to_bignum (n));
+}
+
+int
+scm_integer_to_int32_z (struct scm_bignum *z, int32_t *val)
+{
+  return bignum_to_int32 (z, val);
+}
+
+int
+scm_integer_to_uint32_z (struct scm_bignum *z, uint32_t *val)
+{
+  return bignum_to_uint32 (z, val);
+}
+#endif
 
 SCM
 scm_integer_from_int64 (int64_t n)
