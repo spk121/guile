@@ -25,6 +25,7 @@
 
 #include <math.h>
 #include <stdlib.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <string.h>
 #include <verify.h>
@@ -113,6 +114,22 @@ negative_long (unsigned long mag)
 {
   ASSERT (mag <= (unsigned long) LONG_MIN);
   return ~mag + 1;
+}
+
+static inline int64_t
+negative_int64 (uint64_t mag)
+{
+  ASSERT (mag <= (uint64_t) INT64_MIN);
+  return ~mag + 1;
+}
+
+static inline uint64_t
+int64_magnitude (int64_t i)
+{
+  uint64_t mag = i;
+  if (i < 0)
+    mag = ~mag + 1;
+  return mag;
 }
 
 static inline scm_t_bits
@@ -264,6 +281,82 @@ long_sign (long l)
   if (l < 0) return -1;
   if (l == 0) return 0;
   return 1;
+}
+
+static int
+negative_uint64_to_int64 (uint64_t magnitude, int64_t *val)
+{
+  if (magnitude > int64_magnitude (INT64_MIN))
+    return 0;
+  *val = negative_int64 (magnitude);
+  return 1;
+}
+
+static int
+positive_uint64_to_int64 (uint64_t magnitude, int64_t *val)
+{
+  if (magnitude > INT64_MAX)
+    return 0;
+  *val = magnitude;
+  return 1;
+}
+
+static int
+bignum_to_int64 (struct scm_bignum *z, int64_t *val)
+{
+  switch (bignum_size (z))
+    {
+#if SCM_SIZEOF_LONG == 4
+    case -2:
+      {
+        uint64_t mag = bignum_limbs (z)[0];
+        mag |= ((uint64_t) bignum_limbs (z)[1]) << 32;
+        return negative_uint64_to_int64 (mag, val);
+      }
+#endif
+    case -1:
+      return negative_uint64_to_int64 (bignum_limbs (z)[0], val);
+    case 0:
+      *val = 0;
+      return 1;
+    case 1:
+      return positive_uint64_to_int64 (bignum_limbs (z)[0], val);
+#if SCM_SIZEOF_LONG == 4
+    case 2:
+      {
+        uint64_t mag = bignum_limbs (z)[0];
+        mag |= ((uint64_t) bignum_limbs (z)[1]) << 32;
+        return positive_uint64_to_int64 (mag, val);
+      }
+#endif
+    default:
+      return 0;
+    }
+}
+
+static int
+bignum_to_uint64 (struct scm_bignum *z, uint64_t *val)
+{
+  switch (bignum_size (z))
+    {
+    case 0:
+      *val = 0;
+      return 1;
+    case 1:
+      *val = bignum_limbs (z)[0];
+      return 1;
+#if SCM_SIZEOF_LONG == 4
+    case 2:
+      {
+        uint64_t mag = bignum_limbs (z)[0];
+        mag |= ((uint64_t) bignum_limbs (z)[1]) << 32;
+        *val = mag;
+        return 1;
+      }
+#endif
+    default:
+      return 0;
+    }
 }
 
 static int
@@ -2803,3 +2896,14 @@ scm_integer_exact_quotient_zz (struct scm_bignum *n, struct scm_bignum *d)
   return take_mpz (q);
 }
 
+int
+scm_integer_to_int64_z (struct scm_bignum *z, int64_t *val)
+{
+  return bignum_to_int64 (z, val);
+}
+
+int
+scm_integer_to_uint64_z (struct scm_bignum *z, uint64_t *val)
+{
+  return bignum_to_uint64 (z, val);
+}

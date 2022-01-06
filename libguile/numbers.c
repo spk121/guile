@@ -6788,59 +6788,24 @@ scm_is_exact_integer (SCM val)
   return SCM_I_INUMP (val) || SCM_BIGP (val);
 }
 
+// Given that there is no way to extend intmax_t to encompass types
+// larger than int64, and that we must have int64, intmax will always be
+// 8 bytes wide, and we can treat intmax arguments as int64's.
+verify(SCM_SIZEOF_INTMAX == 8);
+
 int
 scm_is_signed_integer (SCM val, intmax_t min, intmax_t max)
 {
   if (SCM_I_INUMP (val))
     {
       scm_t_signed_bits n = SCM_I_INUM (val);
-      return n >= min && n <= max;
+      return min <= n && n <= max;
     }
   else if (SCM_BIGP (val))
     {
-      if (min >= SCM_MOST_NEGATIVE_FIXNUM && max <= SCM_MOST_POSITIVE_FIXNUM)
-	return 0;
-      else if (min >= LONG_MIN && max <= LONG_MAX)
-	{
-	  if (mpz_fits_slong_p (SCM_I_BIG_MPZ (val)))
-	    {
-	      long n = mpz_get_si (SCM_I_BIG_MPZ (val));
-	      return n >= min && n <= max;
-	    }
-	  else
-	    return 0;
-	}
-      else
-	{
-	  uintmax_t abs_n;
-	  intmax_t n;
-	  size_t count;
-
-	  if (mpz_sizeinbase (SCM_I_BIG_MPZ (val), 2) 
-	      > CHAR_BIT*sizeof (uintmax_t))
-	    return 0;
-	  
-	  mpz_export (&abs_n, &count, 1, sizeof (uintmax_t), 0, 0,
-		      SCM_I_BIG_MPZ (val));
-
-	  if (mpz_sgn (SCM_I_BIG_MPZ (val)) >= 0)
-	    {
-	      if (abs_n <= max)
-		n = abs_n;
-	      else
-		return 0;
-	    }
-	  else
-	    {
-	      /* Carefully avoid signed integer overflow. */
-	      if (min < 0 && abs_n - 1 <= -(min + 1))
-		n = -1 - (intmax_t)(abs_n - 1);
-	      else
-		return 0;
-	    }
-
-	  return n >= min && n <= max;
-	}
+      int64_t n;
+      return scm_integer_to_int64_z (scm_bignum (val), &n)
+        && min <= n && n <= max;
     }
   else
     return 0;
@@ -6856,35 +6821,9 @@ scm_is_unsigned_integer (SCM val, uintmax_t min, uintmax_t max)
     }
   else if (SCM_BIGP (val))
     {
-      if (max <= SCM_MOST_POSITIVE_FIXNUM)
-	return 0;
-      else if (max <= ULONG_MAX)
-	{
-	  if (mpz_fits_ulong_p (SCM_I_BIG_MPZ (val)))
-	    {
-	      unsigned long n = mpz_get_ui (SCM_I_BIG_MPZ (val));
-	      return n >= min && n <= max;
-	    }
-	  else
-	    return 0;
-	}
-      else
-	{
-	  uintmax_t n;
-	  size_t count;
-
-	  if (mpz_sgn (SCM_I_BIG_MPZ (val)) < 0)
-	    return 0;
-
-	  if (mpz_sizeinbase (SCM_I_BIG_MPZ (val), 2)
-	      > CHAR_BIT*sizeof (uintmax_t))
-	    return 0;
-	  
-	  mpz_export (&n, &count, 1, sizeof (uintmax_t), 0, 0,
-		      SCM_I_BIG_MPZ (val));
-
-	  return n >= min && n <= max;
-	}
+      uint64_t n;
+      return scm_integer_to_uint64_z (scm_bignum (val), &n)
+        && min <= n && n <= max;
     }
   else
     return 0;
@@ -6895,7 +6834,7 @@ scm_i_range_error (SCM bad_val, SCM min, SCM max)
 {
   scm_error (scm_out_of_range_key,
 	     NULL,
-	     "Value out of range ~S to ~S: ~S",
+	     "Value out of range ~S to< ~S: ~S",
              scm_list_3 (min, max, bad_val),
              scm_list_1 (bad_val));
 }
