@@ -183,6 +183,31 @@ make_bignum_1 (int is_negative, mp_limb_t limb)
 }
 
 static struct scm_bignum *
+make_bignum_from_uint64 (uint64_t val)
+{
+#if SCM_SIZEOF_LONG == 4
+  mp_limb_t lo = val, hi = val >> 32;
+  struct scm_bignum *z = allocate_bignum (hi ? 2 : 1);
+  z->limbs[0] = lo;
+  if (hi)
+    z->limbs[1] = hi;
+  return z;
+#else
+  struct scm_bignum *z = allocate_bignum (1);
+  z->limbs[0] = val;
+  return z;
+#endif
+}
+
+static struct scm_bignum *
+make_bignum_from_int64 (int64_t val)
+{
+  return val < 0
+    ? negate_bignum (make_bignum_from_uint64 (int64_magnitude (val)))
+    : make_bignum_from_uint64 (val);
+}
+
+static struct scm_bignum *
 ulong_to_bignum (unsigned long u)
 {
   return make_bignum_1 (0, u);
@@ -2894,6 +2919,22 @@ scm_integer_exact_quotient_zz (struct scm_bignum *n, struct scm_bignum *d)
   mpz_divexact (q, zn, zd);
   scm_remember_upto_here_2 (n, d);
   return take_mpz (q);
+}
+
+SCM
+scm_integer_from_int64 (int64_t n)
+{
+  if (SCM_FIXABLE (n))
+    return SCM_I_MAKINUM (n);
+  return scm_from_bignum (make_bignum_from_int64 (n));
+}
+
+SCM
+scm_integer_from_uint64 (uint64_t n)
+{
+  if (SCM_POSFIXABLE (n))
+    return SCM_I_MAKINUM (n);
+  return scm_from_bignum (make_bignum_from_uint64 (n));
 }
 
 int

@@ -202,6 +202,9 @@ SCM_INTERNAL SCM scm_integer_exact_quotient_zz (struct scm_bignum *n,
 SCM_INTERNAL int scm_integer_to_int64_z (struct scm_bignum *z, int64_t *val);
 SCM_INTERNAL int scm_integer_to_uint64_z (struct scm_bignum *z, uint64_t *val);
 
+SCM_INTERNAL SCM scm_integer_from_int64 (int64_t n);
+SCM_INTERNAL SCM scm_integer_from_uint64 (uint64_t n);
+
 
 
 #endif  /* SCM_INTEGERS_H */

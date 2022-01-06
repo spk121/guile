@@ -6829,8 +6829,9 @@ scm_is_unsigned_integer (SCM val, uintmax_t min, uintmax_t max)
     return 0;
 }
 
+static void range_error (SCM bad_val, SCM min, SCM max) SCM_NORETURN;
 static void
-scm_i_range_error (SCM bad_val, SCM min, SCM max)
+range_error (SCM bad_val, SCM min, SCM max)
 {
   scm_error (scm_out_of_range_key,
 	     NULL,
@@ -6838,54 +6839,124 @@ scm_i_range_error (SCM bad_val, SCM min, SCM max)
              scm_list_3 (min, max, bad_val),
              scm_list_1 (bad_val));
 }
+#define scm_i_range_error range_error
 
-#define TYPE                     intmax_t
-#define TYPE_MIN                 min
-#define TYPE_MAX                 max
-#define SIZEOF_TYPE              0
-#define SCM_TO_TYPE_PROTO(arg)   scm_to_signed_integer (arg, intmax_t min, intmax_t max)
-#define SCM_FROM_TYPE_PROTO(arg) scm_from_signed_integer (arg)
-#include "conv-integer.i.c"
+static scm_t_inum
+inum_in_range (SCM x, scm_t_inum min, scm_t_inum max)
+{
+  if (SCM_LIKELY (SCM_I_INUMP (x)))
+    {
+      scm_t_inum val = SCM_I_INUM (x);
+      if (min <= val && val <= max)
+        return val;
+    }
+  else if (!SCM_BIGP (x))
+    scm_wrong_type_arg_msg (NULL, 0, x, "exact integer");
+  range_error (x, scm_from_long (min), scm_from_long (max));
+}
 
-#define TYPE                     uintmax_t
-#define TYPE_MIN                 min
-#define TYPE_MAX                 max
-#define SIZEOF_TYPE              0
-#define SCM_TO_TYPE_PROTO(arg)   scm_to_unsigned_integer (arg, uintmax_t min, uintmax_t max)
-#define SCM_FROM_TYPE_PROTO(arg) scm_from_unsigned_integer (arg)
-#include "conv-uinteger.i.c"
+SCM
+scm_from_signed_integer (intmax_t arg)
+{
+  return scm_integer_from_int64 (arg);
+}
 
-#define TYPE                     int8_t
-#define TYPE_MIN                 INT8_MIN
-#define TYPE_MAX                 INT8_MAX
-#define SIZEOF_TYPE              1
-#define SCM_TO_TYPE_PROTO(arg)   scm_to_int8 (arg)
-#define SCM_FROM_TYPE_PROTO(arg) scm_from_int8 (arg)
-#include "conv-integer.i.c"
+intmax_t
+scm_to_signed_integer (SCM arg, intmax_t min, intmax_t max)
+{
+  int64_t ret;
+  if (SCM_I_INUMP (arg))
+    ret = SCM_I_INUM (arg);
+  else if (SCM_BIGP (arg))
+    {
+      if (!scm_integer_to_int64_z (scm_bignum (arg), &ret))
+        goto out_of_range;
+    }
+  else
+    scm_wrong_type_arg_msg (NULL, 0, arg, "exact integer");
+  if (min <= ret && ret <= max)
+    return ret;
+ out_of_range:
+  range_error (arg, scm_from_intmax (min), scm_from_intmax (max));
+}
 
-#define TYPE                     uint8_t
-#define TYPE_MIN                 0
-#define TYPE_MAX                 UINT8_MAX
-#define SIZEOF_TYPE              1
-#define SCM_TO_TYPE_PROTO(arg)   scm_to_uint8 (arg)
-#define SCM_FROM_TYPE_PROTO(arg) scm_from_uint8 (arg)
-#include "conv-uinteger.i.c"
+SCM
+scm_from_unsigned_integer (uintmax_t arg)
+{
+  return scm_integer_from_uint64 (arg);
+}
 
-#define TYPE                     int16_t
-#define TYPE_MIN                 INT16_MIN
-#define TYPE_MAX                 INT16_MAX
-#define SIZEOF_TYPE              2
-#define SCM_TO_TYPE_PROTO(arg)   scm_to_int16 (arg)
-#define SCM_FROM_TYPE_PROTO(arg) scm_from_int16 (arg)
-#include "conv-integer.i.c"
+uintmax_t
+scm_to_unsigned_integer (SCM arg, uintmax_t min, uintmax_t max)
+{
+  uint64_t ret;
+  if (SCM_I_INUMP (arg))
+    {
+      scm_t_inum n = SCM_I_INUM (arg);
+      if (n < 0)
+        goto out_of_range;
+      ret = n;
+    }
+  else if (SCM_BIGP (arg))
+    {
+      if (!scm_integer_to_uint64_z (scm_bignum (arg), &ret))
+        goto out_of_range;
+    }
+  else
+    scm_wrong_type_arg_msg (NULL, 0, arg, "exact integer");
+  if (min <= ret && ret <= max)
+    return ret;
+ out_of_range:
+  range_error (arg, scm_from_uintmax (min), scm_from_uintmax (max));
+}
 
-#define TYPE                     uint16_t
-#define TYPE_MIN                 0
-#define TYPE_MAX                 UINT16_MAX
-#define SIZEOF_TYPE              2
-#define SCM_TO_TYPE_PROTO(arg)   scm_to_uint16 (arg)
-#define SCM_FROM_TYPE_PROTO(arg) scm_from_uint16 (arg)
-#include "conv-uinteger.i.c"
+int8_t
+scm_to_int8 (SCM arg)
+{
+  return inum_in_range (arg, INT8_MIN, INT8_MAX);
+}
+
+SCM
+scm_from_int8 (int8_t arg)
+{
+  return SCM_I_MAKINUM (arg);
+}
+
+uint8_t
+scm_to_uint8 (SCM arg)
+{
+  return inum_in_range (arg, 0, UINT8_MAX);
+}
+
+SCM
+scm_from_uint8 (uint8_t arg)
+{
+  return SCM_I_MAKINUM (arg);
+}
+
+int16_t
+scm_to_int16 (SCM arg)
+{
+  return inum_in_range (arg, INT16_MIN, INT16_MAX);
+}
+
+SCM
+scm_from_int16 (int16_t arg)
+{
+  return SCM_I_MAKINUM (arg);
+}
+
+uint16_t
+scm_to_uint16 (SCM arg)
+{
+  return inum_in_range (arg, 0, UINT16_MAX);
+}
+
+SCM
+scm_from_uint16 (uint16_t arg)
+{
+  return SCM_I_MAKINUM (arg);
+}
 
 #define TYPE                     int32_t
 #define TYPE_MIN                 INT32_MIN
