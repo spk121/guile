@@ -6996,7 +6996,7 @@ scm_to_uint32 (SCM arg)
 #if SCM_SIZEOF_LONG == 4
   if (SCM_I_INUMP (arg))
     {
-      if (SCM_I_INUM (arg) > 0)
+      if (SCM_I_INUM (arg) >= 0)
         return SCM_I_INUM (arg);
     }
   else if (SCM_BIGP (arg))
@@ -7027,6 +7027,51 @@ scm_from_uint32 (uint32_t arg)
 #endif
 }
 
+int64_t
+scm_to_int64 (SCM arg)
+{
+  if (SCM_I_INUMP (arg))
+    return SCM_I_INUM (arg);
+  else if (!SCM_BIGP (arg))
+    scm_wrong_type_arg_msg (NULL, 0, arg, "exact integer");
+  int64_t ret;
+  if (scm_integer_to_int64_z (scm_bignum (arg), &ret))
+    return ret;
+  range_error (arg, scm_integer_from_int64 (INT64_MIN),
+               scm_integer_from_int64 (INT64_MAX));
+}
+
+SCM
+scm_from_int64 (int64_t arg)
+{
+  return scm_integer_from_int64 (arg);
+}
+
+uint64_t
+scm_to_uint64 (SCM arg)
+{
+  if (SCM_I_INUMP (arg))
+    {
+      if (SCM_I_INUM (arg) >= 0)
+        return SCM_I_INUM (arg);
+    }
+  else if (SCM_BIGP (arg))
+    {
+      uint64_t ret;
+      if (scm_integer_to_uint64_z (scm_bignum (arg), &ret))
+        return ret;
+    }
+  else
+    scm_wrong_type_arg_msg (NULL, 0, arg, "exact integer");
+  range_error (arg, 0, scm_integer_from_uint64 (UINT64_MAX));
+}
+
+SCM
+scm_from_uint64 (uint64_t arg)
+{
+  return scm_integer_from_uint64 (arg);
+}
+
 #define TYPE                     scm_t_wchar
 #define TYPE_MIN                 (int32_t)-1
 #define TYPE_MAX                 (int32_t)0x10ffff
@@ -7034,22 +7079,6 @@ scm_from_uint32 (uint32_t arg)
 #define SCM_TO_TYPE_PROTO(arg)   scm_to_wchar (arg)
 #define SCM_FROM_TYPE_PROTO(arg) scm_from_wchar (arg)
 #include "conv-integer.i.c"
-
-#define TYPE                     int64_t
-#define TYPE_MIN                 INT64_MIN
-#define TYPE_MAX                 INT64_MAX
-#define SIZEOF_TYPE              8
-#define SCM_TO_TYPE_PROTO(arg)   scm_to_int64 (arg)
-#define SCM_FROM_TYPE_PROTO(arg) scm_from_int64 (arg)
-#include "conv-integer.i.c"
-
-#define TYPE                     uint64_t
-#define TYPE_MIN                 0
-#define TYPE_MAX                 UINT64_MAX
-#define SIZEOF_TYPE              8
-#define SCM_TO_TYPE_PROTO(arg)   scm_to_uint64 (arg)
-#define SCM_FROM_TYPE_PROTO(arg) scm_from_uint64 (arg)
-#include "conv-uinteger.i.c"
 
 void
 scm_to_mpz (SCM val, mpz_t rop)
