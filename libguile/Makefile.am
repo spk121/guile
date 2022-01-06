@@ -1,6 +1,6 @@
 ## Process this file with Automake to create Makefile.in
 ##
-##   Copyright (C) 1998-2004, 2006-2014, 2016-2021
+##   Copyright (C) 1998-2004, 2006-2014, 2016-2022
 ##     Free Software Foundation, Inc.
 ##
 ##   This file is part of GUILE.
@@ -527,8 +527,7 @@ uninstall-hook:
 ## compile, since they are #included.  So instead we list them here.
 ## Perhaps we can deal with them normally once the merge seems to be
 ## working.
-noinst_HEADERS = conv-integer.i.c conv-uinteger.i.c		\
-                 elf.h						\
+noinst_HEADERS = elf.h						\
                  integers.h					\
                  intrinsics.h					\
                  srfi-14.i.c					\
