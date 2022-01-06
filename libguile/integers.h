@@ -212,6 +212,10 @@ SCM_INTERNAL int scm_integer_to_uint64_z (struct scm_bignum *z, uint64_t *val);
 SCM_INTERNAL SCM scm_integer_from_int64 (int64_t n);
 SCM_INTERNAL SCM scm_integer_from_uint64 (uint64_t n);
 
+SCM_INTERNAL void scm_integer_exact_sqrt_i (scm_t_inum k, SCM *s, SCM *r);
+SCM_INTERNAL void scm_integer_exact_sqrt_z (struct scm_bignum *k,
+                                            SCM *s, SCM *r);
+
 
 
 #endif  /* SCM_INTEGERS_H */

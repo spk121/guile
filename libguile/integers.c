@@ -3044,3 +3044,33 @@ scm_integer_to_mpz_z (struct scm_bignum *z, mpz_t n)
   mpz_init_set (n, zn);
   scm_remember_upto_here_1 (z);
 }
+
+void
+scm_integer_exact_sqrt_i (scm_t_inum k, SCM *s, SCM *r)
+{
+  ASSERT (k >= 0);
+  if (k == 0)
+    *s = *r = SCM_INUM0;
+  else
+    {
+      mp_limb_t kk = k, ss, rr;
+      if (mpn_sqrtrem (&ss, &rr, &kk, 1) == 0)
+        rr = 0;
+      *s = SCM_I_MAKINUM (ss);
+      *r = SCM_I_MAKINUM (rr);
+    }
+}
+
+void
+scm_integer_exact_sqrt_z (struct scm_bignum *k, SCM *s, SCM *r)
+{
+  mpz_t zk, zs, zr;
+  alias_bignum_to_mpz (k, zk);
+  mpz_init (zs);
+  mpz_init (zr);
+
+  mpz_sqrtrem (zs, zr, zk);
+  scm_remember_upto_here_1 (k);
+  *s = take_mpz (zs);
+  *r = take_mpz (zr);
+}

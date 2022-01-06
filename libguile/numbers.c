@@ -7374,41 +7374,20 @@ SCM_DEFINE (scm_i_exact_integer_sqrt, "exact-integer-sqrt", 1, 0, 0,
 void
 scm_exact_integer_sqrt (SCM k, SCM *sp, SCM *rp)
 {
-  if (SCM_LIKELY (SCM_I_INUMP (k)))
+  if (SCM_I_INUMP (k))
     {
-      if (SCM_I_INUM (k) > 0)
-        {
-          mp_limb_t kk, ss, rr;
-
-          kk = SCM_I_INUM (k);
-          if (mpn_sqrtrem (&ss, &rr, &kk, 1) == 0)
-            rr = 0;
-          *sp = SCM_I_MAKINUM (ss);
-          *rp = SCM_I_MAKINUM (rr);
-        }
-      else if (SCM_I_INUM (k) == 0)
-        *sp = *rp = SCM_INUM0;
-      else
-        scm_wrong_type_arg_msg ("exact-integer-sqrt", SCM_ARG1, k,
-                                "exact non-negative integer");
+      scm_t_inum kk = SCM_I_INUM (k);
+      if (kk >= 0)
+        return scm_integer_exact_sqrt_i (kk, sp, rp);
     }
-  else if (SCM_LIKELY (SCM_BIGP (k)))
+  else if (SCM_BIGP (k))
     {
-      SCM s, r;
-
-      if (mpz_sgn (SCM_I_BIG_MPZ (k)) < 0)
-	scm_wrong_type_arg_msg ("exact-integer-sqrt", SCM_ARG1, k,
-				"exact non-negative integer");
-      s = scm_i_mkbig ();
-      r = scm_i_mkbig ();
-      mpz_sqrtrem (SCM_I_BIG_MPZ (s), SCM_I_BIG_MPZ (r), SCM_I_BIG_MPZ (k));
-      scm_remember_upto_here_1 (k);
-      *sp = scm_i_normbig (s);
-      *rp = scm_i_normbig (r);
+      struct scm_bignum *zk = scm_bignum (k);
+      if (!scm_is_integer_negative_z (zk))
+        return scm_integer_exact_sqrt_z (zk, sp, rp);
     }
-  else
-    scm_wrong_type_arg_msg ("exact-integer-sqrt", SCM_ARG1, k,
-			    "exact non-negative integer");
+  scm_wrong_type_arg_msg ("exact-integer-sqrt", SCM_ARG1, k,
+                          "exact non-negative integer");
 }
 
 /* Return true iff K is a perfect square.
