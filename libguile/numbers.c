@@ -7072,13 +7072,17 @@ scm_from_uint64 (uint64_t arg)
   return scm_integer_from_uint64 (arg);
 }
 
-#define TYPE                     scm_t_wchar
-#define TYPE_MIN                 (int32_t)-1
-#define TYPE_MAX                 (int32_t)0x10ffff
-#define SIZEOF_TYPE              4
-#define SCM_TO_TYPE_PROTO(arg)   scm_to_wchar (arg)
-#define SCM_FROM_TYPE_PROTO(arg) scm_from_wchar (arg)
-#include "conv-integer.i.c"
+wchar_t
+scm_to_wchar (SCM arg)
+{
+  return inum_in_range (arg, -1, 0x10ffff);
+}
+
+SCM
+scm_from_wchar (wchar_t arg)
+{
+  return SCM_I_MAKINUM (arg);
+}
 
 void
 scm_to_mpz (SCM val, mpz_t rop)
