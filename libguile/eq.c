@@ -159,7 +159,14 @@ scm_i_fraction_equalp (SCM x, SCM y)
 int
 scm_i_heap_numbers_equal_p (SCM x, SCM y)
 {
-  if (SCM_IMP (x)) abort();
+  // Precondition: both X and Y are heap numbers.
+  if (!(SCM_HEAP_OBJECT_P (x) && SCM_HEAP_OBJECT_P (y)))
+    abort();
+  // eqv? already checks that the heap tags are the same, but we are
+  // also called by the VM, which only ensures that both values are
+  // numbers.  So check tags here too.
+  if (SCM_CELL_TYPE (x) != SCM_CELL_TYPE (y))
+    return 0;
   switch (SCM_TYP16 (x))
     {
     case scm_tc16_big:
