@@ -338,52 +338,6 @@ scm_i_clonebig (SCM src_big, int same_sign_p)
   return z;
 }
 
-static SCM round_rsh (SCM n, SCM count);
-
-/* scm_i_big2dbl_2exp() is like frexp for bignums: it converts the
-   bignum b into a normalized significand and exponent such that
-   b = significand * 2^exponent and 1/2 <= abs(significand) < 1.
-   The return value is the significand rounded to the closest
-   representable double, and the exponent is placed into *expon_p.
-   If b is zero, then the returned exponent and significand are both
-   zero. */
-
-static double
-scm_i_big2dbl_2exp (SCM b, long *expon_p)
-{
-  size_t bits = mpz_sizeinbase (SCM_I_BIG_MPZ (b), 2);
-  size_t shift = 0;
-
-  if (bits > DBL_MANT_DIG)
-    {
-      shift = bits - DBL_MANT_DIG;
-      b = round_rsh (b, scm_from_size_t (shift));
-      if (SCM_I_INUMP (b))
-        {
-          int expon;
-          double signif = frexp (SCM_I_INUM (b), &expon);
-          *expon_p = expon + shift;
-          return signif;
-        }
-    }
-
-  {
-    long expon;
-    double signif;
-#if SCM_ENABLE_MINI_GMP
-    int iexpon;
-    signif = mpz_get_d (SCM_I_BIG_MPZ (b));
-    signif = frexp (signif, &iexpon);
-    expon = (long) iexpon;
-#else
-    signif = mpz_get_d_2exp (&expon, SCM_I_BIG_MPZ (b));
-#endif
-    scm_remember_upto_here_1 (b);
-    *expon_p = expon + shift;
-    return signif;
-  }
-}
-
 /* scm_i_big2dbl() rounds to the closest representable double,
    in accordance with R5RS exact->inexact.  */
 double
