@@ -127,6 +127,8 @@ SCM_DEFINE (scm_srfi60_rotate_bit_field, "rotate-bit-field", 4, 0, 0,
   else
     cc = scm_to_ulong (scm_modulo (count, scm_difference (end, start)));
 
+  mpz_t zn;
+
   if (SCM_I_INUMP (n))
     {
       long nn = SCM_I_INUM (n);
@@ -169,50 +171,51 @@ SCM_DEFINE (scm_srfi60_rotate_bit_field, "rotate-bit-field", 4, 0, 0,
           if (cc == 0)
             return n;
 
-          n = scm_i_long2big (nn);
-          goto big;
+          mpz_init_set_si (zn, nn);
         }
     }
   else if (SCM_BIGP (n))
     {
-      mpz_t tmp;
-      SCM r;
-
       /* if there's no movement, avoid creating a new bignum. */
       if (cc == 0)
         return n;
-
-    big:
-      r = scm_i_ulong2big (0);
-      mpz_init (tmp);
-
-      /* portion above end */
-      mpz_fdiv_q_2exp (SCM_I_BIG_MPZ (r), SCM_I_BIG_MPZ (n), ee);
-      mpz_mul_2exp (SCM_I_BIG_MPZ (r), SCM_I_BIG_MPZ (r), ee);
-
-      /* field high part, width-count bits from start go to start+count */
-      mpz_fdiv_q_2exp (tmp, SCM_I_BIG_MPZ (n), ss);
-      mpz_fdiv_r_2exp (tmp, tmp, ww - cc);
-      mpz_mul_2exp (tmp, tmp, ss + cc);
-      mpz_ior (SCM_I_BIG_MPZ (r), SCM_I_BIG_MPZ (r), tmp);
-
-      /* field low part, count bits from end-count go to start */
-      mpz_fdiv_q_2exp (tmp, SCM_I_BIG_MPZ (n), ee - cc);
-      mpz_fdiv_r_2exp (tmp, tmp, cc);
-      mpz_mul_2exp (tmp, tmp, ss);
-      mpz_ior (SCM_I_BIG_MPZ (r), SCM_I_BIG_MPZ (r), tmp);
-
-      /* portion below start */
-      mpz_fdiv_r_2exp (tmp, SCM_I_BIG_MPZ (n), ss);
-      mpz_ior (SCM_I_BIG_MPZ (r), SCM_I_BIG_MPZ (r), tmp);
-
-      mpz_clear (tmp);
-
-      /* bits moved around might leave us in range of an inum */
-      return scm_i_normbig (r);
+      scm_integer_init_set_mpz_z (scm_bignum (n), zn);
     }
   else
     SCM_WRONG_TYPE_ARG (SCM_ARG1, n);
+
+  mpz_t tmp, r;
+
+  mpz_init (tmp);
+  mpz_init_set_si (r, 0);
+
+  /* portion above end */
+  mpz_fdiv_q_2exp (r, zn, ee);
+  mpz_mul_2exp (r, r, ee);
+
+  /* field high part, width-count bits from start go to start+count */
+  mpz_fdiv_q_2exp (tmp, zn, ss);
+  mpz_fdiv_r_2exp (tmp, tmp, ww - cc);
+  mpz_mul_2exp (tmp, tmp, ss + cc);
+  mpz_ior (r, r, tmp);
+
+  /* field low part, count bits from end-count go to start */
+  mpz_fdiv_q_2exp (tmp, zn, ee - cc);
+  mpz_fdiv_r_2exp (tmp, tmp, cc);
+  mpz_mul_2exp (tmp, tmp, ss);
+  mpz_ior (r, r, tmp);
+
+  /* portion below start */
+  mpz_fdiv_r_2exp (tmp, zn, ss);
+  mpz_ior (r, r, tmp);
+
+  mpz_clear (zn);
+  mpz_clear (tmp);
+
+  /* bits moved around might leave us in range of an inum */
+  SCM ret = scm_from_mpz (r);
+  mpz_clear (r);
+  return ret;
 }
 #undef FUNC_NAME
 
@@ -230,7 +233,7 @@ SCM_DEFINE (scm_srfi60_reverse_bit_field, "reverse-bit-field", 3, 0, 0,
   long ss = scm_to_long (start);
   long ee = scm_to_long (end);
   long swaps = (ee - ss) / 2;  /* number of swaps */
-  SCM b;
+  mpz_t b;
 
   if (SCM_I_INUMP (n))
     {
@@ -258,9 +261,7 @@ SCM_DEFINE (scm_srfi60_reverse_bit_field, "reverse-bit-field", 3, 0, 0,
           /* avoid creating a new bignum if reversing only 0 or 1 bits */
           if (ee - ss <= 1)
             return n;
-
-          b = scm_i_long2big (nn);
-          goto big;
+          mpz_init_set_si (b, nn);
         }
     }
   else if (SCM_BIGP (n))
@@ -268,37 +269,36 @@ SCM_DEFINE (scm_srfi60_reverse_bit_field, "reverse-bit-field", 3, 0, 0,
       /* avoid creating a new bignum if reversing only 0 or 1 bits */
       if (ee - ss <= 1)
         return n;
-
-      b = scm_i_clonebig (n, 1);
-    big:
-
-      ee--;
-      for ( ; swaps > 0; swaps--)
-        {
-          int sbit = mpz_tstbit (SCM_I_BIG_MPZ (b), ss);
-          int ebit = mpz_tstbit (SCM_I_BIG_MPZ (b), ee);
-          if (sbit ^ ebit)
-            {
-              /* the two bits are different, flip them */
-              if (sbit)
-                {
-                  mpz_clrbit (SCM_I_BIG_MPZ (b), ss);
-                  mpz_setbit (SCM_I_BIG_MPZ (b), ee);
-                }
-              else
-                {
-                  mpz_setbit (SCM_I_BIG_MPZ (b), ss);
-                  mpz_clrbit (SCM_I_BIG_MPZ (b), ee);
-                }
-            }
-          ss++;
-          ee--;
-        }
-      /* swapping zero bits into the high might make us fit a fixnum */
-      return scm_i_normbig (b);
+      scm_integer_init_set_mpz_z (scm_bignum (n), b);
     }
   else
     SCM_WRONG_TYPE_ARG (SCM_ARG1, n);
+
+  ee--;
+  for ( ; swaps > 0; swaps--)
+    {
+      int sbit = mpz_tstbit (b, ss);
+      int ebit = mpz_tstbit (b, ee);
+      if (sbit ^ ebit)
+        {
+          /* the two bits are different, flip them */
+          if (sbit)
+            {
+              mpz_clrbit (b, ss);
+              mpz_setbit (b, ee);
+            }
+          else
+            {
+              mpz_setbit (b, ss);
+              mpz_clrbit (b, ee);
+            }
+        }
+      ss++;
+      ee--;
+    }
+  SCM ret = scm_integer_from_mpz (b);
+  mpz_clear (b);
+  return ret;
 }
 #undef FUNC_NAME
 
@@ -319,7 +319,7 @@ SCM_DEFINE (scm_srfi60_integer_to_list, "integer->list", 1, 1, 0,
 #define FUNC_NAME s_scm_srfi60_integer_to_list
 {
   SCM ret = SCM_EOL;
-  unsigned long ll, i;
+  unsigned long ll;
 
   if (SCM_UNBNDP (len))
     len = scm_integer_length (n);
@@ -327,22 +327,15 @@ SCM_DEFINE (scm_srfi60_integer_to_list, "integer->list", 1, 1, 0,
 
   if (SCM_I_INUMP (n))
     {
-      long nn = SCM_I_INUM (n);
-      for (i = 0; i < ll; i++)
-        {
-          unsigned long shift =
-	    (i < ((unsigned long) SCM_LONG_BIT-1)) 
-	    ? i : ((unsigned long) SCM_LONG_BIT-1);
-          int bit = (nn >> shift) & 1;
-          ret = scm_cons (scm_from_bool (bit), ret);
-        }
+      scm_t_inum nn = SCM_I_INUM (n);
+      for (unsigned long i = 0; i < ll; i++)
+        ret = scm_cons (scm_from_bool (scm_integer_logbit_ui (i, nn)), ret);
     }
   else if (SCM_BIGP (n))
     {
-      for (i = 0; i < ll; i++)
-        ret = scm_cons (scm_from_bool (mpz_tstbit (SCM_I_BIG_MPZ (n), i)),
-                        ret);
-      scm_remember_upto_here_1 (n);
+      struct scm_bignum *nn = scm_bignum (n);
+      for (unsigned long i = 0; i < ll; i++)
+        ret = scm_cons (scm_from_bool (scm_integer_logbit_uz (i, nn)), ret);
     }
   else
     SCM_WRONG_TYPE_ARG (SCM_ARG1, n);
@@ -388,16 +381,18 @@ SCM_DEFINE (scm_srfi60_list_to_integer, "list->integer", 1, 0, 0,
     }
   else
     {
-      /* need a bignum */
-      SCM n = scm_i_ulong2big (0);
+      mpz_t z;
+      mpz_init (z);
       while (scm_is_pair (lst))
         {
           len--;
           if (! scm_is_false (SCM_CAR (lst)))
-            mpz_setbit (SCM_I_BIG_MPZ (n), len);
+            mpz_setbit (z, len);
           lst = SCM_CDR (lst);
         }
-      return n;
+      SCM ret = scm_from_mpz (z);
+      mpz_clear (z);
+      return ret;
     }
 }
 #undef FUNC_NAME
