@@ -6327,12 +6327,10 @@ SCM_PRIMITIVE_GENERIC (scm_magnitude, "magnitude", 1, 0, 0,
     }
   else if (SCM_BIGP (z))
     {
-      int sgn = mpz_sgn (SCM_I_BIG_MPZ (z));
-      scm_remember_upto_here_1 (z);
-      if (sgn < 0)
-	return scm_i_clonebig (z, 0);
+      if (scm_is_integer_negative_z (scm_bignum (z)))
+        return scm_integer_negate_z (scm_bignum (z));
       else
-	return z;
+        return z;
     }
   else if (SCM_REALP (z))
     return scm_i_from_double (fabs (SCM_REAL_VALUE (z)));
@@ -6371,9 +6369,7 @@ SCM_PRIMITIVE_GENERIC (scm_angle, "angle", 1, 0, 0,
     }
   else if (SCM_BIGP (z))
     {
-      int sgn = mpz_sgn (SCM_I_BIG_MPZ (z));
-      scm_remember_upto_here_1 (z);
-      if (sgn < 0)
+      if (scm_is_integer_negative_z (scm_bignum (z)))
 	return scm_i_from_double (atan2 (0.0, -1.0));
       else
         return flo0;
