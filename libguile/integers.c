@@ -2696,8 +2696,8 @@ mpz_get_d_2exp (long *exp, mpz_srcptr z)
 }
 #endif
 
-static double
-bignum_frexp (struct scm_bignum *x, long *exp)
+double
+scm_integer_frexp_z (struct scm_bignum *x, long *exp)
 {
   mpz_t zx;
   alias_bignum_to_mpz (x, zx);
@@ -2730,7 +2730,7 @@ double
 scm_integer_to_double_z (struct scm_bignum *x)
 {
   long exponent;
-  double significand = bignum_frexp (x, &exponent);
+  double significand = scm_integer_frexp_z (x, &exponent);
   return ldexp (significand, exponent);
 }
 
@@ -3134,7 +3134,7 @@ scm_integer_inexact_sqrt_z (struct scm_bignum *k)
   mpz_init (zs);
 
   long expon;
-  double signif = bignum_frexp (k, &expon);
+  double signif = scm_integer_frexp_z (k, &expon);
   int negative = signif < 0;
   if (negative)
     signif = -signif;

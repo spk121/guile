@@ -7209,11 +7209,11 @@ log_of_exact_integer (SCM n)
   else if (SCM_BIGP (n))
     {
       long expon;
-      double signif = scm_i_big2dbl_2exp (n, &expon);
+      double signif = scm_integer_frexp_z (scm_bignum (n), &expon);
       return log_of_shifted_double (signif, expon);
     }
   else
-    scm_wrong_type_arg ("log_of_exact_integer", SCM_ARG1, n);
+    abort ();
 }
 
 /* Returns log(n/d), for exact non-zero integers n and d */
