@@ -197,6 +197,8 @@ SCM_INTERNAL int scm_is_integer_divisible_zz (struct scm_bignum *x,
                                               struct scm_bignum *y);
 
 SCM_INTERNAL SCM scm_integer_exact_quotient_ii (scm_t_inum n, scm_t_inum d);
+SCM_INTERNAL SCM scm_integer_exact_quotient_iz (scm_t_inum n,
+                                                struct scm_bignum *d);
 SCM_INTERNAL SCM scm_integer_exact_quotient_zi (struct scm_bignum *n,
                                                 scm_t_inum d);
 SCM_INTERNAL SCM scm_integer_exact_quotient_zz (struct scm_bignum *n,

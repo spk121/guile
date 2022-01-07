@@ -2939,6 +2939,20 @@ scm_integer_exact_quotient_ii (scm_t_inum n, scm_t_inum d)
   return scm_integer_truncate_quotient_ii (n, d);
 }
 
+SCM
+scm_integer_exact_quotient_iz (scm_t_inum n, struct scm_bignum *d)
+{
+  // There are only two fixnum numerators that are evenly divided by
+  // bignum denominators: 0, which is evenly divided 0 times by
+  // anything, and SCM_MOST_NEGATIVE_FIXNUM, which is evenly divided -1
+  // time by SCM_MOST_POSITIVE_FIXNUM+1.
+  if (n == 0)
+    return SCM_INUM0;
+  ASSERT (n == SCM_MOST_NEGATIVE_FIXNUM);
+  ASSERT (bignum_cmp_long (d, SCM_MOST_POSITIVE_FIXNUM + 1) == 0);
+  return SCM_I_MAKINUM (-1);
+}
+
 /* Return the exact integer q such that n = q*d, for exact integers n
    and d, where d is known in advance to divide n evenly (with zero
    remainder).  For large integers, this can be computed more

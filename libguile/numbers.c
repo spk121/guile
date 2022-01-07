@@ -412,22 +412,19 @@ static SCM
 scm_i_make_ratio (SCM numerator, SCM denominator)
 #define FUNC_NAME "make-ratio"
 {
-  /* Make sure the arguments are proper */
-  if (!SCM_LIKELY (SCM_I_INUMP (numerator) || SCM_BIGP (numerator)))
-    SCM_WRONG_TYPE_ARG (1, numerator);
-  else if (!SCM_LIKELY (SCM_I_INUMP (denominator) || SCM_BIGP (denominator)))
-    SCM_WRONG_TYPE_ARG (2, denominator);
-  else
+  if (!scm_is_exact_integer (numerator))
+    abort();
+  if (!scm_is_exact_integer (denominator))
+    abort();
+
+  SCM the_gcd = scm_gcd (numerator, denominator);
+  if (!(scm_is_eq (the_gcd, SCM_INUM1)))
     {
-      SCM the_gcd = scm_gcd (numerator, denominator);
-      if (!(scm_is_eq (the_gcd, SCM_INUM1)))
-	{
-	  /* Reduce to lowest terms */
-	  numerator = scm_exact_integer_quotient (numerator, the_gcd);
-	  denominator = scm_exact_integer_quotient (denominator, the_gcd);
-	}
-      return scm_i_make_ratio_already_reduced (numerator, denominator);
+      /* Reduce to lowest terms */
+      numerator = scm_exact_integer_quotient (numerator, the_gcd);
+      denominator = scm_exact_integer_quotient (denominator, the_gcd);
     }
+  return scm_i_make_ratio_already_reduced (numerator, denominator);
 }
 #undef FUNC_NAME
 
@@ -921,73 +918,30 @@ static SCM
 scm_exact_integer_quotient (SCM n, SCM d)
 #define FUNC_NAME "exact-integer-quotient"
 {
-  if (SCM_LIKELY (SCM_I_INUMP (n)))
+  if (SCM_I_INUMP (n))
     {
-      scm_t_inum nn = SCM_I_INUM (n);
-      if (SCM_LIKELY (SCM_I_INUMP (d)))
-	{
-	  scm_t_inum dd = SCM_I_INUM (d);
-	  if (SCM_UNLIKELY (dd == 0))
-	    scm_num_overflow ("exact-integer-quotient");
-	  else
-	    {
-	      scm_t_inum qq = nn / dd;
-	      if (SCM_LIKELY (SCM_FIXABLE (qq)))
-		return SCM_I_MAKINUM (qq);
-	      else
-		return scm_i_inum2big (qq);
-	    }
-	}
-      else if (SCM_LIKELY (SCM_BIGP (d)))
-	{
-	  /* n is an inum and d is a bignum.  Given that d is known to
-	     divide n evenly, there are only two possibilities: n is 0,
-	     or else n is fixnum-min and d is abs(fixnum-min). */
-	  if (nn == 0)
-	    return SCM_INUM0;
-	  else
-	    return SCM_I_MAKINUM (-1);
-	}
+      if (scm_is_eq (n, d))
+        return SCM_INUM1;
+      if (SCM_I_INUMP (d))
+        return scm_integer_exact_quotient_ii (SCM_I_INUM (n), SCM_I_INUM (d));
+      else if (SCM_BIGP (d))
+        return scm_integer_exact_quotient_iz (SCM_I_INUM (n), scm_bignum (d));
       else
-	SCM_WRONG_TYPE_ARG (2, d);
+        abort (); // Unreachable.
     }
-  else if (SCM_LIKELY (SCM_BIGP (n)))
+  else if (SCM_BIGP (n))
     {
-      if (SCM_LIKELY (SCM_I_INUMP (d)))
-	{
-	  scm_t_inum dd = SCM_I_INUM (d);
-	  if (SCM_UNLIKELY (dd == 0))
-	    scm_num_overflow ("exact-integer-quotient");
-	  else if (SCM_UNLIKELY (dd == 1))
-	    return n;
-	  else
-	    {
-	      SCM q = scm_i_mkbig ();
-	      if (dd > 0)
-		mpz_divexact_ui (SCM_I_BIG_MPZ (q), SCM_I_BIG_MPZ (n), dd);
-	      else
-		{
-		  mpz_divexact_ui (SCM_I_BIG_MPZ (q), SCM_I_BIG_MPZ (n), -dd);
-		  mpz_neg (SCM_I_BIG_MPZ (q), SCM_I_BIG_MPZ (q));
-		}
-	      scm_remember_upto_here_1 (n);
-	      return scm_i_normbig (q);
-	    }
-	}
-      else if (SCM_LIKELY (SCM_BIGP (d)))
-	{
-	  SCM q = scm_i_mkbig ();
-	  mpz_divexact (SCM_I_BIG_MPZ (q),
-			SCM_I_BIG_MPZ (n),
-			SCM_I_BIG_MPZ (d));
-	  scm_remember_upto_here_2 (n, d);
-	  return scm_i_normbig (q);
-	}
+      if (scm_is_eq (n, d))
+        return SCM_INUM1;
+      if (SCM_I_INUMP (d))
+        return scm_integer_exact_quotient_zi (scm_bignum (n), SCM_I_INUM (d));
+      else if (SCM_BIGP (d))
+        return scm_integer_exact_quotient_zz (scm_bignum (n), scm_bignum (d));
       else
-	SCM_WRONG_TYPE_ARG (2, d);
+        abort (); // Unreachable.
     }
   else
-    SCM_WRONG_TYPE_ARG (1, n);
+    abort (); // Unreachable.
 }
 #undef FUNC_NAME
 
