@@ -175,6 +175,12 @@ negate_bignum (struct scm_bignum *z)
 }
 
 static struct scm_bignum *
+make_bignum_0 (void)
+{
+  return allocate_bignum (0);
+}
+
+static struct scm_bignum *
 make_bignum_1 (int is_negative, mp_limb_t limb)
 {
   struct scm_bignum *z = allocate_bignum (1);
@@ -200,7 +206,7 @@ make_bignum_from_uint64 (uint64_t val)
   if (val > UINT32_MAX)
     return make_bignum_2 (0, val, val >> 32);
 #endif
-  return make_bignum_1 (0, val);
+  return val == 0 ? make_bignum_0 () : make_bignum_1 (0, val);
 }
 
 static struct scm_bignum *
@@ -214,7 +220,7 @@ make_bignum_from_int64 (int64_t val)
 static struct scm_bignum *
 ulong_to_bignum (unsigned long u)
 {
-  return make_bignum_1 (0, u);
+  return u == 0 ? make_bignum_0 () : make_bignum_1 (0, u);
 };
 
 static struct scm_bignum *
@@ -223,7 +229,7 @@ long_to_bignum (long i)
   if (i > 0)
     return ulong_to_bignum (i);
 
-  return make_bignum_1 (1, long_magnitude (i));
+  return i == 0 ? make_bignum_0 () : make_bignum_1 (1, long_magnitude (i));
 };
 
 static inline SCM
