@@ -300,15 +300,6 @@ scm_i_mkbig ()
   return z;
 }
 
-static SCM
-scm_i_inum2big (scm_t_inum x)
-{
-  /* Return a newly created bignum initialized to X. */
-  SCM z = make_bignum ();
-  mpz_init_set_si (SCM_I_BIG_MPZ (z), x);
-  return z;
-}
-
 SCM
 scm_i_long2big (long x)
 {
@@ -6315,35 +6306,10 @@ SCM_PRIMITIVE_GENERIC (scm_magnitude, "magnitude", 1, 0, 0,
 	"@code{abs} for real arguments, but also allows complex numbers.")
 #define FUNC_NAME s_scm_magnitude
 {
-  if (SCM_I_INUMP (z))
-    {
-      scm_t_inum zz = SCM_I_INUM (z);
-      if (zz >= 0)
-	return z;
-      else if (SCM_POSFIXABLE (-zz))
-	return SCM_I_MAKINUM (-zz);
-      else
-	return scm_i_inum2big (-zz);
-    }
-  else if (SCM_BIGP (z))
-    {
-      if (scm_is_integer_negative_z (scm_bignum (z)))
-        return scm_integer_negate_z (scm_bignum (z));
-      else
-        return z;
-    }
-  else if (SCM_REALP (z))
-    return scm_i_from_double (fabs (SCM_REAL_VALUE (z)));
-  else if (SCM_COMPLEXP (z))
+  if (SCM_COMPLEXP (z))
     return scm_i_from_double (hypot (SCM_COMPLEX_REAL (z), SCM_COMPLEX_IMAG (z)));
-  else if (SCM_FRACTIONP (z))
-    {
-      if (scm_is_false (scm_negative_p (SCM_FRACTION_NUMERATOR (z))))
-	return z;
-      return scm_i_make_ratio_already_reduced
-	(scm_difference (SCM_FRACTION_NUMERATOR (z), SCM_UNDEFINED),
-	 SCM_FRACTION_DENOMINATOR (z));
-    }
+  else if (SCM_NUMBERP (z))
+    return scm_abs (z);
   else
     return scm_wta_dispatch_1 (g_scm_magnitude, z, SCM_ARG1,
                                s_scm_magnitude);
@@ -6360,36 +6326,15 @@ SCM_PRIMITIVE_GENERIC (scm_angle, "angle", 1, 0, 0,
      flo0 to save allocating a new flonum with scm_i_from_double each time.
      But if atan2 follows the floating point rounding mode, then the value
      is not a constant.  Maybe it'd be close enough though.  */
-  if (SCM_I_INUMP (z))
-    {
-      if (SCM_I_INUM (z) >= 0)
-        return flo0;
-      else
-	return scm_i_from_double (atan2 (0.0, -1.0));
-    }
-  else if (SCM_BIGP (z))
-    {
-      if (scm_is_integer_negative_z (scm_bignum (z)))
-	return scm_i_from_double (atan2 (0.0, -1.0));
-      else
-        return flo0;
-    }
-  else if (SCM_REALP (z))
-    {
-      double x = SCM_REAL_VALUE (z);
-      if (copysign (1.0, x) > 0.0)
-        return flo0;
-      else
-        return scm_i_from_double (atan2 (0.0, -1.0));
-    }
-  else if (SCM_COMPLEXP (z))
-    return scm_i_from_double (atan2 (SCM_COMPLEX_IMAG (z), SCM_COMPLEX_REAL (z)));
-  else if (SCM_FRACTIONP (z))
-    {
-      if (scm_is_false (scm_negative_p (SCM_FRACTION_NUMERATOR (z))))
-	return flo0;
-      else return scm_i_from_double (atan2 (0.0, -1.0));
-    }
+  if (SCM_COMPLEXP (z))
+    return scm_i_from_double (atan2 (SCM_COMPLEX_IMAG (z),
+                                     SCM_COMPLEX_REAL (z)));
+  else if (SCM_NUMBERP (z))
+    return (SCM_REALP (z)
+            ? copysign (1.0, SCM_REAL_VALUE (z)) < 0.0
+            : scm_is_true (scm_negative_p (z)))
+      ? scm_i_from_double (atan2 (0.0, -1.0))
+      : flo0;
   else
     return scm_wta_dispatch_1 (g_scm_angle, z, SCM_ARG1, s_scm_angle);
 }
