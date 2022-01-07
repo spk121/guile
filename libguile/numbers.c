@@ -1072,7 +1072,7 @@ SCM_PRIMITIVE_GENERIC (scm_floor_quotient, "floor-quotient", 2, 0, 0,
         return scm_integer_floor_quotient_zz (scm_bignum (x), scm_bignum (y));
       else if (SCM_REALP (y))
 	return scm_i_inexact_floor_quotient
-	  (scm_i_big2dbl (x), SCM_REAL_VALUE (y));
+	  (scm_integer_to_double_z (scm_bignum (x)), SCM_REAL_VALUE (y));
       else if (SCM_FRACTIONP (y))
 	return scm_i_exact_rational_floor_quotient (x, y);
       else
@@ -1164,7 +1164,7 @@ SCM_PRIMITIVE_GENERIC (scm_floor_remainder, "floor-remainder", 2, 0, 0,
         return scm_integer_floor_remainder_zz (scm_bignum (x), scm_bignum (y));
       else if (SCM_REALP (y))
 	return scm_i_inexact_floor_remainder
-	  (scm_i_big2dbl (x), SCM_REAL_VALUE (y));
+	  (scm_integer_to_double_z (scm_bignum (x)), SCM_REAL_VALUE (y));
       else if (SCM_FRACTIONP (y))
 	return scm_i_exact_rational_floor_remainder (x, y);
       else
@@ -1280,7 +1280,8 @@ scm_floor_divide (SCM x, SCM y, SCM *qp, SCM *rp)
       else if (SCM_BIGP (y))
         scm_integer_floor_divide_zz (scm_bignum (x), scm_bignum (y), qp, rp);
       else if (SCM_REALP (y))
-	scm_i_inexact_floor_divide (scm_i_big2dbl (x), SCM_REAL_VALUE (y),
+	scm_i_inexact_floor_divide (scm_integer_to_double_z (scm_bignum (x)),
+                                    SCM_REAL_VALUE (y),
                                     qp, rp);
       else if (SCM_FRACTIONP (y))
 	scm_i_exact_rational_floor_divide (x, y, qp, rp);
@@ -1380,7 +1381,7 @@ SCM_PRIMITIVE_GENERIC (scm_ceiling_quotient, "ceiling-quotient", 2, 0, 0,
         return scm_integer_ceiling_quotient_zz (scm_bignum (x), scm_bignum (y));
       else if (SCM_REALP (y))
 	return scm_i_inexact_ceiling_quotient
-	  (scm_i_big2dbl (x), SCM_REAL_VALUE (y));
+	  (scm_integer_to_double_z (scm_bignum (x)), SCM_REAL_VALUE (y));
       else if (SCM_FRACTIONP (y))
 	return scm_i_exact_rational_ceiling_quotient (x, y);
       else
@@ -1476,7 +1477,7 @@ SCM_PRIMITIVE_GENERIC (scm_ceiling_remainder, "ceiling-remainder", 2, 0, 0,
                                                  scm_bignum (y));
       else if (SCM_REALP (y))
 	return scm_i_inexact_ceiling_remainder
-	  (scm_i_big2dbl (x), SCM_REAL_VALUE (y));
+	  (scm_integer_to_double_z (scm_bignum (x)), SCM_REAL_VALUE (y));
       else if (SCM_FRACTIONP (y))
 	return scm_i_exact_rational_ceiling_remainder (x, y);
       else
@@ -1591,8 +1592,8 @@ scm_ceiling_divide (SCM x, SCM y, SCM *qp, SCM *rp)
       else if (SCM_BIGP (y))
         scm_integer_ceiling_divide_zz (scm_bignum (x), scm_bignum (y), qp, rp);
       else if (SCM_REALP (y))
-	scm_i_inexact_ceiling_divide (scm_i_big2dbl (x), SCM_REAL_VALUE (y),
-                                      qp, rp);
+	scm_i_inexact_ceiling_divide (scm_integer_to_double_z (scm_bignum (x)),
+                                      SCM_REAL_VALUE (y), qp, rp);
       else if (SCM_FRACTIONP (y))
 	scm_i_exact_rational_ceiling_divide (x, y, qp, rp);
       else
@@ -1695,7 +1696,7 @@ SCM_PRIMITIVE_GENERIC (scm_truncate_quotient, "truncate-quotient", 2, 0, 0,
                                                  scm_bignum (y));
       else if (SCM_REALP (y))
 	return scm_i_inexact_truncate_quotient
-	  (scm_i_big2dbl (x), SCM_REAL_VALUE (y));
+	  (scm_integer_to_double_z (scm_bignum (x)), SCM_REAL_VALUE (y));
       else if (SCM_FRACTIONP (y))
 	return scm_i_exact_rational_truncate_quotient (x, y);
       else
@@ -1791,7 +1792,7 @@ SCM_PRIMITIVE_GENERIC (scm_truncate_remainder, "truncate-remainder", 2, 0, 0,
                                                   scm_bignum (y));
       else if (SCM_REALP (y))
 	return scm_i_inexact_truncate_remainder
-	  (scm_i_big2dbl (x), SCM_REAL_VALUE (y));
+	  (scm_integer_to_double_z (scm_bignum (x)), SCM_REAL_VALUE (y));
       else if (SCM_FRACTIONP (y))
 	return scm_i_exact_rational_truncate_remainder (x, y);
       else
@@ -1909,8 +1910,8 @@ scm_truncate_divide (SCM x, SCM y, SCM *qp, SCM *rp)
       else if (SCM_BIGP (y))
         scm_integer_truncate_divide_zz (scm_bignum (x), scm_bignum (y), qp, rp);
       else if (SCM_REALP (y))
-	scm_i_inexact_truncate_divide (scm_i_big2dbl (x), SCM_REAL_VALUE (y),
-                                       qp, rp);
+	scm_i_inexact_truncate_divide (scm_integer_to_double_z (scm_bignum (x)),
+                                       SCM_REAL_VALUE (y), qp, rp);
       else if (SCM_FRACTIONP (y))
 	scm_i_exact_rational_truncate_divide (x, y, qp, rp);
       else
@@ -2014,7 +2015,7 @@ SCM_PRIMITIVE_GENERIC (scm_centered_quotient, "centered-quotient", 2, 0, 0,
                                                  scm_bignum (y));
       else if (SCM_REALP (y))
 	return scm_i_inexact_centered_quotient
-	  (scm_i_big2dbl (x), SCM_REAL_VALUE (y));
+	  (scm_integer_to_double_z (scm_bignum (x)), SCM_REAL_VALUE (y));
       else if (SCM_FRACTIONP (y))
 	return scm_i_exact_rational_centered_quotient (x, y);
       else
@@ -2115,7 +2116,7 @@ SCM_PRIMITIVE_GENERIC (scm_centered_remainder, "centered-remainder", 2, 0, 0,
                                                   scm_bignum (y));
       else if (SCM_REALP (y))
 	return scm_i_inexact_centered_remainder
-	  (scm_i_big2dbl (x), SCM_REAL_VALUE (y));
+	  (scm_integer_to_double_z (scm_bignum (x)), SCM_REAL_VALUE (y));
       else if (SCM_FRACTIONP (y))
 	return scm_i_exact_rational_centered_remainder (x, y);
       else
@@ -2238,8 +2239,8 @@ scm_centered_divide (SCM x, SCM y, SCM *qp, SCM *rp)
       else if (SCM_BIGP (y))
         scm_integer_centered_divide_zz (scm_bignum (x), scm_bignum (y), qp, rp);
       else if (SCM_REALP (y))
-	scm_i_inexact_centered_divide (scm_i_big2dbl (x), SCM_REAL_VALUE (y),
-                                       qp, rp);
+	scm_i_inexact_centered_divide (scm_integer_to_double_z (scm_bignum (x)),
+                                       SCM_REAL_VALUE (y), qp, rp);
       else if (SCM_FRACTIONP (y))
 	scm_i_exact_rational_centered_divide (x, y, qp, rp);
       else
@@ -2346,7 +2347,7 @@ SCM_PRIMITIVE_GENERIC (scm_round_quotient, "round-quotient", 2, 0, 0,
         return scm_integer_round_quotient_zz (scm_bignum (x), scm_bignum (y));
       else if (SCM_REALP (y))
 	return scm_i_inexact_round_quotient
-	  (scm_i_big2dbl (x), SCM_REAL_VALUE (y));
+	  (scm_integer_to_double_z (scm_bignum (x)), SCM_REAL_VALUE (y));
       else if (SCM_FRACTIONP (y))
 	return scm_i_exact_rational_round_quotient (x, y);
       else
@@ -2443,7 +2444,7 @@ SCM_PRIMITIVE_GENERIC (scm_round_remainder, "round-remainder", 2, 0, 0,
         return scm_integer_round_remainder_zz (scm_bignum (x), scm_bignum (y));
       else if (SCM_REALP (y))
 	return scm_i_inexact_round_remainder
-	  (scm_i_big2dbl (x), SCM_REAL_VALUE (y));
+	  (scm_integer_to_double_z (scm_bignum (x)), SCM_REAL_VALUE (y));
       else if (SCM_FRACTIONP (y))
 	return scm_i_exact_rational_round_remainder (x, y);
       else
@@ -2564,8 +2565,8 @@ scm_round_divide (SCM x, SCM y, SCM *qp, SCM *rp)
       else if (SCM_BIGP (y))
         scm_integer_round_divide_zz (scm_bignum (x), scm_bignum (y), qp, rp);
       else if (SCM_REALP (y))
-	scm_i_inexact_round_divide (scm_i_big2dbl (x), SCM_REAL_VALUE (y),
-                                    qp, rp);
+	scm_i_inexact_round_divide (scm_integer_to_double_z (scm_bignum (x)),
+                                    SCM_REAL_VALUE (y), qp, rp);
       else if (SCM_FRACTIONP (y))
 	scm_i_exact_rational_round_divide (x, y, qp, rp);
       else
@@ -6349,7 +6350,7 @@ SCM_PRIMITIVE_GENERIC (scm_exact_to_inexact, "exact->inexact", 1, 0, 0,
   if (SCM_I_INUMP (z))
     return scm_i_from_double ((double) SCM_I_INUM (z));
   else if (SCM_BIGP (z))
-    return scm_i_from_double (scm_i_big2dbl (z));
+    return scm_i_from_double (scm_integer_to_double_z (scm_bignum (z)));
   else if (SCM_FRACTIONP (z))
     return scm_i_from_double (scm_i_fraction2double (z));
   else if (SCM_INEXACTP (z))
@@ -6967,7 +6968,7 @@ scm_to_double (SCM val)
   if (SCM_I_INUMP (val))
     return SCM_I_INUM (val);
   else if (SCM_BIGP (val))
-    return scm_i_big2dbl (val);
+    return scm_integer_to_double_z (scm_bignum (val));
   else if (SCM_FRACTIONP (val))
     return scm_i_fraction2double (val);
   else if (SCM_REALP (val))
