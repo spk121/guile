@@ -299,9 +299,13 @@ normalize_bignum (struct scm_bignum *z)
 static SCM
 take_mpz (mpz_ptr mpz)
 {
-  struct scm_bignum *res = make_bignum_from_mpz (mpz);
+  SCM ret;
+  if (mpz_fits_slong_p (mpz))
+    ret = long_to_scm (mpz_get_si (mpz));
+  else
+    ret = scm_from_bignum (make_bignum_from_mpz (mpz));
   mpz_clear (mpz);
-  return normalize_bignum (res);
+  return ret;
 }
 
 static int
