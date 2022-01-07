@@ -2240,6 +2240,30 @@ scm_integer_lognot_z (struct scm_bignum *n)
   return take_mpz (result);
 }
 
+SCM
+scm_integer_expt_ii (scm_t_inum n, scm_t_inum k)
+{
+  ASSERT (k >= 0);
+  mpz_t res;
+  mpz_init (res);
+  mpz_ui_pow_ui (res, inum_magnitude (n), k);
+  if (n < 0 && (k & 1))
+    mpz_neg (res, res);
+  return take_mpz (res);
+}
+
+SCM
+scm_integer_expt_zi (struct scm_bignum *n, scm_t_inum k)
+{
+  ASSERT (k >= 0);
+  mpz_t res, zn;
+  mpz_init (res);
+  alias_bignum_to_mpz (n, zn);
+  mpz_pow_ui (res, zn, k);
+  scm_remember_upto_here_1 (n);
+  return take_mpz (res);
+}
+
 static void
 integer_init_mpz (mpz_ptr z, SCM n)
 {

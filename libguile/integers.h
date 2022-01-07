@@ -124,6 +124,9 @@ SCM_INTERNAL int scm_integer_logbit_uz (unsigned long bit,
 SCM_INTERNAL SCM scm_integer_lognot_i (scm_t_inum n);
 SCM_INTERNAL SCM scm_integer_lognot_z (struct scm_bignum *n);
 
+SCM_INTERNAL SCM scm_integer_expt_ii (scm_t_inum n, scm_t_inum k);
+SCM_INTERNAL SCM scm_integer_expt_zi (struct scm_bignum *n, scm_t_inum k);
+
 SCM_INTERNAL SCM scm_integer_modulo_expt_nnn (SCM n, SCM k, SCM m);
 
 SCM_INTERNAL SCM scm_integer_lsh_iu (scm_t_inum n, unsigned long count);

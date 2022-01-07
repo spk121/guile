@@ -60,8 +60,8 @@
 #include "bdw-gc.h"
 #include "boolean.h"
 #include "deprecation.h"
+#include "dynwind.h"
 #include "eq.h"
-#include "eval.h"
 #include "feature.h"
 #include "finalizers.h"
 #include "goops.h"
@@ -73,8 +73,6 @@
 #include "simpos.h"
 #include "smob.h"
 #include "strings.h"
-#include "threads.h"
-#include "variable.h"
 #include "values.h"
 
 #include "numbers.h"
@@ -2923,23 +2921,119 @@ SCM_DEFINE (scm_modulo_expt, "modulo-expt", 3, 0, 0,
 }
 #undef FUNC_NAME
 
-static SCM integer_expt_var;
-
 static void
-init_integer_expt_var (void)
+mpz_clear_on_unwind (void *mpz)
 {
-  integer_expt_var = scm_c_module_lookup (scm_the_root_module (),
-                                          "integer-expt");
+  mpz_clear (mpz);
 }
 
-SCM
-scm_integer_expt (SCM n, SCM k)
+SCM_DEFINE (scm_integer_expt, "integer-expt", 2, 0, 0,
+            (SCM n, SCM k),
+	    "Return @var{n} raised to the power @var{k}.  @var{k} must be an\n"
+	    "exact integer, @var{n} can be any number.\n"
+	    "\n"
+	    "Negative @var{k} is supported, and results in\n"
+	    "@math{1/@var{n}^abs(@var{k})} in the usual way.\n"
+	    "@math{@var{n}^0} is 1, as usual, and that\n"
+	    "includes @math{0^0} is 1.\n"
+	    "\n"
+	    "@lisp\n"
+	    "(integer-expt 2 5)   @result{} 32\n"
+	    "(integer-expt -3 3)  @result{} -27\n"
+	    "(integer-expt 5 -3)  @result{} 1/125\n"
+	    "(integer-expt 0 0)   @result{} 1\n"
+	    "@end lisp")
+#define FUNC_NAME s_scm_integer_expt
 {
-  static scm_i_pthread_once_t once = SCM_I_PTHREAD_ONCE_INIT;
-  scm_i_pthread_once (&once, init_integer_expt_var);
+  // Fast cases first.
+  if (SCM_I_INUMP (k))
+    {
+      if (SCM_I_INUM (k) < 0)
+        {
+          if (SCM_NUMBERP (n) && scm_is_true (scm_zero_p (n)))
+            return scm_nan ();
+          k = scm_integer_negate_i (SCM_I_INUM (k));
+          n = scm_divide (n, SCM_UNDEFINED);
+        }
+      if (SCM_I_INUMP (n))
+        return scm_integer_expt_ii (SCM_I_INUM (n), SCM_I_INUM (k));
+      else if (SCM_BIGP (n))
+        return scm_integer_expt_zi (scm_bignum (n), SCM_I_INUM (k));
+    }
+  else if (SCM_BIGP (k))
+    {
+      if (scm_is_integer_negative_z (scm_bignum (k)))
+        {
+          if (SCM_NUMBERP (n) && scm_is_true (scm_zero_p (n)))
+            return scm_nan ();
+          k = scm_integer_negate_z (scm_bignum (k));
+          n = scm_divide (n, SCM_UNDEFINED);
+        }
+      if (scm_is_eq (n, SCM_INUM0) || scm_is_eq (n, SCM_INUM1))
+        return n;
+      else if (scm_is_eq (n, SCM_I_MAKINUM (-1)))
+        return scm_is_integer_odd_z (scm_bignum (k)) ? n : SCM_INUM1;
+      else if (scm_is_exact_integer (n))
+        scm_num_overflow ("integer-expt");
+    }
+  else
+    SCM_WRONG_TYPE_ARG (2, k);
 
-  return scm_call_2 (scm_variable_ref (integer_expt_var), n, k);
+  // The general case.
+  if (scm_is_eq (k, SCM_INUM0))
+    return SCM_INUM1;  /* n^(exact0) is exact 1, regardless of n */
+
+  if (SCM_FRACTIONP (n))
+    {
+      /* Optimize the fraction case by (a/b)^k ==> (a^k)/(b^k), to avoid
+         needless reduction of intermediate products to lowest terms.
+         If a and b have no common factors, then a^k and b^k have no
+         common factors.  Use 'scm_i_make_ratio_already_reduced' to
+         construct the final result, so that no gcd computations are
+         needed to exponentiate a fraction.  */
+      if (scm_is_true (scm_positive_p (k)))
+	return scm_i_make_ratio_already_reduced
+	  (scm_integer_expt (SCM_FRACTION_NUMERATOR (n), k),
+	   scm_integer_expt (SCM_FRACTION_DENOMINATOR (n), k));
+      else
+	{
+	  k = scm_difference (k, SCM_UNDEFINED);
+	  return scm_i_make_ratio_already_reduced
+	    (scm_integer_expt (SCM_FRACTION_DENOMINATOR (n), k),
+	     scm_integer_expt (SCM_FRACTION_NUMERATOR (n), k));
+	}
+    }
+
+  mpz_t zk;
+  mpz_init (zk);
+  scm_to_mpz (k, zk);
+
+  scm_dynwind_begin (0);
+  scm_dynwind_unwind_handler (mpz_clear_on_unwind, zk, SCM_F_WIND_EXPLICITLY);
+  if (mpz_sgn (zk) == -1)
+    {
+      mpz_neg (zk, zk);
+      n = scm_divide (n, SCM_UNDEFINED);
+    }
+  SCM acc = SCM_INUM1;
+  while (1)
+    {
+      if (mpz_sgn (zk) == 0)
+        break;
+      if (mpz_cmp_ui(zk, 1) == 0)
+        {
+          acc = scm_product (acc, n);
+          break;
+        }
+      if (mpz_tstbit(zk, 0))
+        acc = scm_product (acc, n);
+      n = scm_product (n, n);
+      mpz_fdiv_q_2exp (zk, zk, 1);
+    }
+  scm_dynwind_end ();
+  return acc;
 }
+#undef FUNC_NAME
 
 static SCM
 lsh (SCM n, SCM count, const char *fn)
