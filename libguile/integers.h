@@ -216,6 +216,13 @@ SCM_INTERNAL void scm_integer_exact_sqrt_i (scm_t_inum k, SCM *s, SCM *r);
 SCM_INTERNAL void scm_integer_exact_sqrt_z (struct scm_bignum *k,
                                             SCM *s, SCM *r);
 
+SCM_INTERNAL int scm_is_integer_perfect_square_i (scm_t_inum k);
+SCM_INTERNAL int scm_is_integer_perfect_square_z (struct scm_bignum *k);
+SCM_INTERNAL SCM scm_integer_floor_sqrt_i (scm_t_inum k);
+SCM_INTERNAL SCM scm_integer_floor_sqrt_z (struct scm_bignum *k);
+SCM_INTERNAL double scm_integer_inexact_sqrt_i (scm_t_inum k);
+SCM_INTERNAL double scm_integer_inexact_sqrt_z (struct scm_bignum *k);
+
 
 
 #endif  /* SCM_INTEGERS_H */

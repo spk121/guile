@@ -7390,62 +7390,6 @@ scm_exact_integer_sqrt (SCM k, SCM *sp, SCM *rp)
                           "exact non-negative integer");
 }
 
-/* Return true iff K is a perfect square.
-   K must be an exact integer. */
-static int
-exact_integer_is_perfect_square (SCM k)
-{
-  int result;
-
-  if (SCM_LIKELY (SCM_I_INUMP (k)))
-    {
-      if (SCM_I_INUM (k) > 0)
-        {
-          mp_limb_t kk = SCM_I_INUM (k);
-
-          result = mpn_perfect_square_p (&kk, 1);
-        }
-      else
-        result = (SCM_I_INUM (k) == 0);
-    }
-  else
-    {
-      result = mpz_perfect_square_p (SCM_I_BIG_MPZ (k));
-      scm_remember_upto_here_1 (k);
-    }
-  return result;
-}
-
-/* Return the floor of the square root of K.
-   K must be an exact non-negative integer. */
-static SCM
-exact_integer_floor_square_root (SCM k)
-{
-  if (SCM_LIKELY (SCM_I_INUMP (k)))
-    {
-      if (SCM_I_INUM (k) > 0)
-        {
-          mp_limb_t kk, ss, rr;
-
-          kk = SCM_I_INUM (k);
-          mpn_sqrtrem (&ss, &rr, &kk, 1);
-          return SCM_I_MAKINUM (ss);
-        }
-      else
-        return SCM_INUM0;
-    }
-  else
-    {
-      SCM s;
-
-      s = scm_i_mkbig ();
-      mpz_sqrt (SCM_I_BIG_MPZ (s), SCM_I_BIG_MPZ (k));
-      scm_remember_upto_here_1 (k);
-      return scm_i_normbig (s);
-    }
-}
-
-
 SCM_PRIMITIVE_GENERIC (scm_sqrt, "sqrt", 1, 0, 0,
 		       (SCM z),
 	"Return the square root of @var{z}.  Of the two possible roots\n"
@@ -7461,7 +7405,35 @@ SCM_PRIMITIVE_GENERIC (scm_sqrt, "sqrt", 1, 0, 0,
 	"@end example")
 #define FUNC_NAME s_scm_sqrt
 {
-  if (SCM_COMPLEXP (z))
+  if (SCM_I_INUMP (z))
+    {
+      scm_t_inum i = SCM_I_INUM (z);
+      if (scm_is_integer_perfect_square_i (i))
+        return scm_integer_floor_sqrt_i (i);
+      double root = scm_integer_inexact_sqrt_i (i);
+      return (root < 0)
+        ? scm_c_make_rectangular (0.0, -root)
+        : scm_i_from_double (root);
+    }
+  else if (SCM_BIGP (z))
+    {
+      struct scm_bignum *k = scm_bignum (z);
+      if (scm_is_integer_perfect_square_z (k))
+        return scm_integer_floor_sqrt_z (k);
+      double root = scm_integer_inexact_sqrt_z (k);
+      return (root < 0)
+        ? scm_c_make_rectangular (0.0, -root)
+        : scm_i_from_double (root);
+    }
+  else if (SCM_REALP (z))
+    {
+      double xx = SCM_REAL_VALUE (z);
+      if (xx < 0)
+        return scm_c_make_rectangular (0.0, sqrt (-xx));
+      else
+        return scm_i_from_double (sqrt (xx));
+    }
+  else if (SCM_COMPLEXP (z))
     {
 #if defined HAVE_COMPLEX_DOUBLE && defined HAVE_USABLE_CSQRT	\
       && defined SCM_COMPLEX_VALUE
@@ -7473,109 +7445,34 @@ SCM_PRIMITIVE_GENERIC (scm_sqrt, "sqrt", 1, 0, 0,
                                0.5 * atan2 (im, re));
 #endif
     }
-  else if (SCM_NUMBERP (z))
+  else if (SCM_FRACTIONP (z))
     {
-      if (SCM_I_INUMP (z))
+      SCM n = SCM_FRACTION_NUMERATOR (z);
+      SCM d = SCM_FRACTION_DENOMINATOR (z);
+      SCM nr = scm_sqrt (n);
+      SCM dr = scm_sqrt (d);
+      if (scm_is_exact_integer (nr) && scm_is_exact_integer (dr))
+        return scm_i_make_ratio_already_reduced (nr, dr);
+
+      double xx = scm_i_divide2double (n, d);
+      double abs_xx = fabs (xx);
+      long shift = 0;
+
+      if (abs_xx > DBL_MAX || abs_xx < DBL_MIN)
         {
-          scm_t_inum x = SCM_I_INUM (z);
-
-          if (SCM_LIKELY (x >= 0))
-            {
-              if (SCM_LIKELY (SCM_I_FIXNUM_BIT < DBL_MANT_DIG
-                              || x < (1L << (DBL_MANT_DIG - 1))))
-                {
-                  double root = sqrt (x);
-
-                  /* If 0 <= x < 2^(DBL_MANT_DIG-1) and sqrt(x) is an
-                     integer, then the result is exact. */
-                  if (root == floor (root))
-                    return SCM_I_MAKINUM ((scm_t_inum) root);
-                  else
-                    return scm_i_from_double (root);
-                }
-              else
-                {
-                  mp_limb_t xx, root, rem;
-
-                  assert (x != 0);
-                  xx = x;
-                  if (mpn_perfect_square_p (&xx, 1))
-                    {
-                      mpn_sqrtrem (&root, &rem, &xx, 1);
-                      return SCM_I_MAKINUM (root);
-                    }
-                }
-            }
-        }
-      else if (SCM_BIGP (z))
-        {
-          if (mpz_perfect_square_p (SCM_I_BIG_MPZ (z)))
-            {
-              SCM root = scm_i_mkbig ();
-
-              mpz_sqrt (SCM_I_BIG_MPZ (root), SCM_I_BIG_MPZ (z));
-              scm_remember_upto_here_1 (z);
-              return scm_i_normbig (root);
-            }
+          shift = (scm_to_long (scm_integer_length (n))
+                   - scm_to_long (scm_integer_length (d))) / 2;
+          if (shift > 0)
+            d = lsh (d, scm_from_long (2 * shift), FUNC_NAME);
           else
-            {
-              long expon;
-              double signif = scm_i_big2dbl_2exp (z, &expon);
-
-              if (expon & 1)
-                {
-                  signif *= 2;
-                  expon--;
-                }
-              if (signif < 0)
-                return scm_c_make_rectangular
-                  (0.0, ldexp (sqrt (-signif), expon / 2));
-              else
-                return scm_i_from_double (ldexp (sqrt (signif), expon / 2));
-            }
-        }
-      else if (SCM_FRACTIONP (z))
-        {
-          SCM n = SCM_FRACTION_NUMERATOR (z);
-          SCM d = SCM_FRACTION_DENOMINATOR (z);
-
-          if (exact_integer_is_perfect_square (n)
-              && exact_integer_is_perfect_square (d))
-            return scm_i_make_ratio_already_reduced
-              (exact_integer_floor_square_root (n),
-               exact_integer_floor_square_root (d));
-          else
-            {
-              double xx = scm_i_divide2double (n, d);
-              double abs_xx = fabs (xx);
-              long shift = 0;
-
-              if (SCM_UNLIKELY (abs_xx > DBL_MAX || abs_xx < DBL_MIN))
-                {
-                  shift = (scm_to_long (scm_integer_length (n))
-                           - scm_to_long (scm_integer_length (d))) / 2;
-                  if (shift > 0)
-                    d = lsh (d, scm_from_long (2 * shift), FUNC_NAME);
-                  else
-                    n = lsh (n, scm_from_long (-2 * shift), FUNC_NAME);
-                  xx = scm_i_divide2double (n, d);
-                }
-
-              if (xx < 0)
-                return scm_c_make_rectangular (0.0, ldexp (sqrt (-xx), shift));
-              else
-                return scm_i_from_double (ldexp (sqrt (xx), shift));
-            }
+            n = lsh (n, scm_from_long (-2 * shift), FUNC_NAME);
+          xx = scm_i_divide2double (n, d);
         }
 
-      /* Fallback method, when the cases above do not apply. */
-      {
-        double xx = scm_to_double (z);
-        if (xx < 0)
-          return scm_c_make_rectangular (0.0, sqrt (-xx));
-        else
-          return scm_i_from_double (sqrt (xx));
-      }
+      if (xx < 0)
+        return scm_c_make_rectangular (0.0, ldexp (sqrt (-xx), shift));
+      else
+        return scm_i_from_double (ldexp (sqrt (xx), shift));
     }
   else
     return scm_wta_dispatch_1 (g_scm_sqrt, z, 1, s_scm_sqrt);

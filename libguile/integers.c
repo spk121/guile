@@ -3074,3 +3074,76 @@ scm_integer_exact_sqrt_z (struct scm_bignum *k, SCM *s, SCM *r)
   *s = take_mpz (zs);
   *r = take_mpz (zr);
 }
+
+int
+scm_is_integer_perfect_square_i (scm_t_inum k)
+{
+  if (k < 0)
+    return 0;
+  if (k == 0)
+    return 1;
+  mp_limb_t kk = k;
+  return mpn_perfect_square_p (&kk, 1);
+}
+
+int
+scm_is_integer_perfect_square_z (struct scm_bignum *k)
+{
+  mpz_t zk;
+  alias_bignum_to_mpz (k, zk);
+  int result = mpz_perfect_square_p (zk);
+  scm_remember_upto_here_1 (k);
+  return result;
+}
+
+SCM
+scm_integer_floor_sqrt_i (scm_t_inum k)
+{
+  if (k <= 0)
+    return SCM_INUM0;
+
+  mp_limb_t kk = k, ss;
+  mpn_sqrtrem (&ss, NULL, &kk, 1);
+  return SCM_I_MAKINUM (ss);
+}
+
+SCM
+scm_integer_floor_sqrt_z (struct scm_bignum *k)
+{
+  mpz_t zk, zs;
+  alias_bignum_to_mpz (k, zk);
+  mpz_init (zs);
+  mpz_sqrt (zs, zk);
+  scm_remember_upto_here_1 (k);
+  return take_mpz (zs);
+}
+
+double
+scm_integer_inexact_sqrt_i (scm_t_inum k)
+{
+  if (k < 0)
+    return -sqrt ((double) -k);
+  return sqrt ((double) k);
+}
+
+double
+scm_integer_inexact_sqrt_z (struct scm_bignum *k)
+{
+  mpz_t zk, zs;
+  alias_bignum_to_mpz (k, zk);
+  mpz_init (zs);
+
+  long expon;
+  double signif = bignum_frexp (k, &expon);
+  int negative = signif < 0;
+  if (negative)
+    signif = -signif;
+
+  if (expon & 1)
+    {
+      signif *= 2;
+      expon--;
+    }
+  double result = ldexp (sqrt (signif), expon / 2);
+  return negative ? -result : result;
+}
