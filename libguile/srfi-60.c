@@ -1,6 +1,6 @@
 /* srfi-60.c --- Integers as Bits
 
-   Copyright 2005-2006,2008,2010,2014,2018
+   Copyright 2005-2006,2008,2010,2014,2018,2022
      Free Software Foundation, Inc.
 
    This file is part of Guile.
@@ -29,6 +29,7 @@
 #include "eq.h"
 #include "extensions.h"
 #include "gsubr.h"
+#include "integers.h"
 #include "list.h"
 #include "numbers.h"
 #include "pairs.h"
@@ -52,19 +53,9 @@ SCM_DEFINE (scm_srfi60_log2_binary_factors, "log2-binary-factors", 1, 0, 0,
   SCM ret = SCM_EOL;
 
   if (SCM_I_INUMP (n))
-    {
-      long nn = SCM_I_INUM (n);
-      if (nn == 0)
-        return SCM_I_MAKINUM (-1);
-      nn = nn ^ (nn-1);  /* 1 bits for each low 0 and lowest 1 */
-      return scm_logcount (SCM_I_MAKINUM (nn >> 1));
-    }
+    return scm_integer_scan1_i (SCM_I_INUM (n));
   else if (SCM_BIGP (n))
-    {
-      /* no need for scm_remember_upto_here_1 here, mpz_scan1 doesn't do
-         anything that could result in a gc */
-      return SCM_I_MAKINUM (mpz_scan1 (SCM_I_BIG_MPZ (n), 0L));
-    }
+    return scm_integer_scan1_z (scm_bignum (n));
   else
     SCM_WRONG_TYPE_ARG (SCM_ARG1, n);
 
@@ -85,7 +76,6 @@ SCM_DEFINE (scm_srfi60_copy_bit, "copy-bit", 3, 0, 0,
 	    "@end example")
 #define FUNC_NAME s_scm_srfi60_copy_bit
 {
-  SCM r;
   unsigned long ii;
   int bb;
 
@@ -94,47 +84,18 @@ SCM_DEFINE (scm_srfi60_copy_bit, "copy-bit", 3, 0, 0,
 
   if (SCM_I_INUMP (n))
     {
-      long nn = SCM_I_INUM (n);
-
-      /* can't set high bit ii==SCM_LONG_BIT-1, that would change the sign,
-         which is not what's wanted */
-      if (ii < SCM_LONG_BIT-1)
-        {
-          nn &= ~(1L << ii);  /* zap bit at index */
-          nn |= ((long) bb << ii);   /* insert desired bit */
-          return scm_from_long (nn);
-        }
-      else
-        {
-          /* bits at ii==SCM_LONG_BIT-1 and above are all copies of the sign
-             bit, if this is already the desired "bit" value then no need to
-             make a new bignum value */
-          if (bb == (nn < 0))
-            return n;
-
-          r = scm_i_long2big (nn);
-          goto big;
-        }
+      if (scm_integer_logbit_ui (ii, SCM_I_INUM (n)) == bb)
+        return n;
     }
   else if (SCM_BIGP (n))
     {
-      /* if the bit is already what's wanted then no need to make a new
-         bignum */
-      if (bb == mpz_tstbit (SCM_I_BIG_MPZ (n), ii))
+      if (scm_integer_logbit_uz (ii, scm_bignum (n)) == bb)
         return n;
-
-      r = scm_i_clonebig (n, 1);
-    big:
-      if (bb)
-        mpz_setbit (SCM_I_BIG_MPZ (r), ii);
-      else
-        mpz_clrbit (SCM_I_BIG_MPZ (r), ii);
-
-      /* changing a high bit might put the result into range of a fixnum */
-      return scm_i_normbig (r);
     }
   else
     SCM_WRONG_TYPE_ARG (SCM_ARG1, n);
+
+  return scm_logxor (n, ii == 0 ? SCM_INUM1 : scm_integer_lsh_iu (1, ii));
 }
 #undef FUNC_NAME
 

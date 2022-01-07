@@ -227,6 +227,9 @@ SCM_INTERNAL SCM scm_integer_floor_sqrt_z (struct scm_bignum *k);
 SCM_INTERNAL double scm_integer_inexact_sqrt_i (scm_t_inum k);
 SCM_INTERNAL double scm_integer_inexact_sqrt_z (struct scm_bignum *k);
 
+SCM_INTERNAL SCM scm_integer_scan1_i (scm_t_inum n);
+SCM_INTERNAL SCM scm_integer_scan1_z (struct scm_bignum *n);
+
 
 
 #endif  /* SCM_INTEGERS_H */

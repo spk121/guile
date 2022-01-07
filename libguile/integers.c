@@ -3168,3 +3168,22 @@ scm_integer_inexact_sqrt_z (struct scm_bignum *k)
   double result = ldexp (sqrt (signif), expon / 2);
   return negative ? -result : result;
 }
+
+SCM
+scm_integer_scan1_i (scm_t_inum n)
+{
+  if (n == 0)
+    return SCM_I_MAKINUM (-1);
+  n = n ^ (n-1);  /* 1 bits for each low 0 and lowest 1 */
+  return scm_integer_logcount_i (n >> 1);
+}
+
+SCM
+scm_integer_scan1_z (struct scm_bignum *n)
+{
+  mpz_t zn;
+  alias_bignum_to_mpz (n, zn);
+  unsigned long pos = mpz_scan1 (zn, 0L);
+  scm_remember_upto_here_1 (n);
+  return ulong_to_scm (pos);
+}
