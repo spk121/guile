@@ -1,4 +1,4 @@
-/* Copyright 1999-2001,2003,2005-2006,2009-2010,2012-2014,2017-2019
+/* Copyright 1999-2001,2003,2005-2006,2009-2010,2012-2014,2017-2019,2022
      Free Software Foundation, Inc.
 
    This file is part of Guile.
@@ -311,8 +311,11 @@ scm_c_random64 (scm_t_rstate *state, uint64_t m)
 SCM
 scm_c_random_bignum (scm_t_rstate *state, SCM m)
 {
-  SCM result = scm_i_mkbig ();
-  const size_t m_bits = mpz_sizeinbase (SCM_I_BIG_MPZ (m), 2);
+  mpz_t result, zm;
+  mpz_init (result);
+  mpz_init (zm);
+  scm_to_mpz (m, zm);
+  const size_t m_bits = mpz_sizeinbase (zm, 2);
   /* how many bits would only partially fill the last uint32_t? */
   const size_t end_bits = m_bits % (sizeof (uint32_t) * SCM_CHAR_BIT);
   uint32_t *random_chunks = NULL;
@@ -321,7 +324,7 @@ scm_c_random_bignum (scm_t_rstate *state, SCM m)
   const uint32_t num_chunks = num_full_chunks + ((end_bits) ? 1 : 0);
 
   /* we know the result will be this big */
-  mpz_realloc2 (SCM_I_BIG_MPZ (result), m_bits);
+  mpz_realloc2 (result, m_bits);
 
   random_chunks =
     (uint32_t *) scm_gc_calloc (num_chunks * sizeof (uint32_t),
@@ -332,7 +335,7 @@ scm_c_random_bignum (scm_t_rstate *state, SCM m)
       uint32_t *current_chunk = random_chunks + (num_chunks - 1);
       uint32_t chunks_left = num_chunks;
 
-      mpz_set_ui (SCM_I_BIG_MPZ (result), 0);
+      mpz_set_ui (result, 0);
       
       if (end_bits)
         {
@@ -352,7 +355,7 @@ scm_c_random_bignum (scm_t_rstate *state, SCM m)
           *current_chunk-- = state->rng->random_bits (state);
           chunks_left--;
         }
-      mpz_import (SCM_I_BIG_MPZ (result),
+      mpz_import (result,
                   num_chunks,
                   -1,
                   sizeof (uint32_t),
@@ -361,11 +364,14 @@ scm_c_random_bignum (scm_t_rstate *state, SCM m)
                   random_chunks);
       /* if result >= m, regenerate it (it is important to regenerate
 	 all bits in order not to get a distorted distribution) */
-    } while (mpz_cmp (SCM_I_BIG_MPZ (result), SCM_I_BIG_MPZ (m)) >= 0);
+    } while (mpz_cmp (result, zm) >= 0);
   scm_gc_free (random_chunks,
                num_chunks * sizeof (uint32_t),
                "random bignum chunks");
-  return scm_i_normbig (result);
+  mpz_clear (zm);
+  SCM ret = scm_from_mpz (result);
+  mpz_clear (result);
+  return ret;
 }
 
 /*

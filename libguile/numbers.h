@@ -347,7 +347,6 @@ SCM_INTERNAL SCM scm_i_divide (SCM x, SCM y, SCM rest);
 SCM_INTERNAL SCM scm_i_exact_integer_sqrt (SCM k);
 
 /* bignum internal functions */
-SCM_INTERNAL SCM scm_i_mkbig (void);
 SCM_API /* FIXME: not internal */ SCM scm_i_normbig (SCM x);
 SCM_API /* FIXME: not internal */ double scm_i_big2dbl (SCM b);
 SCM_API /* FIXME: not internal */ SCM scm_i_long2big (long n);

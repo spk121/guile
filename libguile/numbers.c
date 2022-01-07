@@ -292,15 +292,6 @@ make_bignum (void)
 
 
 SCM
-scm_i_mkbig ()
-{
-  /* Return a newly created bignum. */
-  SCM z = make_bignum ();
-  mpz_init (SCM_I_BIG_MPZ (z));
-  return z;
-}
-
-SCM
 scm_i_long2big (long x)
 {
   /* Return a newly created bignum initialized to X. */

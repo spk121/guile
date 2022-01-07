@@ -1,4 +1,4 @@
-/* Copyright 1996-1998,2000-2007,2009,2011-2015,2018,2021
+/* Copyright 1996-1998,2000-2007,2009,2011-2015,2018,2021,2022
      Free Software Foundation, Inc.
 
    This file is part of Guile.
@@ -213,15 +213,18 @@ SCM_DEFINE (scm_inet_makeaddr, "inet-makeaddr", 2, 0, 0,
 static SCM
 scm_from_ipv6 (const uint8_t *src)
 {
-  SCM result = scm_i_mkbig ();
-  mpz_import (SCM_I_BIG_MPZ (result),
+  mpz_t z;
+  mpz_init (z);
+  mpz_import (z,
               1,  /* chunk */
               1,  /* big-endian chunk ordering */
               16, /* chunks are 16 bytes long */
               1,  /* big-endian byte ordering */
               0,  /* "nails" -- leading unused bits per chunk */
               src);
-  return scm_i_normbig (result);
+  SCM ret = scm_from_mpz (z);
+  mpz_clear (z);
+  return ret;
 }
 
 /* convert a host ordered SCM integer to a 128 bit IPv6 address in
