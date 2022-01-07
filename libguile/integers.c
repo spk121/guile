@@ -3037,12 +3037,19 @@ scm_integer_to_uint64_z (struct scm_bignum *z, uint64_t *val)
 }
 
 void
-scm_integer_to_mpz_z (struct scm_bignum *z, mpz_t n)
+scm_integer_set_mpz_z (struct scm_bignum *z, mpz_t n)
 {
   mpz_t zn;
   alias_bignum_to_mpz (z, zn);
-  mpz_init_set (n, zn);
+  mpz_set (n, zn);
   scm_remember_upto_here_1 (z);
+}
+
+void
+scm_integer_init_set_mpz_z (struct scm_bignum *z, mpz_t n)
+{
+  mpz_init (n);
+  scm_integer_set_mpz_z (z, n);
 }
 
 void

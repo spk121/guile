@@ -443,18 +443,17 @@ scm_i_divide2double (SCM n, SCM d)
   mpz_t nn, dd, lo, hi, x;
   ssize_t e;
 
-  if (SCM_LIKELY (SCM_I_INUMP (d)))
+  if (SCM_I_INUMP (d))
     {
-      if (SCM_LIKELY
-          (SCM_I_INUMP (n)
-           && INUM_LOSSLESSLY_CONVERTIBLE_TO_DOUBLE (SCM_I_INUM (n))
-           && INUM_LOSSLESSLY_CONVERTIBLE_TO_DOUBLE (SCM_I_INUM (d))))
+      if (SCM_I_INUMP (n)
+          && INUM_LOSSLESSLY_CONVERTIBLE_TO_DOUBLE (SCM_I_INUM (n))
+          && INUM_LOSSLESSLY_CONVERTIBLE_TO_DOUBLE (SCM_I_INUM (d)))
         /* If both N and D can be losslessly converted to doubles, then
            we can rely on IEEE floating point to do proper rounding much
            faster than we can. */
         return ((double) SCM_I_INUM (n)) / ((double) SCM_I_INUM (d));
 
-      if (SCM_UNLIKELY (scm_is_eq (d, SCM_INUM0)))
+      if (scm_is_eq (d, SCM_INUM0))
         {
           if (scm_is_true (scm_positive_p (n)))
             return 1.0 / 0.0;
@@ -467,12 +466,12 @@ scm_i_divide2double (SCM n, SCM d)
       mpz_init_set_si (dd, SCM_I_INUM (d));
     }
   else
-    mpz_init_set (dd, SCM_I_BIG_MPZ (d));
+    scm_integer_init_set_mpz_z (scm_bignum (d), dd);
 
   if (SCM_I_INUMP (n))
     mpz_init_set_si (nn, SCM_I_INUM (n));
   else
-    mpz_init_set (nn, SCM_I_BIG_MPZ (n));
+    scm_integer_init_set_mpz_z (scm_bignum (n), nn);
 
   neg = (mpz_sgn (nn) < 0) ^ (mpz_sgn (dd) < 0);
   mpz_abs (nn, nn);
@@ -7044,7 +7043,7 @@ scm_to_mpz (SCM val, mpz_t rop)
   if (SCM_I_INUMP (val))
     mpz_set_si (rop, SCM_I_INUM (val));
   else if (SCM_BIGP (val))
-    scm_integer_to_mpz_z (scm_bignum (val), rop);
+    scm_integer_set_mpz_z (scm_bignum (val), rop);
   else
     scm_wrong_type_arg_msg (NULL, 0, val, "exact integer");
 }
