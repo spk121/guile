@@ -1,7 +1,7 @@
 #ifndef SCM_DEPRECATED_H
 #define SCM_DEPRECATED_H
 
-/* Copyright 2003-2007,2009-2018,2020,2021
+/* Copyright 2003-2007,2009-2018,2020-2022
      Free Software Foundation, Inc.
 
    This file is part of Guile.
@@ -145,6 +145,19 @@ SCM_DEPRECATED SCM scm_make_srcprops (long line, int col, SCM filename,
 SCM_DEPRECATED SCM scm_copy_tree (SCM obj);
 
 SCM_DEPRECATED SCM scm_dynamic_unlink (SCM obj);
+
+/* Each bignum is just an mpz_t stored in a double cell starting at word 1. */
+#if defined BUILDING_LIBGUILE || SCM_ENABLE_MINI_GMP == 0
+#define SCM_I_BIG_MPZ(x) (*((mpz_t *) (SCM_CELL_OBJECT_LOC((x),1))))
+#endif
+
+SCM_DEPRECATED int scm_install_gmp_memory_functions;
+SCM_DEPRECATED SCM scm_i_normbig (SCM x);
+SCM_DEPRECATED double scm_i_big2dbl (SCM b);
+SCM_DEPRECATED SCM scm_i_long2big (long n);
+SCM_DEPRECATED SCM scm_i_ulong2big (unsigned long n);
+SCM_DEPRECATED SCM scm_i_clonebig (SCM src_big, int same_sign_p);
+
 
 void scm_i_init_deprecated (void);
 

@@ -160,25 +160,6 @@ VARARG_MPZ_ITERATOR (mpz_clear)
 */
 /* the macro above will not work as is with fractions */
 
-
-/* In the context of Guile, it's most efficient for GMP to use libgc to
-   allocate MPZ values.  That way Guile doesn't need to install
-   finalizers, which have significant overhead.  Using libgc to allocate
-   digits also allows Guile's GC to adequately measure the memory cost
-   of MPZ values.
-
-   However, if the Guile process is linked to some other user of GMP,
-   then probably the references from the other user of GMP to MPZ values
-   aren't visible to the garbage collector.  So libgc could prematurely
-   collect values from that other GMP user.
-
-   This isn't theoretical -- it happens for Guile-GnuTLS.  GnuTLS uses
-   GMP, and so does Guile.  But if Guile installs libgc as the allocator
-   for MPZ values, we break GnuTLS.
-
-   Therefore we only install libgc as the GMP allocator if we are using
-   mini-gmp, which we know isn't shared with any external library.  */
-int scm_install_gmp_memory_functions = SCM_ENABLE_MINI_GMP;
 static SCM flo0;
 static SCM exactly_one_half;
 static SCM flo_log10e;
@@ -233,132 +214,6 @@ scm_from_complex_double (complex double z)
 #endif /* GUILE_I */
 
 
-
-/* Clear the `mpz_t' embedded in bignum PTR.  */
-static void
-finalize_bignum (void *ptr, void *data)
-{
-  SCM bignum;
-
-  bignum = SCM_PACK_POINTER (ptr);
-  mpz_clear (SCM_I_BIG_MPZ (bignum));
-}
-
-/* The next three functions (custom_libgmp_*) are passed to
-   mp_set_memory_functions (in GMP) so that memory used by the digits
-   themselves is known to the garbage collector.  This is needed so
-   that GC will be run at appropriate times.  Otherwise, a program which
-   creates many large bignums would malloc a huge amount of memory
-   before the GC runs. */
-static void *
-custom_gmp_malloc (size_t alloc_size)
-{
-  return scm_gc_malloc_pointerless (alloc_size, "GMP");
-}
-
-static void *
-custom_gmp_realloc (void *old_ptr, size_t old_size, size_t new_size)
-{
-  return scm_gc_realloc (old_ptr, old_size, new_size, "GMP");
-}
-
-static void
-custom_gmp_free (void *ptr, size_t size)
-{
-  /* Do nothing: all memory allocated by GMP is under GC control and
-     will be freed when needed.  */
-}
-
-
-/* Return a new uninitialized bignum.  */
-static inline SCM
-make_bignum (void)
-{
-  scm_t_bits *p;
-
-  /* Allocate one word for the type tag and enough room for an `mpz_t'.  */
-  p = scm_gc_malloc (sizeof (scm_t_bits) + sizeof (mpz_t),
-                     "bignum");
-  p[0] = scm_tc16_big;
-
-  /* When the 'custom_gmp_*' functions are in use, no need to set a
-     finalizer since allocated memory is under GC control.  In other
-     cases, set a finalizer to call 'mpz_clear', which is expensive.  */
-  if (!scm_install_gmp_memory_functions)
-    scm_i_set_finalizer (p, finalize_bignum, NULL);
-
-  return SCM_PACK (p);
-}
-
-
-SCM
-scm_i_long2big (long x)
-{
-  /* Return a newly created bignum initialized to X. */
-  SCM z = make_bignum ();
-  mpz_init_set_si (SCM_I_BIG_MPZ (z), x);
-  return z;
-}
-
-SCM
-scm_i_ulong2big (unsigned long x)
-{
-  /* Return a newly created bignum initialized to X. */
-  SCM z = make_bignum ();
-  mpz_init_set_ui (SCM_I_BIG_MPZ (z), x);
-  return z;
-}
-
-SCM
-scm_i_clonebig (SCM src_big, int same_sign_p)
-{
-  /* Copy src_big's value, negate it if same_sign_p is false, and return. */
-  SCM z = make_bignum ();
-  mpz_init_set (SCM_I_BIG_MPZ (z), SCM_I_BIG_MPZ (src_big));
-  if (!same_sign_p)
-    mpz_neg (SCM_I_BIG_MPZ (z), SCM_I_BIG_MPZ (z));
-  return z;
-}
-
-/* scm_i_big2dbl() rounds to the closest representable double,
-   in accordance with R5RS exact->inexact.  */
-double
-scm_i_big2dbl (SCM b)
-{
-  return scm_integer_to_double_z (scm_bignum (b));
-}
-
-SCM
-scm_i_normbig (SCM b)
-{
-  /* convert a big back to a fixnum if it'll fit */
-  /* presume b is a bignum */
-  if (mpz_fits_slong_p (SCM_I_BIG_MPZ (b)))
-    {
-      scm_t_inum val = mpz_get_si (SCM_I_BIG_MPZ (b));
-      if (SCM_FIXABLE (val))
-        b = SCM_I_MAKINUM (val);
-    }
-  return b;
-}
-
-static SCM_C_INLINE_KEYWORD SCM
-scm_i_mpz2num (mpz_t b)
-{
-  /* convert a mpz number to a SCM number. */
-  if (mpz_fits_slong_p (b))
-    {
-      scm_t_inum val = mpz_get_si (b);
-      if (SCM_FIXABLE (val))
-        return SCM_I_MAKINUM (val);
-    }
-
-  {
-    SCM z = make_bignum ();
-    mpz_init_set (SCM_I_BIG_MPZ (z), b);
-    return z;
-  }
-}
 
 /* Make the ratio NUMERATOR/DENOMINATOR, where:
     1. NUMERATOR and DENOMINATOR are exact integers
@@ -6938,7 +6793,7 @@ scm_to_mpz (SCM val, mpz_t rop)
 SCM
 scm_from_mpz (mpz_t val)
 {
-  return scm_i_mpz2num (val);
+  return scm_integer_from_mpz (val);
 }
 
 int
@@ -7324,20 +7179,6 @@ SCM_PRIMITIVE_GENERIC (scm_sqrt, "sqrt", 1, 0, 0,
 void
 scm_init_numbers ()
 {
-  /* Give the user the chance to force the use of libgc to manage gmp
-     digits, if we know there are no external GMP users in this process.
-     Can be an important optimization for those who link external GMP,
-     before we switch to the MPN API.  */
-  if (!SCM_ENABLE_MINI_GMP)
-    scm_install_gmp_memory_functions
-      = scm_getenv_int ("GUILE_INSTALL_GMP_MEMORY_FUNCTIONS",
-                        scm_install_gmp_memory_functions);
-
-  if (scm_install_gmp_memory_functions)
-    mp_set_memory_functions (custom_gmp_malloc,
-                             custom_gmp_realloc,
-                             custom_gmp_free);
-
   /* It may be possible to tune the performance of some algorithms by using
    * the following constants to avoid the creation of bignums.  Please, before
    * using these values, remember the two rules of program optimization:

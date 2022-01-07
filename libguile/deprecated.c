@@ -36,6 +36,7 @@
 #include "dynl.h"
 #include "eval.h"
 #include "foreign.h"
+#include "finalizers.h"
 #include "generalized-vectors.h"
 #include "gc.h"
 #include "gsubr.h"
@@ -689,6 +690,95 @@ SCM_DEFINE (scm_dynamic_unlink, "dynamic-unlink", 1, 0, 0, (SCM obj), "")
 }
 #undef FUNC_NAME
 
+
+
+
+static void
+finalize_bignum (void *ptr, void *data)
+{
+  SCM bignum;
+
+  bignum = SCM_PACK_POINTER (ptr);
+  mpz_clear (SCM_I_BIG_MPZ (bignum));
+}
+
+static SCM
+make_bignum (void)
+{
+  scm_t_bits *p;
+
+  /* Allocate one word for the type tag and enough room for an `mpz_t'.  */
+  p = scm_gc_malloc_pointerless (sizeof (scm_t_bits) + sizeof (mpz_t),
+                                 "bignum");
+  p[0] = scm_tc16_big;
+  scm_i_set_finalizer (p, finalize_bignum, NULL);
+
+  return SCM_PACK (p);
+}
+
+/* scm_i_big2dbl() rounds to the closest representable double,
+   in accordance with R5RS exact->inexact.  */
+double
+scm_i_big2dbl (SCM b)
+{
+  scm_c_issue_deprecation_warning
+    ("scm_i_big2dbl is deprecated.  Use scm_to_double instead.");
+  return scm_to_double (b);
+}
+
+SCM
+scm_i_long2big (long x)
+{
+  scm_c_issue_deprecation_warning
+    ("scm_i_long2big is deprecated.  Use scm_from_long instead.");
+  /* Return a newly created bignum initialized to X. */
+  SCM z = make_bignum ();
+  mpz_init_set_si (SCM_I_BIG_MPZ (z), x);
+  return z;
+}
+
+SCM
+scm_i_ulong2big (unsigned long x)
+{
+  scm_c_issue_deprecation_warning
+    ("scm_i_ulong2big is deprecated.  Use scm_from_ulong instead.");
+  /* Return a newly created bignum initialized to X. */
+  SCM z = make_bignum ();
+  mpz_init_set_ui (SCM_I_BIG_MPZ (z), x);
+  return z;
+}
+
+SCM
+scm_i_clonebig (SCM src_big, int same_sign_p)
+{
+  scm_c_issue_deprecation_warning
+    ("scm_i_clonebig is deprecated.  Use scm_to_mpz/scm_from_mpz instead.");
+  /* Copy src_big's value, negate it if same_sign_p is false, and return. */
+  SCM z = make_bignum ();
+  scm_to_mpz (src_big, SCM_I_BIG_MPZ (z));
+  if (!same_sign_p)
+    mpz_neg (SCM_I_BIG_MPZ (z), SCM_I_BIG_MPZ (z));
+  return z;
+}
+
+SCM
+scm_i_normbig (SCM b)
+{
+  scm_c_issue_deprecation_warning
+    ("scm_i_normbig is deprecated.  Direct bignum bit manipulation is not "
+     "supported.");
+  /* convert a big back to a fixnum if it'll fit */
+  /* presume b is a bignum */
+  if (mpz_fits_slong_p (SCM_I_BIG_MPZ (b)))
+    {
+      scm_t_inum val = mpz_get_si (SCM_I_BIG_MPZ (b));
+      if (SCM_FIXABLE (val))
+        b = SCM_I_MAKINUM (val);
+    }
+  return b;
+}
+
+int scm_install_gmp_memory_functions;
 
 
 

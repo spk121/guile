@@ -1,7 +1,7 @@
 #ifndef SCM_NUMBERS_H
 #define SCM_NUMBERS_H
 
-/* Copyright 1995-1996,1998,2000-2006,2008-2011,2013-2014,2016-2018,2021,2022
+/* Copyright 1995-1996,1998,2000-2006,2008-2011,2013-2014,2016-2018,2021-2022
      Free Software Foundation, Inc.
 
    This file is part of Guile.
@@ -168,11 +168,6 @@ typedef long scm_t_inum;
 #define SCM_COMPLEX_REAL(x) (((scm_t_complex *) SCM2PTR (x))->real)
 #define SCM_COMPLEX_IMAG(x) (((scm_t_complex *) SCM2PTR (x))->imag)
 
-/* Each bignum is just an mpz_t stored in a double cell starting at word 1. */
-#if defined BUILDING_LIBGUILE || SCM_ENABLE_MINI_GMP == 0
-#define SCM_I_BIG_MPZ(x) (*((mpz_t *) (SCM_CELL_OBJECT_LOC((x),1))))
-#endif
-
 #define SCM_BIGP(x) (SCM_HAS_TYP16 (x, scm_tc16_big))
 
 #define SCM_NUMBERP(x) (SCM_I_INUMP(x) || SCM_NUMP(x))
@@ -202,7 +197,6 @@ typedef struct scm_t_complex
   double real;
   double imag;
 } scm_t_complex;
-
 
 
 
@@ -346,13 +340,6 @@ SCM_INTERNAL SCM scm_i_product (SCM x, SCM y, SCM rest);
 SCM_INTERNAL SCM scm_i_divide (SCM x, SCM y, SCM rest);
 SCM_INTERNAL SCM scm_i_exact_integer_sqrt (SCM k);
 
-/* bignum internal functions */
-SCM_API /* FIXME: not internal */ SCM scm_i_normbig (SCM x);
-SCM_API /* FIXME: not internal */ double scm_i_big2dbl (SCM b);
-SCM_API /* FIXME: not internal */ SCM scm_i_long2big (long n);
-SCM_API /* FIXME: not internal */ SCM scm_i_ulong2big (unsigned long n);
-SCM_API /* FIXME: not internal */ SCM scm_i_clonebig (SCM src_big, int same_sign_p);
-
 /* ratio functions */
 SCM_API SCM scm_rationalize (SCM x, SCM err);
 SCM_API SCM scm_numerator (SCM z);
@@ -380,13 +367,13 @@ SCM_API SCM scm_from_signed_integer (intmax_t val);
 SCM_API SCM scm_from_unsigned_integer (uintmax_t val);
 
 SCM_API intmax_t scm_to_signed_integer (SCM val,
-					    intmax_t min,
-					    intmax_t max);
+                                        intmax_t min,
+                                        intmax_t max);
 SCM_API uintmax_t scm_to_unsigned_integer (SCM val,
-					       uintmax_t min,
-					       uintmax_t max);
+                                           uintmax_t min,
+                                           uintmax_t max);
 
-SCM_API int8_t   scm_to_int8     (SCM x);
+SCM_API int8_t       scm_to_int8     (SCM x);
 SCM_API SCM          scm_from_int8   (int8_t x);
 
 SCM_API uint8_t      scm_to_uint8    (SCM x);
@@ -606,9 +593,6 @@ SCM_API double scm_c_magnitude (SCM z);
 SCM_API double scm_c_angle (SCM z);
 
 SCM_API int scm_is_number (SCM val);
-
-/* If nonzero, tell gmp to use GC_malloc for its allocations.  */
-SCM_API int scm_install_gmp_memory_functions;
 
 SCM_INTERNAL void scm_init_numbers (void);
 
