@@ -255,10 +255,16 @@ scm_to_ipv6 (uint8_t dst[16], SCM src)
   else if (SCM_BIGP (src))
     {
       size_t count;
+      mpz_t z;
       
-      if ((mpz_sgn (SCM_I_BIG_MPZ (src)) < 0)
-	  || mpz_sizeinbase (SCM_I_BIG_MPZ (src), 2) > 128)
-	scm_out_of_range (NULL, src);
+      mpz_init (z);
+      scm_to_mpz (src, z);
+
+      if (mpz_sgn (z) < 0 || mpz_sizeinbase (z, 2) > 128)
+        {
+          mpz_clear (z);
+          scm_out_of_range (NULL, src);
+        }
       
       memset (dst, 0, 16);
       mpz_export (dst,
@@ -267,8 +273,8 @@ scm_to_ipv6 (uint8_t dst[16], SCM src)
                   16, /* chunks are 16 bytes long */
                   1, /* big-endian byte ordering */
                   0, /* "nails" -- leading unused bits per chunk */
-                  SCM_I_BIG_MPZ (src));
-      scm_remember_upto_here_1 (src);
+                  z);
+      mpz_clear (z);
     }
   else
     scm_wrong_type_arg_msg ("scm_to_ipv6", 0, src, "integer");
