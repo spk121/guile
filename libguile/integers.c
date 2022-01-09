@@ -211,7 +211,6 @@ make_bignum_1 (int is_negative, mp_limb_t limb)
   return is_negative ? negate_bignum(z) : z;
 }
 
-#if SCM_SIZEOF_LONG == 4
 static struct scm_bignum *
 make_bignum_2 (int is_negative, mp_limb_t lo, mp_limb_t hi)
 {
@@ -220,7 +219,6 @@ make_bignum_2 (int is_negative, mp_limb_t lo, mp_limb_t hi)
   z->limbs[1] = hi;
   return is_negative ? negate_bignum(z) : z;
 }
-#endif
 
 static struct scm_bignum *
 make_bignum_from_uint64 (uint64_t val)
@@ -3024,17 +3022,25 @@ scm_integer_mul_ii (scm_t_inum x, scm_t_inum y)
   int64_t k = x * (int64_t) y;
   if (SCM_FIXABLE (k))
     return SCM_I_MAKINUM (k);
-#else
-  if (x == 0)
-    return SCM_INUM0;
-  scm_t_inum ax = (x > 0) ? x : -x;
-  scm_t_inum ay = (y > 0) ? y : -y;
-  if (SCM_MOST_POSITIVE_FIXNUM / ax >= ay)
-    return SCM_I_MAKINUM (x * y);
 #endif
 
-  // FIXME: Use mpn_mul with two-limb result to avoid allocating.
-  return scm_integer_mul_zi (long_to_bignum (x), y);
+  mp_limb_t xd[1] = { long_magnitude (x) };
+  mp_limb_t lo;
+  int negative = (x < 0) != (y < 0);
+  mp_limb_t hi = mpn_mul_1 (&lo, xd, 1, long_magnitude (y));
+  if (!hi)
+    {
+      if (negative)
+        {
+          if (lo <= long_magnitude (SCM_MOST_NEGATIVE_FIXNUM))
+            return SCM_I_MAKINUM (negative_long (lo));
+        }
+      else if (lo <= SCM_MOST_POSITIVE_FIXNUM)
+        return SCM_I_MAKINUM (lo);
+      return scm_from_bignum (make_bignum_1 (negative, lo));
+    }
+
+  return scm_from_bignum (make_bignum_2 (negative, lo, hi));
 }
 
 SCM
