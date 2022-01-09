@@ -2869,7 +2869,19 @@ scm_integer_sub_ii (scm_t_inum x, scm_t_inum y)
 SCM
 scm_integer_sub_iz (scm_t_inum x, struct scm_bignum *y)
 {
-  return scm_integer_add_zi (negate_bignum (clone_bignum (y)), x);
+  if (x == 0)
+    return scm_integer_negate_z (y);
+
+  mpz_t result, zx, zy;
+  mpz_init (result);
+  mpz_init_set_si (zx, x);
+  alias_bignum_to_mpz (y, zy);
+  mpz_sub (result, zx, zy);
+  scm_remember_upto_here_1 (y);
+  mpz_clear (zx);
+  // FIXME: We know that if X is negative, no need to check if
+  // result is fixable.
+  return take_mpz (result);
 }
 
 SCM
