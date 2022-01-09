@@ -176,6 +176,15 @@ bignum_trim1 (struct scm_bignum *z)
 }
 
 static struct scm_bignum *
+bignum_trimn (struct scm_bignum *z)
+{
+  ASSERT (z->u.z.size > 0);
+  while (z->u.z.size > 0 && z->limbs[z->u.z.size - 1] == 0)
+    z->u.z.size--;
+  return z;
+}
+
+static struct scm_bignum *
 negate_bignum (struct scm_bignum *z)
 {
   z->u.z.size = -z->u.z.size;
@@ -2802,45 +2811,116 @@ scm_integer_add_ii (scm_t_inum x, scm_t_inum y)
   return long_to_scm (x + y);
 }
 
+static SCM
+do_add_1 (int negative, mp_limb_t *xd, size_t xn, mp_limb_t y)
+{
+  size_t rn = xn + 1;
+  struct scm_bignum *result = allocate_bignum (rn);
+  mp_limb_t *rd = bignum_limbs (result);
+  if (mpn_add_1 (rd, xd, xn, y))
+    rd[xn] = 1;
+  else
+    result->u.z.size--;
+  // No need to normalize as magnitude is increasing and one operand
+  // already a bignum.
+  return scm_from_bignum (bignum_negate_if (negative, result));
+}
+
+static SCM
+do_add (int negative, mp_limb_t *xd, size_t xn, mp_limb_t *yd, size_t yn)
+{
+  size_t rn = xn + 1;
+  struct scm_bignum *result = allocate_bignum (rn);
+  mp_limb_t *rd = bignum_limbs (result);
+  if (mpn_add (rd, xd, xn, yd, yn))
+    rd[xn] = 1;
+  else
+    result->u.z.size--;
+  // No need to normalize as magnitude is increasing and one operand
+  // already a bignum.
+  return scm_from_bignum (bignum_negate_if (negative, result));
+}
+
+static SCM
+do_sub_1 (int negative, mp_limb_t *xd, size_t xn, mp_limb_t y)
+{
+  size_t rn = xn;
+  struct scm_bignum *result = allocate_bignum (rn);
+  mp_limb_t *rd = bignum_limbs (result);
+  mpn_sub_1 (rd, xd, xn, y);
+  return normalize_bignum
+    (bignum_negate_if (negative, (bignum_trim1 (result))));
+}
+
+static SCM
+do_sub (int negative, mp_limb_t *xd, size_t xn, mp_limb_t *yd, size_t yn)
+{
+  size_t rn = xn;
+  struct scm_bignum *result = allocate_bignum (rn);
+  mp_limb_t *rd = bignum_limbs (result);
+  mpn_sub (rd, xd, xn, yd, yn);
+  return normalize_bignum
+    (bignum_negate_if (negative, (bignum_trimn (result))));
+}
+
+static int
+do_cmp (mp_limb_t *xd, size_t xn, mp_limb_t *yd, size_t yn)
+{
+  if (xn < yn)
+    return -1;
+  if (xn > yn)
+    return 1;
+  return mpn_cmp (xd, yd, xn);
+}
+
 SCM
 scm_integer_add_zi (struct scm_bignum *x, scm_t_inum y)
 {
   if (y == 0)
     return scm_from_bignum (x);
+  size_t xn = bignum_limb_count (x);
+  if (xn == 0)
+    return SCM_I_MAKINUM (y);
 
-  mpz_t result, zx;
-  mpz_init (result);
-  alias_bignum_to_mpz (x, zx);
-  if (y < 0)
-    {
-      mpz_sub_ui (result, zx, - y);
-      scm_remember_upto_here_1 (x);
-      // FIXME: We know that if X is negative, no need to check if
-      // result is fixable.
-      return take_mpz (result);
-    }
+  SCM ret;
+  if (bignum_is_negative (x) == (y < 0))
+    // Magnitude increases, sign stays the same.
+    ret = do_add_1 (y < 0, bignum_limbs (x), xn, inum_magnitude (y));
   else
-    {
-      mpz_add_ui (result, zx, y);
-      scm_remember_upto_here_1 (x);
-      // FIXME: We know that if X is positive, no need to check if
-      // result is fixable.
-      return take_mpz (result);
-    }
+    // Magnitude decreases, but assuming x's magnitude is greater than
+    // y's, not changing sign.
+    ret = do_sub_1 (bignum_is_negative (x), bignum_limbs (x), xn,
+                    inum_magnitude (y));
+  scm_remember_upto_here_1 (x);
+  return ret;
 }
 
 SCM
 scm_integer_add_zz (struct scm_bignum *x, struct scm_bignum *y)
 {
-  mpz_t result, zx, zy;
-  mpz_init (result);
-  alias_bignum_to_mpz (x, zx);
-  alias_bignum_to_mpz (y, zy);
-  mpz_add (result, zx, zy);
+  size_t xn = bignum_limb_count (x);
+  size_t yn = bignum_limb_count (y);
+  if (xn == 0)
+    return normalize_bignum (y);
+  if (yn == 0)
+    return normalize_bignum (x);
+
+  mp_limb_t *xd = bignum_limbs (x);
+  mp_limb_t *yd = bignum_limbs (y);
+  SCM ret;
+  if (bignum_is_negative (x) == bignum_is_negative (y))
+    // Magnitude increases, sign stays the same.
+    ret = xn < yn
+      ? do_add (bignum_is_negative (x), yd, yn, xd, xn)
+      : do_add (bignum_is_negative (x), xd, xn, yd, yn);
+  else
+    // Magnitude decreases, changing sign if abs(x) < abs(y).
+    ret = do_cmp (xd, xn, yd, yn) < 0
+      ? do_sub (!bignum_is_negative (x), yd, yn, xd, xn)
+      : do_sub (bignum_is_negative (x), xd, xn, yd, yn);
+
   scm_remember_upto_here_2 (x, y);
-  // FIXME: We know that if X and Y have the same sign, no need to check
-  // if result is fixable.
-  return take_mpz (result);
+  return ret;
 }
 
 SCM
