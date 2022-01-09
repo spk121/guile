@@ -2951,17 +2951,20 @@ scm_integer_sub_iz (scm_t_inum x, struct scm_bignum *y)
 {
   if (x == 0)
     return scm_integer_negate_z (y);
+  size_t yn = bignum_limb_count (y);
+  if (yn == 0)
+    return SCM_I_MAKINUM (x);
 
-  mpz_t result, zx, zy;
-  mpz_init (result);
-  mpz_init_set_si (zx, x);
-  alias_bignum_to_mpz (y, zy);
-  mpz_sub (result, zx, zy);
+  SCM ret;
+  if (bignum_is_negative (y) == (x < 0))
+    // Magnitude of result smaller than that of y, but assuming y's
+    // magnitude is greater than x's, keeping y's sign.
+    ret = do_sub_1 (x > 0, bignum_limbs (y), yn, inum_magnitude (x));
+  else
+    // Magnitude increases, same sign as x.
+    ret = do_add_1 (x < 0, bignum_limbs (y), yn, inum_magnitude (x));
   scm_remember_upto_here_1 (y);
-  mpz_clear (zx);
-  // FIXME: We know that if X is negative, no need to check if
-  // result is fixable.
-  return take_mpz (result);
+  return ret;
 }
 
 SCM
@@ -2969,34 +2972,49 @@ scm_integer_sub_zi (struct scm_bignum *x, scm_t_inum y)
 {
   if (y == 0)
     return scm_from_bignum (x);
-  if (y < 0)
-    // Assumes that -INUM_MIN can fit in a scm_t_inum, even if that
-    // scm_t_inum is not fixable, and that scm_integer_add_ii can handle
-    // scm_t_inum inputs outside the fixable range.
-    return scm_integer_add_zi (x, -y);
+  size_t xn = bignum_limb_count (x);
+  if (xn == 0)
+    return SCM_I_MAKINUM (y);
 
-  mpz_t result, zx;
-  mpz_init (result);
-  alias_bignum_to_mpz (x, zx);
-  mpz_sub_ui (result, zx, y);
+  SCM ret;
+  if (bignum_is_negative (x) == (y < 0))
+    // Magnitude decreases, but assuming x's magnitude is greater than
+    // y's, not changing sign.
+    ret = do_sub_1 (y < 0, bignum_limbs (x), xn, inum_magnitude (y));
+  else
+    // Magnitude increases, same sign as x.
+    ret = do_add_1 (bignum_is_negative (x), bignum_limbs (x), xn,
+                    inum_magnitude (y));
   scm_remember_upto_here_1 (x);
-  // FIXME: We know that if X is negative, no need to check if
-  // result is fixable.
-  return take_mpz (result);
+  return ret;
 }
 
 SCM
 scm_integer_sub_zz (struct scm_bignum *x, struct scm_bignum *y)
 {
-  mpz_t result, zx, zy;
-  mpz_init (result);
-  alias_bignum_to_mpz (x, zx);
-  alias_bignum_to_mpz (y, zy);
-  mpz_sub (result, zx, zy);
+  size_t xn = bignum_limb_count (x);
+  size_t yn = bignum_limb_count (y);
+  if (xn == 0)
+    return scm_integer_negate_z (y);
+  if (yn == 0)
+    return scm_from_bignum (x);
+
+  mp_limb_t *xd = bignum_limbs (x);
+  mp_limb_t *yd = bignum_limbs (y);
+  SCM ret;
+  if (bignum_is_negative (x) != bignum_is_negative (y))
+    // Magnitude increases, same sign as x.
+    ret = xn < yn
+      ? do_add (bignum_is_negative (x), yd, yn, xd, xn)
+      : do_add (bignum_is_negative (x), xd, xn, yd, yn);
+  else
+    // Magnitude decreases, changing sign if abs(x) < abs(y).
+    ret = do_cmp (xd, xn, yd, yn) < 0
+      ? do_sub (!bignum_is_negative (x), yd, yn, xd, xn)
+      : do_sub (bignum_is_negative (x), xd, xn, yd, yn);
+
   scm_remember_upto_here_2 (x, y);
-  // FIXME: We know that if X and Y have opposite signs, no need to
-  // check if result is fixable.
-  return take_mpz (result);
+  return ret;
 }
 
 SCM
