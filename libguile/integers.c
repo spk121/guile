@@ -2939,13 +2939,25 @@ scm_integer_mul_zi (struct scm_bignum *x, scm_t_inum y)
 SCM
 scm_integer_mul_zz (struct scm_bignum *x, struct scm_bignum *y)
 {
-  mpz_t result, zx, zy;
-  mpz_init (result);
-  alias_bignum_to_mpz (x, zx);
-  alias_bignum_to_mpz (y, zy);
-  mpz_mul (result, zx, zy);
+  size_t xn = bignum_limb_count (x);
+  size_t yn = bignum_limb_count (y);
+  if (xn == 0 || yn == 0)
+    return SCM_INUM0;
+
+  struct scm_bignum *result = allocate_bignum (xn + yn);
+  mp_limb_t *rd = bignum_limbs (result);
+  const mp_limb_t *xd = bignum_limbs (x);
+  const mp_limb_t *yd = bignum_limbs (y);
+  int negate = bignum_is_negative (x) != bignum_is_negative (y);
+  if (xd == yd)
+    mpn_sqr (rd, xd, xn);
+  else if (xn <= yn)
+    mpn_mul (rd, yd, yn, xd, xn);
+  else
+    mpn_mul (rd, xd, xn, yd, yn);
   scm_remember_upto_here_2 (x, y);
-  return take_mpz (result);
+  return normalize_bignum
+    (bignum_negate_if (negate, (bignum_trim1 (result))));
 }
 
 int
