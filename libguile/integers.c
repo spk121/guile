@@ -168,10 +168,24 @@ allocate_bignum (size_t nlimbs)
 }
 
 static struct scm_bignum *
+bignum_trim1 (struct scm_bignum *z)
+{
+  ASSERT (z->u.z.size > 0);
+  z->u.z.size -= (z->limbs[z->u.z.size - 1] == 0);
+  return z;
+}
+
+static struct scm_bignum *
 negate_bignum (struct scm_bignum *z)
 {
   z->u.z.size = -z->u.z.size;
   return z;
+}
+
+static struct scm_bignum *
+bignum_negate_if (int negate, struct scm_bignum *z)
+{
+  return negate ? negate_bignum (z) : z;
 }
 
 static struct scm_bignum *
@@ -2906,12 +2920,18 @@ scm_integer_mul_zi (struct scm_bignum *x, scm_t_inum y)
       return scm_from_bignum (x);
     default:
       {
-        mpz_t result, zx;
-        mpz_init (result);
-        alias_bignum_to_mpz (x, zx);
-        mpz_mul_si (result, zx, y);
+        size_t xn = bignum_limb_count (x);
+        if (xn == 0)
+          return SCM_INUM0;
+
+        struct scm_bignum *result = allocate_bignum (xn + 1);
+        const mp_limb_t *xd = bignum_limbs (x);
+        mp_limb_t yd[1] = { long_magnitude (y) };
+        int negate = bignum_is_negative (x) != (y < 0);
+        mpn_mul (bignum_limbs (result), xd, xn, yd, 1);
         scm_remember_upto_here_1 (x);
-        return take_mpz (result);
+        return normalize_bignum
+          (bignum_negate_if (negate, (bignum_trim1 (result))));
       }
     }
 }
