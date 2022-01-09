@@ -2875,10 +2875,22 @@ scm_integer_sub_iz (scm_t_inum x, struct scm_bignum *y)
 SCM
 scm_integer_sub_zi (struct scm_bignum *x, scm_t_inum y)
 {
-  // Assumes that -INUM_MIN can fit in a scm_t_inum, even if that
-  // scm_t_inum is not fixable, and that scm_integer_add_ii can handle
-  // scm_t_inum inputs outside the fixable range.
-  return scm_integer_add_zi (x, -y);
+  if (y == 0)
+    return scm_from_bignum (x);
+  if (y < 0)
+    // Assumes that -INUM_MIN can fit in a scm_t_inum, even if that
+    // scm_t_inum is not fixable, and that scm_integer_add_ii can handle
+    // scm_t_inum inputs outside the fixable range.
+    return scm_integer_add_zi (x, -y);
+
+  mpz_t result, zx;
+  mpz_init (result);
+  alias_bignum_to_mpz (x, zx);
+  mpz_sub_ui (result, zx, y);
+  scm_remember_upto_here_1 (x);
+  // FIXME: We know that if X is negative, no need to check if
+  // result is fixable.
+  return take_mpz (result);
 }
 
 SCM
