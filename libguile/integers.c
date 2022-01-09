@@ -518,7 +518,7 @@ scm_integer_abs_z (struct scm_bignum *z)
   if (!bignum_is_negative (z))
     return scm_from_bignum (z);
 
-  return scm_from_bignum (negate_bignum (clone_bignum (z)));
+  return scm_integer_negate_z (z);
 }
 
 SCM
@@ -2908,7 +2908,15 @@ scm_integer_sub_zi (struct scm_bignum *x, scm_t_inum y)
 SCM
 scm_integer_sub_zz (struct scm_bignum *x, struct scm_bignum *y)
 {
-  return scm_integer_add_zz (x, negate_bignum (clone_bignum (y)));
+  mpz_t result, zx, zy;
+  mpz_init (result);
+  alias_bignum_to_mpz (x, zx);
+  alias_bignum_to_mpz (y, zy);
+  mpz_sub (result, zx, zy);
+  scm_remember_upto_here_2 (x, y);
+  // FIXME: We know that if X and Y have opposite signs, no need to
+  // check if result is fixable.
+  return take_mpz (result);
 }
 
 SCM
