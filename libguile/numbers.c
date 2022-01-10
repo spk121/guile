@@ -3450,11 +3450,7 @@ icmplx2str (double real, double imag, char *str, int radix)
   double sgn;
   
   i = idbl2str (real, str, radix);
-#ifdef HAVE_COPYSIGN
   sgn = copysign (1.0, imag);
-#else
-  sgn = imag;
-#endif
   /* Don't output a '+' for negative numbers or for Inf and
      NaN.  They will provide their own sign. */
   if (sgn >= 0 && isfinite (imag))
