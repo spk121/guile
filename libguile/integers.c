@@ -2119,6 +2119,18 @@ scm_integer_logand_zi (struct scm_bignum *x, scm_t_inum y)
   if (y == 0)
     return SCM_INUM0;
 
+  if (y > 0)
+    {
+      mp_limb_t rd = bignum_limbs (x)[0];
+      mp_limb_t yd = y;
+      if (bignum_is_negative (x))
+        rd = ~rd + 1;
+      scm_remember_upto_here_1 (x);
+      rd &= yd;
+      // Result must be a positive inum.
+      return SCM_I_MAKINUM (rd);
+    }
+
   mpz_t result, zx, zy;
   mpz_init (result);
   alias_bignum_to_mpz (x, zx);
