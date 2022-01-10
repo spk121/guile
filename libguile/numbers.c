@@ -658,17 +658,7 @@ SCM_PRIMITIVE_GENERIC (scm_abs, "abs", 1, 0, 0,
   if (SCM_I_INUMP (x))
     return scm_integer_abs_i (SCM_I_INUM (x));
   else if (SCM_LIKELY (SCM_REALP (x)))
-    {
-      double xx = SCM_REAL_VALUE (x);
-      /* If x is a NaN then xx<0 is false so we return x unchanged */
-      if (xx < 0.0)
-        return scm_i_from_double (-xx);
-      /* Handle signed zeroes properly */
-      else if (SCM_UNLIKELY (xx == 0.0))
-	return flo0;
-      else
-        return x;
-    }
+    return scm_i_from_double (copysign (SCM_REAL_VALUE (x), 1.0));
   else if (SCM_BIGP (x))
     return scm_integer_abs_z (scm_bignum (x));
   else if (SCM_FRACTIONP (x))
