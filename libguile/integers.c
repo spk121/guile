@@ -2265,6 +2265,27 @@ SCM
 scm_integer_expt_ii (scm_t_inum n, scm_t_inum k)
 {
   ASSERT (k >= 0);
+  if (k == 0)
+    return SCM_INUM1;
+  if (k == 1)
+    return SCM_I_MAKINUM (n);
+  if (n == -1)
+    return scm_is_integer_odd_i (k) ? SCM_I_MAKINUM (-1) : SCM_INUM1;
+  if (n == 2)
+    {
+      if (k < SCM_I_FIXNUM_BIT - 1)
+        return SCM_I_MAKINUM (1L << k);
+      if (k < 64)
+        return scm_integer_from_uint64 (((uint64_t) 1) << k);
+      size_t nlimbs = k / (sizeof (mp_limb_t)*8) + 1;
+      size_t high_shift = k & (sizeof (mp_limb_t)*8 - 1);
+      struct scm_bignum *result = allocate_bignum (nlimbs);
+      mp_limb_t *rd = bignum_limbs (result);
+      mpn_zero(rd, nlimbs - 1);
+      rd[nlimbs - 1] = ((mp_limb_t) 1) << high_shift;
+      return scm_from_bignum (result);
+    }
+
   mpz_t res;
   mpz_init (res);
   mpz_ui_pow_ui (res, inum_magnitude (n), k);
