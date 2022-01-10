@@ -6967,12 +6967,12 @@ scm_is_number (SCM z)
 static SCM
 log_of_shifted_double (double x, long shift)
 {
+  /* cf scm_log10 */
   double ans = log (fabs (x)) + shift * M_LN2;
-
-  if (copysign (1.0, x) > 0.0)
-    return scm_i_from_double (ans);
-  else
+  if (signbit (x) && SCM_LIKELY (!isnan (x)))
     return scm_c_make_rectangular (ans, M_PI);
+  else
+    return scm_i_from_double (ans);
 }
 
 /* Returns log(n), for exact integer n */
@@ -7081,10 +7081,11 @@ SCM_PRIMITIVE_GENERIC (scm_log10, "log10", 1, 0, 0,
       {
 	double re = scm_to_double (z);
 	double l = log10 (fabs (re));
-	if (copysign (1.0, re) > 0.0)
-	  return scm_i_from_double (l);
-	else
-	  return scm_c_make_rectangular (l, M_LOG10E * M_PI);
+        /* cf log_of_shifted_double */
+        if (signbit (re) && SCM_LIKELY (!isnan (re)))
+          return scm_c_make_rectangular (l, M_LOG10E * M_PI);
+        else
+          return scm_i_from_double (l);
       }
     }
   else if (SCM_BIGP (z))

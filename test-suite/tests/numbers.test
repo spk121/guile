@@ -21,7 +21,8 @@
   #:use-module (ice-9 documentation)
   #:autoload   (system base compile) (compile)
   #:use-module (srfi srfi-1)    ; list library
-  #:use-module (srfi srfi-11))  ; let-values
+  #:use-module (srfi srfi-11)   ; let-values
+  #:use-module (rnrs bytevectors))
 
 ;;;
 ;;; miscellaneous
@@ -4762,6 +4763,10 @@
   (pass-if-exception "(log 0)" exception:numerical-overflow
     (log 0))
 
+  ; result of log(nan) is real nan regardless of the sign of the nan.
+  (pass-if (test-eqv? +nan.0 (log (bytevector-ieee-double-ref #vu8(0 0 0 0 0 0 248 127) 0 'little))))
+  (pass-if (test-eqv? +nan.0 (log (bytevector-ieee-double-ref #vu8(0 0 0 0 0 0 248 255) 0 'little))))
+
   (pass-if (test-eqv? -inf.0 (log 0.0)))
   (pass-if (test-eqv? +inf.0 (log +inf.0)))
   (pass-if (test-eqv? -inf.0+3.14159265358979i (log -0.0)))
@@ -4810,6 +4815,10 @@
     (log10 123 456))
   (pass-if-exception "(log10 0)" exception:numerical-overflow
     (log10 0))
+
+  ; result of log10(nan) is real nan regardless of the sign of the nan.
+  (pass-if (test-eqv? +nan.0 (log10 (bytevector-ieee-double-ref #vu8(0 0 0 0 0 0 248 127) 0 'little))))
+  (pass-if (test-eqv? +nan.0 (log10 (bytevector-ieee-double-ref #vu8(0 0 0 0 0 0 248 255) 0 'little))))
 
   (pass-if (test-eqv? -inf.0 (log10 0.0)))
   (pass-if (test-eqv? +inf.0 (log10 +inf.0)))
