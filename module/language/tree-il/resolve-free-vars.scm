@@ -1,5 +1,5 @@
 ;;; Resolving free top-level references to modules
-;;; Copyright (C) 2021
+;;; Copyright (C) 2021-2022
 ;;;   Free Software Foundation, Inc.
 ;;;
 ;;; This library is free software: you can redistribute it and/or modify
@@ -51,20 +51,26 @@
   ;; So instead of using the source program to determine where a binding
   ;; comes from, we use the first-class module interface.
   (define (imported-resolver iface)
-    (let ((public-iface (resolve-interface (module-name iface))))
-      (if (eq? iface public-iface)
-          (lambda (name)
-            (and (module-variable iface name)
-                 (cons (module-name iface) name)))
-          (let ((by-var (make-hash-table)))
-            (module-for-each (lambda (name var)
-                               (hashq-set! by-var var name))
-                             public-iface)
-            (lambda (name)
-              (let ((var (module-variable iface name)))
-                (and var
-                     (cons (module-name iface)
-                           (hashq-ref by-var var)))))))))
+    (let ((by-var (make-hash-table)))
+      ;; When resolving a free variable, Guile visits all used modules
+      ;; to see if there is a binding.  If one of those imports is an
+      ;; autoload, it's possible that the autoload interface fails to
+      ;; load.  In that case Guile will issue a warning and consider the
+      ;; binding not found in that module.  Here we try to produce the
+      ;; same behavior at optimization time that we do at expand time
+      ;; that we would do at run time.
+      (false-if-exception
+       (let ((public-iface (resolve-interface (module-name iface))))
+         (module-for-each (lambda (name var)
+                            (hashq-set! by-var var name))
+                          public-iface))
+       #:warning "Failed to determine exported bindings from module ~a:\n"
+       (module-name iface))
+      (lambda (name)
+        (let ((var (module-variable iface name)))
+          (and var
+               (cons (module-name iface)
+                     (hashq-ref by-var var)))))))
 
   (define the-module (resolve-module mod))
   (define resolvers
