@@ -3385,10 +3385,6 @@ scm_integer_inexact_sqrt_i (scm_t_inum k)
 double
 scm_integer_inexact_sqrt_z (struct scm_bignum *k)
 {
-  mpz_t zk, zs;
-  alias_bignum_to_mpz (k, zk);
-  mpz_init (zs);
-
   long expon;
   double signif = scm_integer_frexp_z (k, &expon);
   int negative = signif < 0;
