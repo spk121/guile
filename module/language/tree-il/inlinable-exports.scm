@@ -1,5 +1,5 @@
 ;;; Attaching inlinable definitions of exported bindings to modules
-;;; Copyright (C) 2021
+;;; Copyright (C) 2021, 2022
 ;;;   Free Software Foundation, Inc.
 ;;;
 ;;; This library is free software: you can redistribute it and/or modify
@@ -750,7 +750,7 @@
                            (iota (vtable-nfields vtable)))))
           `((eq? code ,code)
             (let* (,@(map (lambda (field) `(,field (lp))) fields))
-              (make-struct/no-tail (@ ,mod ,name) ,@fields)))))))
+              (make-struct/simple (@ ,mod ,name) ,@fields)))))))
   (define (constant-clause constant code)
     `((eq? code ,code) ',constant))
 
