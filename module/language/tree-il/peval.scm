@@ -1,6 +1,6 @@
 ;;; Tree-IL partial evaluator
 
-;; Copyright (C) 2011-2014, 2017, 2019, 2020, 2021 Free Software Foundation, Inc.
+;; Copyright (C) 2011-2014, 2017, 2019, 2020, 2021, 2022 Free Software Foundation, Inc.
 
 ;;;; This library is free software; you can redistribute it and/or
 ;;;; modify it under the terms of the GNU Lesser General Public
@@ -1072,10 +1072,12 @@ top-level bindings from ENV and return the resulting expression."
        (cond
         ((and cross-module-inlining?
               public?
-              (and=> (resolve-interface module)
+              (and=> (resolve-module module #:ensure #f)
                      (lambda (module)
-                       (and=> (module-inlinable-exports module)
-                              (lambda (proc) (proc name))))))
+                       (and=> (module-public-interface module)
+                              (lambda (iface)
+                                (and=> (module-inlinable-exports iface)
+                                       (lambda (proc) (proc name))))))))
          => (lambda (inlined)
               ;; Similar logic to lexical-ref, but we can't enumerate
               ;; uses, and don't know about aliases.
