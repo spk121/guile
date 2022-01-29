@@ -3,7 +3,7 @@ dnl   Process this file with autoconf to produce configure.
 dnl
 
 define(GUILE_CONFIGURE_COPYRIGHT,[[
-Copyright 1998-2021 Free Software Foundation, Inc.
+Copyright 1998-2022 Free Software Foundation, Inc.
 
 This file is part of Guile.
 
@@ -64,6 +64,49 @@ AC_LIBTOOL_WIN32_DLL
 
 AC_PROG_INSTALL
 AC_PROG_CC
+
+AC_MSG_CHECKING([whether the compiler supports -flto])
+old_CFLAGS="$CFLAGS"
+LTO_CFLAGS="-flto"
+CFLAGS="$CFLAGS $LTO_CFLAGS"
+AC_COMPILE_IFELSE([AC_LANG_SOURCE([int foo;])],, [LTO_CFLAGS=])
+CFLAGS="$old_CFLAGS"
+if test -n "$LTO_CFLAGS"; then
+  AC_MSG_RESULT([yes])
+else
+  AC_MSG_RESULT([no])
+fi
+
+AC_ARG_ENABLE(lto,
+  [AS_HELP_STRING([--enable-lto]
+                  [enable link-time optimization for libguile])],
+  [],
+  [if test -z "$LTO_CFLAGS"; then enable_lto=no; else enable_lto=yes; fi])
+case "$enable_lto" in
+  yes | y)
+    if test -z "$LTO_CFLAGS"; then
+      AC_MSG_ERROR([--enable-lto=$enable_lto unsupported for $CC])
+    fi
+    CFLAGS="$CFLAGS $LTO_CFLAGS"
+    AC_MSG_CHECKING([for lto-specific prefix for ar, nm, objcopy, ranlib])
+    if test "$GCC" = yes; then
+       TOOLCHAIN_PREFIX=gcc
+    else
+       # Assuming LLVM if not GCC.  Probably won't hurt.
+       TOOLCHAIN_PREFIX=llvm
+    fi
+    AC_MSG_RESULT([$TOOLCHAIN_PREFIX])
+    AC_CHECK_TOOLS([AR], [$TOOLCHAIN_PREFIX-ar ar])
+    AC_CHECK_TOOLS([NM], [$TOOLCHAIN_PREFIX-nm nm])
+    AC_CHECK_TOOLS([OBJCOPY], [$TOOLCHAIN_PREFIX-objcopy objcopy])
+    AC_CHECK_TOOLS([RANLIB], [$TOOLCHAIN_PREFIX-ranlib ranlib])
+    ;;
+  no | n)
+    ;;
+  *)
+    AC_MSG_ERROR([unexpected --enable-lto=$enable_lto])
+    ;;
+esac
 
 # Sadly, there is no released version of Autoconf with a nice
 # C11-ensuring macro.  This should work for gcc/clang within the last 5
