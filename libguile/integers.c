@@ -3094,13 +3094,17 @@ scm_integer_mul_zi (struct scm_bignum *x, scm_t_inum y)
           return SCM_INUM0;
 
         struct scm_bignum *result = allocate_bignum (xn + 1);
+        mp_limb_t *rd = bignum_limbs (result);
         const mp_limb_t *xd = bignum_limbs (x);
-        mp_limb_t yd[1] = { long_magnitude (y) };
+        mp_limb_t yd = long_magnitude (y);
         int negate = bignum_is_negative (x) != (y < 0);
-        mpn_mul (bignum_limbs (result), xd, xn, yd, 1);
+        mp_limb_t hi = mpn_mul_1 (rd, xd, xn, yd);
+        if (hi)
+          rd[xn] = hi;
+        else
+          result->u.z.size--;
         scm_remember_upto_here_1 (x);
-        return normalize_bignum
-          (bignum_negate_if (negate, (bignum_trim1 (result))));
+        return normalize_bignum (bignum_negate_if (negate, (result)));
       }
     }
 }
