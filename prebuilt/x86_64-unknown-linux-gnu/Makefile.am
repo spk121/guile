@@ -1,6 +1,6 @@
 ## Process this file with automake to produce Makefile.in.
 ##
-##  	Copyright (C) 2016 Free Software Foundation, Inc.
+##  	Copyright (C) 2016, 2022 Free Software Foundation, Inc.
 ##
 ##   This file is part of GNU Guile.
 ##
@@ -24,4 +24,5 @@ GUILE_BUILD_TAG = PREBUILD $(GUILE_TARGET)
 
 include $(top_srcdir)/am/bootstrap.am
 
+GOBJECTS = ice-9/eval.go ice-9/boot-9.go ice-9/psyntax-pp.go
 EXTRA_DIST = $(GOBJECTS)
