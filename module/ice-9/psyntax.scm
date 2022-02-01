@@ -1,6 +1,6 @@
 ;;;; -*-scheme-*-
 ;;;;
-;;;; Copyright (C) 2001, 2003, 2006, 2009, 2010-2021
+;;;; Copyright (C) 2001, 2003, 2006, 2009, 2010-2022
 ;;;;   Free Software Foundation, Inc.
 ;;;;
 ;;;; This library is free software; you can redistribute it and/or
@@ -278,11 +278,6 @@
                         `((line . ,(sourcev-line sourcev))
                           (column . ,(sourcev-column sourcev))))))
 
-    (define (decorate-source e s)
-      (when (and s (supports-source-properties? e))
-        (set-source-properties! e (sourcev->alist s)))
-      e)
-
     (define (maybe-name-value! name val)
       (if (lambda? val)
           (let ((meta (lambda-meta val)))
@@ -436,18 +431,10 @@
 
     (define-syntax no-source (identifier-syntax #f))
 
-    (define (datum-sourcev datum)
-      (let ((props (source-properties datum)))
-        (and (pair? props)
-             (vector (assq-ref props 'filename)
-                     (assq-ref props 'line)
-                     (assq-ref props 'column)))))
-
     (define source-annotation
       (lambda (x)
-        (if (syntax? x)
-            (syntax-sourcev x)
-            (datum-sourcev x))))
+        (and (syntax? x)
+             (syntax-sourcev x))))
 
     (define-syntax-rule (arg-check pred? e who)
       (let ((x e))
@@ -1044,7 +1031,7 @@
         x)
        ((syntax? x) (wrap-syntax x (join-wraps w (syntax-wrap x)) defmod))
        ((null? x) x)
-       (else (make-syntax x w defmod (or s (datum-sourcev x))))))
+       (else (make-syntax x w defmod s))))
 
     ;; expanding
 
@@ -1366,9 +1353,9 @@
                       ;; need lambda here...
                       (values 'define-form (wrap #'name w mod)
                               (wrap e w mod)
-                              (decorate-source
+                              (source-wrap
                                (cons #'lambda (wrap #'(args e1 e2 ...) w mod))
-                               s)
+                               empty-wrap s #f)
                               empty-wrap s mod))
                      ((_ name)
                       (id? #'name)
@@ -1514,13 +1501,18 @@
     ;; possible.
     (define expand-macro
       (lambda (p e r w s rib mod)
+        (define (decorate-source x)
+          (source-wrap x empty-wrap s #f))
+        (define (map* f x)
+          (cond
+           ((null? x) x)
+           ((pair? x) (cons (f (car x)) (map* f (cdr x))))
+           (else (f x))))
         (define rebuild-macro-output
           (lambda (x m)
             (cond ((pair? x)
-                   (decorate-source 
-                    (cons (rebuild-macro-output (car x) m)
-                          (rebuild-macro-output (cdr x) m))
-                    s))
+                   (decorate-source
+                    (map* (lambda (x) (rebuild-macro-output x m)) x)))
                   ((syntax? x)
                    (let ((w (syntax-wrap x)))
                      (let ((ms (wrap-marks w)) (ss (wrap-subst w)))
@@ -1544,15 +1536,16 @@
                 
                   ((vector? x)
                    (let* ((n (vector-length x))
-                          (v (decorate-source (make-vector n) s)))
+                          (v (make-vector n)))
                      (do ((i 0 (fx+ i 1)))
                          ((fx= i n) v)
                        (vector-set! v i
-                                    (rebuild-macro-output (vector-ref x i) m)))))
+                                    (rebuild-macro-output (vector-ref x i) m)))
+                     (decorate-source v)))
                   ((symbol? x)
                    (syntax-violation #f "encountered raw symbol in macro output"
                                      (source-wrap e w (wrap-subst w) mod) x))
-                  (else (decorate-source x s)))))
+                  (else (decorate-source x)))))
         (with-fluids ((transformer-environment
                        (lambda (k) (k e r w s rib mod))))
           (rebuild-macro-output (p (source-wrap e (anti-mark w) s mod))
@@ -1997,14 +1990,17 @@
 
     (define (strip x)
       (define (annotate proc datum)
-        (decorate-source datum (proc x)))
+        (let ((s (proc x)))
+          (when (and s (supports-source-properties? datum))
+            (set-source-properties! datum (sourcev->alist s)))
+          datum))
       (cond
        ((syntax? x)
         (annotate syntax-sourcev (strip (syntax-expression x))))
        ((pair? x)
-        (annotate datum-sourcev (cons (strip (car x)) (strip (cdr x)))))
+        (cons (strip (car x)) (strip (cdr x))))
        ((vector? x)
-        (annotate datum-sourcev (list->vector (strip (vector->list x)))))
+        (list->vector (strip (vector->list x))))
        (else x)))
 
     ;; lexical variables
@@ -2739,7 +2735,21 @@
     ;; the object file if we are compiling a file.
     (set! macroexpand
           (lambda* (x #:optional (m 'e) (esew '(eval)))
-            (expand-top-sequence (list x) null-env top-wrap #f m esew
+            (define (unstrip x)
+              (define (annotate result)
+                (let ((props (source-properties x)))
+                  (if (pair? props)
+                      (datum->syntax #f result #:source props)
+                      result)))
+              (cond
+               ((pair? x)
+                (annotate (cons (unstrip (car x)) (unstrip (cdr x)))))
+               ((vector? x)
+                (let ((v (make-vector (vector-length x))))
+                  (annotate (list->vector (map unstrip (vector->list x))))))
+               ((syntax? x) x)
+               (else (annotate x))))
+            (expand-top-sequence (list (unstrip x)) null-env top-wrap #f m esew
                                  (cons 'hygiene (module-name (current-module))))))
 
     (set! identifier?
@@ -2748,6 +2758,11 @@
 
     (set! datum->syntax
           (lambda* (id datum #:key source)
+            (define (props->sourcev alist)
+              (and (pair? alist)
+                   (vector (assq-ref alist 'filename)
+                           (assq-ref alist 'line)
+                           (assq-ref alist 'column))))
             (make-syntax datum
                          (if id
                              (syntax-wrap id)
@@ -2756,8 +2771,10 @@
                              (syntax-module id)
                              #f)
                          (cond
-                          ((not source) (datum-sourcev datum))
-                          ((and (list? source) (and-map pair? source)) source)
+                          ((not source)
+                           (props->sourcev (source-properties datum)))
+                          ((and (list? source) (and-map pair? source))
+                           (props->sourcev source))
                           ((and (vector? source) (= 3 (vector-length source)))
                            source)
                           (else (syntax-sourcev source))))))
