@@ -753,6 +753,12 @@
               (make-struct/simple (@ ,mod ,name) ,@fields)))))))
   (define (constant-clause constant code)
     `((eq? code ,code) ',constant))
+  (define (map-encodings f table)
+    (map (match-lambda
+          ((value . code) (f value code)))
+         (sort (hash-map->list cons table)
+               (match-lambda*
+                (((_ . code1) (_ . code2)) (< code1 code2))))))
 
   `(lambda (bv)
      (define pos 0)
@@ -785,8 +791,8 @@
           ,@(if (symbol-code encoding)
                 (list (symbol-clause (symbol-code encoding)))
                 '())
-          ,@(hash-map->list vtable-clause (vtables encoding))
-          ,@(hash-map->list constant-clause (constants encoding))
+          ,@(map-encodings vtable-clause (vtables encoding))
+          ,@(map-encodings constant-clause (constants encoding))
           (else (error "bad code" code)))))))
 
 (define (encode term encoding)
