@@ -1,5 +1,5 @@
 Guile NEWS --- history of user-visible changes.
-Copyright (C) 1996-2021 Free Software Foundation, Inc.
+Copyright (C) 1996-2022 Free Software Foundation, Inc.
 See the end for copying conditions.
 
 Please send Guile bug reports to bug-guile@gnu.org.
@@ -7,24 +7,62 @@ Please send Guile bug reports to bug-guile@gnu.org.
 
 Changes in 3.0.8 (since 3.0.7)
 
-* Bug fixes
+* Notable changes
 
-** Fix compilation of (ash x N), where N is a literal, at -O1 and below
-** Texinfo and XML parsers are now thread-safe
-   (<https://bugs.gnu.org/51264>)
+** Cross-module inlining
 
-* New deprecations
+Although historically Guile has treated modules as glorified hash
+tables, most modules are actually _declarative_ -- they just define
+functions and variables and provide them for other modules to use, and
+don't manipulate modules as first-class objects.  See "Declarative
+Modules" in the manual.
 
-** Vector functions require vector arguments
+Since version 3.0.0, Guile has taken advantage of declarative semantics
+to allow a top-level definition to be inlined within its uses in the
+same compilation unit, provided the binding is never assigned and
+defined exactly once.  Guile 3.0.8 extends this to allow some
+exported declarative definitions to be inlined into other modules.
 
-Passing arrays that are not vectors (arrays for which `(vector? array)'
-returns false) to functions `vector-move-left!', `vector-move-right!',
-`vector->list', and `vector-copy' is deprecated. Use `array-copy!',
-`array-copy', and `array->list' for such arguments.
+This facility is mostly transparent to the user and is enabled at the
+default -O2 optimization level.  "Small" definitions are available for
+cross-module inlining (-Oinlinable-exports, included at -O2).  The
+actual inlining decision is performed by Guile's partial evaluation pass
+(-Ocross-module-inlining, included at -O2 also), subject to effort and
+size growth counters.
 
-** `scm_from_contiguous_typed_array' is deprecated
+Note however that as with macros, when a definition changes in module A,
+a separately compiled module B that uses that definition doesn't
+automatically get recompiled.  This is a limitation in Guile that we
+would like to fix.
 
-This function was undocumented.
+As another limitation, cross-module inlining is only available for
+imports from modules which have already been compiled at -O2 (or
+otherwise with -Oinlinable-exports).
+
+When determining whether to enable this facility by default, we weighed
+the usability problems of stale inlined bindings against the benefit of
+allowing module boundaries to no longer be optimization boundaries, we
+ended up on the "let's do it!" side of the equation.  However we welcome
+feedback from users as to what should be the default behavior, until
+such a time as we have a proper notion of when a compiled file is stale
+or not.
+
+** Avoid the need for a custom GMP allocator
+
+In Guile 3.0.6, we fixed a longstanding bug in Guile's use of the
+library that Guile uses to implement bignums, GMP.  See the Guile 3.0.6
+release notes.  However this left us with a suboptimal Guile, in which
+each large integer had to have a finalizer.  Finalizers take time and
+space, and so they limit allocation rate, causing bignum performance to
+drop.  Though you could set an environment variable to go back to the
+older, faster behavior, it wasn't the default.
+
+In Guile 3.0.8 we fix this problem comprehensively by avoiding embedding
+GMP's mpz_t values in Guile bignums.  Instead we embed the bignum bits
+digits directly, avoiding the need for finalizers or custom allocators.
+This removes the need for the GUILE_INSTALL_GMP_MEMORY_FUNCTIONS
+environment variable mentioned in the Guile 3.0.6 release notes.  We
+also deprecate the scm_install_gmp_memory_functions variable.
 
 * New interfaces and functionality
 
@@ -61,6 +99,111 @@ See "Bit vectors" in the manual.
 
 The types `complex-float' and `complex-double' stand for C99 `float
 _Complex' and `double _Complex` respectively.
+
+* Other new optimizations
+
+** Better optimization of "let" in right-hand-side of "letrec"
+
+** Allow constant-folding for calls to "expt"
+
+Thanks to Maxime Devos.
+
+** Add ,optimize-cps REPL meta-command
+    
+This meta-command is like ,optimize, but at a lower level.
+
+** Improve alias analysis in CSE
+
+** Avoid argument-count checks for well-typed calls to known procedures
+
+This speeds up calls to lexically bound procedures.
+
+** Avoid return-value-count checks for calls to known-return-arity procedures
+
+This new optimization, enabled at -O2, speeds up returns from calls to
+lexically bound procedures.
+
+* Build system changes
+
+** Update Gnulib (bugs.gnu.org/49930)
+
+Update gnulib to 8f4538a53d64054ae2fc8b86c0f87c418c6176e6.
+    
+** Compile libguile with -flto if available
+
+By default, if the compiler supports link-time optimization via the
+-flto flag, Guile will add it to CFLAGS.  This results in a libguile
+that is approximately 15% smaller.  Pass --disable-lto to configure to
+inhibit this behavior.
+
+** Trim set of prebuilt .go files shipped in the tarball
+
+Guile includes built Scheme files in its tarball to speed up the build,
+for casual builders that are less concerned with reproducibility.
+However they took a lot of space and we have now trimmed these down to a
+more minimal set.  As always, you can remove them and build entirely
+from source via a `make -C prebuilt clean`.
+
+* New deprecations
+
+** Vector functions require vector arguments
+
+Passing arrays that are not vectors (arrays for which `(vector? array)'
+returns false) to functions `vector-move-left!', `vector-move-right!',
+`vector->list', and `vector-copy' is deprecated. Use `array-copy!',
+`array-copy', and `array->list' for such arguments.
+
+** `scm_from_contiguous_typed_array' is deprecated
+
+This function was undocumented.
+
+** Deprecate the "simple vector" concept
+
+This concept meant to indicate "vectors which aren't array slices".
+Deprecate scm_is_simple_vector; instead use scm_is_vector.
+
+** Deprecate `scm_from_contiguous_typed_array'
+    
+This function was added during the Guile 2.x series and was not
+documented and is no longer used in Guile itself.
+
+** Deprecate internal contiguous array flag
+
+We still reserve space for the flag to preserve ABI but it has no
+effect.  As such we also remove the internal SCM_I_ARRAY_CONTIGUOUS,
+SCM_SET_ARRAY_CONTIGUOUS_FLAG, SCM_CLR_ARRAY_CONTIGUOUS_FLAG,
+SCM_I_ARRAY_CONTP preprocessor interfaces, as they were internal and
+there is no longer a sensible way of using them.
+
+* Bug fixes
+
+** Fix compilation of (ash x N), where N is a literal, at -O1 and below
+** Texinfo and XML parsers are now thread-safe (bugs.gnu.org/51264)
+** Fix `filename-completion-function' in (ice-9 readline)
+** Fix trace-calls-to-procedure (bugs.gnu.org/43102, bugs.gnu.org/48412)
+** Fix bug in nftw function (bugs.gnu.org/44182)
+** Fix optimization bug in CSE in eq-constant? if both branches same
+** Fix readline initialization with invalid keymaps
+** Fix crash when reading #nil (bugs.gnu.org/49305)
+** Fix read error when reading #{}}#.
+** Fix Darwin host detection in foreign-library facility.
+** Fix unification of (x ...) patterns in `match'
+** Fix scaling floats with leading zeroes in `format'
+** Improve support for r7rs-style `(srfi N)' and r6rs-style `(srfi :N)
+   module names (bugs.gnu.org/39601, bugs.gnu.org/40371)
+** Add support for the ARC architecture (bugs.gnu.org/48816)
+** Build fix for const strerror result (bugs.gnu.org/43987)
+** Fix typos in SRFI documentation (bugs.gnu.org/50127)
+** Fix bounds check in `recvfrom!' (bugs.gnu.org/45595)
+** Add support for riscv32
+** Limit `ash' to left-shift by 2^32 bits (bugs.gnu.org/48150)
+** Fix type confusion in heap-numbers-equal? calls from VM
+    
+Hearty thanks to Jakub Wojciech, Robin Green, Daniel Llorens, Matija
+Obid, RhodiumToad, Rob Browning, Maxime Devos, Aleix Conchillo Flaqué,
+Timothy Sample, d4ryus, Fabrice Fontaine, Taylan Kammer, Vineet Gupta,
+Philipp Klaus Krause, Arun Isaac, and Alex Shinn.
+
 
 
 Changes in 3.0.7 (since 3.0.6)
