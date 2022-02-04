@@ -1,6 +1,6 @@
 @c -*-texinfo-*-
 @c This is part of the GNU Guile Reference Manual.
-@c Copyright (C)  1996, 1997, 2000-2004, 2006-2017, 2019-2020
+@c Copyright (C)  1996, 1997, 2000-2004, 2006-2017, 2019-2020, 2022
 @c   Free Software Foundation, Inc.
 @c See the file guile.texi for copying conditions.
 
@@ -4657,7 +4657,6 @@ which more below (@pxref{Symbol Variables}).
 * Symbol Keys::                 Symbols as lookup keys.
 * Symbol Variables::            Symbols as denoting variables.
 * Symbol Primitives::           Operations related to symbols.
-* Symbol Props::                Function slots and property lists.
 * Symbol Read Syntax::          Extended read syntax for symbols.
 * Symbol Uninterned::           Uninterned symbols.
 @end menu
@@ -5026,84 +5025,6 @@ to generate such symbols if a programmer goes out of their way to do
 so.  Uniqueness can be guaranteed by instead using uninterned symbols
 (@pxref{Symbol Uninterned}), though they can't be usefully written out
 and read back in.
-
-
-@node Symbol Props
-@subsubsection Function Slots and Property Lists
-
-In traditional Lisp dialects, symbols are often understood as having
-three kinds of value at once:
-
-@itemize @bullet
-@item
-a @dfn{variable} value, which is used when the symbol appears in
-code in a variable reference context
-
-@item
-a @dfn{function} value, which is used when the symbol appears in
-code in a function name position (i.e.@: as the first element in an
-unquoted list)
-
-@item
-a @dfn{property list} value, which is used when the symbol is given as
-the first argument to Lisp's @code{put} or @code{get} functions.
-@end itemize
-
-Although Scheme (as one of its simplifications with respect to Lisp)
-does away with the distinction between variable and function namespaces,
-Guile currently retains some elements of the traditional structure in
-case they turn out to be useful when implementing translators for other
-languages, in particular Emacs Lisp.
-
-Specifically, Guile symbols have two extra slots, one for a symbol's
-property list, and one for its ``function value.''  The following procedures
-are provided to access these slots.
-
-@deffn {Scheme Procedure} symbol-fref symbol
-@deffnx {C Function} scm_symbol_fref (symbol)
-Return the contents of @var{symbol}'s @dfn{function slot}.
-@end deffn
-
-@deffn {Scheme Procedure} symbol-fset! symbol value
-@deffnx {C Function} scm_symbol_fset_x (symbol, value)
-Set the contents of @var{symbol}'s function slot to @var{value}.
-@end deffn
-
-@deffn {Scheme Procedure} symbol-pref symbol
-@deffnx {C Function} scm_symbol_pref (symbol)
-Return the @dfn{property list} currently associated with @var{symbol}.
-@end deffn
-
-@deffn {Scheme Procedure} symbol-pset! symbol value
-@deffnx {C Function} scm_symbol_pset_x (symbol, value)
-Set @var{symbol}'s property list to @var{value}.
-@end deffn
-
-@deffn {Scheme Procedure} symbol-property sym prop
-From @var{sym}'s property list, return the value for property
-@var{prop}.  The assumption is that @var{sym}'s property list is an
-association list whose keys are distinguished from each other using
-@code{equal?}; @var{prop} should be one of the keys in that list.  If
-the property list has no entry for @var{prop}, @code{symbol-property}
-returns @code{#f}.
-@end deffn
-
-@deffn {Scheme Procedure} set-symbol-property! sym prop val
-In @var{sym}'s property list, set the value for property @var{prop} to
-@var{val}, or add a new entry for @var{prop}, with value @var{val}, if
-none already exists.  For the structure of the property list, see
-@code{symbol-property}.
-@end deffn
-
-@deffn {Scheme Procedure} symbol-property-remove! sym prop
-From @var{sym}'s property list, remove the entry for property
-@var{prop}, if there is one.  For the structure of the property list,
-see @code{symbol-property}.
-@end deffn
-
-Support for these extra slots may be removed in a future release, and it
-is probably better to avoid using them.  For a more modern and Schemely
-approach to properties, see @ref{Object Properties}.
 
 
 @node Symbol Read Syntax

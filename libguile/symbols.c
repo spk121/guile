@@ -1,4 +1,4 @@
-/* Copyright 1995-1998,2000-2001,2003-2004,2006,2009,2011,2013,2015,2018
+/* Copyright 1995-1998,2000-2001,2003-2004,2006,2009,2011,2013,2015,2018,2022
      Free Software Foundation, Inc.
 
    This file is part of Guile.
@@ -247,8 +247,7 @@ scm_i_str2symbol (SCM str)
   else
     {
       /* The symbol was not found, create it.  */
-      symbol = scm_i_make_symbol (str, 0, raw_hash,
-				  scm_cons (SCM_BOOL_F, SCM_EOL));
+      symbol = scm_i_make_symbol (str, 0, raw_hash);
 
       /* Might return a different symbol, if another one was interned at
          the same time.  */
@@ -264,8 +263,7 @@ scm_i_str2uninterned_symbol (SCM str)
 {
   size_t raw_hash = scm_i_string_hash (str);
 
-  return scm_i_make_symbol (str, SCM_I_F_SYMBOL_UNINTERNED, 
-			    raw_hash, scm_cons (SCM_BOOL_F, SCM_EOL));
+  return scm_i_make_symbol (str, SCM_I_F_SYMBOL_UNINTERNED, raw_hash);
 }
 
 SCM_DEFINE (scm_symbol_p, "symbol?", 1, 0, 0, 
@@ -418,52 +416,6 @@ SCM_DEFINE (scm_symbol_hash, "symbol-hash", 1, 0, 0,
 {
   SCM_VALIDATE_SYMBOL (1, symbol);
   return scm_from_ulong (scm_i_symbol_hash (symbol));
-}
-#undef FUNC_NAME
-
-SCM_DEFINE (scm_symbol_fref, "symbol-fref", 1, 0, 0, 
-           (SCM s),
-	    "Return the contents of the symbol @var{s}'s @dfn{function slot}.")
-#define FUNC_NAME s_scm_symbol_fref
-{
-  SCM_VALIDATE_SYMBOL (1, s);
-  return SCM_CAR (SCM_CELL_OBJECT_3 (s));
-}
-#undef FUNC_NAME
-
-
-SCM_DEFINE (scm_symbol_pref, "symbol-pref", 1, 0, 0, 
-           (SCM s),
-	    "Return the @dfn{property list} currently associated with the\n"
-	    "symbol @var{s}.")
-#define FUNC_NAME s_scm_symbol_pref
-{
-  SCM_VALIDATE_SYMBOL (1, s);
-  return SCM_CDR (SCM_CELL_OBJECT_3 (s));
-}
-#undef FUNC_NAME
-
-
-SCM_DEFINE (scm_symbol_fset_x, "symbol-fset!", 2, 0, 0, 
-           (SCM s, SCM val),
-	    "Change the binding of the symbol @var{s}'s function slot.")
-#define FUNC_NAME s_scm_symbol_fset_x
-{
-  SCM_VALIDATE_SYMBOL (1, s);
-  scm_set_car_x (SCM_CELL_OBJECT_3 (s), val);
-  return SCM_UNSPECIFIED;
-}
-#undef FUNC_NAME
-
-
-SCM_DEFINE (scm_symbol_pset_x, "symbol-pset!", 2, 0, 0,
-           (SCM s, SCM val),
-	    "Change the binding of the symbol @var{s}'s property slot.")
-#define FUNC_NAME s_scm_symbol_pset_x
-{
-  SCM_VALIDATE_SYMBOL (1, s);
-  scm_set_cdr_x (SCM_CELL_OBJECT_3 (s), val);
-  return SCM_UNSPECIFIED;
 }
 #undef FUNC_NAME
 

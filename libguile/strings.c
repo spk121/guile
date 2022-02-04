@@ -760,16 +760,19 @@ scm_i_string_set_x (SCM str, size_t p, scm_t_wchar chr)
 #define SYMBOL_STRINGBUF SCM_CELL_OBJECT_1
 
 SCM
-scm_i_make_symbol (SCM name, scm_t_bits flags,
-		   unsigned long hash, SCM props)
+scm_i_make_symbol (SCM name, scm_t_bits flags, unsigned long hash)
 {
-  SCM buf;
+  SCM buf, symbol;
   size_t length = STRING_LENGTH (name);
 
   name = scm_i_substring_copy (name, 0, length);
   buf = STRING_STRINGBUF (name);
-  return scm_double_cell (scm_tc7_symbol | flags, SCM_UNPACK (buf),
-			  (scm_t_bits) hash, SCM_UNPACK (props));
+
+  symbol = scm_words (scm_tc7_symbol | flags, 3);
+  SCM_SET_CELL_WORD_1 (symbol, SCM_UNPACK (buf));
+  SCM_SET_CELL_WORD_2 (symbol, hash);
+
+  return symbol;
 }
 
 /* Returns the number of characters in SYM.  This may be different

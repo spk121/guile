@@ -175,6 +175,14 @@ SCM_SET_ARRAY_CONTIGUOUS_FLAG, SCM_CLR_ARRAY_CONTIGUOUS_FLAG,
 SCM_I_ARRAY_CONTP preprocessor interfaces, as they were internal and
 there is no longer a sensible way of using them.
 
+** Deprecate symbol properties
+
+Symbols used to have a "function slot" and a "property slot", inherited
+from Emacs Lisp and early Lisps, which one would access with
+'symbol-pref', 'symbol-fref', 'symbol-pset!', and 'symbol-fset!'.  These
+procedures have been discouraged in favor of object properties; they are
+now deprecated.  This saves a few words of memory per symbol.
+
 * Bug fixes
 
 ** Fix compilation of (ash x N), where N is a literal, at -O1 and below

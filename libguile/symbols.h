@@ -1,7 +1,7 @@
 #ifndef SCM_SYMBOLS_H
 #define SCM_SYMBOLS_H
 
-/* Copyright 1995-1998,2000-2001,2003-2004,2006,2008,2010-2011,2018
+/* Copyright 1995-1998,2000-2001,2003-2004,2006,2008,2010-2011,2018,2022
      Free Software Foundation, Inc.
 
    This file is part of Guile.
@@ -80,10 +80,6 @@ SCM_SNARF_INIT(c_name = scm_from_utf8_symbol (scheme_name))
 /* Older spellings; don't use in new code.
  */
 #define SCM_SYMBOLP(x)			(scm_is_symbol (x))
-#define SCM_SYMBOL_FUNC(x)		(scm_symbol_fref (x))
-#define SCM_SET_SYMBOL_FUNC(x,f)	(scm_symbol_fset_x (x, f))
-#define SCM_SYMBOL_PROPS(x)		(scm_symbol_pref (x))
-#define SCM_SET_SYMBOL_PROPS(x,p)	(scm_symbol_pset_x (x, p))
 #define SCM_SYMBOL_HASH(x)		(scm_i_symbol_hash (x))
 #define SCM_SYMBOL_INTERNED_P(x)	(scm_i_symbol_is_interned (x))
 
@@ -99,11 +95,6 @@ SCM_API SCM scm_make_symbol (SCM name);
 SCM_API SCM scm_symbol_to_string (SCM s);
 SCM_API SCM scm_string_to_symbol (SCM s);
 SCM_API SCM scm_string_ci_to_symbol (SCM s);
-
-SCM_API SCM scm_symbol_fref (SCM s);
-SCM_API SCM scm_symbol_pref (SCM s);
-SCM_API SCM scm_symbol_fset_x (SCM s, SCM val);
-SCM_API SCM scm_symbol_pset_x (SCM s, SCM val);
 
 SCM_API SCM scm_symbol_hash (SCM s);
 SCM_API SCM scm_gensym (SCM prefix);

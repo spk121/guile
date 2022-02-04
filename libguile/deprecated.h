@@ -144,6 +144,16 @@ SCM_DEPRECATED SCM scm_make_srcprops (long line, int col, SCM filename,
 
 SCM_DEPRECATED SCM scm_copy_tree (SCM obj);
 
+#define SCM_SYMBOL_FUNC(x)		(scm_symbol_fref (x))
+#define SCM_SET_SYMBOL_FUNC(x,f)	(scm_symbol_fset_x (x, f))
+#define SCM_SYMBOL_PROPS(x)		(scm_symbol_pref (x))
+#define SCM_SET_SYMBOL_PROPS(x,p)	(scm_symbol_pset_x (x, p))
+
+SCM_DEPRECATED SCM scm_symbol_fref (SCM s);
+SCM_DEPRECATED SCM scm_symbol_pref (SCM s);
+SCM_DEPRECATED SCM scm_symbol_fset_x (SCM s, SCM val);
+SCM_DEPRECATED SCM scm_symbol_pset_x (SCM s, SCM val);
+
 SCM_DEPRECATED SCM scm_dynamic_unlink (SCM obj);
 
 /* Each bignum is just an mpz_t stored in a double cell starting at word 1. */

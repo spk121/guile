@@ -41,6 +41,7 @@
 #include "gc.h"
 #include "gsubr.h"
 #include "modules.h"
+#include "objprop.h"
 #include "procprop.h"
 #include "srcprop.h"
 #include "srfi-4.h"
@@ -677,6 +678,57 @@ scm_copy_tree (SCM obj)
   return scm_call_1 (scm_c_public_ref ("ice-9 copy-tree", "copy-tree"), obj);
 }
 
+
+/* Symbol properties.  */
+
+SCM_SYMBOL (symbol_function_slot, "symbol-function-slot");
+SCM_SYMBOL (symbol_property_slot, "symbol-property-slot");
+
+SCM_DEFINE (scm_symbol_fref, "symbol-fref", 1, 0, 0, 
+           (SCM s),
+	    "Return the contents of the symbol @var{s}'s @dfn{function slot}.")
+#define FUNC_NAME s_scm_symbol_fref
+{
+  SCM_VALIDATE_SYMBOL (1, s);
+  return scm_object_property (s, symbol_function_slot);
+}
+#undef FUNC_NAME
+
+SCM_DEFINE (scm_symbol_pref, "symbol-pref", 1, 0, 0, 
+           (SCM s),
+	    "Return the @dfn{property list} currently associated with the\n"
+	    "symbol @var{s}.")
+#define FUNC_NAME s_scm_symbol_pref
+{
+  SCM result;
+
+  SCM_VALIDATE_SYMBOL (1, s);
+  result = scm_object_property (s, symbol_property_slot);
+  return scm_is_false (result) ? SCM_EOL : result;
+}
+#undef FUNC_NAME
+
+
+SCM_DEFINE (scm_symbol_fset_x, "symbol-fset!", 2, 0, 0, 
+           (SCM s, SCM val),
+	    "Change the binding of the symbol @var{s}'s function slot.")
+#define FUNC_NAME s_scm_symbol_fset_x
+{
+  SCM_VALIDATE_SYMBOL (1, s);
+  return scm_set_object_property_x (s, symbol_function_slot, val);
+}
+#undef FUNC_NAME
+
+
+SCM_DEFINE (scm_symbol_pset_x, "symbol-pset!", 2, 0, 0,
+           (SCM s, SCM val),
+	    "Change the binding of the symbol @var{s}'s property slot.")
+#define FUNC_NAME s_scm_symbol_pset_x
+{
+  SCM_VALIDATE_SYMBOL (1, s);
+  return scm_set_object_property_x (s, symbol_property_slot, val);
+}
+#undef FUNC_NAME
 
 
 

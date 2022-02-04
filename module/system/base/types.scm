@@ -1,5 +1,5 @@
 ;;; 'SCM' type tag decoding.
-;;; Copyright (C) 2014, 2015, 2017, 2018 Free Software Foundation, Inc.
+;;; Copyright (C) 2014, 2015, 2017, 2018, 2022 Free Software Foundation, Inc.
 ;;;
 ;;; This library is free software; you can redistribute it and/or modify it
 ;;; under the terms of the GNU Lesser General Public License as published by
@@ -397,7 +397,7 @@ using BACKEND."
            (address->inferior-struct address
                                      (- vtable-address %tc3-struct)
                                      backend))
-          (((_ & #x7f = %tc7-symbol) buf hash props)
+          (((_ & #x7f = %tc7-symbol) buf hash)
            (match (cell->object buf backend)
              (($ <stringbuf> string)
               (string->symbol string))))
