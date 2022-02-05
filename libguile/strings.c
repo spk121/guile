@@ -763,10 +763,16 @@ SCM
 scm_i_make_symbol (SCM name, scm_t_bits flags, unsigned long hash)
 {
   SCM buf, symbol;
-  size_t length = STRING_LENGTH (name);
+  size_t start, length = STRING_LENGTH (name);
 
-  name = scm_i_substring_copy (name, 0, length);
-  buf = STRING_STRINGBUF (name);
+  get_str_buf_start (&name, &buf, &start);
+  if (SCM_UNLIKELY (STRINGBUF_MUTABLE (buf)
+                    || start != 0
+                    || STRINGBUF_LENGTH (buf) != length))
+    {
+      name = scm_i_substring_copy (name, 0, length);
+      buf = STRING_STRINGBUF (name);
+    }
 
   symbol = scm_words (scm_tc7_symbol | flags, 3);
   SCM_SET_CELL_WORD_1 (symbol, SCM_UNPACK (buf));
