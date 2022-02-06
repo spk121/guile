@@ -1,4 +1,4 @@
-/* Copyright 2001,2004,2006-2007,2009,2011,2018-2019
+/* Copyright 2001,2004,2006-2007,2009,2011,2018-2019,2022
      Free Software Foundation, Inc.
 
    This file is part of Guile.
@@ -46,17 +46,27 @@
 /* Include the pre-computed standard charset data.  */
 #include "srfi-14.i.c"
 
-scm_t_char_range cs_full_ranges[] = {
-  {0x0000, SCM_CODEPOINT_SURROGATE_START - 1}
-  ,
+static const scm_t_bits SCM_CHARSET_F_IMMUTABLE = 1 << 16;
+
+static inline int
+scm_charset_is_immutable (SCM charset)
+{
+  return SCM_SMOB_DATA_0 (charset) & SCM_CHARSET_F_IMMUTABLE;
+}
+
+#define SCM_VALIDATE_MUTABLE_CHARSET(pos, x)                            \
+  do {                                                                  \
+    SCM_ASSERT_TYPE (SCM_CHARSETP (x) && !scm_charset_is_immutable (x), \
+                     x, pos, FUNC_NAME, "mutable charset");             \
+  } while (0)
+
+static const scm_t_char_range cs_full_ranges[] = {
+  {0x0000, SCM_CODEPOINT_SURROGATE_START - 1},
   {SCM_CODEPOINT_SURROGATE_END + 1, SCM_CODEPOINT_MAX}
 };
+static const size_t cs_full_len = 2;
 
-scm_t_char_set cs_full = {
-  2,
-  cs_full_ranges
-};
-
+#define SCM_CHARSET_DATA(charset) ((scm_t_char_set *) SCM_SMOB_DATA (charset))
 
 #define SCM_CHARSET_DATA(charset) ((scm_t_char_set *) SCM_SMOB_DATA (charset))
 
@@ -997,7 +1007,7 @@ SCM_DEFINE (scm_char_set_unfold_x, "char-set-unfold!", 5, 0, 0,
   SCM_VALIDATE_PROC (1, p);
   SCM_VALIDATE_PROC (2, f);
   SCM_VALIDATE_PROC (3, g);
-  SCM_VALIDATE_SMOB (5, base_cs, charset);
+  SCM_VALIDATE_MUTABLE_CHARSET (5, base_cs);
 
   tmp = scm_call_1 (p, seed);
   while (scm_is_false (tmp))
@@ -1172,7 +1182,7 @@ SCM_DEFINE (scm_list_to_char_set_x, "list->char-set!", 2, 0, 0,
 #define FUNC_NAME s_scm_list_to_char_set_x
 {
   SCM_VALIDATE_LIST (1, list);
-  SCM_VALIDATE_SMOB (2, base_cs, charset);
+  SCM_VALIDATE_MUTABLE_CHARSET (2, base_cs);
   while (!scm_is_null (list))
     {
       SCM chr = SCM_CAR (list);
@@ -1228,7 +1238,7 @@ SCM_DEFINE (scm_string_to_char_set_x, "string->char-set!", 2, 0, 0,
   size_t k = 0, len;
 
   SCM_VALIDATE_STRING (1, str);
-  SCM_VALIDATE_SMOB (2, base_cs, charset);
+  SCM_VALIDATE_MUTABLE_CHARSET (2, base_cs);
   len = scm_i_string_length (str);
   while (k < len)
     {
@@ -1294,7 +1304,7 @@ SCM_DEFINE (scm_char_set_filter_x, "char-set-filter!", 3, 0, 0,
 
   SCM_VALIDATE_PROC (1, pred);
   SCM_VALIDATE_SMOB (2, cs, charset);
-  SCM_VALIDATE_SMOB (3, base_cs, charset);
+  SCM_VALIDATE_MUTABLE_CHARSET (3, base_cs);
   p = SCM_CHARSET_DATA (cs);
   if (p->len == 0)
     return base_cs;
@@ -1343,11 +1353,16 @@ scm_i_ucs_range_to_char_set (const char *FUNC_NAME, SCM lower, SCM upper,
     cs = make_char_set (FUNC_NAME);
   else
     {
-      SCM_VALIDATE_SMOB (3, base_cs, charset);
       if (reuse)
-        cs = base_cs;
+        {
+          SCM_VALIDATE_MUTABLE_CHARSET (3, base_cs);
+          cs = base_cs;
+        }
       else
-        cs = scm_char_set_copy (base_cs);
+        {
+          SCM_VALIDATE_SMOB (3, base_cs, charset);
+          cs = scm_char_set_copy (base_cs);
+        }
     }
 
   if ((clower >= SCM_CODEPOINT_SURROGATE_START && clower <= SCM_CODEPOINT_SURROGATE_END)
@@ -1678,7 +1693,7 @@ SCM_DEFINE (scm_char_set_adjoin_x, "char-set-adjoin!", 1, 0, 1,
             "be a character set.")
 #define FUNC_NAME s_scm_char_set_adjoin_x
 {
-  SCM_VALIDATE_SMOB (1, cs, charset);
+  SCM_VALIDATE_MUTABLE_CHARSET (1, cs);
   SCM_VALIDATE_REST_ARGUMENT (rest);
 
   while (!scm_is_null (rest))
@@ -1702,7 +1717,7 @@ SCM_DEFINE (scm_char_set_delete_x, "char-set-delete!", 1, 0, 1,
             "must be a character set.")
 #define FUNC_NAME s_scm_char_set_delete_x
 {
-  SCM_VALIDATE_SMOB (1, cs, charset);
+  SCM_VALIDATE_MUTABLE_CHARSET (1, cs);
   SCM_VALIDATE_REST_ARGUMENT (rest);
 
   while (!scm_is_null (rest))
@@ -1913,7 +1928,7 @@ SCM_DEFINE (scm_char_set_complement_x, "char-set-complement!", 1, 0, 0,
             (SCM cs), "Return the complement of the character set @var{cs}.")
 #define FUNC_NAME s_scm_char_set_complement_x
 {
-  SCM_VALIDATE_SMOB (1, cs, charset);
+  SCM_VALIDATE_MUTABLE_CHARSET (1, cs);
   cs = scm_char_set_complement (cs);
   return cs;
 }
@@ -1925,7 +1940,7 @@ SCM_DEFINE (scm_char_set_union_x, "char-set-union!", 1, 0, 1,
             "Return the union of all argument character sets.")
 #define FUNC_NAME s_scm_char_set_union_x
 {
-  SCM_VALIDATE_SMOB (1, cs1, charset);
+  SCM_VALIDATE_MUTABLE_CHARSET (1, cs1);
   SCM_VALIDATE_REST_ARGUMENT (rest);
 
   cs1 = scm_char_set_union (scm_cons (cs1, rest));
@@ -1939,7 +1954,7 @@ SCM_DEFINE (scm_char_set_intersection_x, "char-set-intersection!", 1, 0, 1,
             "Return the intersection of all argument character sets.")
 #define FUNC_NAME s_scm_char_set_intersection_x
 {
-  SCM_VALIDATE_SMOB (1, cs1, charset);
+  SCM_VALIDATE_MUTABLE_CHARSET (1, cs1);
   SCM_VALIDATE_REST_ARGUMENT (rest);
 
   cs1 = scm_char_set_intersection (scm_cons (cs1, rest));
@@ -1953,7 +1968,7 @@ SCM_DEFINE (scm_char_set_difference_x, "char-set-difference!", 1, 0, 1,
             "Return the difference of all argument character sets.")
 #define FUNC_NAME s_scm_char_set_difference_x
 {
-  SCM_VALIDATE_SMOB (1, cs1, charset);
+  SCM_VALIDATE_MUTABLE_CHARSET (1, cs1);
   SCM_VALIDATE_REST_ARGUMENT (rest);
 
   cs1 = scm_char_set_difference (cs1, rest);
@@ -1967,6 +1982,7 @@ SCM_DEFINE (scm_char_set_xor_x, "char-set-xor!", 1, 0, 1,
 	    "Return the exclusive-or of all argument character sets.")
 #define FUNC_NAME s_scm_char_set_xor_x
 {
+  SCM_VALIDATE_MUTABLE_CHARSET (1, cs1);
   /* a side-effecting variant should presumably give consistent results:
      (define a (char-set #\a))
      (char-set-xor a a a) -> char set #\a
@@ -2022,11 +2038,16 @@ SCM scm_char_set_full;
 
 /* Create an empty character set and return it after binding it to NAME.  */
 static inline SCM
-define_charset (const char *name, const scm_t_char_set *p)
+define_charset (const char *name, size_t len, const scm_t_char_range *ranges)
 {
   SCM cs;
 
-  SCM_NEWSMOB (cs, scm_tc16_charset, p);
+  scm_t_char_set *p = scm_gc_malloc_pointerless (sizeof (scm_t_char_set),
+                                                 "charset");
+  p->len = len;
+  /* Strip const qualifier but add immutable flag on SCM.  */
+  p->ranges = (scm_t_char_range *) ranges;
+  SCM_NEWSMOB (cs, scm_tc16_charset | SCM_CHARSET_F_IMMUTABLE, p);
   scm_c_define (name, cs);
   return cs;
 }
@@ -2087,6 +2108,9 @@ SCM_DEFINE (scm_sys_char_set_dump, "%char-set-dump", 1, 0, 0, (SCM charset),
 
 
 
+#define DEFINE_CHARSET(name, stem) \
+  define_charset ("char-set:" name, cs_##stem##_len, cs_##stem##_ranges)
+
 void
 scm_init_srfi_14 (void)
 {
@@ -2096,32 +2120,25 @@ scm_init_srfi_14 (void)
   scm_tc16_charset_cursor = scm_make_smob_type ("char-set-cursor", 0);
   scm_set_smob_print (scm_tc16_charset_cursor, charset_cursor_print);
 
-  scm_char_set_upper_case =
-    define_charset ("char-set:upper-case", &cs_upper_case);
-  scm_char_set_lower_case =
-    define_charset ("char-set:lower-case", &cs_lower_case);
-  scm_char_set_title_case =
-    define_charset ("char-set:title-case", &cs_title_case);
-  scm_char_set_letter = define_charset ("char-set:letter", &cs_letter);
-  scm_char_set_digit = define_charset ("char-set:digit", &cs_digit);
-  scm_char_set_letter_and_digit =
-    define_charset ("char-set:letter+digit", &cs_letter_plus_digit);
-  scm_char_set_graphic = define_charset ("char-set:graphic", &cs_graphic);
-  scm_char_set_printing = define_charset ("char-set:printing", &cs_printing);
-  scm_char_set_whitespace =
-    define_charset ("char-set:whitespace", &cs_whitespace);
-  scm_char_set_iso_control =
-    define_charset ("char-set:iso-control", &cs_iso_control);
-  scm_char_set_punctuation =
-    define_charset ("char-set:punctuation", &cs_punctuation);
-  scm_char_set_symbol = define_charset ("char-set:symbol", &cs_symbol);
-  scm_char_set_hex_digit =
-    define_charset ("char-set:hex-digit", &cs_hex_digit);
-  scm_char_set_blank = define_charset ("char-set:blank", &cs_blank);
-  scm_char_set_ascii = define_charset ("char-set:ascii", &cs_ascii);
-  scm_char_set_empty = define_charset ("char-set:empty", &cs_empty);
-  scm_char_set_designated = define_charset ("char-set:designated", &cs_designated);
-  scm_char_set_full = define_charset ("char-set:full", &cs_full);
+  scm_char_set_upper_case = DEFINE_CHARSET ("upper-case", upper_case);
+  scm_char_set_lower_case = DEFINE_CHARSET ("lower-case", lower_case);
+  scm_char_set_title_case = DEFINE_CHARSET ("title-case", title_case);
+  scm_char_set_letter = DEFINE_CHARSET ("letter", letter);
+  scm_char_set_digit = DEFINE_CHARSET ("digit", digit);
+  scm_char_set_letter_and_digit = DEFINE_CHARSET ("letter+digit",
+                                                  letter_plus_digit);
+  scm_char_set_graphic = DEFINE_CHARSET ("graphic", graphic);
+  scm_char_set_printing = DEFINE_CHARSET ("printing", printing);
+  scm_char_set_whitespace = DEFINE_CHARSET ("whitespace", whitespace);
+  scm_char_set_iso_control = DEFINE_CHARSET ("iso-control", iso_control);
+  scm_char_set_punctuation = DEFINE_CHARSET ("punctuation", punctuation);
+  scm_char_set_symbol = DEFINE_CHARSET ("symbol", symbol);
+  scm_char_set_hex_digit = DEFINE_CHARSET ("hex-digit", hex_digit);
+  scm_char_set_blank = DEFINE_CHARSET ("blank", blank);
+  scm_char_set_ascii = DEFINE_CHARSET ("ascii", ascii);
+  scm_char_set_empty = DEFINE_CHARSET ("empty", empty);
+  scm_char_set_designated = DEFINE_CHARSET ("designated", designated);
+  scm_char_set_full = DEFINE_CHARSET ("full", full);
 
 #include "srfi-14.x"
 }

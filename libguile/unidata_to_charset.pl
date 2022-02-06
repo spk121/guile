@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 # unidata_to_charset.pl --- Compute SRFI-14 charsets from UnicodeData.txt
 #
-# Copyright (C) 2009, 2010 Free Software Foundation, Inc.
+# Copyright (C) 2009, 2010, 2022 Free Software Foundation, Inc.
 #
 # This library is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public
@@ -347,7 +347,7 @@ sub compute {
     }
 
     # Print the C struct that contains the range list.
-    print $out "scm_t_char_range cs_" . $f . "_ranges[] = {\n";
+    print $out "static const scm_t_char_range cs_" . $f . "_ranges[] = {\n";
     if ($rstart[0] != -1) {
         for (my $i=0; $i<@rstart-1; $i++) {
             printf $out "  {0x%04x, 0x%04x},\n", $rstart[$i], $rend[$i];
@@ -358,10 +358,7 @@ sub compute {
 
     # Print the C struct that contains the range list length and
     # pointer to the range list.
-    print $out "scm_t_char_set cs_${f} = {\n";
-    print $out "  $len,\n";
-    print $out "  cs_" . $f . "_ranges\n";
-    print $out "};\n\n";
+    print $out "static const size_t cs_${f}_len = $len;\n\n";
 }
 
 # Write a bit of a header
