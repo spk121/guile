@@ -1,4 +1,4 @@
-;;;; 	Copyright (C) 2009-2014, 2017-2020 Free Software Foundation, Inc.
+;;;; 	Copyright (C) 2009-2014, 2017-2020, 2022 Free Software Foundation, Inc.
 ;;;;
 ;;;; This library is free software; you can redistribute it and/or
 ;;;; modify it under the terms of the GNU Lesser General Public
@@ -21,8 +21,7 @@
   #:use-module (srfi srfi-11)
   #:use-module (ice-9 match)
   #:use-module (system base syntax)
-  #:export (tree-il-src
-
+  #:export ((tree-il-src/ensure-alist . tree-il-src)
             <void> void? make-void void-src
             <const> const? make-const const-src const-exp
             <primitive-ref> primitive-ref? make-primitive-ref primitive-ref-src primitive-ref-name
@@ -135,6 +134,20 @@
   (<let-values> exp body)
   (<prompt> escape-only? tag body handler)
   (<abort> tag args tail))
+
+(define tree-il-src/ensure-alist
+  (make-procedure-with-setter
+   (lambda (tree)
+     "Return the source location of TREE as a source property alist."
+     ;; psyntax gives us "source vectors"; convert them lazily to reduce
+     ;; allocations.
+    (match (tree-il-src tree)
+      (#(file line column)
+       `((filename . ,file) (line . ,line) (column . ,column)))
+      (src
+       src)))
+   (lambda (tree src)
+     (set! (tree-il-src tree) src))))
 
 
 

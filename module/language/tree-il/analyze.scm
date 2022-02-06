@@ -1,6 +1,6 @@
 ;;; Diagnostic warnings for Tree-IL
 
-;; Copyright (C) 2001,2008-2014,2016,2018-2021 Free Software Foundation, Inc.
+;; Copyright (C) 2001,2008-2014,2016,2018-2022 Free Software Foundation, Inc.
 
 ;;;; This library is free software; you can redistribute it and/or
 ;;;; modify it under the terms of the GNU Lesser General Public
@@ -346,11 +346,11 @@ given `tree-il' element."
    (lambda (x defs env locs)
      ;; Going down into X.
      (record-case x
-                  ((<toplevel-define> name src)
+                  ((<toplevel-define> name)
                    (match (vhash-assq name defs)
                      ((_ . previous-definition)
-                      (warning 'shadowed-toplevel src name
-                               (toplevel-define-src previous-definition))
+                      (warning 'shadowed-toplevel (tree-il-src x) name
+                               (tree-il-src previous-definition))
                       defs)
                      (#f
                       (vhash-consq name x defs))))

@@ -2821,10 +2821,16 @@ procedure with label @var{rw-init}.  @var{rw-init} may be false.  If
 
       (let lp ((sources (asm-sources asm)) (out '()))
         (match sources
-          (((pc . s) . sources)
-           (let ((file (assq-ref s 'filename))
-                 (line (assq-ref s 'line))
-                 (col (assq-ref s 'column)))
+          (((pc . location) . sources)
+           (let-values (((file line col)
+                         ;; Usually CPS records contain a "source
+                         ;; vector" coming from tree-il, but some might
+                         ;; contain a source property alist.
+                         (match location
+                           (#(file line col) (values file line col))
+                           (lst (values (assq-ref lst 'filename)
+                                        (assq-ref lst 'line)
+                                        (assq-ref lst 'column))))))
              (lp sources
                  ;; Guile line and column numbers are 0-indexed, but
                  ;; they are 1-indexed for DWARF.

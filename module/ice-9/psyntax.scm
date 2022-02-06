@@ -287,24 +287,24 @@
     ;; output constructors
     (define build-void
       (lambda (sourcev)
-        (make-void (sourcev->alist sourcev))))
+        (make-void sourcev)))
 
     (define build-call
       (lambda (sourcev fun-exp arg-exps)
-        (make-call (sourcev->alist sourcev) fun-exp arg-exps)))
+        (make-call sourcev fun-exp arg-exps)))
   
     (define build-conditional
       (lambda (sourcev test-exp then-exp else-exp)
-        (make-conditional (sourcev->alist sourcev) test-exp then-exp else-exp)))
+        (make-conditional sourcev test-exp then-exp else-exp)))
   
     (define build-lexical-reference
       (lambda (type sourcev name var)
-        (make-lexical-ref (sourcev->alist sourcev) name var)))
+        (make-lexical-ref sourcev name var)))
   
     (define build-lexical-assignment
       (lambda (sourcev name var exp)
         (maybe-name-value! name exp)
-        (make-lexical-set (sourcev->alist sourcev) name var exp)))
+        (make-lexical-set sourcev name var exp)))
   
     (define (analyze-variable mod var modref-cont bare-cont)
       (if (not mod)
@@ -330,9 +330,9 @@
         (analyze-variable
          mod var
          (lambda (mod var public?) 
-           (make-module-ref (sourcev->alist sourcev) mod var public?))
+           (make-module-ref sourcev mod var public?))
          (lambda (mod var)
-           (make-toplevel-ref (sourcev->alist sourcev) mod var)))))
+           (make-toplevel-ref sourcev mod var)))))
 
     (define build-global-assignment
       (lambda (sourcev var exp mod)
@@ -340,18 +340,18 @@
         (analyze-variable
          mod var
          (lambda (mod var public?) 
-           (make-module-set (sourcev->alist sourcev) mod var public? exp))
+           (make-module-set sourcev mod var public? exp))
          (lambda (mod var)
-           (make-toplevel-set (sourcev->alist sourcev) mod var exp)))))
+           (make-toplevel-set sourcev mod var exp)))))
 
     (define build-global-definition
       (lambda (sourcev mod var exp)
         (maybe-name-value! var exp)
-        (make-toplevel-define (sourcev->alist sourcev) (and mod (cdr mod)) var exp)))
+        (make-toplevel-define sourcev (and mod (cdr mod)) var exp)))
 
     (define build-simple-lambda
       (lambda (src req rest vars meta exp)
-        (make-lambda (sourcev->alist src)
+        (make-lambda src
                      meta
                      ;; hah, a case in which kwargs would be nice.
                      (make-lambda-case
@@ -360,7 +360,7 @@
 
     (define build-case-lambda
       (lambda (src meta body)
-        (make-lambda (sourcev->alist src) meta body)))
+        (make-lambda src meta body)))
 
     (define build-lambda-case
       ;; req := (name ...)
@@ -374,31 +374,31 @@
       ;; the body of a lambda: anything, already expanded
       ;; else: lambda-case | #f
       (lambda (src req opt rest kw inits vars body else-case)
-        (make-lambda-case (sourcev->alist src) req opt rest kw inits vars body else-case)))
+        (make-lambda-case src req opt rest kw inits vars body else-case)))
 
     (define build-primcall
       (lambda (src name args)
-        (make-primcall (sourcev->alist src) name args)))
+        (make-primcall src name args)))
     
     (define build-primref
       (lambda (src name)
-        (make-primitive-ref (sourcev->alist src) name)))
+        (make-primitive-ref src name)))
     
     (define (build-data src exp)
-      (make-const (sourcev->alist src) exp))
+      (make-const src exp))
 
     (define build-sequence
       (lambda (src exps)
         (if (null? (cdr exps))
             (car exps)
-            (make-seq (sourcev->alist src) (car exps) (build-sequence #f (cdr exps))))))
+            (make-seq src (car exps) (build-sequence #f (cdr exps))))))
 
     (define build-let
       (lambda (src ids vars val-exps body-exp)
         (for-each maybe-name-value! ids val-exps)
         (if (null? vars)
             body-exp
-            (make-let (sourcev->alist src) ids vars val-exps body-exp))))
+            (make-let src ids vars val-exps body-exp))))
 
     (define build-named-let
       (lambda (src ids vars val-exps body-exp)
@@ -410,7 +410,7 @@
             (maybe-name-value! f-name proc)
             (for-each maybe-name-value! ids val-exps)
             (make-letrec
-             (sourcev->alist src) #f
+             src #f
              (list f-name) (list f) (list proc)
              (build-call src (build-lexical-reference 'fun src f-name f)
                          val-exps))))))
@@ -421,7 +421,7 @@
             body-exp
             (begin
               (for-each maybe-name-value! ids val-exps)
-              (make-letrec (sourcev->alist src) in-order? ids vars val-exps body-exp)))))
+              (make-letrec src in-order? ids vars val-exps body-exp)))))
 
 
     (define-syntax-rule (build-lexical-var src id)
@@ -1616,7 +1616,7 @@
                    ((null? var-ids) tail)
                    ((not (car var-ids))
                     (lp (cdr var-ids) (cdr vars) (cdr vals)
-                        (make-seq (sourcev->alist src) ((car vals)) tail)))
+                        (make-seq src ((car vals)) tail)))
                    (else
                     (let ((var-ids (map (lambda (id)
                                           (if id (syntax->datum id) '_))
@@ -1626,7 +1626,7 @@
                           (vals (map (lambda (expand-expr id)
                                        (if id
                                            (expand-expr)
-                                           (make-seq (sourcev->alist src)
+                                           (make-seq src
                                                      (expand-expr)
                                                      (build-void src))))
                                      (reverse vals) (reverse var-ids))))
