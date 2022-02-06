@@ -58,11 +58,11 @@ drop.  Though you could set an environment variable to go back to the
 older, faster behavior, it wasn't the default.
 
 In Guile 3.0.8 we fix this problem comprehensively by avoiding embedding
-GMP's mpz_t values in Guile bignums.  Instead we embed the bignum bits
-digits directly, avoiding the need for finalizers or custom allocators.
-This removes the need for the GUILE_INSTALL_GMP_MEMORY_FUNCTIONS
-environment variable mentioned in the Guile 3.0.6 release notes.  We
-also deprecate the scm_install_gmp_memory_functions variable.
+GMP's mpz_t values in Guile bignums.  Instead we embed the bignum digits
+directly, avoiding the need for finalizers or custom allocators.  This
+removes the need for the GUILE_INSTALL_GMP_MEMORY_FUNCTIONS environment
+variable mentioned in the Guile 3.0.6 release notes.  We also deprecate
+the scm_install_gmp_memory_functions variable.
 
 * New interfaces and functionality
 
