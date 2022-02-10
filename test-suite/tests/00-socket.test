@@ -128,10 +128,15 @@
 	       (= (sockaddr:flowinfo sa*) 1)))))
 
   (if (defined? 'AF_UNIX)
-      (pass-if "AF_UNIX"
-	(let ((sa (make-socket-address AF_UNIX "/tmp/unix-socket")))
-	  (and (= (sockaddr:fam sa) AF_UNIX)
-	       (string=? (sockaddr:path sa) "/tmp/unix-socket"))))))
+      (begin
+        (pass-if "AF_UNIX"
+	  (let ((sa (make-socket-address AF_UNIX "/tmp/unix-socket")))
+	    (and (= (sockaddr:fam sa) AF_UNIX)
+	         (string=? (sockaddr:path sa) "/tmp/unix-socket"))))
+        (pass-if "AF_UNIX abstract"
+          (let ((sa (make-socket-address AF_UNIX "\x00/tmp/abstract-socket")))
+	    (and (= (sockaddr:fam sa) AF_UNIX)
+	         (string=? (sockaddr:path sa) "\x00/tmp/abstract-socket")))))))
 
 ;;;
 ;;; setsockopt
@@ -319,6 +324,72 @@
 
 	#t)
 
+      ;; testing `bind', `listen' and `connect' on abstract stream-oriented sockets
+
+      (let ((server-socket (socket AF_UNIX SOCK_STREAM 0))
+	    (server-bound? #f)
+	    (server-listening? #f)
+	    (server-pid #f)
+	    (path (temp-file-path)))
+
+        (false-if-exception (delete-file path))
+        (set! path (string-append "\x00" path))
+
+	(pass-if "bind abstract"
+	  (catch 'system-error
+	    (lambda ()
+	      (bind server-socket AF_UNIX path)
+	      (set! server-bound? #t)
+              #t)
+	    (lambda args
+	      (let ((errno (system-error-errno args)))
+		(if (= errno EADDRINUSE)
+                    (throw 'unresolved)
+		    (apply throw args))))))
+
+	(pass-if "listen abstract"
+	  (if (not server-bound?)
+	      (throw 'unresolved)
+	      (begin
+		(listen server-socket 123)
+		(set! server-listening? #t)
+		#t)))
+
+	(force-output (current-output-port))
+	(force-output (current-error-port))
+	(when server-listening?
+          (let ((pid (primitive-fork-if-available)))
+	    ;; Spawn a server process.
+	    (case pid
+	      ((-1)  ;; fork not available
+               #f)
+	      ((0)   ;; the kid:  serve one connection and exit
+	       (let serve ((conn
+			    (false-if-exception (accept server-socket)))
+			   (count 0))
+		 (if (not conn)
+		     (exit 1)
+	             (exit 0))))
+	      (else  ;; the parent
+	       (set! server-pid pid)
+	       #t))))
+
+	(pass-if "connect abstract"
+	  (if (not server-pid)
+	      (throw 'unresolved)
+	      (let ((s (socket AF_UNIX SOCK_STREAM 0)))
+                (display "connect abstract\n")
+		(connect s AF_UNIX path)
+		#t)))
+
+	(pass-if "accept abstract"
+	  (if (not server-pid)
+	      (throw 'unresolved)
+              (begin
+	        (let ((status (cdr (waitpid server-pid))))
+		  (eqv? 0 (status:exit-val status))))))
+
+	#t)
 
       ;; Testing `send', `recv!' & co. on stream-oriented sockets (with
       ;; a bit of duplication with the above.)

@@ -813,10 +813,11 @@ scm_fill_sockaddr (int fam, SCM address, SCM *args, int which_arg,
 	struct sockaddr_un *soka;
 	int addr_size;
 	char *c_address;
+	size_t c_address_size;
 
 	scm_dynwind_begin (0);
 
-	c_address = scm_to_locale_string (address);
+	c_address = scm_to_locale_stringn (address, &c_address_size);
 	scm_dynwind_free (c_address);
 
 	/* the static buffer size in sockaddr_un seems to be arbitrary
@@ -826,12 +827,14 @@ scm_fill_sockaddr (int fam, SCM address, SCM *args, int which_arg,
 	   connect/bind etc., to fail.  sun_path is always the last
 	   member of the structure.  */
 	addr_size = sizeof (struct sockaddr_un)
-	  + MAX (0, strlen (c_address) + 1 - (sizeof soka->sun_path));
+	  + MAX (0, c_address_size + 1 - (sizeof soka->sun_path));
 	soka = (struct sockaddr_un *) scm_malloc (addr_size);
-	memset (soka, 0, addr_size);  /* for sun_len: see sin_len above. */
+	memset (soka, 0, addr_size);
 	soka->sun_family = AF_UNIX;
-	strcpy (soka->sun_path, c_address);
-	*size = SUN_LEN (soka);
+        /* we accept 0-bytes here (used for abstract sockets in Linux);
+           therefore do not use strlen() or SUN_LEN!  */
+	memcpy (soka->sun_path, c_address, c_address_size);
+	*size = offsetof (struct sockaddr_un, sun_path) + c_address_size;
 
 	scm_dynwind_end ();
 	return (struct sockaddr *) soka;
@@ -1045,7 +1048,12 @@ _scm_from_sockaddr (const scm_t_max_sockaddr *address, unsigned addr_size,
 	if (addr_size <= offsetof (struct sockaddr_un, sun_path))
 	  SCM_SIMPLE_VECTOR_SET(result, 1, SCM_BOOL_F);
 	else
-	  SCM_SIMPLE_VECTOR_SET(result, 1, scm_from_locale_string (nad->sun_path));
+          {
+            size_t path_size = addr_size - offsetof (struct sockaddr_un, sun_path);
+            SCM_SIMPLE_VECTOR_SET (result, 1,
+                                   scm_from_locale_stringn (nad->sun_path,
+                                                            path_size));
+          }
       }
       break;
 #endif
