@@ -6854,7 +6854,7 @@ scm_to_wchar (SCM arg)
 }
 
 SCM
-scm_from_wchar (wchar_t arg)
+scm_from_wchar (scm_t_wchar arg)
 {
   return SCM_I_MAKINUM (arg);
 }
