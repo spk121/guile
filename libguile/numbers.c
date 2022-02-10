@@ -6847,7 +6847,7 @@ scm_from_uint64 (uint64_t arg)
   return scm_integer_from_uint64 (arg);
 }
 
-wchar_t
+scm_t_wchar
 scm_to_wchar (SCM arg)
 {
   return inum_in_range (arg, -1, 0x10ffff);
