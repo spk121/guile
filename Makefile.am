@@ -114,7 +114,7 @@ gen-ChangeLog:
 # name, for maintainers who use Guix.
 .PHONY: assert-no-store-file-names
 assert-no-store-file-names:
-	if grep -rE "/gnu/store/[a-z0-9]{32}-" $(distdir) ;			\
+	if grep --exclude=ChangeLog -rE "/gnu/store/[a-z0-9]{32}-" $(distdir) ;			\
 	then									\
 	  echo "error: store file names embedded in the distribution" >&2 ;	\
 	  exit 1 ;								\
