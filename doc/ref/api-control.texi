@@ -154,7 +154,7 @@ documentation:
 (define-syntax-rule (when test stmt stmt* ...)
   (if test (begin stmt stmt* ...)))
 
-(define-syntax-rule (unless condition stmt stmt* ...)
+(define-syntax-rule (unless test stmt stmt* ...)
   (if (not test) (begin stmt stmt* ...)))
 @end example
 
