@@ -13,6 +13,7 @@ Changes in 3.0.9 (since 3.0.8)
    (https://bugs.gnu.org/54198)
 ** psyntax honors source properties coming from read hash extensions
    (https://bugs.gnu.org/54003)
+** ./configure checks whether the linker supports '-flto' (needed on macOS)
 
 
 Changes in 3.0.8 (since 3.0.7)

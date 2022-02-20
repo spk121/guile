@@ -69,7 +69,7 @@ AC_MSG_CHECKING([whether the compiler supports -flto])
 old_CFLAGS="$CFLAGS"
 LTO_CFLAGS="-flto"
 CFLAGS="$CFLAGS $LTO_CFLAGS"
-AC_COMPILE_IFELSE([AC_LANG_SOURCE([int foo;])],, [LTO_CFLAGS=])
+AC_LINK_IFELSE([AC_LANG_PROGRAM([int foo;], [])],, [LTO_CFLAGS=])
 CFLAGS="$old_CFLAGS"
 if test -n "$LTO_CFLAGS"; then
   AC_MSG_RESULT([yes])
