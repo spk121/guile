@@ -357,6 +357,7 @@ AC_CHECK_SIZEOF(uintptr_t)
 AC_CHECK_SIZEOF(ptrdiff_t)
 AC_CHECK_SIZEOF(size_t)
 AC_CHECK_SIZEOF(off_t)
+AC_CHECK_SIZEOF(intmax_t)
 
 if test "$ac_cv_sizeof_long" -gt "$ac_cv_sizeof_void_p"; then
   AC_MSG_ERROR(long does not fit into a void*)
