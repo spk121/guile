@@ -5,6 +5,14 @@ See the end for copying conditions.
 Please send Guile bug reports to bug-guile@gnu.org.
 
 
+Changes in 3.0.9 (since 3.0.8)
+
+* Bug fixes
+
+** Type sizes are correctly determined when cross-compiling
+   (https://bugs.gnu.org/54198)
+
+
 Changes in 3.0.8 (since 3.0.7)
 
 * Notable changes
