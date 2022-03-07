@@ -1,5 +1,5 @@
 ;;;; compiler.test --- tests for the compiler      -*- scheme -*-
-;;;; Copyright (C) 2008-2014, 2018, 2021 Free Software Foundation, Inc.
+;;;; Copyright (C) 2008-2014, 2018, 2021-2022 Free Software Foundation, Inc.
 ;;;; 
 ;;;; This library is free software; you can redistribute it and/or
 ;;;; modify it under the terms of the GNU Lesser General Public
@@ -19,6 +19,8 @@
   #:use-module (test-suite lib)
   #:use-module (test-suite guile-test)
   #:use-module (system base compile)
+  #:use-module ((language tree-il)
+                #:select (tree-il-src call-args))
   #:use-module ((system vm loader) #:select (load-thunk-from-memory))
   #:use-module ((system vm program) #:select (program-sources source:addr)))
 
@@ -70,7 +72,27 @@
     (let ((m (make-module)))
       (beautify-user-module! m)
       (compile '(define round round) #:env m)
-      (eq? round (module-ref m 'round)))))
+      (eq? round (module-ref m 'round))))
+
+  (pass-if-equal "syntax-source with read-hash-extend"
+      '((filename . "sample.scm") (line . 2) (column . 5))
+    ;; In Guile 3.0.8, psyntax would dismiss source properties added by
+    ;; read hash extensions on data they return.
+    ;; See <https://issues.guix.gnu.org/54003>
+    (with-fluids ((%read-hash-procedures
+                   (fluid-ref %read-hash-procedures)))
+      (read-hash-extend #\~ (lambda (chr port)
+                              (list 'magic (read port))))
+      (tree-il-src
+       (car
+        (call-args
+         (call-with-input-string "\
+;; first line
+;; second line
+   #~(this is a magic expression)"
+           (lambda (port)
+             (set-port-filename! port "sample.scm")
+             (compile (read-syntax port) #:to 'tree-il)))))))))
 
 
 (with-test-prefix "current-reader"

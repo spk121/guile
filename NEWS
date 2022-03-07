@@ -11,6 +11,8 @@ Changes in 3.0.9 (since 3.0.8)
 
 ** Type sizes are correctly determined when cross-compiling
    (https://bugs.gnu.org/54198)
+** psyntax honors source properties coming from read hash extensions
+   (https://bugs.gnu.org/54003)
 
 
 Changes in 3.0.8 (since 3.0.7)
