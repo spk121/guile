@@ -728,7 +728,7 @@ EXTRA_DIST = ChangeLog-scm ChangeLog-threads				\
     guile-func-name-check						\
     cpp-E.syms cpp-E.c cpp-SIG.syms cpp-SIG.c				\
     c-tokenize.lex							\
-    scmconfig.h.top libgettext.h unidata_to_charset.pl libguile.map	\
+    scmconfig.h.top libgettext.h unidata_to_charset.awk libguile.map	\
     vm-operations.h libguile-@GUILE_EFFECTIVE_VERSION@-gdb.scm		\
     $(lightening_c_files) $(lightening_extra_files)
 #    $(DOT_DOC_FILES) $(EXTRA_DOT_DOC_FILES) \
