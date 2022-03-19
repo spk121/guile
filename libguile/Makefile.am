@@ -462,7 +462,10 @@ vm-operations.h: vm-engine.c
 	| sed -e 's,VM_DEFINE_OP (\(.*\)).*,  M (\1) \\,' >> $@
 	@echo '' >> $@
 
-BUILT_INCLUDES = vm-operations.h scmconfig.h libpath.h
+srfi-14.i.c: UnicodeData.txt unidata_to_charset.awk
+	$(AM_V_GEN)$(AWK) -f unidata_to_charset.awk < "$<" > "$@"
+
+BUILT_INCLUDES = vm-operations.h scmconfig.h libpath.h srfi-14.i.c
 BUILT_SOURCES = cpp-E.c cpp-SIG.c $(BUILT_INCLUDES) \
     $(DOT_X_FILES) $(EXTRA_DOT_X_FILES)
 
@@ -530,7 +533,6 @@ uninstall-hook:
 noinst_HEADERS = elf.h						\
                  integers.h					\
                  intrinsics.h					\
-                 srfi-14.i.c					\
                  quicksort.i.c                                  \
                  atomics-internal.h				\
                  cache-internal.h				\
@@ -728,7 +730,8 @@ EXTRA_DIST = ChangeLog-scm ChangeLog-threads				\
     guile-func-name-check						\
     cpp-E.syms cpp-E.c cpp-SIG.syms cpp-SIG.c				\
     c-tokenize.lex							\
-    scmconfig.h.top libgettext.h unidata_to_charset.awk libguile.map	\
+    scmconfig.h.top libgettext.h libguile.map				\
+    unidata_to_charset.awk UnicodeData.txt				\
     vm-operations.h libguile-@GUILE_EFFECTIVE_VERSION@-gdb.scm		\
     $(lightening_c_files) $(lightening_extra_files)
 #    $(DOT_DOC_FILES) $(EXTRA_DOT_DOC_FILES) \
@@ -915,6 +918,7 @@ chknew-E chknew-SIG:
 MOSTLYCLEANFILES = \
 	scmconfig.h scmconfig.h.tmp
 
-CLEANFILES = libpath.h *.x *.doc guile-procedures.txt guile-procedures.texi guile.texi
+CLEANFILES = libpath.h *.x *.doc srfi-14.i.c guile-procedures.txt	\
+     guile-procedures.texi guile.texi
 
 MAINTAINERCLEANFILES = c-tokenize.c

@@ -100,6 +100,14 @@ BEGIN {
     }
 }
 
+# Comments
+##########
+
+# Skip comments so we can include a copyright notice in the data file.
+/^#/ {
+    next;
+}
+
 # Record initialization
 #######################
 
