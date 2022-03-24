@@ -14,6 +14,8 @@ Changes in 3.0.9 (since 3.0.8)
 ** psyntax honors source properties coming from read hash extensions
    (https://bugs.gnu.org/54003)
 ** ./configure checks whether the linker supports '-flto' (needed on macOS)
+** libguile/srfi-14.i.c is now longer shipped and is instead built from source
+   (https://bugs.gnu.org/54111)
 
 
 Changes in 3.0.8 (since 3.0.7)
