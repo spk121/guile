@@ -49,7 +49,33 @@
     (equal? 444
             (primitive-eval '(let ()
                                (define foo 444)
-                               foo)))))
+                               foo))))
+
+  (pass-if "docstring"
+    (equal? "Doc"
+            (primitive-eval '(let ()
+                               (define (((foo a) b c) d)
+                                 "Doc"
+                                 42)
+                               (procedure-documentation foo)))))
+
+  (pass-if "define-public"
+    (eqv? 6
+          (primitive-eval '(let ()
+                             (define-public (((f a) b) c)
+                               (+ a b c))
+                             (((f 1) 2) 3)))))
+
+  ;; FIXME: how to test for define-public actually making
+  ;; a public binding?
+
+  (pass-if "define-public and docstring"
+    (equal? "Addition curried."
+            (primitive-eval '(let ()
+                               (define-public (((f a) b) c)
+                                 "Addition curried."
+                                 (+ a b c))
+                               (procedure-documentation f))))))
 
 (with-test-prefix "define*"
   (pass-if "define* works as usual"
@@ -81,4 +107,26 @@
     (equal? 444
             (primitive-eval '(let ()
                                (define* foo 444)
-                               foo)))))
+                               foo))))
+  (pass-if "docstring"
+    (equal? "Doc"
+            (primitive-eval '(let ()
+                               (define* (((f a) b c) #:optional d)
+                                 "Doc"
+                                 42)
+                               (procedure-documentation f)))))
+
+  (pass-if "define*-public"
+    (eqv? 6
+          (primitive-eval '(let ()
+                             (define*-public (((f a) b) #:optional c)
+                               (+ a b c))
+                             (((f 1) 2) 3)))))
+
+  (pass-if "define*-public and docstring"
+    (equal? "Addition curried."
+            (primitive-eval '(let ()
+                               (define*-public (((f a) b) #:key (c 3))
+                                 "Addition curried."
+                                 (+ a b c))
+                               (procedure-documentation f))))))
