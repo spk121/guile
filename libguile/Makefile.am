@@ -462,8 +462,8 @@ vm-operations.h: vm-engine.c
 	| sed -e 's,VM_DEFINE_OP (\(.*\)).*,  M (\1) \\,' >> $@
 	@echo '' >> $@
 
-srfi-14.i.c: UnicodeData.txt unidata_to_charset.awk
-	$(AM_V_GEN)$(AWK) -f unidata_to_charset.awk < "$<" > "$@"
+srfi-14.i.c: $(srcdir)/UnicodeData.txt $(srcdir)/unidata_to_charset.awk
+	$(AM_V_GEN)$(AWK) -f $(srcdir)/unidata_to_charset.awk < "$<" > "$@"
 
 BUILT_INCLUDES = vm-operations.h scmconfig.h libpath.h srfi-14.i.c
 BUILT_SOURCES = cpp-E.c cpp-SIG.c $(BUILT_INCLUDES) \
