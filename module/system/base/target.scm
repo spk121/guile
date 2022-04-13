@@ -53,7 +53,14 @@
   (if (or (not (string? target))
           (let ((parts (string-split target #\-)))
             (or (< (length parts) 3)
-                (or-map string-null? parts))))
+                (let ((cpu (list-ref parts 0))
+                      (os (list-ref parts 2)))
+                  (or (string-null? cpu)
+                      ;; vendor (parts[1]) may be empty
+                      (string-null? os)
+                      ;; optional components (ABI) should be nonempty if
+                      ;; specified
+                      (or-map string-null? (list-tail parts 3)))))))
       (error "invalid target" target)))
 
 (define (with-target target thunk)

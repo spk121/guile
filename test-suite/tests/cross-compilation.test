@@ -1,6 +1,6 @@
 ;;;; Cross compilation   -*- mode: scheme; coding: utf-8; -*-
 ;;;;
-;;;; 	Copyright (C) 2010-2014, 2020 Free Software Foundation, Inc.
+;;;; 	Copyright (C) 2010-2014, 2020, 2022 Free Software Foundation, Inc.
 ;;;;
 ;;;; This library is free software; you can redistribute it and/or
 ;;;; modify it under the terms of the GNU Lesser General Public
@@ -67,11 +67,13 @@
   (test-triplet "i586" "pc" "gnu0.3")
   (test-triplet "x86_64" "unknown" "linux-gnu")
   (test-triplet "x86_64" "unknown" "kfreebsd-gnu")
+  (test-triplet "x86_64" "" "netbsd")   ;NetBSD/pkgsrc with empty vendor
 
   (test-target "i586-pc-gnu0.3" (endianness little) 4)
   (test-target "x86_64-pc-linux-gnu" (endianness little) 8)
   (test-target "powerpc-unknown-linux-gnu" (endianness big) 4)
   (test-target "sparc64-unknown-freebsd8.2" (endianness big) 8)
+  (test-target "x86_64--netbsd" (endianness little) 8)
 
   (test-target "mips64el-unknown-linux-gnu"       ; n32 or o32 ABI
                (endianness little) 4)
