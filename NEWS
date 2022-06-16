@@ -7,6 +7,16 @@ Please send Guile bug reports to bug-guile@gnu.org.
 
 Changes in 3.0.9 (since 3.0.8)
 
+* Notable changes
+
+* New interfaces and functionality
+
+** Abstract Unix-domain sockets are supported
+
+It is now possible to create an AF_UNIX socket with a leading zero byte
+in its file name to create an abstract Unix-domain socket.  See
+"man 7 unix" for information on abstract Unix-domain sockets.
+
 * Bug fixes
 
 ** Type sizes are correctly determined when cross-compiling
@@ -16,6 +26,13 @@ Changes in 3.0.9 (since 3.0.8)
 ** ./configure checks whether the linker supports '-flto' (needed on macOS)
 ** libguile/srfi-14.i.c is now longer shipped and is instead built from source
    (https://bugs.gnu.org/54111)
+** Cross-compilation supports triplets with empty vendor strings
+   (https://bugs.gnu.org/54915)
+** It is possible to use a 'library-form' inside 'cond-expand' in R7RS libraries
+   (https://bugs.gnu.org/55934)
+** 'coverage-data->lcov' accepts a #:modules argument as documented
+   (https://bugs.gnu.org/54911)
+** 'connect' returns #f upon EAGAIN, not just EINPROGRESS
 
 
 Changes in 3.0.8 (since 3.0.7)
