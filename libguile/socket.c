@@ -890,7 +890,7 @@ SCM_DEFINE (scm_connect, "connect", 2, 1, 1,
 
       free (soka);
       errno = save_errno;
-      if (errno == EINPROGRESS)
+      if (errno == EINPROGRESS || errno == EAGAIN)
         return SCM_BOOL_F;
       SCM_SYSERROR;
     }
