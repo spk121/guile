@@ -962,13 +962,23 @@ as an ordered alist."
     (((? symbol?) . (? key-value-list?)) #t)
     (_ #f)))
 
+;; While according to RFC 7617 Schemes are case-insensitive:
+;;
+;; 'Note that both scheme and parameter names are matched
+;; case-insensitive'
+;;
+;; some software (*) incorrectly assumes title case for scheme
+;; names, so use the more titlecase.
+;;
+;; (*): See, e.g.,
+;; https://community.spotify.com/t5/Spotify-for-Developers/API-Authorization-header-doesn-t-follow-HTTP-spec/m-p/5397381#M4917
 (define (write-credentials val port)
   (match val
     (('basic . cred)
-     (put-string port "basic ")
+     (put-string port "Basic ")
      (put-string port cred))
     ((scheme . params)
-     (put-symbol port scheme)
+     (put-string port (string-titlecase (symbol->string scheme)))
      (put-char port #\space)
      (write-key-value-list params port))))
 

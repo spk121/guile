@@ -336,9 +336,14 @@
   (pass-if-parse authorization "Digest foooo" '(digest foooo))
   (pass-if-parse authorization "Digest foo=bar,baz=qux"
                  '(digest (foo . "bar") (baz . "qux")))
-  (pass-if-round-trip "Authorization: basic foooo\r\n")
-  (pass-if-round-trip "Authorization: digest foooo\r\n")
-  (pass-if-round-trip "Authorization: digest foo=bar, baz=qux\r\n")
+  (pass-if-parse authorization "basic foooo" '(basic . "foooo"))
+  (pass-if-parse authorization "digest foooo" '(digest foooo))
+  (pass-if-parse authorization "digest foo=bar,baz=qux"
+                 '(digest (foo . "bar") (baz . "qux")))
+  (pass-if-round-trip "Authorization: Basic foooo\r\n")
+  (pass-if-round-trip "Authorization: Bearer token\r\n")
+  (pass-if-round-trip "Authorization: Digest foooo\r\n")
+  (pass-if-round-trip "Authorization: Digest foo=bar, baz=qux\r\n")
   (pass-if-parse expect "100-continue, foo" '((100-continue) (foo)))
   (pass-if-parse from "foo@bar" "foo@bar")
   (pass-if-parse host "qux" '("qux" . #f))
