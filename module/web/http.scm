@@ -38,6 +38,7 @@
   #:use-module (ice-9 q)
   #:use-module (ice-9 binary-ports)
   #:use-module (ice-9 textual-ports)
+  #:use-module (ice-9 exceptions)
   #:use-module (rnrs bytevectors)
   #:use-module (web uri)
   #:export (string->header
@@ -67,6 +68,8 @@
             read-response-line
             write-response-line
 
+            &chunked-input-error-prematurely
+            chunked-input-ended-prematurely-error?
             make-chunked-input-port
             make-chunked-output-port
 
@@ -1945,6 +1948,17 @@ treated specially, and is just returned as a plain string."
 
 
 ;; Chunked Responses
+(define &chunked-input-ended-prematurely
+  (make-exception-type '&chunked-input-error-prematurely
+                       &external-error
+                       '()))
+
+(define make-chunked-input-ended-prematurely-error
+  (record-constructor &chunked-input-ended-prematurely))
+
+(define chunked-input-ended-prematurely-error?
+  (record-predicate &chunked-input-ended-prematurely))
+
 (define (read-chunk-header port)
   "Read a chunk header from PORT and return the size in bytes of the
 upcoming chunk."
@@ -1997,8 +2011,8 @@ closed it will also close PORT, unless the KEEP-ALIVE? is true."
                                                 ask-for)))
                (cond
                 ((eof-object? read)     ;premature termination
-                 (set! finished? #t)
-                 num-read)
+                 (raise-exception
+                  (make-chunked-input-ended-prematurely-error)))
                 (else
                  (let ((left (- remaining read)))
                    (set! remaining left)

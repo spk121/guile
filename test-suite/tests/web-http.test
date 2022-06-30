@@ -28,16 +28,19 @@
   #:use-module (test-suite lib))
 
 
-(define-syntax pass-if-named-exception
+(define-syntax pass-if-expected-exception
   (syntax-rules ()
-    ((_ name k pat exp)
+    ((_ name exception-predicate? exp)
      (pass-if name
-       (catch 'k
-         (lambda () exp (error "expected exception" 'k))
-         (lambda (k message args)
-           (if (string-match pat message)
-               #t
-               (error "unexpected exception" message args))))))))
+       (with-exception-handler
+           (lambda (exn)
+             (if (exception-predicate? exn)
+                 #t
+                 (error "unexpected exception" exn)))
+         (lambda ()
+           exp
+           #f)
+         #:unwind? #t)))))
 
 (define-syntax pass-if-only-parse
   (syntax-rules ()
@@ -488,6 +491,12 @@
     ;; See the backtrace at
     ;; <http://debbugs.gnu.org/cgi/bugreport.cgi?bug=19976#5>.
     (let* ((str  "B\r\nOnly chunk.")
+           (port (make-chunked-input-port (open-input-string str))))
+      (get-string-all port)))
+
+  (pass-if-expected-exception "Exception on premature chunk end"
+      chunked-input-ended-prematurely-error?
+    (let* ((str  "b\r\nFirst chunk\r\nc\r\nSecond chun")
            (port (make-chunked-input-port (open-input-string str))))
       (get-string-all port)))
 
