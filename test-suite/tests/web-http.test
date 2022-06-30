@@ -426,7 +426,7 @@
                  '((basic (realm . "guile")))))
 
 (with-test-prefix "chunked encoding"
-  (let* ((s "5\r\nFirst\r\nA\r\n line\n Sec\r\n8\r\nond line\r\n0\r\n")
+  (let* ((s "5\r\nFirst\r\nA\r\n line\n Sec\r\n8\r\nond line\r\n0\r\n\r\n")
          (p (make-chunked-input-port (open-input-string s))))
     (pass-if-equal
         "First line\n Second line"
@@ -502,4 +502,4 @@
            (force-output out-chunked)
            (display "Third chunk" out-chunked)
            (close-port out-chunked))))
-      "b\r\nFirst chunk\r\nc\r\nSecond chunk\r\nb\r\nThird chunk\r\n0\r\n"))
+      "b\r\nFirst chunk\r\nc\r\nSecond chunk\r\nb\r\nThird chunk\r\n0\r\n\r\n"))

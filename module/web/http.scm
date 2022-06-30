@@ -1987,6 +1987,7 @@ closed it will also close PORT, unless the KEEP-ALIVE? is true."
                (cond
                 ((zero? size)
                  (set! finished? #t)
+                 (get-bytevector-n port 2) ; \r\n follows the last chunk
                  num-read)
                 (else
                  (loop to-read num-read)))))
@@ -2041,7 +2042,7 @@ KEEP-ALIVE? is true."
         (put-string port "\r\n"))))
   (define (close)
     (flush)
-    (put-string port "0\r\n")
+    (put-string port "0\r\n\r\n")
     (force-output port)
     (unless keep-alive?
       (close-port port)))
