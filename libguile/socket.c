@@ -1656,6 +1656,7 @@ scm_init_socket ()
   /* standard addresses.  */
 #ifdef INADDR_ANY
   scm_c_define ("INADDR_ANY", scm_from_ulong (INADDR_ANY));
+  scm_c_define ("IN6ADDR_ANY", scm_from_ulong (0));
 #endif
 #ifdef INADDR_BROADCAST
   scm_c_define ("INADDR_BROADCAST", scm_from_ulong (INADDR_BROADCAST));
@@ -1665,6 +1666,7 @@ scm_init_socket ()
 #endif
 #ifdef INADDR_LOOPBACK
   scm_c_define ("INADDR_LOOPBACK", scm_from_ulong (INADDR_LOOPBACK));
+  scm_c_define ("IN6ADDR_LOOPBACK", scm_from_ulong (1));
 #endif
 
   /* socket types.

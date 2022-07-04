@@ -2524,7 +2524,22 @@ Make an IPv4 Internet address by combining the network number
 @cindex IPv6
 
 An IPv6 Internet address is a 16-byte value, represented in Guile as
-an integer in host byte order, so that say ``::1'' is 1.
+an integer in host byte order, so that say ``::1'' is 1.  The following
+constants are defined for convenience.
+
+@defvar IN6ADDR_ANY
+For a server, this can be used with @code{bind} (@pxref{Network Sockets
+and Communication}) to allow connections from any IPv6 interface on the
+machine.
+@end defvar
+
+@defvar IN6ADDR_LOOPBACK
+The address of the local host using the loopback device, ie.@:
+@samp{::1}.
+@end defvar
+
+The procedures below convert an IPv6 @emph{or} an IPv4 address to and
+from its textual representation.
 
 @deffn {Scheme Procedure} inet-ntop family address
 @deffnx {C Function} scm_inet_ntop (family, address)
