@@ -1712,6 +1712,9 @@ scm_init_socket ()
 #ifdef IPPROTO_IP
   scm_c_define ("IPPROTO_IP", scm_from_int (IPPROTO_IP));
 #endif
+#ifdef IPPROTO_IPV6
+  scm_c_define ("IPPROTO_IPV6", scm_from_int (IPPROTO_IPV6));
+#endif
 #ifdef IPPROTO_TCP
   scm_c_define ("IPPROTO_TCP", scm_from_int (IPPROTO_TCP));
 #endif
@@ -1799,6 +1802,10 @@ scm_init_socket ()
 
 #ifdef IP_MULTICAST_IF 
   scm_c_define ("IP_MULTICAST_IF", scm_from_int ( IP_MULTICAST_IF));
+#endif
+
+#ifdef IPV6_V6ONLY
+  scm_c_define ("IPV6_V6ONLY", scm_from_int (IPV6_V6ONLY));
 #endif
 
   scm_add_feature ("socket");

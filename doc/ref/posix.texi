@@ -3202,6 +3202,7 @@ Databases}).
 
 @defvar SOL_SOCKET
 @defvarx IPPROTO_IP
+@defvarx IPPROTO_IPV6
 @defvarx IPPROTO_TCP
 @defvarx IPPROTO_UDP
 @end defvar
@@ -3266,6 +3267,16 @@ the interface @var{INTERFACEADDR}.  @var{INTERFACEADDR} can be
 @var{INTERFACEADDR} can also be an interface index number, on systems
 supporting that.
 @end defvar
+
+Last, for IPv6 level (@code{IPPROTO_IPV6}), the following @var{optname}s
+are defined.  See @command{man 7 ipv6} for details.
+
+@defvar IPV6_V6ONLY
+Determines whether an @code{AF_INET6} socket is restricted to
+transmitting IPv6 packets only, or whether it can also transmit packets
+for an IPv4-mapped IPv6 address.
+@end defvar
+
 @end deffn
 
 For @code{IPPROTO_TCP} level the following @var{optname}s are defined
