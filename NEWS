@@ -17,6 +17,14 @@ It is now possible to create an AF_UNIX socket with a leading zero byte
 in its file name to create an abstract Unix-domain socket.  See
 "man 7 unix" for information on abstract Unix-domain sockets.
 
+** New socket-related constants defined
+
+The `IN6ADDR_ANY' and `IN6ADDR_LOOPBACK' are now defined on systems with
+IPv6 support; they can be used with `bind'.
+
+Likewise, the `IPPROTO_IPV6' and `IPV6_V6ONLY' constants are defined,
+for use with `setsockopt'.
+
 * Bug fixes
 
 ** Type sizes are correctly determined when cross-compiling
@@ -33,6 +41,8 @@ in its file name to create an abstract Unix-domain socket.  See
 ** 'coverage-data->lcov' accepts a #:modules argument as documented
    (https://bugs.gnu.org/54911)
 ** 'connect' returns #f upon EAGAIN, not just EINPROGRESS
+** (web http) capitalizes the "Basic" authorization header
+** (web http) terminates chunked encoding with an extra \r\n
 
 
 Changes in 3.0.8 (since 3.0.7)
