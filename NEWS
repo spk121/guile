@@ -43,6 +43,8 @@ for use with `setsockopt'.
 ** 'connect' returns #f upon EAGAIN, not just EINPROGRESS
 ** (web http) capitalizes the "Basic" authorization header
 ** (web http) terminates chunked encoding with an extra \r\n
+** (web client) retries TLS handshake upon non-fatal errors
+   (<https://bugs.gnu.org/49223>)
 
 
 Changes in 3.0.8 (since 3.0.7)
