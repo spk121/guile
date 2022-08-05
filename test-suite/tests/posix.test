@@ -1,6 +1,6 @@
 ;;;; posix.test --- Test suite for Guile POSIX functions. -*- scheme -*-
 ;;;;
-;;;; Copyright 2003-2004,2006-2007,2010,2012,2015,2017-2019,2021
+;;;; Copyright 2003-2004, 2006-2007, 2010, 2012, 2015, 2017-2019, 2021-2022
 ;;;;   Free Software Foundation, Inc.
 ;;;;
 ;;;; This library is free software; you can redistribute it and/or
@@ -241,7 +241,19 @@
     ;; `system*' would remain alive after an `execvp' failure.
     (let ((me (getpid)))
       (and (not (zero? (system* "something-that-does-not-exist")))
-           (= me (getpid))))))
+           (= me (getpid)))))
+
+  (pass-if-equal "exit code for nonexistent file"
+      127                                         ;aka. EX_NOTFOUND
+    (status:exit-val (system* "something-that-does-not-exist")))
+
+  (pass-if-equal "https://bugs.gnu.org/55596"
+      127
+    ;; The parameterization below used to cause 'start_child' to close
+    ;; fd 2 in the child process, which in turn would cause it to
+    ;; segfault, leading to a wrong exit code.
+    (parameterize ((current-output-port (current-error-port)))
+      (status:exit-val (system* "something-that-does-not-exist")))))
 
 ;;
 ;; crypt

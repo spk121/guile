@@ -1,4 +1,4 @@
-/* Copyright 1995-2014,2016-2019,2021
+/* Copyright 1995-2014, 2016-2019, 2021-2022
      Free Software Foundation, Inc.
 
    This file is part of Guile.
@@ -1371,7 +1371,8 @@ start_child (const char *exec_file, char **exec_argv,
       if (err == 1)
         err = renumber_file_descriptor (err, err);
       do dup2 (out, 1); while (errno == EINTR);
-      close (out);
+      if (out > 2)
+        close (out);
     }
   if (err > 2)
     {
