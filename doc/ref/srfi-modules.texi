@@ -405,6 +405,13 @@ These are synonyms for @code{car}, @code{cadr}, @code{caddr}, @dots{}.
 Return two values, the @sc{car} and the @sc{cdr} of @var{pair}.
 @end deffn
 
+@lisp
+(car+cdr '(0 1 2 3))
+@result{}
+0
+(1 2 3)
+@end lisp
+
 @deffn {Scheme Procedure} take lst i
 @deffnx {Scheme Procedure} take! lst i
 Return a list containing the first @var{i} elements of @var{lst}.
