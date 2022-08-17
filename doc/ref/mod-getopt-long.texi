@@ -261,7 +261,7 @@ as ordinary argument strings.
 @node getopt-long Reference
 @subsection Reference Documentation for @code{getopt-long}
 
-@deffn {Scheme Procedure} getopt-long args grammar [#:stop-at-first-non-option #t]
+@deffn {Scheme Procedure} getopt-long args grammar [#:stop-at-first-non-option #f]
 Parse the command line given in @var{args} (which must be a list of
 strings) according to the option specification @var{grammar}.
 
