@@ -49,7 +49,7 @@ Here's an example use:
   (lambda (data result)
     (let ((port (open-output-file "lcov.info")))
       (coverage-data->lcov data port)
-      (close file))))
+      (close port))))
 @end example
 
 In addition, the module provides low-level procedures that would make it
