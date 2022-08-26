@@ -69,7 +69,7 @@ the argument was that eventually when GEL became more capable, it
 could gain the ability to execute other languages, especially Emacs
 Lisp.
 
-Due to a naming conflict with another programming language, Jim Blandy
+Due to a naming conflict with another programming language, Lee Thomas
 suggested a new name for GEL: ``Guile''. Besides being a recursive
 acronym, ``Guile'' craftily follows the naming of its ancestors,
 ``Planner'', ``Conniver'', and ``Schemer''. (The latter was truncated
