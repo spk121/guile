@@ -1,6 +1,6 @@
 /* A GNU-like <stdio.h>.
 
-   Copyright (C) 2004, 2007-2021 Free Software Foundation, Inc.
+   Copyright (C) 2004, 2007-2022 Free Software Foundation, Inc.
 
    This file is free software: you can redistribute it and/or modify
    it under the terms of the GNU Lesser General Public License as
@@ -55,6 +55,52 @@
    and eglibc 2.11.2.
    May also define off_t to a 64-bit type on native Windows.  */
 #include <sys/types.h>
+
+/* Solaris 10 and NetBSD 7.0 declare renameat in <unistd.h>, not in <stdio.h>.  */
+/* But in any case avoid namespace pollution on glibc systems.  */
+#if (@GNULIB_RENAMEAT@ || defined GNULIB_POSIXCHECK) && (defined __sun || defined __NetBSD__) \
+    && ! defined __GLIBC__
+# include <unistd.h>
+#endif
+
+/* Android 4.3 declares renameat in <sys/stat.h>, not in <stdio.h>.  */
+/* But in any case avoid namespace pollution on glibc systems.  */
+#if (@GNULIB_RENAMEAT@ || defined GNULIB_POSIXCHECK) && defined __ANDROID__ \
+    && ! defined __GLIBC__
+# include <sys/stat.h>
+#endif
+
+/* MSVC declares 'perror' in <stdlib.h>, not in <stdio.h>.  We must include
+   it before we  #define perror rpl_perror.  */
+/* But in any case avoid namespace pollution on glibc systems.  */
+#if (@GNULIB_PERROR@ || defined GNULIB_POSIXCHECK) \
+    && (defined _WIN32 && ! defined __CYGWIN__) \
+    && ! defined __GLIBC__
+# include <stdlib.h>
+#endif
+
+/* MSVC declares 'remove' in <io.h>, not in <stdio.h>.  We must include
+   it before we  #define remove rpl_remove.  */
+/* MSVC declares 'rename' in <io.h>, not in <stdio.h>.  We must include
+   it before we  #define rename rpl_rename.  */
+/* But in any case avoid namespace pollution on glibc systems.  */
+#if (@GNULIB_REMOVE@ || @GNULIB_RENAME@ || defined GNULIB_POSIXCHECK) \
+    && (defined _WIN32 && ! defined __CYGWIN__) \
+    && ! defined __GLIBC__
+# include <io.h>
+#endif
+
+
+/* _GL_ATTRIBUTE_DEALLOC (F, I) declares that the function returns pointers
+   that can be freed by passing them as the Ith argument to the
+   function F.  */
+#ifndef _GL_ATTRIBUTE_DEALLOC
+# if __GNUC__ >= 11
+#  define _GL_ATTRIBUTE_DEALLOC(f, i) __attribute__ ((__malloc__ (f, i)))
+# else
+#  define _GL_ATTRIBUTE_DEALLOC(f, i)
+# endif
+#endif
 
 /* The __attribute__ feature is available in gcc versions 2.5 and later.
    The __-protected variants of the attributes 'format' and 'printf' are
@@ -126,41 +172,6 @@
    ISO C99 and POSIX.  */
 #define _GL_ATTRIBUTE_FORMAT_SCANF_SYSTEM(formatstring_parameter, first_argument) \
   _GL_ATTRIBUTE_FORMAT ((__scanf__, formatstring_parameter, first_argument))
-
-/* Solaris 10 and NetBSD 7.0 declare renameat in <unistd.h>, not in <stdio.h>.  */
-/* But in any case avoid namespace pollution on glibc systems.  */
-#if (@GNULIB_RENAMEAT@ || defined GNULIB_POSIXCHECK) && (defined __sun || defined __NetBSD__) \
-    && ! defined __GLIBC__
-# include <unistd.h>
-#endif
-
-/* Android 4.3 declares renameat in <sys/stat.h>, not in <stdio.h>.  */
-/* But in any case avoid namespace pollution on glibc systems.  */
-#if (@GNULIB_RENAMEAT@ || defined GNULIB_POSIXCHECK) && defined __ANDROID__ \
-    && ! defined __GLIBC__
-# include <sys/stat.h>
-#endif
-
-/* MSVC declares 'perror' in <stdlib.h>, not in <stdio.h>.  We must include
-   it before we  #define perror rpl_perror.  */
-/* But in any case avoid namespace pollution on glibc systems.  */
-#if (@GNULIB_PERROR@ || defined GNULIB_POSIXCHECK) \
-    && (defined _WIN32 && ! defined __CYGWIN__) \
-    && ! defined __GLIBC__
-# include <stdlib.h>
-#endif
-
-/* MSVC declares 'remove' in <io.h>, not in <stdio.h>.  We must include
-   it before we  #define remove rpl_remove.  */
-/* MSVC declares 'rename' in <io.h>, not in <stdio.h>.  We must include
-   it before we  #define rename rpl_rename.  */
-/* But in any case avoid namespace pollution on glibc systems.  */
-#if (@GNULIB_REMOVE@ || @GNULIB_RENAME@ || defined GNULIB_POSIXCHECK) \
-    && (defined _WIN32 && ! defined __CYGWIN__) \
-    && ! defined __GLIBC__
-# include <io.h>
-#endif
-
 
 /* The definitions of _GL_FUNCDECL_RPL etc. are copied here.  */
 
@@ -388,7 +399,8 @@ _GL_CXXALIASWARN (fileno);
 #endif
 
 #if @GNULIB_FOPEN@
-# if @REPLACE_FOPEN@
+# if (@GNULIB_FOPEN@ && @REPLACE_FOPEN@) \
+     || (@GNULIB_FOPEN_GNU@ && @REPLACE_FOPEN_FOR_FOPEN_GNU@)
 #  if !(defined __cplusplus && defined GNULIB_NAMESPACE)
 #   undef fopen
 #   define fopen rpl_fopen

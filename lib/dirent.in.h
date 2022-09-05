@@ -1,5 +1,5 @@
 /* A GNU-like <dirent.h>.
-   Copyright (C) 2006-2021 Free Software Foundation, Inc.
+   Copyright (C) 2006-2022 Free Software Foundation, Inc.
 
    This file is free software: you can redistribute it and/or modify
    it under the terms of the GNU Lesser General Public License as
@@ -52,6 +52,28 @@ struct dirent
 #  define DT_WHT    14          /* whiteout */
 typedef struct gl_directory DIR;
 #  define GNULIB_defined_struct_dirent 1
+# endif
+#endif
+
+/* _GL_ATTRIBUTE_DEALLOC (F, I) declares that the function returns pointers
+   that can be freed by passing them as the Ith argument to the
+   function F.  */
+#ifndef _GL_ATTRIBUTE_DEALLOC
+# if __GNUC__ >= 11
+#  define _GL_ATTRIBUTE_DEALLOC(f, i) __attribute__ ((__malloc__ (f, i)))
+# else
+#  define _GL_ATTRIBUTE_DEALLOC(f, i)
+# endif
+#endif
+
+/* _GL_ATTRIBUTE_MALLOC declares that the function returns a pointer to freshly
+   allocated memory.  */
+/* Applies to: functions.  */
+#ifndef _GL_ATTRIBUTE_MALLOC
+# if __GNUC__ >= 3 || defined __clang__
+#  define _GL_ATTRIBUTE_MALLOC __attribute__ ((__malloc__))
+# else
+#  define _GL_ATTRIBUTE_MALLOC
 # endif
 #endif
 

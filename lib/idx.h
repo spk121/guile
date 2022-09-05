@@ -1,5 +1,5 @@
 /* A type for indices and sizes.
-   Copyright (C) 2020-2021 Free Software Foundation, Inc.
+   Copyright (C) 2020-2022 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -55,6 +55,26 @@
 
      * Because 'size_t' is an unsigned type, and a signed type is better.
        See above.
+
+   Why not use 'ssize_t'?
+
+     * 'ptrdiff_t' is more portable; it is standardized by ISO C
+       whereas 'ssize_t' is standardized only by POSIX.
+
+     * 'ssize_t' is not required to be as wide as 'size_t', and some
+       now-obsolete POSIX platforms had 'size_t' wider than 'ssize_t'.
+
+     * Conversely, some now-obsolete platforms had 'ptrdiff_t' wider
+       than 'size_t', which can be a win and conforms to POSIX.
+
+   Won't this cause a problem with objects larger than PTRDIFF_MAX?
+
+     * Typical modern or large platforms do not allocate such objects,
+       so this is not much of a problem in practice; for example, you
+       can safely write 'idx_t len = strlen (s);'.  To port to older
+       small platforms where allocations larger than PTRDIFF_MAX could
+       in theory be a problem, you can use Gnulib's ialloc module, or
+       functions like ximalloc in Gnulib's xalloc module.
 
    Why not use 'ptrdiff_t' directly?
 

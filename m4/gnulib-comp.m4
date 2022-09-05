@@ -1,9 +1,9 @@
 # DO NOT EDIT! GENERATED AUTOMATICALLY!
-# Copyright (C) 2002-2021 Free Software Foundation, Inc.
+# Copyright (C) 2002-2022 Free Software Foundation, Inc.
 #
 # This file is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 3 of the License, or
+# the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
 #
 # This file is distributed in the hope that it will be useful,
@@ -42,10 +42,10 @@ AC_DEFUN([gl_EARLY],
   AC_REQUIRE([gl_USE_SYSTEM_EXTENSIONS])
   AC_REQUIRE([gl_PROG_AR_RANLIB])
 
-  AC_REQUIRE([AM_PROG_CC_C_O])
   # Code from module absolute-header:
   # Code from module accept:
   # Code from module accept4:
+  # Code from module access:
   # Code from module alignof:
   # Code from module alloca:
   # Code from module alloca-opt:
@@ -71,6 +71,7 @@ AC_DEFUN([gl_EARLY],
   # Code from module clock-time:
   # Code from module cloexec:
   # Code from module close:
+  # Code from module concat-filename:
   # Code from module connect:
   # Code from module copysign:
   # Code from module dirent:
@@ -89,6 +90,7 @@ AC_DEFUN([gl_EARLY],
   # Code from module fcntl-h:
   # Code from module fd-hook:
   # Code from module filename:
+  # Code from module findprog-in:
   # Code from module flexmember:
   # Code from module float:
   # Code from module flock:
@@ -102,6 +104,7 @@ AC_DEFUN([gl_EARLY],
   # Code from module full-read:
   # Code from module full-write:
   # Code from module func:
+  # Code from module gen-header:
   # Code from module gendocs:
   # Code from module getaddrinfo:
   # Code from module getdtablesize:
@@ -187,6 +190,8 @@ AC_DEFUN([gl_EARLY],
   # Code from module pipe2:
   # Code from module poll:
   # Code from module poll-h:
+  # Code from module posix_spawn-internal:
+  # Code from module posix_spawnp:
   # Code from module putenv:
   # Code from module raise:
   # Code from module rawmemchr:
@@ -202,6 +207,7 @@ AC_DEFUN([gl_EARLY],
   # Code from module safe-read:
   # Code from module safe-write:
   # Code from module same-inode:
+  # Code from module sched:
   # Code from module scratch_buffer:
   # Code from module select:
   # Code from module send:
@@ -210,6 +216,7 @@ AC_DEFUN([gl_EARLY],
   # Code from module setenv:
   # Code from module setlocale-null:
   # Code from module setsockopt:
+  # Code from module sh-filename:
   # Code from module shutdown:
   # Code from module signal-h:
   # Code from module signbit:
@@ -223,16 +230,20 @@ AC_DEFUN([gl_EARLY],
   # Code from module socketlib:
   # Code from module sockets:
   # Code from module socklen:
+  # Code from module spawn:
   # Code from module ssize_t:
   # Code from module stat:
   # Code from module stat-time:
   # Code from module std-gnu11:
   # Code from module stdalign:
   # Code from module stdbool:
+  # Code from module stdckdint:
   # Code from module stddef:
   # Code from module stdint:
   # Code from module stdio:
   # Code from module stdlib:
+  # Code from module stpcpy:
+  # Code from module strchrnul:
   # Code from module strdup-posix:
   # Code from module streq:
   # Code from module striconveh:
@@ -257,6 +268,7 @@ AC_DEFUN([gl_EARLY],
   # Code from module unistd:
   # Code from module unsetenv:
   # Code from module useless-if-before-free:
+  # Code from module vararrays:
   # Code from module vasnprintf:
   # Code from module vc-list-files:
   # Code from module verify:
@@ -265,6 +277,7 @@ AC_DEFUN([gl_EARLY],
   # Code from module wchar:
   # Code from module wcrtomb:
   # Code from module wctype-h:
+  # Code from module windows-spawn:
   # Code from module write:
   # Code from module xalloc-oversized:
   # Code from module xsize:
@@ -274,6 +287,7 @@ AC_DEFUN([gl_EARLY],
 # "Check for header files, types and library functions".
 AC_DEFUN([gl_INIT],
 [
+  AC_CONFIG_LIBOBJ_DIR([lib])
   AM_CONDITIONAL([GL_COND_LIBTOOL], [true])
   gl_cond_libtool=true
   gl_m4_base='m4'
@@ -286,97 +300,89 @@ AC_DEFUN([gl_INIT],
   m4_pushdef([GL_MODULE_INDICATOR_PREFIX], [GL])
   gl_COMMON
   gl_source_base='lib'
+  gl_source_base_prefix=
   AC_REQUIRE([gl_SYS_SOCKET_H])
-  if test "$ac_cv_header_winsock2_h" = yes; then
-    AC_LIBOBJ([accept])
-  fi
+  gl_CONDITIONAL([GL_COND_OBJ_ACCEPT], [test "$ac_cv_header_winsock2_h" = yes])
   gl_SYS_SOCKET_MODULE_INDICATOR([accept])
   gl_FUNC_ACCEPT4
   gl_SYS_SOCKET_MODULE_INDICATOR([accept4])
   gl_FUNC_ALLOCA
+  gl_CONDITIONAL_HEADER([alloca.h])
+  AC_PROG_MKDIR_P
   gl_ARPA_INET_H
   gl_ARPA_INET_H_REQUIRE_DEFAULTS
   AC_PROG_MKDIR_P
   AC_REQUIRE([gl_SYS_SOCKET_H])
-  if test "$ac_cv_header_winsock2_h" = yes; then
-    AC_LIBOBJ([bind])
-  fi
+  gl_CONDITIONAL([GL_COND_OBJ_BIND], [test "$ac_cv_header_winsock2_h" = yes])
   gl_SYS_SOCKET_MODULE_INDICATOR([bind])
   gl_BYTESWAP
+  gl_CONDITIONAL_HEADER([byteswap.h])
+  AC_PROG_MKDIR_P
   gl_CANONICALIZE_LGPL
-  if test $HAVE_CANONICALIZE_FILE_NAME = 0 || test $REPLACE_CANONICALIZE_FILE_NAME = 1; then
-    AC_LIBOBJ([canonicalize-lgpl])
-  fi
+  gl_CONDITIONAL([GL_COND_OBJ_CANONICALIZE_LGPL],
+                 [test $HAVE_CANONICALIZE_FILE_NAME = 0 || test $REPLACE_CANONICALIZE_FILE_NAME = 1])
   gl_MODULE_INDICATOR([canonicalize-lgpl])
   gl_STDLIB_MODULE_INDICATOR([canonicalize_file_name])
   gl_STDLIB_MODULE_INDICATOR([realpath])
   gl_FUNC_CEIL
-  if test $REPLACE_CEIL = 1; then
-    AC_LIBOBJ([ceil])
-  fi
+  gl_CONDITIONAL([GL_COND_OBJ_CEIL], [test $REPLACE_CEIL = 1])
   gl_MATH_MODULE_INDICATOR([ceil])
   gl_CLOCK_TIME
   gl_FUNC_CLOSE
-  if test $REPLACE_CLOSE = 1; then
-    AC_LIBOBJ([close])
-  fi
+  gl_CONDITIONAL([GL_COND_OBJ_CLOSE], [test $REPLACE_CLOSE = 1])
   gl_UNISTD_MODULE_INDICATOR([close])
   AC_REQUIRE([gl_SYS_SOCKET_H])
-  if test "$ac_cv_header_winsock2_h" = yes; then
-    AC_LIBOBJ([connect])
-  fi
+  gl_CONDITIONAL([GL_COND_OBJ_CONNECT], [test "$ac_cv_header_winsock2_h" = yes])
   gl_SYS_SOCKET_MODULE_INDICATOR([connect])
   gl_FUNC_COPYSIGN
-  if test $HAVE_COPYSIGN = 0; then
-    AC_LIBOBJ([copysign])
-  fi
+  gl_CONDITIONAL([GL_COND_OBJ_COPYSIGN], [test $HAVE_COPYSIGN = 0])
   gl_MATH_MODULE_INDICATOR([copysign])
   gl_DIRENT_H
   gl_DIRENT_H_REQUIRE_DEFAULTS
+  AC_PROG_MKDIR_P
   gl_FUNC_DIRFD
-  if test $ac_cv_func_dirfd = no && test $gl_cv_func_dirfd_macro = no \
-     || test $REPLACE_DIRFD = 1; then
-    AC_LIBOBJ([dirfd])
+  gl_CONDITIONAL([GL_COND_OBJ_DIRFD],
+                 [test $ac_cv_func_dirfd = no && test $gl_cv_func_dirfd_macro = no || test $REPLACE_DIRFD = 1])
+  AM_COND_IF([GL_COND_OBJ_DIRFD], [
     gl_PREREQ_DIRFD
-  fi
+  ])
   gl_DIRENT_MODULE_INDICATOR([dirfd])
   gl_DOUBLE_SLASH_ROOT
   gl_FUNC_DUPLOCALE
-  if test $REPLACE_DUPLOCALE = 1; then
-    AC_LIBOBJ([duplocale])
+  gl_CONDITIONAL([GL_COND_OBJ_DUPLOCALE], [test $REPLACE_DUPLOCALE = 1])
+  AM_COND_IF([GL_COND_OBJ_DUPLOCALE], [
     gl_PREREQ_DUPLOCALE
-  fi
+  ])
   gl_LOCALE_MODULE_INDICATOR([duplocale])
   gl_ENVIRON
   gl_UNISTD_MODULE_INDICATOR([environ])
   gl_HEADER_ERRNO_H
+  gl_CONDITIONAL_HEADER([errno.h])
+  AC_PROG_MKDIR_P
   AC_REQUIRE([gl_EXTERN_INLINE])
   gl_FCNTL_H
   gl_FCNTL_H_REQUIRE_DEFAULTS
+  AC_PROG_MKDIR_P
   AC_C_FLEXIBLE_ARRAY_MEMBER
   gl_FLOAT_H
-  if test $REPLACE_FLOAT_LDBL = 1; then
-    AC_LIBOBJ([float])
-  fi
-  if test $REPLACE_ITOLD = 1; then
-    AC_LIBOBJ([itold])
-  fi
+  gl_CONDITIONAL_HEADER([float.h])
+  AC_PROG_MKDIR_P
+  gl_CONDITIONAL([GL_COND_OBJ_FLOAT], [test $REPLACE_FLOAT_LDBL = 1])
+  gl_CONDITIONAL([GL_COND_OBJ_ITOLD], [test $REPLACE_ITOLD = 1])
   gl_FUNC_FLOCK
-  if test $HAVE_FLOCK = 0; then
-    AC_LIBOBJ([flock])
+  gl_CONDITIONAL([GL_COND_OBJ_FLOCK], [test $HAVE_FLOCK = 0])
+  AM_COND_IF([GL_COND_OBJ_FLOCK], [
     gl_PREREQ_FLOCK
-  fi
+  ])
   gl_SYS_FILE_MODULE_INDICATOR([flock])
   AC_REQUIRE([gl_FUNC_FLOOR])
-  if test $REPLACE_FLOOR = 1; then
-    AC_LIBOBJ([floor])
-  fi
+  gl_CONDITIONAL([GL_COND_OBJ_FLOOR], [test $REPLACE_FLOOR = 1])
   gl_MATH_MODULE_INDICATOR([floor])
   gl_FUNC_FREE
-  if test $REPLACE_FREE = 1; then
-    AC_LIBOBJ([free])
+  gl_CONDITIONAL([GL_COND_OBJ_FREE], [test $REPLACE_FREE = 1])
+  AM_COND_IF([GL_COND_OBJ_FREE], [
     gl_PREREQ_FREE
-  fi
+  ])
   gl_STDLIB_MODULE_INDICATOR([free-posix])
   AC_REQUIRE([gl_FUNC_FREXP])
   if test $gl_func_frexp != yes; then
@@ -384,51 +390,44 @@ AC_DEFUN([gl_INIT],
   fi
   gl_MATH_MODULE_INDICATOR([frexp])
   gl_FUNC_FSTAT
-  if test $REPLACE_FSTAT = 1; then
-    AC_LIBOBJ([fstat])
+  gl_CONDITIONAL([GL_COND_OBJ_FSTAT], [test $REPLACE_FSTAT = 1])
+  AM_COND_IF([GL_COND_OBJ_FSTAT], [
     case "$host_os" in
       mingw*)
         AC_LIBOBJ([stat-w32])
         ;;
     esac
     gl_PREREQ_FSTAT
-  fi
+  ])
   gl_SYS_STAT_MODULE_INDICATOR([fstat])
   gl_FUNC_FSYNC
-  if test $HAVE_FSYNC = 0; then
-    AC_LIBOBJ([fsync])
+  gl_CONDITIONAL([GL_COND_OBJ_FSYNC], [test $HAVE_FSYNC = 0])
+  AM_COND_IF([GL_COND_OBJ_FSYNC], [
     gl_PREREQ_FSYNC
-  fi
+  ])
   gl_UNISTD_MODULE_INDICATOR([fsync])
   gl_FUNC
   gl_GETADDRINFO
-  if test $HAVE_GETADDRINFO = 0 || test $REPLACE_GETADDRINFO = 1; then
-    AC_LIBOBJ([getaddrinfo])
-  fi
-  if test $HAVE_DECL_GAI_STRERROR = 0 || test $REPLACE_GAI_STRERROR = 1; then
-    AC_LIBOBJ([gai_strerror])
-  fi
+  gl_CONDITIONAL([GL_COND_OBJ_GETADDRINFO],
+                 [test $HAVE_GETADDRINFO = 0 || test $REPLACE_GETADDRINFO = 1])
+  gl_CONDITIONAL([GL_COND_OBJ_GAI_STRERROR],
+                 [test $HAVE_DECL_GAI_STRERROR = 0 || test $REPLACE_GAI_STRERROR = 1])
   gl_NETDB_MODULE_INDICATOR([getaddrinfo])
   gl_FUNC_GETLOGIN
-  if test $HAVE_GETLOGIN = 0; then
-    AC_LIBOBJ([getlogin])
-  fi
+  gl_CONDITIONAL([GL_COND_OBJ_GETLOGIN], [test $HAVE_GETLOGIN = 0])
   gl_UNISTD_MODULE_INDICATOR([getlogin])
   AC_REQUIRE([gl_LIB_GETLOGIN])
   AC_REQUIRE([gl_SYS_SOCKET_H])
-  if test "$ac_cv_header_winsock2_h" = yes; then
-    AC_LIBOBJ([getpeername])
-  fi
+  gl_CONDITIONAL([GL_COND_OBJ_GETPEERNAME],
+                 [test "$ac_cv_header_winsock2_h" = yes])
   gl_SYS_SOCKET_MODULE_INDICATOR([getpeername])
   AC_REQUIRE([gl_SYS_SOCKET_H])
-  if test "$ac_cv_header_winsock2_h" = yes; then
-    AC_LIBOBJ([getsockname])
-  fi
+  gl_CONDITIONAL([GL_COND_OBJ_GETSOCKNAME],
+                 [test "$ac_cv_header_winsock2_h" = yes])
   gl_SYS_SOCKET_MODULE_INDICATOR([getsockname])
   AC_REQUIRE([gl_SYS_SOCKET_H])
-  if test "$ac_cv_header_winsock2_h" = yes; then
-    AC_LIBOBJ([getsockopt])
-  fi
+  gl_CONDITIONAL([GL_COND_OBJ_GETSOCKOPT],
+                 [test "$ac_cv_header_winsock2_h" = yes])
   gl_SYS_SOCKET_MODULE_INDICATOR([getsockopt])
   # Autoconf 2.61a.99 and earlier don't support linking a file only
   # in VPATH builds.  But since GNUmakefile is for maintainer use
@@ -446,38 +445,36 @@ AC_DEFUN([gl_INIT],
     [gl_ICONV_MODULE_INDICATOR([iconv])])
   gl_ICONV_H
   gl_ICONV_H_REQUIRE_DEFAULTS
+  gl_CONDITIONAL_HEADER([iconv.h])
+  AC_PROG_MKDIR_P
   gl_FUNC_ICONV_OPEN
-  if test $REPLACE_ICONV_OPEN = 1; then
-    AC_LIBOBJ([iconv_open])
-  fi
-  if test $REPLACE_ICONV = 1; then
-    AC_LIBOBJ([iconv])
-    AC_LIBOBJ([iconv_close])
-  fi
+  dnl Because of gl_REPLACE_ICONV_H:
+  gl_CONDITIONAL_HEADER([iconv.h])
+  gl_CONDITIONAL([GL_COND_OBJ_ICONV_OPEN], [test $REPLACE_ICONV_OPEN = 1])
+  gl_CONDITIONAL([GL_COND_OBJ_ICONV], [test $REPLACE_ICONV = 1])
   gl_FUNC_ICONV_OPEN_UTF
   gl_FUNC_INET_NTOP
-  if test $HAVE_INET_NTOP = 0 || test $REPLACE_INET_NTOP = 1; then
-    AC_LIBOBJ([inet_ntop])
+  gl_CONDITIONAL([GL_COND_OBJ_INET_NTOP],
+                 [test $HAVE_INET_NTOP = 0 || test $REPLACE_INET_NTOP = 1])
+  AM_COND_IF([GL_COND_OBJ_INET_NTOP], [
     gl_PREREQ_INET_NTOP
-  fi
+  ])
   gl_ARPA_INET_MODULE_INDICATOR([inet_ntop])
   gl_FUNC_INET_PTON
-  if test $HAVE_INET_PTON = 0 || test $REPLACE_INET_PTON = 1; then
-    AC_LIBOBJ([inet_pton])
+  gl_CONDITIONAL([GL_COND_OBJ_INET_PTON],
+                 [test $HAVE_INET_PTON = 0 || test $REPLACE_INET_PTON = 1])
+  AM_COND_IF([GL_COND_OBJ_INET_PTON], [
     gl_PREREQ_INET_PTON
-  fi
+  ])
   gl_ARPA_INET_MODULE_INDICATOR([inet_pton])
   gl_INTTYPES_INCOMPLETE
   gl_INTTYPES_H_REQUIRE_DEFAULTS
+  AC_PROG_MKDIR_P
   gl_ISFINITE
-  if test $REPLACE_ISFINITE = 1; then
-    AC_LIBOBJ([isfinite])
-  fi
+  gl_CONDITIONAL([GL_COND_OBJ_ISFINITE], [test $REPLACE_ISFINITE = 1])
   gl_MATH_MODULE_INDICATOR([isfinite])
   gl_ISINF
-  if test $REPLACE_ISINF = 1; then
-    AC_LIBOBJ([isinf])
-  fi
+  gl_CONDITIONAL([GL_COND_OBJ_ISINF], [test $REPLACE_ISINF = 1])
   gl_MATH_MODULE_INDICATOR([isinf])
   gl_ISNAN
   gl_MATH_MODULE_INDICATOR([isnan])
@@ -510,21 +507,22 @@ AC_DEFUN([gl_INIT],
   gl_MATH_MODULE_INDICATOR([isnanl])
   gl_LANGINFO_H
   gl_LANGINFO_H_REQUIRE_DEFAULTS
+  AC_PROG_MKDIR_P
   AC_REQUIRE([gl_LARGEFILE])
   gl_FUNC_LDEXP
   gl_LD_VERSION_SCRIPT
   gl_VISIBILITY
+  gl___INLINE
   gl_LIBUNISTRING
   gl_LIMITS_H
+  gl_CONDITIONAL_HEADER([limits.h])
+  AC_PROG_MKDIR_P
   gl_FUNC_LINK
-  if test $HAVE_LINK = 0 || test $REPLACE_LINK = 1; then
-    AC_LIBOBJ([link])
-  fi
+  gl_CONDITIONAL([GL_COND_OBJ_LINK],
+                 [test $HAVE_LINK = 0 || test $REPLACE_LINK = 1])
   gl_UNISTD_MODULE_INDICATOR([link])
   AC_REQUIRE([gl_SYS_SOCKET_H])
-  if test "$ac_cv_header_winsock2_h" = yes; then
-    AC_LIBOBJ([listen])
-  fi
+  gl_CONDITIONAL([GL_COND_OBJ_LISTEN], [test "$ac_cv_header_winsock2_h" = yes])
   gl_SYS_SOCKET_MODULE_INDICATOR([listen])
   gl_LOCALCHARSET
   dnl For backward compatibility. Some packages still use this.
@@ -532,173 +530,159 @@ AC_DEFUN([gl_INIT],
   AC_SUBST([LOCALCHARSET_TESTS_ENVIRONMENT])
   gl_LOCALE_H
   gl_LOCALE_H_REQUIRE_DEFAULTS
+  AC_PROG_MKDIR_P
   gl_FUNC_LOG1P
-  if test $HAVE_LOG1P = 0 || test $REPLACE_LOG1P = 1; then
-    AC_LIBOBJ([log1p])
-  fi
+  gl_CONDITIONAL([GL_COND_OBJ_LOG1P],
+                 [test $HAVE_LOG1P = 0 || test $REPLACE_LOG1P = 1])
   gl_MATH_MODULE_INDICATOR([log1p])
   gl_FUNC_LSTAT
-  if test $REPLACE_LSTAT = 1; then
-    AC_LIBOBJ([lstat])
+  gl_CONDITIONAL([GL_COND_OBJ_LSTAT], [test $REPLACE_LSTAT = 1])
+  AM_COND_IF([GL_COND_OBJ_LSTAT], [
     gl_PREREQ_LSTAT
-  fi
+  ])
   gl_SYS_STAT_MODULE_INDICATOR([lstat])
   AC_CONFIG_COMMANDS_PRE([m4_ifdef([AH_HEADER],
     [AC_SUBST([CONFIG_INCLUDE], m4_defn([AH_HEADER]))])])
   AC_REQUIRE([AC_PROG_SED])
   AC_REQUIRE([AC_PROG_GREP])
   gl_FUNC_MALLOC_GNU
-  if test $REPLACE_MALLOC = 1; then
+  if test $REPLACE_MALLOC_FOR_MALLOC_GNU = 1; then
     AC_LIBOBJ([malloc])
   fi
+  gl_STDLIB_MODULE_INDICATOR([malloc-gnu])
   AC_REQUIRE([gl_FUNC_MALLOC_POSIX])
-  if test $REPLACE_MALLOC = 1; then
+  if test $REPLACE_MALLOC_FOR_MALLOC_POSIX = 1; then
     AC_LIBOBJ([malloc])
   fi
   gl_STDLIB_MODULE_INDICATOR([malloc-posix])
   gl_MALLOCA
   gl_MATH_H
   gl_MATH_H_REQUIRE_DEFAULTS
+  AC_PROG_MKDIR_P
   gl_MINMAX
   gl_FUNC_MKDIR
-  if test $REPLACE_MKDIR = 1; then
-    AC_LIBOBJ([mkdir])
-  fi
+  gl_CONDITIONAL([GL_COND_OBJ_MKDIR], [test $REPLACE_MKDIR = 1])
   gl_SYS_STAT_MODULE_INDICATOR([mkdir])
   gl_FUNC_MKOSTEMP
-  if test $HAVE_MKOSTEMP = 0; then
-    AC_LIBOBJ([mkostemp])
+  gl_CONDITIONAL([GL_COND_OBJ_MKOSTEMP], [test $HAVE_MKOSTEMP = 0])
+  AM_COND_IF([GL_COND_OBJ_MKOSTEMP], [
     gl_PREREQ_MKOSTEMP
-  fi
+  ])
   gl_MODULE_INDICATOR([mkostemp])
   gl_STDLIB_MODULE_INDICATOR([mkostemp])
   AC_REQUIRE([gl_MSVC_INVAL])
-  if test $HAVE_MSVC_INVALID_PARAMETER_HANDLER = 1; then
-    AC_LIBOBJ([msvc-inval])
-  fi
+  gl_CONDITIONAL([GL_COND_OBJ_MSVC_INVAL],
+                 [test $HAVE_MSVC_INVALID_PARAMETER_HANDLER = 1])
   AC_REQUIRE([gl_MSVC_NOTHROW])
-  if test $HAVE_MSVC_INVALID_PARAMETER_HANDLER = 1; then
-    AC_LIBOBJ([msvc-nothrow])
-  fi
+  gl_CONDITIONAL([GL_COND_OBJ_MSVC_NOTHROW],
+                 [test $HAVE_MSVC_INVALID_PARAMETER_HANDLER = 1])
   gl_MODULE_INDICATOR([msvc-nothrow])
   gl_MULTIARCH
   gl_NETDB_H
   gl_NETDB_H_REQUIRE_DEFAULTS
-  gl_HEADER_NETINET_IN
   AC_PROG_MKDIR_P
   gl_FUNC_NL_LANGINFO
-  if test $HAVE_NL_LANGINFO = 0 || test $REPLACE_NL_LANGINFO = 1; then
-    AC_LIBOBJ([nl_langinfo])
-  fi
+  gl_CONDITIONAL([GL_COND_OBJ_NL_LANGINFO],
+                 [test $HAVE_NL_LANGINFO = 0 || test $REPLACE_NL_LANGINFO = 1])
+  gl_CONDITIONAL([GL_COND_OBJ_NL_LANGINFO_LOCK],
+                 [test $REPLACE_NL_LANGINFO = 1 && test $NL_LANGINFO_MTSAFE = 0])
   if test $REPLACE_NL_LANGINFO = 1 && test $NL_LANGINFO_MTSAFE = 0; then
-    AC_LIBOBJ([nl_langinfo-lock])
     gl_PREREQ_NL_LANGINFO_LOCK
   fi
   gl_LANGINFO_MODULE_INDICATOR([nl_langinfo])
   gl_NPROC
   gl_FUNC_GNU_STRFTIME
   gl_FUNC_OPEN
-  if test $REPLACE_OPEN = 1; then
-    AC_LIBOBJ([open])
+  gl_CONDITIONAL([GL_COND_OBJ_OPEN], [test $REPLACE_OPEN = 1])
+  AM_COND_IF([GL_COND_OBJ_OPEN], [
     gl_PREREQ_OPEN
-  fi
+  ])
   gl_FCNTL_MODULE_INDICATOR([open])
   gl_FUNC_PIPE
-  if test $HAVE_PIPE = 0; then
-    AC_LIBOBJ([pipe])
-  fi
+  gl_CONDITIONAL([GL_COND_OBJ_PIPE], [test $HAVE_PIPE = 0])
   gl_UNISTD_MODULE_INDICATOR([pipe])
   gl_FUNC_PIPE2
   gl_UNISTD_MODULE_INDICATOR([pipe2])
   gl_FUNC_POLL
-  if test $HAVE_POLL = 0 || test $REPLACE_POLL = 1; then
-    AC_LIBOBJ([poll])
+  gl_CONDITIONAL([GL_COND_OBJ_POLL],
+                 [test $HAVE_POLL = 0 || test $REPLACE_POLL = 1])
+  AM_COND_IF([GL_COND_OBJ_POLL], [
     gl_PREREQ_POLL
-  fi
+  ])
   gl_POLL_MODULE_INDICATOR([poll])
   gl_POLL_H
   gl_POLL_H_REQUIRE_DEFAULTS
+  AC_PROG_MKDIR_P
+  gl_POSIX_SPAWN
+  gl_CONDITIONAL([GL_COND_OBJ_SPAWNP],
+                 [test $HAVE_POSIX_SPAWN = 0 || test $REPLACE_POSIX_SPAWN = 1])
+  gl_SPAWN_MODULE_INDICATOR([posix_spawnp])
   gl_FUNC_PUTENV
-  if test $REPLACE_PUTENV = 1; then
-    AC_LIBOBJ([putenv])
+  gl_CONDITIONAL([GL_COND_OBJ_PUTENV], [test $REPLACE_PUTENV = 1])
+  AM_COND_IF([GL_COND_OBJ_PUTENV], [
     gl_PREREQ_PUTENV
-  fi
+  ])
   gl_STDLIB_MODULE_INDICATOR([putenv])
   gl_FUNC_READ
-  if test $REPLACE_READ = 1; then
-    AC_LIBOBJ([read])
+  gl_CONDITIONAL([GL_COND_OBJ_READ], [test $REPLACE_READ = 1])
+  AM_COND_IF([GL_COND_OBJ_READ], [
     gl_PREREQ_READ
-  fi
+  ])
   gl_UNISTD_MODULE_INDICATOR([read])
   gl_FUNC_READLINK
-  if test $HAVE_READLINK = 0 || test $REPLACE_READLINK = 1; then
-    AC_LIBOBJ([readlink])
+  gl_CONDITIONAL([GL_COND_OBJ_READLINK],
+                 [test $HAVE_READLINK = 0 || test $REPLACE_READLINK = 1])
+  AM_COND_IF([GL_COND_OBJ_READLINK], [
     gl_PREREQ_READLINK
-  fi
+  ])
   gl_UNISTD_MODULE_INDICATOR([readlink])
   AC_REQUIRE([gl_SYS_SOCKET_H])
-  if test "$ac_cv_header_winsock2_h" = yes; then
-    AC_LIBOBJ([recv])
-  fi
+  gl_CONDITIONAL([GL_COND_OBJ_RECV], [test "$ac_cv_header_winsock2_h" = yes])
   gl_SYS_SOCKET_MODULE_INDICATOR([recv])
   AC_REQUIRE([gl_SYS_SOCKET_H])
-  if test "$ac_cv_header_winsock2_h" = yes; then
-    AC_LIBOBJ([recvfrom])
-  fi
+  gl_CONDITIONAL([GL_COND_OBJ_RECVFROM], [test "$ac_cv_header_winsock2_h" = yes])
   gl_SYS_SOCKET_MODULE_INDICATOR([recvfrom])
   gl_REGEX
-  if test $ac_use_included_regex = yes; then
-    AC_LIBOBJ([regex])
+  gl_CONDITIONAL([GL_COND_OBJ_REGEX], [test $ac_use_included_regex = yes])
+  AM_COND_IF([GL_COND_OBJ_REGEX], [
     gl_PREREQ_REGEX
-  fi
+  ])
   gl_FUNC_RENAME
-  if test $REPLACE_RENAME = 1; then
-    AC_LIBOBJ([rename])
-  fi
+  gl_CONDITIONAL([GL_COND_OBJ_RENAME], [test $REPLACE_RENAME = 1])
   gl_STDIO_MODULE_INDICATOR([rename])
   gl_FUNC_RMDIR
-  if test $REPLACE_RMDIR = 1; then
-    AC_LIBOBJ([rmdir])
-  fi
+  gl_CONDITIONAL([GL_COND_OBJ_RMDIR], [test $REPLACE_RMDIR = 1])
   gl_UNISTD_MODULE_INDICATOR([rmdir])
   gl_PREREQ_SAFE_READ
   gl_PREREQ_SAFE_WRITE
+  gl_SCHED_H
+  gl_SCHED_H_REQUIRE_DEFAULTS
+  AC_PROG_MKDIR_P
   gl_FUNC_SELECT
-  if test $REPLACE_SELECT = 1; then
-    AC_LIBOBJ([select])
-  fi
+  gl_CONDITIONAL([GL_COND_OBJ_SELECT], [test $REPLACE_SELECT = 1])
   gl_SYS_SELECT_MODULE_INDICATOR([select])
   AC_REQUIRE([gl_SYS_SOCKET_H])
-  if test "$ac_cv_header_winsock2_h" = yes; then
-    AC_LIBOBJ([send])
-  fi
+  gl_CONDITIONAL([GL_COND_OBJ_SEND], [test "$ac_cv_header_winsock2_h" = yes])
   gl_SYS_SOCKET_MODULE_INDICATOR([send])
   AC_REQUIRE([gl_SYS_SOCKET_H])
-  if test "$ac_cv_header_winsock2_h" = yes; then
-    AC_LIBOBJ([sendto])
-  fi
+  gl_CONDITIONAL([GL_COND_OBJ_SENDTO], [test "$ac_cv_header_winsock2_h" = yes])
   gl_SYS_SOCKET_MODULE_INDICATOR([sendto])
   gl_FUNC_SETENV
-  if test $HAVE_SETENV = 0 || test $REPLACE_SETENV = 1; then
-    AC_LIBOBJ([setenv])
-  fi
+  gl_CONDITIONAL([GL_COND_OBJ_SETENV],
+                 [test $HAVE_SETENV = 0 || test $REPLACE_SETENV = 1])
   gl_STDLIB_MODULE_INDICATOR([setenv])
   AC_REQUIRE([gl_SYS_SOCKET_H])
-  if test "$ac_cv_header_winsock2_h" = yes; then
-    AC_LIBOBJ([setsockopt])
-  fi
+  gl_CONDITIONAL([GL_COND_OBJ_SETSOCKOPT],
+                 [test "$ac_cv_header_winsock2_h" = yes])
   gl_SYS_SOCKET_MODULE_INDICATOR([setsockopt])
   AC_REQUIRE([gl_SYS_SOCKET_H])
-  if test "$ac_cv_header_winsock2_h" = yes; then
-    AC_LIBOBJ([shutdown])
-  fi
+  gl_CONDITIONAL([GL_COND_OBJ_SHUTDOWN], [test "$ac_cv_header_winsock2_h" = yes])
   gl_SYS_SOCKET_MODULE_INDICATOR([shutdown])
   gl_SIGNAL_H
   gl_SIGNAL_H_REQUIRE_DEFAULTS
+  AC_PROG_MKDIR_P
   AC_REQUIRE([gl_SYS_SOCKET_H])
-  if test "$ac_cv_header_winsock2_h" = yes; then
-    AC_LIBOBJ([socket])
-  fi
+  gl_CONDITIONAL([GL_COND_OBJ_SOCKET], [test "$ac_cv_header_winsock2_h" = yes])
   # When this module is used, sockets may actually occur as file descriptors,
   # hence it is worth warning if the modules 'close' and 'ioctl' are not used.
   m4_ifdef([gl_UNISTD_H_DEFAULTS], [gl_UNISTD_H_REQUIRE_DEFAULTS])
@@ -711,16 +695,40 @@ AC_DEFUN([gl_INIT],
   gl_SYS_SOCKET_MODULE_INDICATOR([socket])
   AC_REQUIRE([gl_SOCKETLIB])
   gl_TYPE_SOCKLEN_T
+  gl_SPAWN_H
+  gl_SPAWN_H_REQUIRE_DEFAULTS
+  AC_PROG_MKDIR_P
   gt_TYPE_SSIZE_T
   gl_STAT_TIME
   gl_STAT_BIRTHTIME
   gl_STDALIGN_H
-  AM_STDBOOL_H
+  gl_CONDITIONAL_HEADER([stdalign.h])
+  AC_PROG_MKDIR_P
+  gl_STDBOOL_H
+  gl_CONDITIONAL_HEADER([stdbool.h])
+  AC_PROG_MKDIR_P
+  AC_CHECK_HEADERS_ONCE([stdckdint.h])
+  if test $ac_cv_header_stdckdint_h = yes; then
+    GL_GENERATE_STDCKDINT_H=false
+  else
+    GL_GENERATE_STDCKDINT_H=true
+  fi
+  gl_CONDITIONAL_HEADER([stdckdint.h])
+  AC_PROG_MKDIR_P
   gl_STDDEF_H
   gl_STDDEF_H_REQUIRE_DEFAULTS
+  gl_CONDITIONAL_HEADER([stddef.h])
+  AC_PROG_MKDIR_P
   gl_STDINT_H
+  gl_CONDITIONAL_HEADER([stdint.h])
+  dnl Because of gl_REPLACE_LIMITS_H:
+  gl_CONDITIONAL_HEADER([limits.h])
+  AC_PROG_MKDIR_P
   gl_STDIO_H
   gl_STDIO_H_REQUIRE_DEFAULTS
+  AC_PROG_MKDIR_P
+  gl_CONDITIONAL([GL_COND_OBJ_STDIO_READ], [test $REPLACE_STDIO_READ_FUNCS = 1])
+  gl_CONDITIONAL([GL_COND_OBJ_STDIO_WRITE], [test $REPLACE_STDIO_WRITE_FUNCS = 1])
   dnl No need to create extra modules for these functions. Everyone who uses
   dnl <stdio.h> likely needs them.
   gl_STDIO_MODULE_INDICATOR([fscanf])
@@ -746,12 +754,14 @@ AC_DEFUN([gl_INIT],
   gl_STDIO_MODULE_INDICATOR([fwrite])
   gl_STDLIB_H
   gl_STDLIB_H_REQUIRE_DEFAULTS
+  AC_PROG_MKDIR_P
   if test $gl_cond_libtool = false; then
     gl_ltlibdeps="$gl_ltlibdeps $LTLIBICONV"
     gl_libdeps="$gl_libdeps $LIBICONV"
   fi
   gl_STRING_H
   gl_STRING_H_REQUIRE_DEFAULTS
+  AC_PROG_MKDIR_P
   gl_SYS_FILE_H
   gl_SYS_FILE_H_REQUIRE_DEFAULTS
   AC_PROG_MKDIR_P
@@ -778,44 +788,46 @@ AC_DEFUN([gl_INIT],
   AC_PROG_MKDIR_P
   gl_TIME_H
   gl_TIME_H_REQUIRE_DEFAULTS
+  AC_PROG_MKDIR_P
   gl_TIME_RZ
-  if test $HAVE_TIMEZONE_T = 0; then
-    AC_LIBOBJ([time_rz])
-  fi
+  gl_CONDITIONAL([GL_COND_OBJ_TIME_RZ], [test $HAVE_TIMEZONE_T = 0])
   gl_TIME_MODULE_INDICATOR([time_rz])
   gl_FUNC_TIMES
-  if test $HAVE_TIMES = 0; then
-    AC_LIBOBJ([times])
-  fi
+  gl_CONDITIONAL([GL_COND_OBJ_TIMES], [test $HAVE_TIMES = 0])
   gl_SYS_TIMES_MODULE_INDICATOR([times])
   gl_FUNC_TRUNC
-  if test $HAVE_DECL_TRUNC = 0 || test $REPLACE_TRUNC = 1; then
-    AC_LIBOBJ([trunc])
-  fi
+  gl_CONDITIONAL([GL_COND_OBJ_TRUNC],
+                 [test $HAVE_DECL_TRUNC = 0 || test $REPLACE_TRUNC = 1])
   gl_MATH_MODULE_INDICATOR([trunc])
   gl_UNISTD_H
   gl_UNISTD_H_REQUIRE_DEFAULTS
+  AC_PROG_MKDIR_P
+  AC_C_VARARRAYS
   gl_FUNC_VSNPRINTF
   gl_STDIO_MODULE_INDICATOR([vsnprintf])
   gl_WCHAR_H
   gl_WCHAR_H_REQUIRE_DEFAULTS
+  AC_PROG_MKDIR_P
   gl_FUNC_WRITE
-  if test $REPLACE_WRITE = 1; then
-    AC_LIBOBJ([write])
+  gl_CONDITIONAL([GL_COND_OBJ_WRITE], [test $REPLACE_WRITE = 1])
+  AM_COND_IF([GL_COND_OBJ_WRITE], [
     gl_PREREQ_WRITE
-  fi
+  ])
   gl_UNISTD_MODULE_INDICATOR([write])
+  gl_gnulib_enabled_access=false
   gl_gnulib_enabled_alloca=false
   gl_gnulib_enabled_assure=false
   gl_gnulib_enabled_btowc=false
   gl_gnulib_enabled_37f71b604aa9c54446783d80f42fe547=false
   gl_gnulib_enabled_chdir=false
   gl_gnulib_enabled_cloexec=false
+  gl_gnulib_enabled_6da965dc4d3aa4f87d68116dce96f1a5=false
   gl_gnulib_enabled_dup2=false
   gl_gnulib_enabled_dynarray=false
   gl_gnulib_enabled_925677f0343de64b89a9f0c790b4104c=false
   gl_gnulib_enabled_fcntl=false
   gl_gnulib_enabled_43fe87a341d9b4b93c47c3ad819a5239=false
+  gl_gnulib_enabled_7be38c8cf2027003f573b80556d26ff2=false
   gl_gnulib_enabled_getdtablesize=false
   gl_gnulib_enabled_getrandom=false
   gl_gnulib_enabled_be453cec5eecf5731a274f2de7f2db36=false
@@ -824,7 +836,6 @@ AC_DEFUN([gl_INIT],
   gl_gnulib_enabled_b1df7117b479d2da59d76deba468ee21=false
   gl_gnulib_enabled_3f0e593033d1fc2c127581960f641b66=false
   gl_gnulib_enabled_dbdf22868a5367f28bf18e0013ac6f8f=false
-  gl_gnulib_enabled_21ee726a3540c09237a8e70c0baf7467=false
   gl_gnulib_enabled_localeconv=false
   gl_gnulib_enabled_log=false
   gl_gnulib_enabled_mbrtowc=false
@@ -834,7 +845,9 @@ AC_DEFUN([gl_INIT],
   gl_gnulib_enabled_mempcpy=false
   gl_gnulib_enabled_mktime=false
   gl_gnulib_enabled_5264294aa0a5557541b53c8c741f7f31=false
+  gl_gnulib_enabled_netinet_in=false
   gl_gnulib_enabled_pathmax=false
+  gl_gnulib_enabled_332607f759618fb73dfc3076748afea7=false
   gl_gnulib_enabled_raise=false
   gl_gnulib_enabled_rawmemchr=false
   gl_gnulib_enabled_61bcaca76b3e6f9ae55d57a1c3193bc4=false
@@ -843,11 +856,14 @@ AC_DEFUN([gl_INIT],
   gl_gnulib_enabled_scratch_buffer=false
   gl_gnulib_enabled_servent=false
   gl_gnulib_enabled_e7e881d32ca02f1c997b13c737c64bbd=false
+  gl_gnulib_enabled_cdeb0f2aaf9d280baa6526bfa1b07f70=false
   gl_gnulib_enabled_signbit=false
   gl_gnulib_enabled_size_max=false
   gl_gnulib_enabled_snprintf=false
   gl_gnulib_enabled_sockets=false
   gl_gnulib_enabled_stat=false
+  gl_gnulib_enabled_stpcpy=false
+  gl_gnulib_enabled_strchrnul=false
   gl_gnulib_enabled_f9850631dca91859e9cddac9359921c0=false
   gl_gnulib_enabled_streq=false
   gl_gnulib_enabled_sys_random=false
@@ -859,7 +875,18 @@ AC_DEFUN([gl_INIT],
   gl_gnulib_enabled_vasnprintf=false
   gl_gnulib_enabled_wcrtomb=false
   gl_gnulib_enabled_3dcce957eadc896e63ab5f137947b410=false
+  gl_gnulib_enabled_fd43d02c899a251eacc999baf40b238e=false
   gl_gnulib_enabled_xsize=false
+  func_gl_gnulib_m4code_access ()
+  {
+    if ! $gl_gnulib_enabled_access; then
+      gl_FUNC_ACCESS
+      gl_CONDITIONAL([GL_COND_OBJ_ACCESS], [test $REPLACE_ACCESS = 1])
+      gl_UNISTD_MODULE_INDICATOR([access])
+      gl_gnulib_enabled_access=true
+      func_gl_gnulib_m4code_fcntl
+    fi
+  }
   func_gl_gnulib_m4code_alloca ()
   {
     if ! $gl_gnulib_enabled_alloca; then
@@ -880,10 +907,11 @@ AC_SUBST([LTALLOCA])
   {
     if ! $gl_gnulib_enabled_btowc; then
       gl_FUNC_BTOWC
-      if test $HAVE_BTOWC = 0 || test $REPLACE_BTOWC = 1; then
-        AC_LIBOBJ([btowc])
+      gl_CONDITIONAL([GL_COND_OBJ_BTOWC],
+                     [test $HAVE_BTOWC = 0 || test $REPLACE_BTOWC = 1])
+      AM_COND_IF([GL_COND_OBJ_BTOWC], [
         gl_PREREQ_BTOWC
-      fi
+      ])
       gl_WCHAR_MODULE_INDICATOR([btowc])
       gl_gnulib_enabled_btowc=true
       if test $HAVE_BTOWC = 0 || test $REPLACE_BTOWC = 1; then
@@ -914,14 +942,21 @@ AC_SUBST([LTALLOCA])
       func_gl_gnulib_m4code_fcntl
     fi
   }
+  func_gl_gnulib_m4code_6da965dc4d3aa4f87d68116dce96f1a5 ()
+  {
+    if ! $gl_gnulib_enabled_6da965dc4d3aa4f87d68116dce96f1a5; then
+      gl_gnulib_enabled_6da965dc4d3aa4f87d68116dce96f1a5=true
+      func_gl_gnulib_m4code_stpcpy
+    fi
+  }
   func_gl_gnulib_m4code_dup2 ()
   {
     if ! $gl_gnulib_enabled_dup2; then
       gl_FUNC_DUP2
-      if test $REPLACE_DUP2 = 1; then
-        AC_LIBOBJ([dup2])
+      gl_CONDITIONAL([GL_COND_OBJ_DUP2], [test $REPLACE_DUP2 = 1])
+      AM_COND_IF([GL_COND_OBJ_DUP2], [
         gl_PREREQ_DUP2
-      fi
+      ])
       gl_UNISTD_MODULE_INDICATOR([dup2])
       gl_gnulib_enabled_dup2=true
     fi
@@ -932,7 +967,6 @@ AC_SUBST([LTALLOCA])
       AC_PROG_MKDIR_P
       gl_gnulib_enabled_dynarray=true
       func_gl_gnulib_m4code_37f71b604aa9c54446783d80f42fe547
-      func_gl_gnulib_m4code_21ee726a3540c09237a8e70c0baf7467
     fi
   }
   func_gl_gnulib_m4code_925677f0343de64b89a9f0c790b4104c ()
@@ -945,9 +979,8 @@ AC_SUBST([LTALLOCA])
   {
     if ! $gl_gnulib_enabled_fcntl; then
       gl_FUNC_FCNTL
-      if test $HAVE_FCNTL = 0 || test $REPLACE_FCNTL = 1; then
-        AC_LIBOBJ([fcntl])
-      fi
+      gl_CONDITIONAL([GL_COND_OBJ_FCNTL],
+                     [test $HAVE_FCNTL = 0 || test $REPLACE_FCNTL = 1])
       gl_FCNTL_MODULE_INDICATOR([fcntl])
       gl_gnulib_enabled_fcntl=true
       if test $HAVE_FCNTL = 0 || test $REPLACE_FCNTL = 1; then
@@ -964,14 +997,26 @@ AC_SUBST([LTALLOCA])
       gl_gnulib_enabled_43fe87a341d9b4b93c47c3ad819a5239=true
     fi
   }
+  func_gl_gnulib_m4code_7be38c8cf2027003f573b80556d26ff2 ()
+  {
+    if ! $gl_gnulib_enabled_7be38c8cf2027003f573b80556d26ff2; then
+      gl_FINDPROG_IN
+      gl_gnulib_enabled_7be38c8cf2027003f573b80556d26ff2=true
+      func_gl_gnulib_m4code_access
+      func_gl_gnulib_m4code_6da965dc4d3aa4f87d68116dce96f1a5
+      func_gl_gnulib_m4code_stat
+      func_gl_gnulib_m4code_f9850631dca91859e9cddac9359921c0
+    fi
+  }
   func_gl_gnulib_m4code_getdtablesize ()
   {
     if ! $gl_gnulib_enabled_getdtablesize; then
       gl_FUNC_GETDTABLESIZE
-      if test $HAVE_GETDTABLESIZE = 0 || test $REPLACE_GETDTABLESIZE = 1; then
-        AC_LIBOBJ([getdtablesize])
+      gl_CONDITIONAL([GL_COND_OBJ_GETDTABLESIZE],
+                     [test $HAVE_GETDTABLESIZE = 0 || test $REPLACE_GETDTABLESIZE = 1])
+      AM_COND_IF([GL_COND_OBJ_GETDTABLESIZE], [
         gl_PREREQ_GETDTABLESIZE
-      fi
+      ])
       gl_UNISTD_MODULE_INDICATOR([getdtablesize])
       gl_gnulib_enabled_getdtablesize=true
     fi
@@ -981,9 +1026,8 @@ AC_SUBST([LTALLOCA])
     if ! $gl_gnulib_enabled_getrandom; then
       AC_REQUIRE([AC_CANONICAL_HOST])
       gl_FUNC_GETRANDOM
-      if test $HAVE_GETRANDOM = 0 || test $REPLACE_GETRANDOM = 1; then
-        AC_LIBOBJ([getrandom])
-      fi
+      gl_CONDITIONAL([GL_COND_OBJ_GETRANDOM],
+                     [test $HAVE_GETRANDOM = 0 || test $REPLACE_GETRANDOM = 1])
       gl_SYS_RANDOM_MODULE_INDICATOR([getrandom])
       gl_gnulib_enabled_getrandom=true
       func_gl_gnulib_m4code_sys_random
@@ -1047,21 +1091,14 @@ AC_SUBST([LTALLOCA])
       gl_gnulib_enabled_dbdf22868a5367f28bf18e0013ac6f8f=true
     fi
   }
-  func_gl_gnulib_m4code_21ee726a3540c09237a8e70c0baf7467 ()
-  {
-    if ! $gl_gnulib_enabled_21ee726a3540c09237a8e70c0baf7467; then
-      gl___INLINE
-      gl_gnulib_enabled_21ee726a3540c09237a8e70c0baf7467=true
-    fi
-  }
   func_gl_gnulib_m4code_localeconv ()
   {
     if ! $gl_gnulib_enabled_localeconv; then
       gl_FUNC_LOCALECONV
-      if test $REPLACE_LOCALECONV = 1; then
-        AC_LIBOBJ([localeconv])
+      gl_CONDITIONAL([GL_COND_OBJ_LOCALECONV], [test $REPLACE_LOCALECONV = 1])
+      AM_COND_IF([GL_COND_OBJ_LOCALECONV], [
         gl_PREREQ_LOCALECONV
-      fi
+      ])
       gl_LOCALE_MODULE_INDICATOR([localeconv])
       gl_gnulib_enabled_localeconv=true
     fi
@@ -1070,9 +1107,7 @@ AC_SUBST([LTALLOCA])
   {
     if ! $gl_gnulib_enabled_log; then
       AC_REQUIRE([gl_FUNC_LOG])
-      if test $REPLACE_LOG = 1; then
-        AC_LIBOBJ([log])
-      fi
+      gl_CONDITIONAL([GL_COND_OBJ_LOG], [test $REPLACE_LOG = 1])
       gl_MATH_MODULE_INDICATOR([log])
       gl_gnulib_enabled_log=true
     fi
@@ -1081,15 +1116,16 @@ AC_SUBST([LTALLOCA])
   {
     if ! $gl_gnulib_enabled_mbrtowc; then
       gl_FUNC_MBRTOWC
-      if test $HAVE_MBRTOWC = 0 || test $REPLACE_MBRTOWC = 1; then
-        AC_LIBOBJ([mbrtowc])
+      gl_CONDITIONAL([GL_COND_OBJ_MBRTOWC],
+                     [test $HAVE_MBRTOWC = 0 || test $REPLACE_MBRTOWC = 1])
+      AM_COND_IF([GL_COND_OBJ_MBRTOWC], [
         if test $REPLACE_MBSTATE_T = 1; then
           AC_LIBOBJ([lc-charset-dispatch])
           AC_LIBOBJ([mbtowc-lock])
           gl_PREREQ_MBTOWC_LOCK
         fi
         gl_PREREQ_MBRTOWC
-      fi
+      ])
       gl_WCHAR_MODULE_INDICATOR([mbrtowc])
       gl_gnulib_enabled_mbrtowc=true
       if { test $HAVE_MBRTOWC = 0 || test $REPLACE_MBRTOWC = 1; } && test $REPLACE_MBSTATE_T = 0; then
@@ -1107,10 +1143,11 @@ AC_SUBST([LTALLOCA])
   {
     if ! $gl_gnulib_enabled_mbsinit; then
       gl_FUNC_MBSINIT
-      if test $HAVE_MBSINIT = 0 || test $REPLACE_MBSINIT = 1; then
-        AC_LIBOBJ([mbsinit])
+      gl_CONDITIONAL([GL_COND_OBJ_MBSINIT],
+                     [test $HAVE_MBSINIT = 0 || test $REPLACE_MBSINIT = 1])
+      AM_COND_IF([GL_COND_OBJ_MBSINIT], [
         gl_PREREQ_MBSINIT
-      fi
+      ])
       gl_WCHAR_MODULE_INDICATOR([mbsinit])
       gl_gnulib_enabled_mbsinit=true
       if test $HAVE_MBSINIT = 0 || test $REPLACE_MBSINIT = 1; then
@@ -1122,10 +1159,11 @@ AC_SUBST([LTALLOCA])
   {
     if ! $gl_gnulib_enabled_mbtowc; then
       gl_FUNC_MBTOWC
-      if test $HAVE_MBTOWC = 0 || test $REPLACE_MBTOWC = 1; then
-        AC_LIBOBJ([mbtowc])
+      gl_CONDITIONAL([GL_COND_OBJ_MBTOWC],
+                     [test $HAVE_MBTOWC = 0 || test $REPLACE_MBTOWC = 1])
+      AM_COND_IF([GL_COND_OBJ_MBTOWC], [
         gl_PREREQ_MBTOWC
-      fi
+      ])
       gl_STDLIB_MODULE_INDICATOR([mbtowc])
       gl_gnulib_enabled_mbtowc=true
       if test $HAVE_MBTOWC = 0 || test $REPLACE_MBTOWC = 1; then
@@ -1137,10 +1175,10 @@ AC_SUBST([LTALLOCA])
   {
     if ! $gl_gnulib_enabled_memchr; then
       gl_FUNC_MEMCHR
-      if test $REPLACE_MEMCHR = 1; then
-        AC_LIBOBJ([memchr])
+      gl_CONDITIONAL([GL_COND_OBJ_MEMCHR], [test $REPLACE_MEMCHR = 1])
+      AM_COND_IF([GL_COND_OBJ_MEMCHR], [
         gl_PREREQ_MEMCHR
-      fi
+      ])
       gl_STRING_MODULE_INDICATOR([memchr])
       gl_gnulib_enabled_memchr=true
     fi
@@ -1149,10 +1187,10 @@ AC_SUBST([LTALLOCA])
   {
     if ! $gl_gnulib_enabled_mempcpy; then
       gl_FUNC_MEMPCPY
-      if test $HAVE_MEMPCPY = 0; then
-        AC_LIBOBJ([mempcpy])
+      gl_CONDITIONAL([GL_COND_OBJ_MEMPCPY], [test $HAVE_MEMPCPY = 0])
+      AM_COND_IF([GL_COND_OBJ_MEMPCPY], [
         gl_PREREQ_MEMPCPY
-      fi
+      ])
       gl_STRING_MODULE_INDICATOR([mempcpy])
       gl_gnulib_enabled_mempcpy=true
     fi
@@ -1167,9 +1205,6 @@ AC_SUBST([LTALLOCA])
       fi
       gl_TIME_MODULE_INDICATOR([mktime])
       gl_gnulib_enabled_mktime=true
-      if test $REPLACE_MKTIME = 1; then
-        func_gl_gnulib_m4code_21ee726a3540c09237a8e70c0baf7467
-      fi
       if test $REPLACE_MKTIME = 1; then
         func_gl_gnulib_m4code_time_r
       fi
@@ -1187,6 +1222,15 @@ AC_SUBST([LTALLOCA])
       func_gl_gnulib_m4code_mktime
     fi
   }
+  func_gl_gnulib_m4code_netinet_in ()
+  {
+    if ! $gl_gnulib_enabled_netinet_in; then
+      gl_HEADER_NETINET_IN
+      gl_CONDITIONAL_HEADER([netinet/in.h])
+      AC_PROG_MKDIR_P
+      gl_gnulib_enabled_netinet_in=true
+    fi
+  }
   func_gl_gnulib_m4code_pathmax ()
   {
     if ! $gl_gnulib_enabled_pathmax; then
@@ -1194,14 +1238,39 @@ AC_SUBST([LTALLOCA])
       gl_gnulib_enabled_pathmax=true
     fi
   }
+  func_gl_gnulib_m4code_332607f759618fb73dfc3076748afea7 ()
+  {
+    if ! $gl_gnulib_enabled_332607f759618fb73dfc3076748afea7; then
+      gl_POSIX_SPAWN
+      gl_CONDITIONAL([GL_COND_OBJ_SPAWNI],
+                     [test $HAVE_POSIX_SPAWN = 0 || test $REPLACE_POSIX_SPAWN = 1])
+      AM_COND_IF([GL_COND_OBJ_SPAWNI], [
+        gl_PREREQ_POSIX_SPAWN_INTERNAL
+      ])
+      gl_gnulib_enabled_332607f759618fb73dfc3076748afea7=true
+      if test $HAVE_POSIX_SPAWN = 0; then
+        func_gl_gnulib_m4code_6da965dc4d3aa4f87d68116dce96f1a5
+      fi
+      func_gl_gnulib_m4code_dup2
+      if test $HAVE_POSIX_SPAWN = 0; then
+        func_gl_gnulib_m4code_7be38c8cf2027003f573b80556d26ff2
+      fi
+      func_gl_gnulib_m4code_cdeb0f2aaf9d280baa6526bfa1b07f70
+      func_gl_gnulib_m4code_strchrnul
+      if test $HAVE_POSIX_SPAWN = 0; then
+        func_gl_gnulib_m4code_fd43d02c899a251eacc999baf40b238e
+      fi
+    fi
+  }
   func_gl_gnulib_m4code_raise ()
   {
     if ! $gl_gnulib_enabled_raise; then
       gl_FUNC_RAISE
-      if test $HAVE_RAISE = 0 || test $REPLACE_RAISE = 1; then
-        AC_LIBOBJ([raise])
+      gl_CONDITIONAL([GL_COND_OBJ_RAISE],
+                     [test $HAVE_RAISE = 0 || test $REPLACE_RAISE = 1])
+      AM_COND_IF([GL_COND_OBJ_RAISE], [
         gl_PREREQ_RAISE
-      fi
+      ])
       gl_SIGNAL_MODULE_INDICATOR([raise])
       gl_gnulib_enabled_raise=true
     fi
@@ -1210,10 +1279,10 @@ AC_SUBST([LTALLOCA])
   {
     if ! $gl_gnulib_enabled_rawmemchr; then
       gl_FUNC_RAWMEMCHR
-      if test $HAVE_RAWMEMCHR = 0; then
-        AC_LIBOBJ([rawmemchr])
+      gl_CONDITIONAL([GL_COND_OBJ_RAWMEMCHR], [test $HAVE_RAWMEMCHR = 0])
+      AM_COND_IF([GL_COND_OBJ_RAWMEMCHR], [
         gl_PREREQ_RAWMEMCHR
-      fi
+      ])
       gl_STRING_MODULE_INDICATOR([rawmemchr])
       gl_gnulib_enabled_rawmemchr=true
     fi
@@ -1222,7 +1291,7 @@ AC_SUBST([LTALLOCA])
   {
     if ! $gl_gnulib_enabled_61bcaca76b3e6f9ae55d57a1c3193bc4; then
       gl_FUNC_REALLOC_POSIX
-      if test $REPLACE_REALLOC = 1; then
+      if test $REPLACE_REALLOC_FOR_REALLOC_POSIX = 1; then
         AC_LIBOBJ([realloc])
       fi
       gl_STDLIB_MODULE_INDICATOR([realloc-posix])
@@ -1233,9 +1302,8 @@ AC_SUBST([LTALLOCA])
   {
     if ! $gl_gnulib_enabled_round; then
       gl_FUNC_ROUND
-      if test $HAVE_ROUND = 0 || test $REPLACE_ROUND = 1; then
-        AC_LIBOBJ([round])
-      fi
+      gl_CONDITIONAL([GL_COND_OBJ_ROUND],
+                     [test $HAVE_ROUND = 0 || test $REPLACE_ROUND = 1])
       gl_MATH_MODULE_INDICATOR([round])
       gl_gnulib_enabled_round=true
     fi
@@ -1252,7 +1320,6 @@ AC_SUBST([LTALLOCA])
       AC_PROG_MKDIR_P
       gl_gnulib_enabled_scratch_buffer=true
       func_gl_gnulib_m4code_37f71b604aa9c54446783d80f42fe547
-      func_gl_gnulib_m4code_21ee726a3540c09237a8e70c0baf7467
       func_gl_gnulib_m4code_61bcaca76b3e6f9ae55d57a1c3193bc4
     fi
   }
@@ -1267,23 +1334,27 @@ AC_SUBST([LTALLOCA])
   {
     if ! $gl_gnulib_enabled_e7e881d32ca02f1c997b13c737c64bbd; then
       gl_FUNC_SETLOCALE_NULL
-      if test $SETLOCALE_NULL_ALL_MTSAFE = 0 || test $SETLOCALE_NULL_ONE_MTSAFE = 0; then
-        AC_LIBOBJ([setlocale-lock])
+      gl_CONDITIONAL([GL_COND_OBJ_SETLOCALE_LOCK],
+                     [test $SETLOCALE_NULL_ALL_MTSAFE = 0 || test $SETLOCALE_NULL_ONE_MTSAFE = 0])
+      AM_COND_IF([GL_COND_OBJ_SETLOCALE_LOCK], [
         gl_PREREQ_SETLOCALE_LOCK
-      fi
+      ])
       gl_LOCALE_MODULE_INDICATOR([setlocale_null])
       gl_gnulib_enabled_e7e881d32ca02f1c997b13c737c64bbd=true
+    fi
+  }
+  func_gl_gnulib_m4code_cdeb0f2aaf9d280baa6526bfa1b07f70 ()
+  {
+    if ! $gl_gnulib_enabled_cdeb0f2aaf9d280baa6526bfa1b07f70; then
+      gl_SH_FILENAME
+      gl_gnulib_enabled_cdeb0f2aaf9d280baa6526bfa1b07f70=true
     fi
   }
   func_gl_gnulib_m4code_signbit ()
   {
     if ! $gl_gnulib_enabled_signbit; then
       gl_SIGNBIT
-      if test $REPLACE_SIGNBIT = 1; then
-        AC_LIBOBJ([signbitf])
-        AC_LIBOBJ([signbitd])
-        AC_LIBOBJ([signbitl])
-      fi
+      gl_CONDITIONAL([GL_COND_OBJ_SIGNBIT3], [test $REPLACE_SIGNBIT = 1])
       gl_MATH_MODULE_INDICATOR([signbit])
       gl_gnulib_enabled_signbit=true
       if test $REPLACE_SIGNBIT = 1; then
@@ -1328,15 +1399,15 @@ AC_SUBST([LTALLOCA])
   {
     if ! $gl_gnulib_enabled_stat; then
       gl_FUNC_STAT
-      if test $REPLACE_STAT = 1; then
-        AC_LIBOBJ([stat])
+      gl_CONDITIONAL([GL_COND_OBJ_STAT], [test $REPLACE_STAT = 1])
+      AM_COND_IF([GL_COND_OBJ_STAT], [
         case "$host_os" in
           mingw*)
             AC_LIBOBJ([stat-w32])
             ;;
         esac
         gl_PREREQ_STAT
-      fi
+      ])
       gl_SYS_STAT_MODULE_INDICATOR([stat])
       gl_gnulib_enabled_stat=true
       if test $REPLACE_STAT = 1; then
@@ -1344,14 +1415,42 @@ AC_SUBST([LTALLOCA])
       fi
     fi
   }
+  func_gl_gnulib_m4code_stpcpy ()
+  {
+    if ! $gl_gnulib_enabled_stpcpy; then
+      gl_FUNC_STPCPY
+      gl_CONDITIONAL([GL_COND_OBJ_STPCPY], [test $HAVE_STPCPY = 0])
+      AM_COND_IF([GL_COND_OBJ_STPCPY], [
+        gl_PREREQ_STPCPY
+      ])
+      gl_STRING_MODULE_INDICATOR([stpcpy])
+      gl_gnulib_enabled_stpcpy=true
+    fi
+  }
+  func_gl_gnulib_m4code_strchrnul ()
+  {
+    if ! $gl_gnulib_enabled_strchrnul; then
+      gl_FUNC_STRCHRNUL
+      gl_CONDITIONAL([GL_COND_OBJ_STRCHRNUL],
+                     [test $HAVE_STRCHRNUL = 0 || test $REPLACE_STRCHRNUL = 1])
+      AM_COND_IF([GL_COND_OBJ_STRCHRNUL], [
+        gl_PREREQ_STRCHRNUL
+      ])
+      gl_STRING_MODULE_INDICATOR([strchrnul])
+      gl_gnulib_enabled_strchrnul=true
+      if test $HAVE_STRCHRNUL = 0 || test $REPLACE_STRCHRNUL = 1; then
+        func_gl_gnulib_m4code_rawmemchr
+      fi
+    fi
+  }
   func_gl_gnulib_m4code_f9850631dca91859e9cddac9359921c0 ()
   {
     if ! $gl_gnulib_enabled_f9850631dca91859e9cddac9359921c0; then
       gl_FUNC_STRDUP_POSIX
-      if test $REPLACE_STRDUP = 1; then
-        AC_LIBOBJ([strdup])
+      gl_CONDITIONAL([GL_COND_OBJ_STRDUP], [test $REPLACE_STRDUP = 1])
+      AM_COND_IF([GL_COND_OBJ_STRDUP], [
         gl_PREREQ_STRDUP
-      fi
+      ])
       gl_STRING_MODULE_INDICATOR([strdup])
       gl_gnulib_enabled_f9850631dca91859e9cddac9359921c0=true
     fi
@@ -1378,17 +1477,17 @@ AC_SUBST([LTALLOCA])
       gl_MODULE_INDICATOR([tempname])
       gl_gnulib_enabled_tempname=true
       func_gl_gnulib_m4code_getrandom
-      func_gl_gnulib_m4code_21ee726a3540c09237a8e70c0baf7467
     fi
   }
   func_gl_gnulib_m4code_time_r ()
   {
     if ! $gl_gnulib_enabled_time_r; then
       gl_TIME_R
-      if test $HAVE_LOCALTIME_R = 0 || test $REPLACE_LOCALTIME_R = 1; then
-        AC_LIBOBJ([time_r])
+      gl_CONDITIONAL([GL_COND_OBJ_TIME_R],
+                     [test $HAVE_LOCALTIME_R = 0 || test $REPLACE_LOCALTIME_R = 1])
+      AM_COND_IF([GL_COND_OBJ_TIME_R], [
         gl_PREREQ_TIME_R
-      fi
+      ])
       gl_TIME_MODULE_INDICATOR([time_r])
       gl_gnulib_enabled_time_r=true
     fi
@@ -1397,10 +1496,11 @@ AC_SUBST([LTALLOCA])
   {
     if ! $gl_gnulib_enabled_timegm; then
       gl_FUNC_TIMEGM
-      if test $HAVE_TIMEGM = 0 || test $REPLACE_TIMEGM = 1; then
-        AC_LIBOBJ([timegm])
+      gl_CONDITIONAL([GL_COND_OBJ_TIMEGM],
+                     [test $HAVE_TIMEGM = 0 || test $REPLACE_TIMEGM = 1])
+      AM_COND_IF([GL_COND_OBJ_TIMEGM], [
         gl_PREREQ_TIMEGM
-      fi
+      ])
       gl_TIME_MODULE_INDICATOR([timegm])
       gl_gnulib_enabled_timegm=true
       if test $HAVE_TIMEGM = 0 || test $REPLACE_TIMEGM = 1; then
@@ -1415,9 +1515,7 @@ AC_SUBST([LTALLOCA])
   {
     if ! $gl_gnulib_enabled_tzset; then
       gl_FUNC_TZSET
-      if test $REPLACE_TZSET = 1; then
-        AC_LIBOBJ([tzset])
-      fi
+      gl_CONDITIONAL([GL_COND_OBJ_TZSET], [test $REPLACE_TZSET = 1])
       gl_TIME_MODULE_INDICATOR([tzset])
       gl_gnulib_enabled_tzset=true
     fi
@@ -1426,10 +1524,11 @@ AC_SUBST([LTALLOCA])
   {
     if ! $gl_gnulib_enabled_unsetenv; then
       gl_FUNC_UNSETENV
-      if test $HAVE_UNSETENV = 0 || test $REPLACE_UNSETENV = 1; then
-        AC_LIBOBJ([unsetenv])
+      gl_CONDITIONAL([GL_COND_OBJ_UNSETENV],
+                     [test $HAVE_UNSETENV = 0 || test $REPLACE_UNSETENV = 1])
+      AM_COND_IF([GL_COND_OBJ_UNSETENV], [
         gl_PREREQ_UNSETENV
-      fi
+      ])
       gl_STDLIB_MODULE_INDICATOR([unsetenv])
       gl_gnulib_enabled_unsetenv=true
     fi
@@ -1448,10 +1547,11 @@ AC_SUBST([LTALLOCA])
   {
     if ! $gl_gnulib_enabled_wcrtomb; then
       gl_FUNC_WCRTOMB
-      if test $HAVE_WCRTOMB = 0 || test $REPLACE_WCRTOMB = 1; then
-        AC_LIBOBJ([wcrtomb])
+      gl_CONDITIONAL([GL_COND_OBJ_WCRTOMB],
+                     [test $HAVE_WCRTOMB = 0 || test $REPLACE_WCRTOMB = 1])
+      AM_COND_IF([GL_COND_OBJ_WCRTOMB], [
         gl_PREREQ_WCRTOMB
-      fi
+      ])
       gl_WCHAR_MODULE_INDICATOR([wcrtomb])
       gl_gnulib_enabled_wcrtomb=true
       if test $HAVE_WCRTOMB = 0 || test $REPLACE_WCRTOMB = 1; then
@@ -1464,7 +1564,18 @@ AC_SUBST([LTALLOCA])
     if ! $gl_gnulib_enabled_3dcce957eadc896e63ab5f137947b410; then
       gl_WCTYPE_H
       gl_WCTYPE_H_REQUIRE_DEFAULTS
+      AC_PROG_MKDIR_P
       gl_gnulib_enabled_3dcce957eadc896e63ab5f137947b410=true
+    fi
+  }
+  func_gl_gnulib_m4code_fd43d02c899a251eacc999baf40b238e ()
+  {
+    if ! $gl_gnulib_enabled_fd43d02c899a251eacc999baf40b238e; then
+      AC_REQUIRE([AC_CANONICAL_HOST])
+      gl_CONDITIONAL([GL_COND_OBJ_WINDOWS_SPAWN],
+                     [case "$host_os" in mingw*) true;; *) false;; esac])
+      gl_gnulib_enabled_fd43d02c899a251eacc999baf40b238e=true
+      func_gl_gnulib_m4code_7be38c8cf2027003f573b80556d26ff2
     fi
   }
   func_gl_gnulib_m4code_xsize ()
@@ -1477,9 +1588,6 @@ AC_SUBST([LTALLOCA])
   }
   if test $HAVE_CANONICALIZE_FILE_NAME = 0 || test $REPLACE_CANONICALIZE_FILE_NAME = 1; then
     func_gl_gnulib_m4code_925677f0343de64b89a9f0c790b4104c
-  fi
-  if test $HAVE_CANONICALIZE_FILE_NAME = 0 || test $REPLACE_CANONICALIZE_FILE_NAME = 1; then
-    func_gl_gnulib_m4code_21ee726a3540c09237a8e70c0baf7467
   fi
   if test $HAVE_CANONICALIZE_FILE_NAME = 0 || test $REPLACE_CANONICALIZE_FILE_NAME = 1; then
     func_gl_gnulib_m4code_mempcpy
@@ -1528,6 +1636,12 @@ AC_SUBST([LTALLOCA])
   fi
   if test $HAVE_GETADDRINFO = 0 || test $REPLACE_GETADDRINFO = 1; then
     func_gl_gnulib_m4code_sockets
+  fi
+  if test $HAVE_INET_NTOP = 0 || test $REPLACE_INET_NTOP = 1; then
+    func_gl_gnulib_m4code_netinet_in
+  fi
+  if test $HAVE_INET_PTON = 0 || test $REPLACE_INET_PTON = 1; then
+    func_gl_gnulib_m4code_netinet_in
   fi
   if test $REPLACE_ISFINITE = 1; then
     func_gl_gnulib_m4code_b1df7117b479d2da59d76deba468ee21
@@ -1580,6 +1694,9 @@ AC_SUBST([LTALLOCA])
   if test $HAVE_POLL = 0 || test $REPLACE_POLL = 1; then
     func_gl_gnulib_m4code_sockets
   fi
+  if test $HAVE_POSIX_SPAWN = 0 || test $REPLACE_POSIX_SPAWN = 1; then
+    func_gl_gnulib_m4code_332607f759618fb73dfc3076748afea7
+  fi
   if test $HAVE_READLINK = 0 || test $REPLACE_READLINK = 1; then
     func_gl_gnulib_m4code_stat
   fi
@@ -1591,9 +1708,6 @@ AC_SUBST([LTALLOCA])
   fi
   if test $ac_use_included_regex = yes; then
     func_gl_gnulib_m4code_dynarray
-  fi
-  if test $ac_use_included_regex = yes; then
-    func_gl_gnulib_m4code_21ee726a3540c09237a8e70c0baf7467
   fi
   if test $ac_use_included_regex = yes; then
     func_gl_gnulib_m4code_mbrtowc
@@ -1647,17 +1761,20 @@ AC_SUBST([LTALLOCA])
     func_gl_gnulib_m4code_raise
   fi
   m4_pattern_allow([^gl_GNULIB_ENABLED_])
+  AM_CONDITIONAL([gl_GNULIB_ENABLED_access], [$gl_gnulib_enabled_access])
   AM_CONDITIONAL([gl_GNULIB_ENABLED_alloca], [$gl_gnulib_enabled_alloca])
   AM_CONDITIONAL([gl_GNULIB_ENABLED_assure], [$gl_gnulib_enabled_assure])
   AM_CONDITIONAL([gl_GNULIB_ENABLED_btowc], [$gl_gnulib_enabled_btowc])
   AM_CONDITIONAL([gl_GNULIB_ENABLED_37f71b604aa9c54446783d80f42fe547], [$gl_gnulib_enabled_37f71b604aa9c54446783d80f42fe547])
   AM_CONDITIONAL([gl_GNULIB_ENABLED_chdir], [$gl_gnulib_enabled_chdir])
   AM_CONDITIONAL([gl_GNULIB_ENABLED_cloexec], [$gl_gnulib_enabled_cloexec])
+  AM_CONDITIONAL([gl_GNULIB_ENABLED_6da965dc4d3aa4f87d68116dce96f1a5], [$gl_gnulib_enabled_6da965dc4d3aa4f87d68116dce96f1a5])
   AM_CONDITIONAL([gl_GNULIB_ENABLED_dup2], [$gl_gnulib_enabled_dup2])
   AM_CONDITIONAL([gl_GNULIB_ENABLED_dynarray], [$gl_gnulib_enabled_dynarray])
   AM_CONDITIONAL([gl_GNULIB_ENABLED_925677f0343de64b89a9f0c790b4104c], [$gl_gnulib_enabled_925677f0343de64b89a9f0c790b4104c])
   AM_CONDITIONAL([gl_GNULIB_ENABLED_fcntl], [$gl_gnulib_enabled_fcntl])
   AM_CONDITIONAL([gl_GNULIB_ENABLED_43fe87a341d9b4b93c47c3ad819a5239], [$gl_gnulib_enabled_43fe87a341d9b4b93c47c3ad819a5239])
+  AM_CONDITIONAL([gl_GNULIB_ENABLED_7be38c8cf2027003f573b80556d26ff2], [$gl_gnulib_enabled_7be38c8cf2027003f573b80556d26ff2])
   AM_CONDITIONAL([gl_GNULIB_ENABLED_getdtablesize], [$gl_gnulib_enabled_getdtablesize])
   AM_CONDITIONAL([gl_GNULIB_ENABLED_getrandom], [$gl_gnulib_enabled_getrandom])
   AM_CONDITIONAL([gl_GNULIB_ENABLED_be453cec5eecf5731a274f2de7f2db36], [$gl_gnulib_enabled_be453cec5eecf5731a274f2de7f2db36])
@@ -1666,7 +1783,6 @@ AC_SUBST([LTALLOCA])
   AM_CONDITIONAL([gl_GNULIB_ENABLED_b1df7117b479d2da59d76deba468ee21], [$gl_gnulib_enabled_b1df7117b479d2da59d76deba468ee21])
   AM_CONDITIONAL([gl_GNULIB_ENABLED_3f0e593033d1fc2c127581960f641b66], [$gl_gnulib_enabled_3f0e593033d1fc2c127581960f641b66])
   AM_CONDITIONAL([gl_GNULIB_ENABLED_dbdf22868a5367f28bf18e0013ac6f8f], [$gl_gnulib_enabled_dbdf22868a5367f28bf18e0013ac6f8f])
-  AM_CONDITIONAL([gl_GNULIB_ENABLED_21ee726a3540c09237a8e70c0baf7467], [$gl_gnulib_enabled_21ee726a3540c09237a8e70c0baf7467])
   AM_CONDITIONAL([gl_GNULIB_ENABLED_localeconv], [$gl_gnulib_enabled_localeconv])
   AM_CONDITIONAL([gl_GNULIB_ENABLED_log], [$gl_gnulib_enabled_log])
   AM_CONDITIONAL([gl_GNULIB_ENABLED_mbrtowc], [$gl_gnulib_enabled_mbrtowc])
@@ -1676,7 +1792,9 @@ AC_SUBST([LTALLOCA])
   AM_CONDITIONAL([gl_GNULIB_ENABLED_mempcpy], [$gl_gnulib_enabled_mempcpy])
   AM_CONDITIONAL([gl_GNULIB_ENABLED_mktime], [$gl_gnulib_enabled_mktime])
   AM_CONDITIONAL([gl_GNULIB_ENABLED_5264294aa0a5557541b53c8c741f7f31], [$gl_gnulib_enabled_5264294aa0a5557541b53c8c741f7f31])
+  AM_CONDITIONAL([gl_GNULIB_ENABLED_netinet_in], [$gl_gnulib_enabled_netinet_in])
   AM_CONDITIONAL([gl_GNULIB_ENABLED_pathmax], [$gl_gnulib_enabled_pathmax])
+  AM_CONDITIONAL([gl_GNULIB_ENABLED_332607f759618fb73dfc3076748afea7], [$gl_gnulib_enabled_332607f759618fb73dfc3076748afea7])
   AM_CONDITIONAL([gl_GNULIB_ENABLED_raise], [$gl_gnulib_enabled_raise])
   AM_CONDITIONAL([gl_GNULIB_ENABLED_rawmemchr], [$gl_gnulib_enabled_rawmemchr])
   AM_CONDITIONAL([gl_GNULIB_ENABLED_61bcaca76b3e6f9ae55d57a1c3193bc4], [$gl_gnulib_enabled_61bcaca76b3e6f9ae55d57a1c3193bc4])
@@ -1685,11 +1803,14 @@ AC_SUBST([LTALLOCA])
   AM_CONDITIONAL([gl_GNULIB_ENABLED_scratch_buffer], [$gl_gnulib_enabled_scratch_buffer])
   AM_CONDITIONAL([gl_GNULIB_ENABLED_servent], [$gl_gnulib_enabled_servent])
   AM_CONDITIONAL([gl_GNULIB_ENABLED_e7e881d32ca02f1c997b13c737c64bbd], [$gl_gnulib_enabled_e7e881d32ca02f1c997b13c737c64bbd])
+  AM_CONDITIONAL([gl_GNULIB_ENABLED_cdeb0f2aaf9d280baa6526bfa1b07f70], [$gl_gnulib_enabled_cdeb0f2aaf9d280baa6526bfa1b07f70])
   AM_CONDITIONAL([gl_GNULIB_ENABLED_signbit], [$gl_gnulib_enabled_signbit])
   AM_CONDITIONAL([gl_GNULIB_ENABLED_size_max], [$gl_gnulib_enabled_size_max])
   AM_CONDITIONAL([gl_GNULIB_ENABLED_snprintf], [$gl_gnulib_enabled_snprintf])
   AM_CONDITIONAL([gl_GNULIB_ENABLED_sockets], [$gl_gnulib_enabled_sockets])
   AM_CONDITIONAL([gl_GNULIB_ENABLED_stat], [$gl_gnulib_enabled_stat])
+  AM_CONDITIONAL([gl_GNULIB_ENABLED_stpcpy], [$gl_gnulib_enabled_stpcpy])
+  AM_CONDITIONAL([gl_GNULIB_ENABLED_strchrnul], [$gl_gnulib_enabled_strchrnul])
   AM_CONDITIONAL([gl_GNULIB_ENABLED_f9850631dca91859e9cddac9359921c0], [$gl_gnulib_enabled_f9850631dca91859e9cddac9359921c0])
   AM_CONDITIONAL([gl_GNULIB_ENABLED_streq], [$gl_gnulib_enabled_streq])
   AM_CONDITIONAL([gl_GNULIB_ENABLED_sys_random], [$gl_gnulib_enabled_sys_random])
@@ -1701,6 +1822,7 @@ AC_SUBST([LTALLOCA])
   AM_CONDITIONAL([gl_GNULIB_ENABLED_vasnprintf], [$gl_gnulib_enabled_vasnprintf])
   AM_CONDITIONAL([gl_GNULIB_ENABLED_wcrtomb], [$gl_gnulib_enabled_wcrtomb])
   AM_CONDITIONAL([gl_GNULIB_ENABLED_3dcce957eadc896e63ab5f137947b410], [$gl_gnulib_enabled_3dcce957eadc896e63ab5f137947b410])
+  AM_CONDITIONAL([gl_GNULIB_ENABLED_fd43d02c899a251eacc999baf40b238e], [$gl_gnulib_enabled_fd43d02c899a251eacc999baf40b238e])
   AM_CONDITIONAL([gl_GNULIB_ENABLED_xsize], [$gl_gnulib_enabled_xsize])
   # End of code from modules
   m4_ifval(gl_LIBSOURCES_LIST, [
@@ -1724,16 +1846,28 @@ AC_SUBST([LTALLOCA])
   AC_CONFIG_COMMANDS_PRE([
     gl_libobjs=
     gl_ltlibobjs=
+    gl_libobjdeps=
     if test -n "$gl_LIBOBJS"; then
       # Remove the extension.
+changequote(,)dnl
       sed_drop_objext='s/\.o$//;s/\.obj$//'
+      sed_dirname1='s,//*,/,g'
+      sed_dirname2='s,\(.\)/$,\1,'
+      sed_dirname3='s,^[^/]*$,.,'
+      sed_dirname4='s,\(.\)/[^/]*$,\1,'
+      sed_basename1='s,.*/,,'
+changequote([, ])dnl
       for i in `for i in $gl_LIBOBJS; do echo "$i"; done | sed -e "$sed_drop_objext" | sort | uniq`; do
         gl_libobjs="$gl_libobjs $i.$ac_objext"
         gl_ltlibobjs="$gl_ltlibobjs $i.lo"
+        i_dir=`echo "$i" | sed -e "$sed_dirname1" -e "$sed_dirname2" -e "$sed_dirname3" -e "$sed_dirname4"`
+        i_base=`echo "$i" | sed -e "$sed_basename1"`
+        gl_libobjdeps="$gl_libobjdeps $i_dir/\$(DEPDIR)/$i_base.Plo"
       done
     fi
     AC_SUBST([gl_LIBOBJS], [$gl_libobjs])
     AC_SUBST([gl_LTLIBOBJS], [$gl_ltlibobjs])
+    AC_SUBST([gl_LIBOBJDEPS], [$gl_libobjdeps])
   ])
   gltests_libdeps=
   gltests_ltlibdeps=
@@ -1746,6 +1880,7 @@ AC_SUBST([LTALLOCA])
   m4_pushdef([GL_MODULE_INDICATOR_PREFIX], [GL])
   gl_COMMON
   gl_source_base='tests'
+  gl_source_base_prefix=
 changequote(,)dnl
   gltests_WITNESS=IN_`echo "${PACKAGE-$PACKAGE_TARNAME}" | LC_ALL=C tr abcdefghijklmnopqrstuvwxyz ABCDEFGHIJKLMNOPQRSTUVWXYZ | LC_ALL=C sed -e 's/[^A-Z0-9_]/_/g'`_GNULIB_TESTS
 changequote([, ])dnl
@@ -1775,17 +1910,30 @@ changequote([, ])dnl
   AC_CONFIG_COMMANDS_PRE([
     gltests_libobjs=
     gltests_ltlibobjs=
+    gltests_libobjdeps=
     if test -n "$gltests_LIBOBJS"; then
       # Remove the extension.
+changequote(,)dnl
       sed_drop_objext='s/\.o$//;s/\.obj$//'
+      sed_dirname1='s,//*,/,g'
+      sed_dirname2='s,\(.\)/$,\1,'
+      sed_dirname3='s,^[^/]*$,.,'
+      sed_dirname4='s,\(.\)/[^/]*$,\1,'
+      sed_basename1='s,.*/,,'
+changequote([, ])dnl
       for i in `for i in $gltests_LIBOBJS; do echo "$i"; done | sed -e "$sed_drop_objext" | sort | uniq`; do
         gltests_libobjs="$gltests_libobjs $i.$ac_objext"
         gltests_ltlibobjs="$gltests_ltlibobjs $i.lo"
+        i_dir=`echo "$i" | sed -e "$sed_dirname1" -e "$sed_dirname2" -e "$sed_dirname3" -e "$sed_dirname4"`
+        i_base=`echo "$i" | sed -e "$sed_basename1"`
+        gltests_libobjdeps="$gltests_libobjdeps $i_dir/\$(DEPDIR)/$i_base.Plo"
       done
     fi
     AC_SUBST([gltests_LIBOBJS], [$gltests_libobjs])
     AC_SUBST([gltests_LTLIBOBJS], [$gltests_ltlibobjs])
+    AC_SUBST([gltests_LIBOBJDEPS], [$gltests_libobjdeps])
   ])
+  AC_REQUIRE([gl_CC_GNULIB_WARNINGS])
 ])
 
 # Like AC_LIBOBJ, except that the module name goes
@@ -1859,6 +2007,7 @@ AC_DEFUN([gl_FILE_LIST], [
   lib/_Noreturn.h
   lib/accept.c
   lib/accept4.c
+  lib/access.c
   lib/alignof.h
   lib/alloca.c
   lib/alloca.in.h
@@ -1887,6 +2036,8 @@ AC_DEFUN([gl_FILE_LIST], [
   lib/cloexec.c
   lib/cloexec.h
   lib/close.c
+  lib/concat-filename.c
+  lib/concat-filename.h
   lib/connect.c
   lib/copysign.c
   lib/dirent.in.h
@@ -1903,6 +2054,8 @@ AC_DEFUN([gl_FILE_LIST], [
   lib/fd-hook.c
   lib/fd-hook.h
   lib/filename.h
+  lib/findprog-in.c
+  lib/findprog.h
   lib/flexmember.h
   lib/float+.h
   lib/float.c
@@ -1942,6 +2095,7 @@ AC_DEFUN([gl_FILE_LIST], [
   lib/idx.h
   lib/inet_ntop.c
   lib/inet_pton.c
+  lib/intprops-internal.h
   lib/intprops.h
   lib/inttypes.in.h
   lib/isfinite.c
@@ -2046,6 +2200,7 @@ AC_DEFUN([gl_FILE_LIST], [
   lib/safe-write.c
   lib/safe-write.h
   lib/same-inode.h
+  lib/sched.in.h
   lib/scratch_buffer.h
   lib/select.c
   lib/send.c
@@ -2065,6 +2220,10 @@ AC_DEFUN([gl_FILE_LIST], [
   lib/socket.c
   lib/sockets.c
   lib/sockets.h
+  lib/spawn.in.h
+  lib/spawn_int.h
+  lib/spawni.c
+  lib/spawnp.c
   lib/stat-time.c
   lib/stat-time.h
   lib/stat-w32.c
@@ -2072,10 +2231,16 @@ AC_DEFUN([gl_FILE_LIST], [
   lib/stat.c
   lib/stdalign.in.h
   lib/stdbool.in.h
+  lib/stdckdint.in.h
   lib/stddef.in.h
   lib/stdint.in.h
+  lib/stdio-read.c
+  lib/stdio-write.c
   lib/stdio.in.h
   lib/stdlib.in.h
+  lib/stpcpy.c
+  lib/strchrnul.c
+  lib/strchrnul.valgrind
   lib/strdup.c
   lib/streq.h
   lib/strftime.h
@@ -2118,6 +2283,8 @@ AC_DEFUN([gl_FILE_LIST], [
   lib/wctype-h.c
   lib/wctype.in.h
   lib/windows-initguard.h
+  lib/windows-spawn.c
+  lib/windows-spawn.h
   lib/write.c
   lib/xalloc-oversized.h
   lib/xsize.c
@@ -2126,6 +2293,7 @@ AC_DEFUN([gl_FILE_LIST], [
   m4/__inline.m4
   m4/absolute-header.m4
   m4/accept4.m4
+  m4/access.m4
   m4/alloca.m4
   m4/arpa_inet_h.m4
   m4/autobuild.m4
@@ -2144,6 +2312,7 @@ AC_DEFUN([gl_FILE_LIST], [
   m4/double-slash-root.m4
   m4/dup2.m4
   m4/duplocale.m4
+  m4/eaccess.m4
   m4/eealloc.m4
   m4/environ.m4
   m4/errno_h.m4
@@ -2155,6 +2324,7 @@ AC_DEFUN([gl_FILE_LIST], [
   m4/fcntl-o.m4
   m4/fcntl.m4
   m4/fcntl_h.m4
+  m4/findprog-in.m4
   m4/flexmember.m4
   m4/float_h.m4
   m4/flock.m4
@@ -2242,6 +2412,7 @@ AC_DEFUN([gl_FILE_LIST], [
   m4/pipe2.m4
   m4/poll.m4
   m4/poll_h.m4
+  m4/posix_spawn.m4
   m4/printf.m4
   m4/putenv.m4
   m4/raise.m4
@@ -2255,10 +2426,12 @@ AC_DEFUN([gl_FILE_LIST], [
   m4/round.m4
   m4/safe-read.m4
   m4/safe-write.m4
+  m4/sched_h.m4
   m4/select.m4
   m4/servent.m4
   m4/setenv.m4
   m4/setlocale_null.m4
+  m4/sh-filename.m4
   m4/signal_h.m4
   m4/signbit.m4
   m4/size_max.m4
@@ -2267,6 +2440,7 @@ AC_DEFUN([gl_FILE_LIST], [
   m4/sockets.m4
   m4/socklen.m4
   m4/sockpfaf.m4
+  m4/spawn_h.m4
   m4/ssize_t.m4
   m4/stat-time.m4
   m4/stat.m4
@@ -2278,6 +2452,8 @@ AC_DEFUN([gl_FILE_LIST], [
   m4/stdint_h.m4
   m4/stdio_h.m4
   m4/stdlib_h.m4
+  m4/stpcpy.m4
+  m4/strchrnul.m4
   m4/strdup.m4
   m4/string_h.m4
   m4/sys_file_h.m4
@@ -2300,6 +2476,7 @@ AC_DEFUN([gl_FILE_LIST], [
   m4/trunc.m4
   m4/tzset.m4
   m4/unistd_h.m4
+  m4/vararrays.m4
   m4/vasnprintf.m4
   m4/visibility.m4
   m4/vsnprintf.m4

@@ -1,5 +1,5 @@
 /* Read the contents of a symbolic link.
-   Copyright (C) 2003-2007, 2009-2021 Free Software Foundation, Inc.
+   Copyright (C) 2003-2007, 2009-2022 Free Software Foundation, Inc.
 
    This file is free software: you can redistribute it and/or modify
    it under the terms of the GNU Lesser General Public License as
@@ -29,8 +29,8 @@
    such as DJGPP 2.03 and mingw32.  */
 
 ssize_t
-readlink (char const *file, char *buf _GL_UNUSED,
-          size_t bufsize _GL_UNUSED)
+readlink (char const *file, _GL_UNUSED char *buf,
+          _GL_UNUSED size_t bufsize)
 {
   struct stat statbuf;
 

@@ -1,8 +1,8 @@
-# Copyright (C) 2002-2021 Free Software Foundation, Inc.
+# Copyright (C) 2002-2022 Free Software Foundation, Inc.
 #
 # This file is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 3 of the License, or
+# the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
 #
 # This file is distributed in the hope that it will be useful,
@@ -115,6 +115,7 @@
 #  pipe-posix \
 #  pipe2 \
 #  poll \
+#  posix_spawnp \
 #  putenv \
 #  readlink \
 #  recv \
@@ -214,6 +215,7 @@ gl_MODULES([
   pipe-posix
   pipe2
   poll
+  posix_spawnp
   putenv
   readlink
   recv
@@ -242,7 +244,7 @@ gl_MODULES([
   warnings
   wchar
 ])
-gl_AVOID([ lock unistr/base unistr/u8-mbtouc unistr/u8-mbtouc-unsafe unistr/u8-mbtoucr unistr/u8-prev unistr/u8-uctomb unitypes])
+gl_AVOID([lock unistr/base unistr/u8-mbtouc unistr/u8-mbtouc-unsafe unistr/u8-mbtoucr unistr/u8-prev unistr/u8-uctomb unitypes])
 gl_SOURCE_BASE([lib])
 gl_M4_BASE([m4])
 gl_PO_BASE([])

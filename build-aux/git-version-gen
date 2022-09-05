@@ -1,12 +1,12 @@
 #!/bin/sh
 # Print a version string.
-scriptversion=2019-10-13.15; # UTC
+scriptversion=2022-07-09.08; # UTC
 
-# Copyright (C) 2007-2021 Free Software Foundation, Inc.
+# Copyright (C) 2007-2022 Free Software Foundation, Inc.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 3 of the License, or
+# the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
 #
 # This program is distributed in the hope that it will be useful,
@@ -65,9 +65,10 @@ scriptversion=2019-10-13.15; # UTC
 # EXTRA_DIST = $(top_srcdir)/.version
 # BUILT_SOURCES = $(top_srcdir)/.version
 # $(top_srcdir)/.version:
-#	echo $(VERSION) > $@-t && mv $@-t $@
+#	echo '$(VERSION)' > $@-t
+#	mv $@-t $@
 # dist-hook:
-#	echo $(VERSION) > $(distdir)/.tarball-version
+#	echo '$(VERSION)' > $(distdir)/.tarball-version
 
 
 me=$0
@@ -94,7 +95,7 @@ Options:
    --help             display this help and exit
    --version          output version information and exit
 
-Running without arguments will suffice in most cases."
+Send patches and bug reports to <bug-gnulib@gnu.org>."
 
 prefix=v
 fallback=

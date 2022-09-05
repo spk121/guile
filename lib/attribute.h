@@ -1,6 +1,6 @@
 /* ATTRIBUTE_* macros for using attributes in GCC and similar compilers
 
-   Copyright 2020-2021 Free Software Foundation, Inc.
+   Copyright 2020-2022 Free Software Foundation, Inc.
 
    This file is free software: you can redistribute it and/or modify
    it under the terms of the GNU Lesser General Public License as
@@ -76,6 +76,14 @@
 /* Applies to: function, pointer to function, function types.  */
 #define ATTRIBUTE_ALLOC_SIZE(args) _GL_ATTRIBUTE_ALLOC_SIZE (args)
 
+/* ATTRIBUTE_DEALLOC (F, I) declares that the function returns pointers
+   that can be freed by passing them as the Ith argument to the
+   function F.
+   ATTRIBUTE_DEALLOC_FREE declares that the function returns pointers that
+   can be freed via 'free'; it can be used only after declaring 'free'.  */
+/* Applies to: functions.  Cannot be used on inline functions.  */
+#define ATTRIBUTE_DEALLOC(f, i) _GL_ATTRIBUTE_DEALLOC(f, i)
+#define ATTRIBUTE_DEALLOC_FREE _GL_ATTRIBUTE_DEALLOC_FREE
 
 /* Attributes for variadic functions.  */
 

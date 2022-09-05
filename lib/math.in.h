@@ -1,6 +1,6 @@
 /* A GNU-like <math.h>.
 
-   Copyright (C) 2002-2003, 2007-2021 Free Software Foundation, Inc.
+   Copyright (C) 2002-2003, 2007-2022 Free Software Foundation, Inc.
 
    This file is free software: you can redistribute it and/or modify
    it under the terms of the GNU Lesser General Public License as
@@ -54,6 +54,16 @@
 _GL_INLINE_HEADER_BEGIN
 #ifndef _GL_MATH_INLINE
 # define _GL_MATH_INLINE _GL_INLINE
+#endif
+
+/* The __attribute__ feature is available in gcc versions 2.5 and later.
+   The attribute __const__ was added in gcc 2.95.  */
+#ifndef _GL_ATTRIBUTE_CONST
+# if __GNUC__ > 2 || (__GNUC__ == 2 && __GNUC_MINOR__ >= 95) || defined __clang__
+#  define _GL_ATTRIBUTE_CONST __attribute__ ((__const__))
+# else
+#  define _GL_ATTRIBUTE_CONST /* empty */
+# endif
 #endif
 
 /* The definitions of _GL_FUNCDECL_RPL etc. are copied here.  */
@@ -2423,6 +2433,7 @@ _GL_MATH_CXX_REAL_FLOATING_DECL_1 (isfinite)
      functions.  */
 _GL_MATH_CXX_REAL_FLOATING_DECL_2 (isfinite, rpl_isfinite, bool)
 #    define isfinite rpl_isfinite
+#    define GNULIB_NAMESPACE_LACKS_ISFINITE 1
 #   else
 _GL_MATH_CXX_REAL_FLOATING_DECL_2 (isfinite, isfinite, bool)
 #   endif
@@ -2457,6 +2468,7 @@ _GL_MATH_CXX_REAL_FLOATING_DECL_1 (isinf)
      functions.  */
 _GL_MATH_CXX_REAL_FLOATING_DECL_2 (isinf, rpl_isinf, bool)
 #    define isinf rpl_isinf
+#    define GNULIB_NAMESPACE_LACKS_ISINF 1
 #   else
 _GL_MATH_CXX_REAL_FLOATING_DECL_2 (isinf, isinf, bool)
 #   endif
@@ -2584,6 +2596,7 @@ _GL_MATH_CXX_REAL_FLOATING_DECL_1 (isnan)
      functions.  */
 _GL_MATH_CXX_REAL_FLOATING_DECL_2 (isnan, rpl_isnan, bool)
 #    define isnan rpl_isnan
+#    define GNULIB_NAMESPACE_LACKS_ISNAN 1
 #   else
 _GL_MATH_CXX_REAL_FLOATING_DECL_2 (isnan, isnan, bool)
 #   endif
@@ -2667,6 +2680,7 @@ _GL_MATH_CXX_REAL_FLOATING_DECL_1 (signbit)
      functions.  */
 _GL_MATH_CXX_REAL_FLOATING_DECL_2 (signbit, rpl_signbit, bool)
 #    define signbit rpl_signbit
+#    define GNULIB_NAMESPACE_LACKS_SIGNBIT 1
 #   else
 _GL_MATH_CXX_REAL_FLOATING_DECL_2 (signbit, signbit, bool)
 #   endif

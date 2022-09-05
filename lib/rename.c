@@ -1,6 +1,6 @@
 /* Work around rename bugs in some systems.
 
-   Copyright (C) 2001-2003, 2005-2006, 2009-2021 Free Software Foundation, Inc.
+   Copyright (C) 2001-2003, 2005-2006, 2009-2022 Free Software Foundation, Inc.
 
    This file is free software: you can redistribute it and/or modify
    it under the terms of the GNU Lesser General Public License as
@@ -287,7 +287,7 @@ rpl_rename (char const *src, char const *dst)
   char *dst_temp = (char *) dst;
   bool src_slash;
   bool dst_slash;
-  bool dst_exists _GL_UNUSED;
+  _GL_UNUSED bool dst_exists;
   int ret_val = -1;
   int rename_errno = ENOTDIR;
   struct stat src_st;

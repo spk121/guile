@@ -1,10 +1,11 @@
-# clock_time.m4 serial 10
-dnl Copyright (C) 2002-2006, 2009-2021 Free Software Foundation, Inc.
+# clock_time.m4 serial 11
+dnl Copyright (C) 2002-2006, 2009-2022 Free Software Foundation, Inc.
 dnl This file is free software; the Free Software Foundation
 dnl gives unlimited permission to copy and/or distribute it,
 dnl with or without modifications, as long as this notice is preserved.
 
-# Check for clock_gettime and clock_settime, and set LIB_CLOCK_GETTIME.
+# Check for clock_getres, clock_gettime and clock_settime,
+# and set LIB_CLOCK_GETTIME.
 # For a program named, say foo, you should add a line like the following
 # in the corresponding Makefile.am file:
 # foo_LDADD = $(LDADD) $(LIB_CLOCK_GETTIME)
@@ -24,15 +25,8 @@ AC_DEFUN([gl_CLOCK_TIME],
   AC_SUBST([LIB_CLOCK_GETTIME])
   gl_saved_libs=$LIBS
     AC_SEARCH_LIBS([clock_gettime], [rt posix4],
-                   [if test "$ac_cv_search_clock_gettime" = "none required"; then
-                      AC_SEARCH_LIBS([clock_getcpuclockid], [rt posix4],
-                                     [test "$ac_cv_search_clock_getcpuclockid" = "none required" \
-                                      || LIB_CLOCK_GETTIME=$ac_cv_search_clock_getcpuclockid],
-                                     [test "$ac_cv_search_clock_gettime" = "none required" \
-                                      || LIB_CLOCK_GETTIME=$ac_cv_search_clock_gettime])
-                    else
-                      LIB_CLOCK_GETTIME=$ac_cv_search_clock_gettime
-                    fi])
-    AC_CHECK_FUNCS([clock_gettime clock_settime clock_getcpuclockid])
+                   [test "$ac_cv_search_clock_gettime" = "none required" ||
+                    LIB_CLOCK_GETTIME=$ac_cv_search_clock_gettime])
+    AC_CHECK_FUNCS([clock_getres clock_gettime clock_settime])
   LIBS=$gl_saved_libs
 ])

@@ -1,5 +1,5 @@
 /* Character set conversion handler type.
-   Copyright (C) 2001-2007, 2009-2021 Free Software Foundation, Inc.
+   Copyright (C) 2001-2007, 2009-2022 Free Software Foundation, Inc.
    Written by Bruno Haible.
 
    This file is free software: you can redistribute it and/or modify
@@ -29,7 +29,10 @@ enum iconv_ilseq_handler
 {
   iconveh_error,                /* return and set errno = EILSEQ */
   iconveh_question_mark,        /* use one '?' per unconvertible character */
-  iconveh_escape_sequence       /* use escape sequence \uxxxx or \Uxxxxxxxx */
+  iconveh_escape_sequence,      /* use escape sequence \uxxxx or \Uxxxxxxxx */
+  iconveh_replacement_character /* use one U+FFFD per unconvertible character
+                                   if that fits in the target encoding,
+                                   otherwise one '?' */
 };
 
 
