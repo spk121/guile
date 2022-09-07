@@ -1,0 +1,38 @@
+#!/bin/sh
+exec guile -q -s "$0" "$@"
+!#
+
+;;; Exercise the 'e' flag to 'open-file' (O_CLOEXEC).
+
+(define file
+  (string-append (or (getenv "TMPDIR") "/tmp")
+                 "/guile-test-close-on-exec-"
+                 (number->string (getpid)) ".txt"))
+
+;;; Since fcntl(2) F_GETFD does not return flags such as O_CLOEXEC,
+;;; create a child process, call 'exec', and make sure it doesn't
+;;; inherit the file descriptor.
+(let ((port (open-file file "we")))
+  (display "Hello!\n" port)
+  (let ((pid (primitive-fork)))
+    (if (zero? pid)
+        (dynamic-wind
+          (const #t)
+          (lambda ()
+            (execlp "guile" "guile" "-c"
+                    (object->string
+                     `(catch #t
+                        (lambda ()
+                          (fdopen ,(fileno port) "w")
+                          (primitive-exit 0))
+                        (lambda (key . args)
+                          (pk 'child-exception args)
+                          (if (and (eq? key 'system-error)
+                                   (= EBADF (system-error-errno (cons key args))))
+                              (primitive-exit 1)
+                              (primitive-exit 2)))))))
+          (lambda ()
+            (primitive-exit 3)))
+        (let ((status (pk 'child-status (cdr (waitpid pid)))))
+          (false-if-exception (delete-file file))
+          (exit (equal? (status:exit-val status) 1))))))

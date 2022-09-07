@@ -996,6 +996,9 @@ Also, open the file using the binary-compatible character encoding
 @item +
 Open the port for both input and output.  E.g., @code{r+}: open
 an existing file for both input and output.
+@item e
+Mark the underlying file descriptor as close-on-exec, as per the
+@code{O_CLOEXEC} flag.
 @item 0
 Create an "unbuffered" port.  In this case input and output
 operations are passed directly to the underlying port

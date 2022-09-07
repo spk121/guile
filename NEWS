@@ -11,6 +11,13 @@ Changes in 3.0.9 (since 3.0.8)
 
 * New interfaces and functionality
 
+** `open-file' now supports an "e" flag for O_CLOEXEC
+
+Until now, the high-level `open-file' facility did not provide a way to
+pass O_CLOEXEC to the underlying `open' call.  It can now be done by
+appending "e" to the `mode' string passed as a second argument.  See
+"File Ports" in the manual for more info.
+
 ** Abstract Unix-domain sockets are supported
 
 It is now possible to create an AF_UNIX socket with a leading zero byte

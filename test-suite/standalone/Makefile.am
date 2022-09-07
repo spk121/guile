@@ -1,7 +1,7 @@
 ## Process this file with automake to produce Makefile.in.
 ##
 ## Copyright 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010,
-##   2011, 2012, 2013, 2014, 2020, 2021 Free Software Foundation, Inc.
+##   2011, 2012, 2013, 2014, 2020, 2021, 2022 Free Software Foundation, Inc.
 ##
 ## This file is part of GUILE.
 ##
@@ -300,5 +300,8 @@ TESTS += test-stack-overflow
 
 check_SCRIPTS += test-out-of-memory
 TESTS += test-out-of-memory
+
+check_SCRIPTS += test-close-on-exec
+TESTS += test-close-on-exec
 
 EXTRA_DIST += ${check_SCRIPTS}

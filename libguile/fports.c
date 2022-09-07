@@ -1,4 +1,4 @@
-/* Copyright 1995-2004,2006-2015,2017-2020
+/* Copyright 1995-2004,2006-2015,2017-2020,2022
      Free Software Foundation, Inc.
 
    This file is part of Guile.
@@ -208,6 +208,9 @@ scm_i_mode_to_open_flags (SCM mode, int *is_binary, const char *FUNC_NAME)
 	  flags |= O_BINARY;
 #endif
 	  break;
+        case 'e':
+          flags |= O_CLOEXEC;
+          break;
 	case '0':  /* unbuffered: handled later.  */
 	case 'l':  /* line buffered: handled during output.  */
 	  break;
@@ -368,6 +371,9 @@ SCM_DEFINE (scm_i_open_file, "open-file", 2, 0, 1,
 	    "@item +\n"
 	    "Open the port for both input and output.  E.g., @code{r+}: open\n"
 	    "an existing file for both input and output.\n"
+            "@item e\n"
+            "Mark the underlying file descriptor as close-on-exec, as per the\n"
+            "@code{O_CLOEXEC} flag.\n"
 	    "@item 0\n"
 	    "Create an \"unbuffered\" port.  In this case input and output\n"
 	    "operations are passed directly to the underlying port\n"
