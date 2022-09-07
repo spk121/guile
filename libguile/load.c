@@ -1,4 +1,4 @@
-/* Copyright 1995-1996,1998-2001,2004,2006,2008-2019
+/* Copyright 1995-1996,1998-2001,2004,2006,2008-2019,2022
      Free Software Foundation, Inc.
 
    This file is part of Guile.
@@ -106,7 +106,7 @@ SCM_DEFINE (scm_primitive_load, "primitive-load", 1, 0, 0,
     SCM port;
 
     port = scm_open_file_with_encoding (filename,
-                                        scm_from_latin1_string ("r"),
+                                        scm_from_latin1_string ("re"),
                                         SCM_BOOL_T, /* guess_encoding */
                                         scm_from_latin1_string ("UTF-8"));
 
