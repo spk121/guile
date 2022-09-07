@@ -989,6 +989,10 @@ The "append mode" can be turned off while the port is in use
 The following additional characters can be appended:
 
 @table @samp
+@item b
+Open the underlying file in binary mode, if supported by the system.
+Also, open the file using the binary-compatible character encoding
+"ISO-8859-1", ignoring the default port encoding.
 @item +
 Open the port for both input and output.  E.g., @code{r+}: open
 an existing file for both input and output.
