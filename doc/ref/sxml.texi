@@ -475,14 +475,14 @@ where
  <handler> :: <trigger-symbol> x [<tree>] -> <new-tree>
 @end smallexample
 
-The pre-post-order function visits the nodes and nodelists
-pre-post-order (depth-first).  For each @code{<Node>} of the form
-@code{(@var{name} <Node> ...)}, it looks up an association with the
-given @var{name} among its @var{<bindings>}.  If failed,
-@code{pre-post-order} tries to locate a @code{*default*} binding.  It's
-an error if the latter attempt fails as well.  Having found a binding,
-the @code{pre-post-order} function first checks to see if the binding is
-of the form
+The @code{pre-post-order} function, in the @code{(sxml transform)}
+module, visits the nodes and nodelists pre-post-order (depth-first).
+For each @code{<Node>} of the form @code{(@var{name} <Node> ...)}, it
+looks up an association with the given @var{name} among its
+@var{<bindings>}.  If failed, @code{pre-post-order} tries to locate a
+@code{*default*} binding.  It's an error if the latter attempt fails as
+well.  Having found a binding, the @code{pre-post-order} function first
+checks to see if the binding is of the form
 
 @smallexample 
 	(<trigger-symbol> *preorder* . <handler>)
