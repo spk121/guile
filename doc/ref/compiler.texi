@@ -1120,7 +1120,7 @@ especially in cases when we know that we can just update the intmap in
 place.  As an example, say we have an intmap mapping the integers 1 to
 100 to the integers 42 to 141.  Let's say that we want to transform this
 map by adding 1 to each value.  There is already an efficient
-@code{intmap-map} procedure in the @code{(language cps utils}) module,
+@code{intmap-map} procedure in the @code{(language cps utils)} module,
 but if we didn't know about that we might do:
 
 @example
