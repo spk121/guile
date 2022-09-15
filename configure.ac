@@ -138,9 +138,6 @@ AC_DEFINE([GNULIB_LOCK], [1],
   [Define to allow Gnulib modules to use Guile's locks.])
 
 
-# for per-target cflags in the libguile subdir
-AM_PROG_CC_C_O
-
 LT_INIT([dlopen win32-dll])
 
 AM_CONDITIONAL([HAVE_SHARED_LIBRARIES], [test "x$enable_shared" = "xyes"])
