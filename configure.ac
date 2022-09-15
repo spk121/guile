@@ -60,8 +60,6 @@ AC_LANG([C])
 dnl Some more checks for Win32
 AC_CANONICAL_HOST
 
-AC_LIBTOOL_WIN32_DLL
-
 AC_PROG_INSTALL
 AC_PROG_CC
 
@@ -151,8 +149,7 @@ AC_DEFINE([GNULIB_LOCK], [1],
 # for per-target cflags in the libguile subdir
 AM_PROG_CC_C_O
 
-AC_LIBTOOL_DLOPEN
-AC_PROG_LIBTOOL
+LT_INIT([dlopen win32-dll])
 
 AM_CONDITIONAL([HAVE_SHARED_LIBRARIES], [test "x$enable_shared" = "xyes"])
 
