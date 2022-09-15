@@ -326,8 +326,6 @@ fi
 
 AC_CHECK_LIB(uca, __uc_get_ar_bsp)
 
-AC_C_CONST
-
 # "volatile" is used in a couple of tests below.
 AC_C_VOLATILE
 
