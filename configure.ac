@@ -106,19 +106,11 @@ case "$enable_lto" in
     ;;
 esac
 
-# Sadly, there is no released version of Autoconf with a nice
-# C11-ensuring macro.  This should work for gcc/clang within the last 5
-# years though.
-AC_MSG_CHECKING([how to enable C11 support])
-if test "$GCC" = yes; then
-  AC_MSG_RESULT([-std=gnu11])
-  CC="$CC -std=gnu11"
+AC_MSG_CHECKING([compiler's C standard])
+if test "$ac_prog_cc_stdc" = "c89"; then
+  AC_MSG_ERROR([Support for C99 required but not found.])
 else
-  dnl Guile requires C99 or later.
-  AC_PROG_CC_C99
-  if test "$ac_cv_prog_cc_c99" = "xno"; then
-    AC_MSG_ERROR([Support for C99 required but not found.])
-  fi
+  AC_MSG_RESULT([$ac_prog_cc_stdc])
 fi
 
 # Gnulib uses gperf when building from git
