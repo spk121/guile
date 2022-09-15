@@ -376,7 +376,6 @@ esac
 AC_MSG_RESULT($SCM_PREBUILT_BINARIES)
 AC_SUBST([SCM_PREBUILT_BINARIES])
 
-AC_HEADER_TIME
 AC_HEADER_SYS_WAIT
 AC_HEADER_DIRENT
 
@@ -1013,15 +1012,8 @@ AC_CHECK_MEMBERS([struct stat.st_rdev, struct stat.st_blksize, struct stat.st_bl
 AC_STRUCT_TIMEZONE
 AC_CHECK_MEMBERS([struct tm.tm_gmtoff],,,
 [#include <time.h>
-#ifdef TIME_WITH_SYS_TIME
+#if HAVE_SYS_TIME_H
 # include <sys/time.h>
-# include <time.h>
-#else
-# if HAVE_SYS_TIME_H
-#  include <sys/time.h>
-# else
-#  include <time.h>
-# endif
 #endif
 ])
 GUILE_STRUCT_UTIMBUF
