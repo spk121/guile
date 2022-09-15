@@ -417,7 +417,7 @@ AC_SUBST([SCM_I_GSC_HAVE_STRUCT_DIRENT64])
 #   sched.h - missing on MinGW
 #   sys/sendfile.h - non-POSIX, found in glibc
 #
-AC_CHECK_HEADERS([complex.h fenv.h io.h libc.h memory.h process.h \
+AC_CHECK_HEADERS([complex.h fenv.h io.h memory.h process.h \
 sys/dir.h sys/ioctl.h sys/select.h \
 sys/time.h sys/timeb.h sys/times.h sys/stdtypes.h sys/types.h \
 sys/utime.h unistd.h utime.h pwd.h grp.h sys/utsname.h \
@@ -442,8 +442,6 @@ AC_CHECK_TYPE(socklen_t, ,
 ])
 
 AC_CHECK_TYPES([struct ip_mreq], , , [#include <netinet/in.h>])
-
-GUILE_HEADER_LIBC_WITH_UNISTD
 
 AC_TYPE_GETGROUPS
 AC_TYPE_SIGNAL
