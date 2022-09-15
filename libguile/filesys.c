@@ -58,10 +58,6 @@
 #endif
 #include <time.h>
 
-#ifdef LIBC_H_WITH_UNISTD_H
-#include <libc.h>
-#endif
-
 #ifdef HAVE_PWD_H
 #include <pwd.h>
 #endif

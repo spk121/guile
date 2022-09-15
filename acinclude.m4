@@ -44,51 +44,6 @@ struct utime blah;
   fi])
 
 
-
-
-dnl
-dnl Apparently, at CMU they have a weird version of libc.h that is
-dnl installed in /usr/local/include and conflicts with unistd.h.
-dnl In these situations, we should not #include libc.h.
-dnl This test arranges to #define LIBC_H_WITH_UNISTD_H iff libc.h is
-dnl present on the system, and is safe to #include.
-dnl
-AC_DEFUN([GUILE_HEADER_LIBC_WITH_UNISTD],
-  [
-    AC_CHECK_HEADERS(libc.h unistd.h)
-    AC_CACHE_CHECK(
-      [whether libc.h and unistd.h can be included together],
-      guile_cv_header_libc_with_unistd,
-      [
-        if test "$ac_cv_header_libc_h" = "no"; then
-          guile_cv_header_libc_with_unistd="no"
-        elif test "$ac_cv_header_unistd_h" = "no"; then
-          guile_cv_header_libc_with_unistd="yes"
-        else
-          AC_TRY_COMPILE(
-	    [
-#             include <libc.h>
-#             include <unistd.h>
-	    ],
-	    [],
-	    [guile_cv_header_libc_with_unistd=yes],
-	    [guile_cv_header_libc_with_unistd=no]
-          )
-        fi
-      ]
-    )
-    if test "$guile_cv_header_libc_with_unistd" = yes; then
-      AC_DEFINE([LIBC_H_WITH_UNISTD_H], 1,
-        [Define this if we should include <libc.h> when we've already
-         included <unistd.h>.  On some systems, they conflict, and libc.h
-         should be omitted.  See GUILE_HEADER_LIBC_WITH_UNISTD in
-         aclocal.m4.])
-    fi
-  ]
-)
-
-
-
 dnl This is needed when we want to check for the same function repeatedly
 dnl with other parameters, such as libraries, varying.
 dnl
