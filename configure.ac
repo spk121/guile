@@ -418,10 +418,10 @@ AC_SUBST([SCM_I_GSC_HAVE_STRUCT_DIRENT64])
 #   sched.h - missing on MinGW
 #   sys/sendfile.h - non-POSIX, found in glibc
 #
-AC_CHECK_HEADERS([complex.h fenv.h io.h libc.h limits.h memory.h process.h string.h \
+AC_CHECK_HEADERS([complex.h fenv.h io.h libc.h memory.h process.h \
 sys/dir.h sys/ioctl.h sys/select.h \
 sys/time.h sys/timeb.h sys/times.h sys/stdtypes.h sys/types.h \
-sys/utime.h time.h unistd.h utime.h pwd.h grp.h sys/utsname.h \
+sys/utime.h unistd.h utime.h pwd.h grp.h sys/utsname.h \
 direct.h machine/fpu.h sched.h sys/sendfile.h])
 
 # "complex double" is new in C99, and "complex" is only a keyword if
@@ -489,7 +489,7 @@ AM_CONDITIONAL([MINGW_LIBPATH], [test x$mingw_libpath = xtrue])
 # Reasons for testing:
 #   crt_externs.h - Darwin specific
 #
-AC_CHECK_HEADERS([assert.h crt_externs.h])
+AC_CHECK_HEADERS([crt_externs.h])
 
 # Reasons for testing:
 #   DINFINITY - OSF specific
@@ -903,9 +903,7 @@ AC_MSG_CHECKING(whether localtime caches TZ)
 AC_CACHE_VAL(guile_cv_localtime_cache,
 [if test x$ac_cv_func_tzset = xyes; then
 AC_RUN_IFELSE([AC_LANG_SOURCE([[#include <time.h>
-#if STDC_HEADERS
-# include <stdlib.h>
-#endif
+#include <stdlib.h>
 extern char **environ;
 unset_TZ ()
 {
@@ -1007,7 +1005,9 @@ int main () { return (isnan(x) != 0); }]])],
 #
 AC_CHECK_MEMBERS([struct stat.st_rdev, struct stat.st_blksize, struct stat.st_blocks, struct stat.st_atim, struct stat.st_mtim, struct stat.st_ctim],,,
                  [#define _GNU_SOURCE
-AC_INCLUDES_DEFAULT
+#ifdef HAVE_SYS_STAT_H
+# include <sys/stat.h>
+#endif
 ])
 
 AC_STRUCT_TIMEZONE
@@ -1054,8 +1054,7 @@ GUILE_UNISTRING_ICONVEH_VALUES
 
 SCM_I_GSC_STACK_GROWS_UP=0
 AC_RUN_IFELSE([AC_LANG_SOURCE(
-[AC_INCLUDES_DEFAULT
-int
+[int
 find_stack_direction (int *addr, int depth)
 {
   int dir, dummy = 0;

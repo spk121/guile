@@ -24,10 +24,7 @@
 # include <config.h>
 #endif
 
-#ifdef HAVE_WCHAR_H
 #include <wchar.h>
-#endif
-
 #include <math.h>
 #include <string.h>
 #include <unistr.h>

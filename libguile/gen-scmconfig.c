@@ -159,12 +159,7 @@ main (int argc, char *argv[])
   pf ("/* Important headers */\n");
   pf ("#include <stdint.h>\n");
   pf ("#include <stddef.h>\n");
-
-#ifdef HAVE_LIMITS_H
   pf ("#include <limits.h>\n");
-#else
-  pf ("/* limits.h not available */\n");
-#endif
 
 #if HAVE_SYS_TIME_H
   pf ("#include <sys/time.h>\n");
@@ -172,15 +167,9 @@ main (int argc, char *argv[])
   pf ("/* sys/time.h not available */\n");
 #endif
 
-#if HAVE_TIME_H
   pf ("#include <time.h>\n");
-#else
-  pf ("/* time.h not available */\n");
-#endif
-
   pf("\n");
-#ifdef STDC_HEADERS
-  pf ("#define SCM_HAVE_STDC_HEADERS 1 /* 0 or 1 */\n");
+
   pf ("#include <stdlib.h>\n");
 # ifdef HAVE_SYS_TYPES_H
   pf ("#include <sys/types.h>\n");
@@ -189,9 +178,6 @@ main (int argc, char *argv[])
   pf ("#include <sys/stdtypes.h>\n");
 # endif
   pf ("#include <stddef.h>\n");
-#else /* STDC_HEADERS */
-  pf ("#define SCM_HAVE_STDC_HEADERS 0 /* 0 or 1 */");
-#endif /* def STDC_HEADERS */
 
   pf("\n");
 #ifdef HAVE_SYS_SELECT_H

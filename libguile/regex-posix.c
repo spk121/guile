@@ -35,10 +35,7 @@
 #include <regex.h>
 #include <string.h>
 #include <sys/types.h>
-
-#ifdef HAVE_WCHAR_H
 #include <wchar.h>
-#endif
 
 #include "async.h"
 #include "feature.h"
@@ -187,7 +184,6 @@ SCM_DEFINE (scm_make_regexp, "make-regexp", 1, 0, 1,
 }
 #undef FUNC_NAME
 
-#ifdef HAVE_WCHAR_H
 /*
  * While regexec does respect the current locale, it returns byte
  * offsets instead of character offsets. This routine fixes up the
@@ -222,7 +218,6 @@ fixup_multibyte_match (regmatch_t *matches, int nmatches, char *str)
     }
 
 }
-#endif
 
 SCM_DEFINE (scm_regexp_exec, "regexp-exec", 2, 2, 0,
             (SCM rx, SCM str, SCM start, SCM flags),
@@ -280,10 +275,8 @@ SCM_DEFINE (scm_regexp_exec, "regexp-exec", 2, 2, 0,
   status = regexec (SCM_RGX (rx), c_str, nmatches, matches,
 		    scm_to_int (flags));
 
-#ifdef HAVE_WCHAR_H
   if (!status)
     fixup_multibyte_match (matches, nmatches, c_str);
-#endif
 
   free (c_str);
 

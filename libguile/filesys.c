@@ -43,6 +43,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <string.h>
 
 #ifdef HAVE_DIRECT_H
 #include <direct.h>
@@ -65,10 +66,6 @@
 
 #ifdef LIBC_H_WITH_UNISTD_H
 #include <libc.h>
-#endif
-
-#ifdef HAVE_STRING_H
-#include <string.h>
 #endif
 
 #ifdef HAVE_PWD_H

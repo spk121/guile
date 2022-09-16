@@ -28,10 +28,7 @@
 
 #include <stdio.h>
 #include <fcntl.h>
-
-#ifdef HAVE_STRING_H
 #include <string.h>
-#endif
 #include <unistd.h>
 #ifdef HAVE_IO_H
 #include <io.h>
