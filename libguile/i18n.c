@@ -75,15 +75,6 @@
 /* Use Gnulib's header, which also provides `nl_item' & co.  */
 #include <langinfo.h>
 
-#ifndef HAVE_SETLOCALE
-static inline char *
-setlocale (int category, const char *name)
-{
-  errno = ENOSYS;
-  return NULL;
-}
-#endif
-
 /* The newlib C library has alternative names for locale constants.  */
 #if HAVE_DECL__NL_NUMERIC_GROUPING
 #define INT_CURR_SYMBOL    _NL_MONETARY_INT_CURR_SYMBOL

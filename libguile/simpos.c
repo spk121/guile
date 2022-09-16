@@ -36,7 +36,6 @@
 
 
 
-#ifdef HAVE_SYSTEM
 SCM_DEFINE (scm_system, "system", 0, 1, 0,
            (SCM cmd),
 	    "Execute @var{cmd} using the operating system's \"command\n"
@@ -67,7 +66,6 @@ SCM_DEFINE (scm_system, "system", 0, 1, 0,
   return scm_from_int (rv);
 }
 #undef FUNC_NAME
-#endif /* HAVE_SYSTEM */
 
 
 SCM_DEFINE (scm_getenv, "getenv", 1, 0, 0, 

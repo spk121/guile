@@ -522,13 +522,13 @@ AC_CHECK_HEADERS([crt_externs.h])
 AC_CHECK_FUNCS([DINFINITY DQNAN cexp chsize clog clog10 ctermid         \
   fesetround ftime ftruncate fchown fchmod getcwd geteuid getsid        \
   gettimeofday getuid getgid gmtime_r ioctl lstat mkdir mkdtemp mknod   \
-  nice readlink rename rmdir setegid seteuid                            \
-  setlocale setuid setgid setpgid setsid sigaction siginterrupt stat64  \
+  nice readlink rmdir setegid seteuid                            \
+  setuid setgid setpgid setsid sigaction siginterrupt stat64  \
   strptime symlink sync sysconf tcgetpgrp tcsetpgrp uname waitpid       \
-  strdup system usleep atexit on_exit chown link fcntl ttyname getpwent \
+  strdup usleep on_exit chown link fcntl ttyname getpwent \
   getgrent kill getppid getpgrp fork setitimer getitimer strchr strcmp  \
-  index bcopy memcpy rindex truncate isblank _NSGetEnviron              \
-  strcoll strcoll_l strtod_l strtol_l newlocale uselocale utimensat     \
+  index bcopy rindex truncate isblank _NSGetEnviron              \
+  strcoll_l strtod_l strtol_l newlocale uselocale utimensat     \
   sched_getaffinity sched_setaffinity sendfile pipe2])
 
 # The newlib C library uses _NL_ prefixed locale langinfo constants.
