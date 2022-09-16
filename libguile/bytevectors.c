@@ -22,10 +22,7 @@
 # include <config.h>
 #endif
 
-#ifdef HAVE_LIMITS_H
-# include <limits.h>
-#endif
-
+#include <limits.h>
 #include <byteswap.h>
 #include <errno.h>
 #include <striconveh.h>

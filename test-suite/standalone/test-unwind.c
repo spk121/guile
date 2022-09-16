@@ -27,11 +27,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
-
-#ifdef HAVE_STRING_H
-# include <string.h>
-#endif
-
+#include <string.h>
 
 void set_flag (void *data);
 void func1 (void);

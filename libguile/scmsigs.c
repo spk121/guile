@@ -67,11 +67,7 @@
 #ifdef RETSIGTYPE
 # define SIGRETTYPE RETSIGTYPE
 #else
-# ifdef STDC_HEADERS
-#  define SIGRETTYPE void
-# else
-#  define SIGRETTYPE int
-# endif
+# define SIGRETTYPE void
 #endif
 
 

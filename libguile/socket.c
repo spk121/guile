@@ -30,9 +30,8 @@
 #ifdef HAVE_STDINT_H
 #include <stdint.h>
 #endif
-#ifdef HAVE_STRING_H
+
 #include <string.h>
-#endif
 #include <unistd.h>
 #include <sys/types.h>
 
