@@ -112,9 +112,7 @@
 #include <sys/utsname.h>
 #endif
 
-#ifdef HAVE_SETLOCALE
 #include <locale.h>
-#endif
 
 #if (defined HAVE_NEWLOCALE) && (defined HAVE_STRCOLL_L)
 # define USE_GNU_LOCALE_API
@@ -1833,8 +1831,6 @@ SCM_DEFINE (scm_putenv, "putenv", 1, 0, 0,
    details.  */
 scm_i_pthread_mutex_t scm_i_locale_mutex = SCM_I_PTHREAD_MUTEX_INITIALIZER;
 
-#ifdef HAVE_SETLOCALE
-
 SCM_DEFINE (scm_setlocale, "setlocale", 1, 1, 0,
             (SCM category, SCM locale),
 	    "If @var{locale} is omitted, return the current value of the\n"
@@ -1898,7 +1894,6 @@ SCM_DEFINE (scm_setlocale, "setlocale", 1, 1, 0,
   return scm_from_locale_string (rv);
 }
 #undef FUNC_NAME
-#endif /* HAVE_SETLOCALE */
 
 #ifdef HAVE_MKNOD
 SCM_DEFINE (scm_mknod, "mknod", 4, 0, 0,
