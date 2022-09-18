@@ -35,6 +35,7 @@
 #endif
 #include <unistd.h>
 #include <sys/types.h>
+#include <sys/time.h>
 
 #ifdef HAVE_WINSOCK2_H
 #include <winsock2.h>
@@ -502,6 +503,12 @@ SCM_DEFINE (scm_getsockopt, "getsockopt", 3, 0, 0,
 	    "timeout support (ie.@: without @code{struct linger}), only\n"
 	    "@var{enable} has an effect but the value in Guile is always a\n"
 	    "pair.\n"
+	    "@end defvar"
+            "\n"
+	    "@defvar SO_RCVTIMEO\n"
+	    "@defvarx SO_SNDTIMEO\n"
+	    "@var{value} is a pair of integers @code{(@var{SECONDS}\n"
+	    ". @var{MICROSECONDS})}.\n"
 	    "@end defvar")
 #define FUNC_NAME s_scm_getsockopt
 {
@@ -521,6 +528,16 @@ SCM_DEFINE (scm_getsockopt, "getsockopt", 3, 0, 0,
   fd = SCM_FPORT_FDES (sock);
   if (getsockopt (fd, ilevel, ioptname, (void *) &optval, &optlen) == -1)
     SCM_SYSERROR;
+
+#if defined(SO_RCVTIMEO) && defined(SO_SNDTIMEO)
+  if (ioptname == SO_RCVTIMEO || ioptname == SO_SNDTIMEO)
+    {
+      struct timeval *opt_time = (struct timeval *) &optval;
+
+      return scm_cons (scm_from_long (opt_time->tv_sec),
+                       scm_from_long (opt_time->tv_usec));
+    }
+#endif
 
   if (ilevel == SOL_SOCKET)
     {
@@ -590,6 +607,12 @@ SCM_DEFINE (scm_setsockopt, "setsockopt", 4, 0, 0,
 	    "(ie.@: without @code{struct linger}), only @var{ENABLE} has an\n"
 	    "effect but the value in Guile is always a pair.\n"
 	    "@end defvar\n"
+            "\n"
+	    "@defvar SO_RCVTIMEO\n"
+	    "@defvarx SO_SNDTIMEO\n"
+	    "@var{value} is a pair of integers @code{(@var{SECONDS}\n"
+	    ". @var{MICROSECONDS})}.\n"
+	    "@end defvar\n"
 	    "\n"
 	    "@c  Note that we refer only to ``man ip'' here.  On GNU/Linux it's\n"
 	    "@c  ``man 7 ip'' but on NetBSD it's ``man 4 ip''.\n"
@@ -632,6 +655,8 @@ SCM_DEFINE (scm_setsockopt, "setsockopt", 4, 0, 0,
 #ifdef HAVE_STRUCT_IP_MREQ
   struct ip_mreq opt_mreq;
 #endif
+
+  struct timeval opt_time;
 
   const void *optval = NULL;
   socklen_t optlen = 0;
@@ -679,6 +704,19 @@ SCM_DEFINE (scm_setsockopt, "setsockopt", 4, 0, 0,
       opt_mreq.imr_interface.s_addr = htonl (scm_to_ulong (SCM_CDR (value)));
       optlen = sizeof (opt_mreq);
       optval = &opt_mreq;
+    }
+#endif
+
+#if defined(SO_RCVTIMEO) && defined(SO_SNDTIMEO)
+  if (ioptname == SO_RCVTIMEO || ioptname == SO_SNDTIMEO)
+    {
+      SCM_ASSERT_TYPE (scm_is_pair (value), value, SCM_ARG4, FUNC_NAME,
+                       "value");
+      opt_time.tv_sec = scm_to_ulong (SCM_CAR (value));
+      opt_time.tv_usec = scm_to_ulong (SCM_CDR (value));
+
+      optlen = sizeof (opt_time);
+      optval = &opt_time;
     }
 #endif
 
@@ -1767,6 +1805,12 @@ scm_init_socket ()
 #endif
 #ifdef SO_REUSEPORT				  /* new in Linux 3.9 */
   scm_c_define ("SO_REUSEPORT", scm_from_int (SO_REUSEPORT));
+#endif
+#ifdef SO_RCVTIMEO
+  scm_c_define ("SO_RCVTIMEO", scm_from_int (SO_RCVTIMEO));
+#endif
+#ifdef SO_SNDTIMEO
+  scm_c_define ("SO_SNDTIMEO", scm_from_int (SO_SNDTIMEO));
 #endif
 
   /* recv/send options.  */

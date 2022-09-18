@@ -3247,6 +3247,8 @@ Manual}, or @command{man 7 socket}.
 @defvarx SO_NO_CHECK
 @defvarx SO_PRIORITY
 @defvarx SO_REUSEPORT
+@defvarx SO_RCVTIMEO
+@defvarx SO_SNDTIMEO
 The @var{value} taken or returned is an integer.
 @end defvar
 
