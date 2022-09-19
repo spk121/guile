@@ -534,6 +534,7 @@ AC_CHECK_HEADERS([assert.h crt_externs.h])
 #   fork - unavailable on Windows
 #   sched_getaffinity, sched_setaffinity - GNU extensions (glibc)
 #   sendfile - non-POSIX, found in glibc
+#   pipe2 - non-POSIX, found in glibc (GNU/Linux and GNU/Hurd)
 #
 AC_CHECK_FUNCS([DINFINITY DQNAN cexp chsize clog clog10 ctermid         \
   fesetround ftime ftruncate fchown fchmod getcwd geteuid getsid        \
@@ -545,7 +546,7 @@ AC_CHECK_FUNCS([DINFINITY DQNAN cexp chsize clog clog10 ctermid         \
   getgrent kill getppid getpgrp fork setitimer getitimer strchr strcmp  \
   index bcopy memcpy rindex truncate isblank _NSGetEnviron              \
   strcoll strcoll_l strtod_l strtol_l newlocale uselocale utimensat     \
-  sched_getaffinity sched_setaffinity sendfile])
+  sched_getaffinity sched_setaffinity sendfile pipe2])
 
 # The newlib C library uses _NL_ prefixed locale langinfo constants.
 AC_CHECK_DECLS([_NL_NUMERIC_GROUPING], [], [], [[#include <langinfo.h>]])

@@ -231,6 +231,41 @@
         (throw 'unresolved))))
 
 ;;
+;; pipe
+;;
+
+(with-test-prefix "pipe"
+
+  (pass-if-equal "in and out"
+      "hi!\n"
+    (let ((in+out (pipe)))
+      (display "hi!\n" (cdr in+out))
+      (close-port (cdr in+out))
+      (let ((str (list->string (list (read-char (car in+out))
+                                     (read-char (car in+out))
+                                     (read-char (car in+out))
+                                     (read-char (car in+out))))))
+        (and (eof-object? (read-char (car in+out)))
+             (begin
+               (close-port (car in+out))
+               str)))))
+
+  (pass-if-equal "O_CLOEXEC"
+      (list FD_CLOEXEC FD_CLOEXEC)
+    (let* ((in+out (catch 'system-error
+                     (lambda ()
+                       (pipe O_CLOEXEC))
+                     (lambda args
+                       (if (= (system-error-errno args) ENOSYS)
+                           (throw 'unresolved)
+                           (apply throw args)))))
+           (flags (list (fcntl (car in+out) F_GETFD)
+                        (fcntl (cdr in+out) F_GETFD))))
+      (close-port (car in+out))
+      (close-port (cdr in+out))
+      flags)))
+
+;;
 ;; system*
 ;;
 

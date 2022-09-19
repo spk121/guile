@@ -318,7 +318,7 @@ the file descriptor will be closed even if a port is using it.  The
 return value is unspecified.
 @end deffn
 
-@deffn {Scheme Procedure} pipe
+@deffn {Scheme Procedure} pipe [flags]
 @deffnx {C Function} scm_pipe ()
 @cindex pipe
 Return a newly created pipe: a pair of ports which are linked together
@@ -328,6 +328,24 @@ output port can be read from the input port.  Pipes are commonly used
 for communication with a newly forked child process.  The need to flush
 the output port can be avoided by making it unbuffered using
 @code{setvbuf} (@pxref{Buffering}).
+
+Optionally, on systems that support it such as GNU/Linux and
+GNU/Hurd, @var{flags} can specify a bitwise-or of the following
+constants:
+
+@table @code
+@item O_CLOEXEC
+Mark the returned file descriptors as close-on-exec;
+@item O_DIRECT
+Create a pipe that performs input/output in ``packet"
+mode---see @command{man 2 pipe} for details;
+@item O_NONBLOCK
+Set the @code{O_NONBLOCK} status flag (non-blocking input and
+output) on the file descriptors.
+@end table
+
+On systems that do @emph{not} support it, passing a non-zero
+@var{flags} value triggers a @code{system-error} exception.
 
 @defvar PIPE_BUF
 A write of up to @code{PIPE_BUF} many bytes to a pipe is atomic,

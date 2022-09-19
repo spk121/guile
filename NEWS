@@ -18,6 +18,13 @@ pass O_CLOEXEC to the underlying `open' call.  It can now be done by
 appending "e" to the `mode' string passed as a second argument.  See
 "File Ports" in the manual for more info.
 
+** `pipe' now takes flags as an optional argument
+
+This lets you pass flags such as O_CLOEXEC and O_NONBLOCK, as with the
+pipe2(2) system call found on GNU/Linux and GNU/Hurd, instead of having
+to call `fnctl' afterwards.  See "Ports and File Descriptors" in the
+manual for details.
+
 ** Abstract Unix-domain sockets are supported
 
 It is now possible to create an AF_UNIX socket with a leading zero byte

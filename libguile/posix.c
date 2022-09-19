@@ -226,8 +226,8 @@ char *getlogin (void);
 SCM_SYMBOL (sym_read_pipe, "read pipe");
 SCM_SYMBOL (sym_write_pipe, "write pipe");
 
-SCM_DEFINE (scm_pipe, "pipe", 0, 0, 0,
-            (),
+SCM_DEFINE (scm_pipe2, "pipe", 0, 1, 0,
+            (SCM flags),
 	    "Return a newly created pipe: a pair of ports which are linked\n"
 	    "together on the local machine.  The @emph{car} is the input\n"
 	    "port and the @emph{cdr} is the output port.  Data written (and\n"
@@ -236,20 +236,54 @@ SCM_DEFINE (scm_pipe, "pipe", 0, 0, 0,
 	    "child process.  The need to flush the output port can be\n"
 	    "avoided by making it unbuffered using @code{setvbuf}.\n"
 	    "\n"
+            "Optionally, on systems that support it such as GNU/Linux and\n"
+            "GNU/Hurd, @var{flags} can specify a bitwise-or of the following\n"
+            "constants:\n"
+            "\n"
+            "@table @code\n"
+            "@item O_CLOEXEC\n"
+            "Mark the returned file descriptors as close-on-exec;\n"
+            "@item O_DIRECT\n"
+            "Create a pipe that performs input/output in \"packet\"\n"
+            "mode---see @command{man 2 pipe} for details;\n"
+            "@item O_NONBLOCK\n"
+            "Set the @code{O_NONBLOCK} status flag (non-blocking input and\n"
+            "output) on the file descriptors.\n"
+            "@end table\n"
+            "\n"
+            "On systems that do @emph{not} support it, passing a non-zero\n"
+            "@var{flags} value triggers a @code{system-error} exception.\n"
+	    "\n"
 	    "Writes occur atomically provided the size of the data in bytes\n"
 	    "is not greater than the value of @code{PIPE_BUF}.  Note that\n"
 	    "the output port is likely to block if too much data (typically\n"
 	    "equal to @code{PIPE_BUF}) has been written but not yet read\n"
 	    "from the input port.")
-#define FUNC_NAME s_scm_pipe
+#define FUNC_NAME s_scm_pipe2
 {
-  int fd[2], rv;
+  int fd[2], rv, c_flags;
   SCM p_rd, p_wt;
 
-  rv = pipe (fd);
+  if (SCM_UNBNDP (flags))
+    c_flags = 0;
+  else
+    SCM_VALIDATE_INT_COPY (1, flags, c_flags);
+
+#ifdef HAVE_PIPE2
+  rv = pipe2 (fd, c_flags);
+#else
+  if (c_flags == 0)
+    rv = pipe (fd);
+  else
+    /* 'pipe2' cannot be emulated on systems that lack it: calling
+       'fnctl' afterwards to set the relevant flags is not equivalent
+       because it's not atomic.  */
+    rv = ENOSYS;
+#endif
+
   if (rv)
     SCM_SYSERROR;
-  
+
   p_rd = scm_i_fdes_to_port (fd[0], scm_mode_bits ("r"), sym_read_pipe,
                              SCM_FPORT_OPTION_NOT_SEEKABLE);
   p_wt = scm_i_fdes_to_port (fd[1], scm_mode_bits ("w"), sym_write_pipe,
@@ -258,6 +292,11 @@ SCM_DEFINE (scm_pipe, "pipe", 0, 0, 0,
 }
 #undef FUNC_NAME
 
+SCM
+scm_pipe (void)
+{
+  return scm_pipe2 (SCM_INUM0);
+}
 
 #ifdef HAVE_GETGROUPS
 SCM_DEFINE (scm_getgroups, "getgroups", 0, 0, 0,

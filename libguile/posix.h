@@ -1,7 +1,7 @@
 #ifndef SCM_POSIX_H
 #define SCM_POSIX_H
 
-/* Copyright 1995-1998,2000-2001,2003,2006,2008-2011,2018,2021
+/* Copyright 1995-1998,2000-2001,2003,2006,2008-2011,2018,2021,2022
      Free Software Foundation, Inc.
 
    This file is part of Guile.
@@ -34,6 +34,7 @@ SCM_API SCM scm_setsid (void);
 SCM_API SCM scm_getsid (SCM pid);
 SCM_API SCM scm_setpgid (SCM pid, SCM pgid);
 SCM_API SCM scm_pipe (void);
+SCM_INTERNAL SCM scm_pipe2 (SCM flags);
 SCM_API SCM scm_getgroups (void);
 SCM_API SCM scm_setgroups (SCM groups);
 SCM_API SCM scm_getpgrp (void);
