@@ -4,6 +4,9 @@ exec guile -q -s "$0" "$@"
 
 ;;; Exercise the 'e' flag to 'open-file' (O_CLOEXEC).
 
+(unless (provided? 'fork)
+  (exit 77))
+
 (define file
   (string-append (or (getenv "TMPDIR") "/tmp")
                  "/guile-test-close-on-exec-"

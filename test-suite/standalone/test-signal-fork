@@ -4,7 +4,7 @@ exec guile -q -s "$0" "$@"
 !#
 ;;; test-signal-fork --- Signal thread vs. fork.     -*- Scheme -*-
 ;;;
-;;; Copyright (C) 2021 Free Software Foundation, Inc.
+;;; Copyright (C) 2021, 2022 Free Software Foundation, Inc.
 ;;;
 ;;; This library is free software; you can redistribute it and/or
 ;;; modify it under the terms of the GNU Lesser General Public
@@ -27,6 +27,9 @@ exec guile -q -s "$0" "$@"
 ;; condition.  This test checks for the presence of that race condition.
 
 (use-modules (ice-9 match))
+
+(unless (provided? 'fork)
+  (exit 77))
 
 (setvbuf (current-output-port) 'none)
 (sigaction SIGCHLD pk)                            ;start signal thread
