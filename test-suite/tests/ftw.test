@@ -23,6 +23,8 @@
   #:use-module (srfi srfi-1)
   #:use-module (srfi srfi-26))
 
+(define mingw?
+  (string-contains %host-type "-mingw32"))
 
 ;; the procedure-source checks here ensure the vector indexes we write match
 ;; what ice-9/posix.scm stat:dev and stat:ino do (which in turn match
@@ -238,9 +240,13 @@
   (let ((name (string-append %top-builddir "/test-EACCES")))
     (pass-if-equal "EACCES"
         `((error ,name ,EACCES))
-      (if (and (defined? 'getuid) (zero? (getuid)))
-          ;; When run as root, this test would fail because root can
-          ;; list the contents of #o000 directories.
+      (if (or (and (defined? 'getuid) (zero? (getuid)))
+              ;; When run as root, this test would fail because root can
+              ;; list the contents of #o000 directories.
+              mingw?
+              ;; MinGW uses ACLs for directory control, which
+              ;; chmod doesn't emulate.
+              )
           (throw 'unresolved)
           (with-file-tree %top-builddir '(directory "test-EACCES" #o000
                                                     (("a") ("b")))
