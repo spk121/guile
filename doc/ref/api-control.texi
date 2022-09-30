@@ -2269,12 +2269,12 @@ expression library.
 In the following C functions, @var{SUBR} and @var{MESSAGE} parameters
 can be @code{NULL} to give the effect of @code{#f} described above.
 
-@deftypefn {C Function} SCM scm_error (SCM @var{key}, char *@var{subr}, char *@var{message}, SCM @var{args}, SCM @var{rest})
+@deftypefn {C Function} SCM scm_error (SCM @var{key}, const char *@var{subr}, const char *@var{message}, SCM @var{args}, SCM @var{rest})
 Throw an error, as per @code{scm-error} (@pxref{Error Reporting}).
 @end deftypefn
 
-@deftypefn {C Function} void scm_syserror (char *@var{subr})
-@deftypefnx {C Function} void scm_syserror_msg (char *@var{subr}, char *@var{message}, SCM @var{args})
+@deftypefn {C Function} void scm_syserror (const char *@var{subr})
+@deftypefnx {C Function} void scm_syserror_msg (const char *@var{subr}, const char *@var{message}, SCM @var{args})
 Throw an error with key @code{system-error} and supply @code{errno} in
 the @var{rest} argument.  For @code{scm_syserror} the message is
 generated using @code{strerror}.
@@ -2283,11 +2283,11 @@ Care should be taken that any code in between the failing operation
 and the call to these routines doesn't change @code{errno}.
 @end deftypefn
 
-@deftypefn {C Function} void scm_num_overflow (char *@var{subr})
-@deftypefnx {C Function} void scm_out_of_range (char *@var{subr}, SCM @var{bad_value})
+@deftypefn {C Function} void scm_num_overflow (const char *@var{subr})
+@deftypefnx {C Function} void scm_out_of_range (const char *@var{subr}, SCM @var{bad_value})
 @deftypefnx {C Function} void scm_wrong_num_args (SCM @var{proc})
-@deftypefnx {C Function} void scm_wrong_type_arg (char *@var{subr}, int @var{argnum}, SCM @var{bad_value})
-@deftypefnx {C Function} void scm_wrong_type_arg_msg (char *@var{subr}, int @var{argnum}, SCM @var{bad_value}, const char *@var{expected})
+@deftypefnx {C Function} void scm_wrong_type_arg (const char *@var{subr}, int @var{argnum}, SCM @var{bad_value})
+@deftypefnx {C Function} void scm_wrong_type_arg_msg (const char *@var{subr}, int @var{argnum}, SCM @var{bad_value}, const char *@var{expected})
 @deftypefnx {C Function} void scm_misc_error (const char *@var{subr}, const char *@var{message}, SCM @var{args})
 Throw an error with the various keys described above.
 
