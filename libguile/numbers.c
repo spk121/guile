@@ -6782,7 +6782,7 @@ scm_to_uint32 (SCM arg)
     }
   else
     scm_wrong_type_arg_msg (NULL, 0, arg, "exact integer");
-  range_error (arg, 0, scm_integer_from_uint32 (UINT32_MAX));
+  range_error (arg, scm_integer_from_uint32 (0), scm_integer_from_uint32 (UINT32_MAX));
 #elif SCM_SIZEOF_LONG == 8
   return inum_in_range (arg, 0, UINT32_MAX);
 #else
@@ -6838,7 +6838,7 @@ scm_to_uint64 (SCM arg)
     }
   else
     scm_wrong_type_arg_msg (NULL, 0, arg, "exact integer");
-  range_error (arg, 0, scm_integer_from_uint64 (UINT64_MAX));
+  range_error (arg, scm_integer_from_uint64(0), scm_integer_from_uint64 (UINT64_MAX));
 }
 
 SCM
