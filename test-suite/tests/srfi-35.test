@@ -1,7 +1,7 @@
 ;;;; srfi-35.test --- SRFI-35.             -*- mode: scheme; coding: utf-8; -*-
 ;;;; Ludovic Courtès <ludo@gnu.org>
 ;;;;
-;;;; 	Copyright (C) 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
+;;;; 	Copyright (C) 2007, 2008, 2009, 2010, 2022 Free Software Foundation, Inc.
 ;;;;
 ;;;; This library is free software; you can redistribute it and/or
 ;;;; modify it under the terms of the GNU Lesser General Public
@@ -176,7 +176,21 @@
            (c  (condition (t1 (a 0) (b 1))
                           (t2 (c 2) (d 3)))))
       (and (equal? c1 (extract-condition c t1))
-           (equal? c2 (extract-condition c t2))))))
+           (equal? c2 (extract-condition c t2)))))
+
+  (pass-if "compound condition, hygienic macro expansion"
+    ;; In Guile 3.0.8, the 'condition' form below would refer to
+    ;; 'make-compound-condition' in an unhygienic fashion, leading to
+    ;; "unbound variable: make-compound-condition" if (srfi srfi-35) is
+    ;; not imported or imported with different bindings.
+    (let ((c (eval '(begin
+                      (use-modules ((srfi srfi-35) #:prefix s:))
+
+                      (s:condition (s:&error)
+                                   (s:&message (message "m"))))
+                   (make-fresh-user-module))))
+      (and (condition? c)
+           (error? c) (message-condition? c)))))
 
 
 ;;;
