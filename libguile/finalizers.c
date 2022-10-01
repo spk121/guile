@@ -1,4 +1,4 @@
-/* Copyright 2012-2014,2018-2020
+/* Copyright 2012-2014,2018-2020,2022
      Free Software Foundation, Inc.
 
    This file is part of Guile.
@@ -226,8 +226,11 @@ finalization_thread_proc (void *unused)
       struct finalization_pipe_data data;
 
       scm_without_guile (read_finalization_pipe_data, &data);
-      
-      if (data.n <= 0)
+
+      if (data.n == 0)
+        /* The other end of the pipe was closed, so exit.  */
+        return NULL;
+      else if (data.n < 0)
         {
           if (data.err != EINTR)
             {
