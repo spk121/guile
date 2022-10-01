@@ -1122,6 +1122,16 @@ you try to use one of them.  The reason for two versions is that the
 full @code{format} is fairly large and requires some time to load.
 @code{simple-format} is often adequate too.
 
+@quotation Note
+Beware that when @code{(ice-9 format)} is loaded, it replaces the
+binding for @code{format} on the toplevel.  If your module loads
+another module that loads @code{(ice-9 format)}, then your module
+will see the @code{format} function from @code{(ice-9 format)},
+even if it does not itself import @code{(ice-9 format)}.
+
+@emph{This is legacy behavior and may be removed in a future Guile
+version.}
+@end quotation
 
 @node File Tree Walk
 @section File Tree Walk
