@@ -235,7 +235,13 @@
 
   (pass-if "Chained comparisons"
     (not (compile
-          '(false-if-exception (< 'not-a-number))))))
+          '(false-if-exception (< 'not-a-number)))))
+
+  (pass-if-equal "(not (list 1 2))"          ;https://bugs.gnu.org/58217
+      '(#f #f)
+    ;; The baseline compiler (-O0 and -O1) in 3.0.8 would crash.
+    (list (compile '(not (list 1 2)) #:optimization-level 2)
+          (compile '(not (list 1 2)) #:optimization-level 0))))
 
 (with-test-prefix "prompt body slot allocation"
   (define test-code

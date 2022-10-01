@@ -61,6 +61,8 @@ for use with `setsockopt'.
    (<https://bugs.gnu.org/49223>)
 ** 'primitive-load' opens files as O_CLOEXEC
    (<https://bugs.gnu.org/57567>)
+** Baseline compiler no longer crashes on (not (list 1 2))
+   (<https://bugs.gnu.org/58217>)
 
 
 Changes in 3.0.8 (since 3.0.7)
