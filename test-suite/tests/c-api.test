@@ -22,7 +22,7 @@
 (define srcdir (cdr (assq 'srcdir %guile-build-info)))
 
 (define (egrep string filename)
-  (zero? (system (string-append "grep -E '" string "' " filename
+  (zero? (system (string-append "grep -E \"" string "\" " filename
                                 " >" %null-device))))
 
 (define (seek-offset-test dirname)
