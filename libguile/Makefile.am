@@ -23,7 +23,7 @@
 include $(top_srcdir)/am/snarf
 include $(srcdir)/lightening/lightening.am
 
-AUTOMAKE_OPTIONS = gnu
+AUTOMAKE_OPTIONS = gnu subdir-objects
 
 ## Prevent automake from adding extra -I options
 DEFS = @DEFS@
