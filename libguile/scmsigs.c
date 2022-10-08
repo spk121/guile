@@ -62,16 +62,6 @@
 
 
 
-/* SIGRETTYPE is the type that signal handlers return.  See <signal.h> */
-
-#ifdef RETSIGTYPE
-# define SIGRETTYPE RETSIGTYPE
-#else
-# define SIGRETTYPE void
-#endif
-
-
-
 /* take_signal is installed as the C signal handler whenever a Scheme
    handler is set.  When a signal arrives, take_signal will write a
    byte into the 'signal pipe'.  The 'signal delivery thread' will
@@ -108,7 +98,7 @@ static scm_i_pthread_mutex_t signal_delivery_thread_mutex =
 #ifdef HAVE_SIGACTION
 static struct sigaction orig_handlers[NSIG];
 #else
-static SIGRETTYPE (*orig_handlers[NSIG])(int);
+static void (*orig_handlers[NSIG])(int);
 #endif
 
 static SCM
@@ -130,7 +120,7 @@ close_1 (SCM proc, SCM arg)
 
 static int signal_pipe[2];
 
-static SIGRETTYPE
+static void
 take_signal (int signum)
 {
   int old_errno = errno;
@@ -235,7 +225,7 @@ scm_i_ensure_signal_delivery_thread ()
 
 #else /* !SCM_USE_PTHREAD_THREADS */
 
-static SIGRETTYPE
+static void
 take_signal (int signum)
 {
   SCM cell = SCM_SIMPLE_VECTOR_REF (signal_handler_asyncs, signum);
@@ -321,8 +311,8 @@ SCM_DEFINE (scm_sigaction_for_thread, "sigaction", 1, 3, 0,
   struct sigaction action;
   struct sigaction old_action;
 #else
-  SIGRETTYPE (* chandler) (int) = SIG_DFL;
-  SIGRETTYPE (* old_chandler) (int);
+  void (* chandler) (int) = SIG_DFL;
+  void (* old_chandler) (int);
 #endif
   int query_only = 0;
   int save_handler = 0;
@@ -359,9 +349,9 @@ SCM_DEFINE (scm_sigaction_for_thread, "sigaction", 1, 3, 0,
       if (handler_int == (long) SIG_DFL || handler_int == (long) SIG_IGN)
 	{
 #ifdef HAVE_SIGACTION
-	  action.sa_handler = (SIGRETTYPE (*) (int)) handler_int;
+	  action.sa_handler = (void (*) (int)) handler_int;
 #else
-	  chandler = (SIGRETTYPE (*) (int)) handler_int;
+	  chandler = (void (*) (int)) handler_int;
 #endif
 	  install_handler (csig, SCM_BOOL_F, SCM_BOOL_F);
 	}
