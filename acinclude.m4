@@ -1,6 +1,6 @@
 dnl -*- Autoconf -*-
 
-dnl Copyright (C) 1997,1999-2002,2004,2006-2011,2013,2018-2019
+dnl Copyright (C) 1997,1999-2002,2004,2006-2011,2013,2018-2019,2022
 dnl   Free Software Foundation, Inc.
 dnl
 dnl This file is part of GUILE
@@ -27,16 +27,16 @@ dnl  struct utime, unless you #define _POSIX_SOURCE.
 AC_DEFUN([GUILE_STRUCT_UTIMBUF], [
   AC_CACHE_CHECK([whether we need POSIX to get struct utimbuf],
     guile_cv_struct_utimbuf_needs_posix,
-    [AC_TRY_CPP([
+    [AC_PREPROC_IFELSE([AC_LANG_SOURCE([[
 #ifdef __EMX__
 #include <sys/utime.h>
 #else
 #include <utime.h>
 #endif
 struct utime blah;
-],
-                guile_cv_struct_utimbuf_needs_posix=no,
-		guile_cv_struct_utimbuf_needs_posix=yes)])
+]])],
+[guile_cv_struct_utimbuf_needs_posix=no],
+[guile_cv_struct_utimbuf_needs_posix=yes])])
   if test "$guile_cv_struct_utimbuf_needs_posix" = yes; then
      AC_DEFINE([UTIMBUF_NEEDS_POSIX], 1,
        [Define this if <utime.h> doesn't define struct utimbuf unless
@@ -52,11 +52,10 @@ dnl                        [ACTION-IF-FOUND [, ACTION-IF-NOT-FOUND]])
 AC_DEFUN([GUILE_NAMED_CHECK_FUNC],
 [AC_MSG_CHECKING([for $1])
 AC_CACHE_VAL(ac_cv_func_$1_$2,
-[AC_TRY_LINK(
-dnl Don't include <ctype.h> because on OSF/1 3.0 it includes <sys/types.h>
+[AC_LINK_IFELSE([AC_LANG_PROGRAM([[dnl Don't include <ctype.h> because on OSF/1 3.0 it includes <sys/types.h>
 dnl which includes <sys/select.h> which contains a prototype for
 dnl select.  Similarly for bzero.
-[/* System header to define __stub macros and hopefully few prototypes,
+/* System header to define __stub macros and hopefully few prototypes,
     which can conflict with char $1(); below.  */
 #include <assert.h>
 /* Override any gcc2 internal prototype to avoid an error.  */
@@ -66,7 +65,7 @@ extern "C"
 /* We use char because int might match the return type of a gcc2
     builtin and then its argument prototype would still apply.  */
 char $1();
-], [
+]], [[
 /* The GNU C library defines this for functions which it implements
     to always fail with ENOSYS.  Some functions are actually named
     something starting with __ and the normal name is an alias.  */
@@ -75,7 +74,7 @@ choke me
 #else
 $1();
 #endif
-], eval "ac_cv_func_$1_$2=yes", eval "ac_cv_func_$1_$2=no")])
+]])],[eval "ac_cv_func_$1_$2=yes"],[eval "ac_cv_func_$1_$2=no"])])
 if eval "test \"`echo '$ac_cv_func_'$1'_'$2`\" = yes"; then
   AC_MSG_RESULT(yes)
   ifelse([$3], , :, [$3])
@@ -95,7 +94,7 @@ dnl
 AC_DEFUN([ACX_PTHREAD], [
 AC_REQUIRE([AC_CANONICAL_HOST])
 AC_LANG_SAVE
-AC_LANG_C
+AC_LANG([C])
 acx_pthread_ok=no
 
 # We used to check for pthread.h first, but this fails if pthread.h
@@ -208,11 +207,9 @@ for flag in $acx_pthread_flags; do
         # pthread_cleanup_push because it is one of the few pthread
         # functions on Solaris that doesn't have a non-functional libc stub.
         # We try pthread_create on general principles.
-        AC_TRY_LINK([#include <pthread.h>],
-                    [pthread_t th; pthread_join(th, 0);
+        AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <pthread.h>]], [[pthread_t th; pthread_join(th, 0);
                      pthread_attr_init(0); pthread_cleanup_push(0, 0);
-                     pthread_create(0,0,0,0); pthread_cleanup_pop(0); ],
-                    [acx_pthread_ok=yes])
+                     pthread_create(0,0,0,0); pthread_cleanup_pop(0); ]])],[acx_pthread_ok=yes],[])
 
         LIBS="$save_LIBS"
         CFLAGS="$save_CFLAGS"
@@ -238,8 +235,7 @@ if test "x$acx_pthread_ok" = xyes; then
         AC_MSG_CHECKING([for joinable pthread attribute])
         attr_name=unknown
         for attr in PTHREAD_CREATE_JOINABLE PTHREAD_CREATE_UNDETACHED; do
-            AC_TRY_LINK([#include <pthread.h>], [int attr=$attr; return attr;],
-                        [attr_name=$attr; break])
+            AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <pthread.h>]], [[int attr=$attr; return attr;]])],[attr_name=$attr; break],[])
         done
         AC_MSG_RESULT($attr_name)
         if test "$attr_name" != PTHREAD_CREATE_JOINABLE; then
@@ -391,12 +387,12 @@ AC_DEFUN([GUILE_READLINE], [
 
     AC_CACHE_CHECK([for rl_getc_function pointer in readline],
 		     ac_cv_var_rl_getc_function,
-		     [AC_TRY_LINK([
+		     [AC_LINK_IFELSE([AC_LANG_PROGRAM([[
     #include <stdio.h>
-    #include <readline/readline.h>],
-				  [printf ("%ld", (long) rl_getc_function)],
-				  [ac_cv_var_rl_getc_function=yes],
-				  [ac_cv_var_rl_getc_function=no])])
+    #include <readline/readline.h>]],
+      [[printf ("%ld", (long) rl_getc_function)]])],
+      [ac_cv_var_rl_getc_function=yes],
+      [ac_cv_var_rl_getc_function=no])])
     if test "${ac_cv_var_rl_getc_function}" = "yes"; then
       AC_DEFINE([HAVE_RL_GETC_FUNCTION], 1,
 	[Define if your readline library has the rl_getc_function variable.])
