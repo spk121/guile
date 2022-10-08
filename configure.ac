@@ -444,7 +444,6 @@ AC_CHECK_TYPE(socklen_t, ,
 AC_CHECK_TYPES([struct ip_mreq], , , [#include <netinet/in.h>])
 
 AC_TYPE_GETGROUPS
-AC_TYPE_SIGNAL
 AC_TYPE_MODE_T
 
 dnl Check whether we need -lm.
