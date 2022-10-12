@@ -104,9 +104,8 @@ the THANKS file (for everything else).
 Coding standards =====================================================
 
 - As for any part of Project GNU, changes to Guile should follow the
-GNU coding standards.  The standards are available via anonymous FTP
-from prep.ai.mit.edu, as /pub/gnu/standards/standards.texi and
-make-stds.texi.
+GNU coding standards, available at
+https://www.gnu.org/prep/standards/standards.html.
 
 - The Guile tree should compile without warnings under the following
 GCC switches, which are the default in the current configure script:
