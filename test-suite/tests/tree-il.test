@@ -1519,7 +1519,53 @@
                              #:to 'cps)))))
          (and (= (length w) 1)
               (number? (string-contains (car w)
-                                        "cannot be meaningfully compared")))))))
+                                        "cannot be meaningfully compared"))))))
+
+   (with-test-prefix "location"
+     (define (call-with-fake-input-file filename contents thunk)
+       (call-with-input-string contents
+         (lambda (port)
+           (set-port-filename! port filename)
+           (thunk port))))
+
+     (pass-if "unused variable"
+       (let ((w (call-with-warnings
+                 (lambda ()
+                   (call-with-fake-input-file
+                    "unused-variable.scm"
+                    "\
+(lambda (x)
+  (let ((y (+ x 2)))
+    x))"
+                    (lambda (port)
+                      (read-and-compile port #:opts %opts-w-unused #:to 'cps)))))))
+         (and (= (length w) 1)
+              (number? (string-contains (car w) "unused variable `y'"))
+              (number? (string-contains (car w) "unused-variable.scm:2:2")))))
+
+     (pass-if "unbound variable (spaces)"
+       (let ((w (call-with-warnings
+                 (lambda ()
+                   (call-with-fake-input-file
+                    "unbound-spaces.scm"
+                    "  (foo)"
+                    (lambda (port)
+                      (read-and-compile port #:opts %opts-w-unbound #:to 'cps)))))))
+         (and (= (length w) 1)
+              (number? (string-contains (car w) "unbound variable `foo'"))
+              (number? (string-contains (car w) "unbound-spaces.scm:1:3")))))
+
+     (pass-if "unbound variable (tabs)"
+       (let ((w (call-with-warnings
+                 (lambda ()
+                   (call-with-fake-input-file
+                    "unbound-tabs.scm"
+                    "\t\t(foo)"
+                    (lambda (port)
+                      (read-and-compile port #:opts %opts-w-unbound #:to 'cps)))))))
+         (and (= (length w) 1)
+              (number? (string-contains (car w) "unbound variable `foo'"))
+              (number? (string-contains (car w) "unbound-tabs.scm:1:17")))))))
 
 ;; Local Variables:
 ;; eval: (put 'pass-if-primitives-resolved 'scheme-indent-function 1)
