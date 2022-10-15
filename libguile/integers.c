@@ -493,7 +493,7 @@ bignum_cmp_long (struct scm_bignum *z, long l)
 }
 
 SCM
-scm_integer_from_mpz (mpz_srcptr mpz)
+scm_integer_from_mpz (const mpz_t mpz)
 {
   return normalize_bignum (make_bignum_from_mpz (mpz));
 }
