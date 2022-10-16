@@ -301,7 +301,7 @@ scm_raw_ihash (SCM obj, size_t depth)
           SCM n = SCM_I_MAKINUM (SCM_MOST_POSITIVE_FIXNUM);
           if (scm_is_inexact (obj))
             obj = scm_inexact_to_exact (obj);
-          return scm_raw_ihashq (scm_to_ulong (scm_modulo (obj, n)));
+          return scm_raw_ihashq (scm_to_uintptr_t (scm_modulo (obj, n)));
         }
       else
         return scm_i_string_hash (scm_number_to_string (obj, scm_from_int (10)));
