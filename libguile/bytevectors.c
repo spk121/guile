@@ -75,8 +75,13 @@
 #define is_unsigned_int8(_x)    ((_x) <= 255UL)
 #define is_signed_int16(_x)     (((_x) >= -32768L) && ((_x) <= 32767L))
 #define is_unsigned_int16(_x)   ((_x) <= 65535UL)
+#if !(__MINGW32__ && __x86_64__)
 #define is_signed_int32(_x)     (((_x) >= -2147483648L) && ((_x) <= 2147483647L))
 #define is_unsigned_int32(_x)   ((_x) <= 4294967295UL)
+#else /* (__MINGW32__ && __x86_64__) */
+#define is_signed_int32(_x)     (((_x) >= -2147483648LL) && ((_x) <= 2147483647LL))
+#define is_unsigned_int32(_x)   ((_x) <= 4294967295ULL)
+#endif /* (__MINGW32__ && __x86_64__) */
 #define SIGNEDNESS_signed       1
 #define SIGNEDNESS_unsigned     0
 
@@ -825,14 +830,14 @@ SCM_DEFINE (scm_u8_list_to_bytevector, "u8-list->bytevector", 1, 0, 0,
 static inline void
 twos_complement (mpz_t value, size_t size)
 {
-  unsigned long bit_count;
+  uintptr_t bit_count;
 
-  /* We expect BIT_COUNT to fit in a unsigned long thanks to the range
+  /* We expect BIT_COUNT to fit in a uintptr_t thanks to the range
      checking on SIZE performed earlier.  */
-  bit_count = (unsigned long) size << 3UL;
+  bit_count = (uintptr_t) size << 3ULL;
 
-  if (SCM_LIKELY (bit_count < sizeof (unsigned long)))
-    mpz_ui_sub (value, 1UL << bit_count, value);
+  if (SCM_LIKELY (bit_count < sizeof (uintptr_t)))
+    mpz_ui_sub (value, 1ULL << bit_count, value);
   else
     {
       mpz_t max;

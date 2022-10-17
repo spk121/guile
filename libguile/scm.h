@@ -837,10 +837,8 @@ typedef struct scm_thread scm_thread;
 # define SCM_CHAR_BIT 8
 #endif
 
-#ifdef LONG_BIT
-# define SCM_LONG_BIT LONG_BIT
-#else
-# define SCM_LONG_BIT (SCM_SIZEOF_LONG * 8)
+#ifndef INTPTR_T_BIT
+# define SCM_INTPTR_T_BIT (SCM_SIZEOF_INTPTR_T * 8)
 #endif
 
 

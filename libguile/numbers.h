@@ -54,10 +54,17 @@ extern "C++" {
  * (along with two tagging bits).
  *
  * In the current implementation, Inums must also fit within a long
- * because that's what GMP's mpz_*_si functions accept.  */
-typedef long scm_t_inum;
-#define SCM_I_FIXNUM_BIT         (SCM_LONG_BIT - 2)
+ * because that's what GMP's mpz_*_si functions accept.
+ *
+ * When using mini-gmp, we use intptr_t instead.
+ */
+
+#define SCM_I_FIXNUM_BIT         (SCM_INTPTR_T_BIT - 2)
+#if !(__MINGW32__ && __x86_64__)
 #define SCM_MOST_NEGATIVE_FIXNUM (-1L << (SCM_I_FIXNUM_BIT - 1))
+#else /* __MINGW32__ && __x86_64__ */
+#define SCM_MOST_NEGATIVE_FIXNUM (-1LL << (SCM_I_FIXNUM_BIT - 1))
+#endif /* __MINGW32__ && __x86_64__ */
 #define SCM_MOST_POSITIVE_FIXNUM (- (SCM_MOST_NEGATIVE_FIXNUM + 1))
 
 /* SCM_SRS (X, Y) is signed right shift, defined as floor (X / 2^Y),
@@ -85,12 +92,12 @@ typedef long scm_t_inum;
 
    NOTE: X must not perform side effects.  */
 #ifdef __GNUC__
-# define SCM_I_INUM(x)  (SCM_SRS ((scm_t_inum) SCM_UNPACK (x), 2))
+# define SCM_I_INUM(x)  (SCM_SRS ((intptr_t) SCM_UNPACK (x), 2))
 #else
 # define SCM_I_INUM(x)                          \
   (SCM_UNPACK (x) > SCM_T_SIGNED_BITS_MAX       \
-   ? -1 - (scm_t_inum) (~SCM_UNPACK (x) >> 2)   \
-   : (scm_t_inum) (SCM_UNPACK (x) >> 2))
+   ? -1 - (intptr_t) (~SCM_UNPACK (x) >> 2)   \
+   : (intptr_t) (SCM_UNPACK (x) >> 2))
 #endif
 
 #define SCM_I_INUMP(x)	(2 & SCM_UNPACK (x))

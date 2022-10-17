@@ -1,4 +1,4 @@
-/* Copyright 1995-1998,2000-2001,2003-2004,2006,2009,2011,2013,2015,2018,2022
+/* Copyright 1995-1998,2000-2001,2003-2004,2006,2009,2011,2013,2015,2018
      Free Software Foundation, Inc.
 
    This file is part of Guile.
@@ -415,7 +415,7 @@ SCM_DEFINE (scm_symbol_hash, "symbol-hash", 1, 0, 0,
 #define FUNC_NAME s_scm_symbol_hash
 {
   SCM_VALIDATE_SYMBOL (1, symbol);
-  return scm_from_ulong (scm_i_symbol_hash (symbol));
+  return scm_from_uintptr_t (scm_i_symbol_hash (symbol));
 }
 #undef FUNC_NAME
 

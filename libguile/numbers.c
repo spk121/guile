@@ -91,19 +91,25 @@
 /* FIXME: We assume that FLT_RADIX is 2 */
 verify (FLT_RADIX == 2);
 
-/* Make sure that scm_t_inum fits within a SCM value.  */
-verify (sizeof (scm_t_inum) <= sizeof (scm_t_bits));
+/* Make sure that intptr_t fits within a SCM value.  */
+verify (sizeof (intptr_t) <= sizeof (scm_t_bits));
+
+#if !(__MINGW32__ && __x86_64__)
+#define L1 1L
+#define UL1 1UL
+#else /* (__MINGW32__ && __x86_64__) */
+#define L1 1LL
+#define UL1 1ULL
+#endif /* (__MINGW32__ && __x86_64__) */
 
 /* Several functions below assume that fixnums fit within a long, and
    furthermore that there is some headroom to spare for other operations
    without overflowing. */
-verify (SCM_I_FIXNUM_BIT <= SCM_LONG_BIT - 2);
+verify (SCM_I_FIXNUM_BIT <= SCM_INTPTR_T_BIT - 2);
 
 /* Some functions that use GMP's mpn functions assume that a
    non-negative fixnum will always fit in a 'mp_limb_t'.  */
 verify (SCM_MOST_POSITIVE_FIXNUM <= (mp_limb_t) -1);
-
-#define scm_from_inum(x) (scm_from_signed_integer (x))
 
 /* Test an inum to see if it can be converted to a double without loss
    of precision.  Note that this will sometimes return 0 even when 1
@@ -111,7 +117,7 @@ verify (SCM_MOST_POSITIVE_FIXNUM <= (mp_limb_t) -1);
    to be a fast check to optimize common cases. */
 #define INUM_LOSSLESSLY_CONVERTIBLE_TO_DOUBLE(n)                        \
   (SCM_I_FIXNUM_BIT-1 <= DBL_MANT_DIG                                   \
-   || ((n) ^ ((n) >> (SCM_I_FIXNUM_BIT-1))) < (1L << DBL_MANT_DIG))
+   || ((n) ^ ((n) >> (SCM_I_FIXNUM_BIT-1))) < (L1 << DBL_MANT_DIG))
 
 #if (! HAVE_DECL_MPZ_INITS) || SCM_ENABLE_MINI_GMP
 
@@ -2854,8 +2860,8 @@ SCM_DEFINE (scm_logbit_p, "logbit?", 2, 0, 0,
 	    "@end lisp")
 #define FUNC_NAME s_scm_logbit_p
 {
-  unsigned long int iindex;
-  iindex = scm_to_ulong (index);
+  uintptr_t iindex;
+  iindex = scm_to_uintptr_t (index);
 
   if (SCM_I_INUMP (j))
     return scm_from_bool (scm_integer_logbit_ui (iindex, SCM_I_INUM (j)));
@@ -3030,13 +3036,13 @@ lsh (SCM n, SCM count, const char *fn)
 {
   if (scm_is_eq (n, SCM_INUM0))
     return n;
-  if (!scm_is_unsigned_integer (count, 0, ULONG_MAX))
+  if (!scm_is_unsigned_integer (count, 0, UINTPTR_MAX))
     scm_num_overflow (fn);
 
-  unsigned long ucount = scm_to_ulong (count);
+  uintptr_t ucount = scm_to_uintptr_t (count);
   if (ucount == 0)
     return n;
-  if (ucount / (sizeof (int) * 8) >= (unsigned long) INT_MAX)
+  if (ucount / (sizeof (int) * 8) >= (uintptr_t) INT_MAX)
     scm_num_overflow (fn);
   if (SCM_I_INUMP (n))
     return scm_integer_lsh_iu (SCM_I_INUM (n), ucount);
@@ -3046,10 +3052,10 @@ lsh (SCM n, SCM count, const char *fn)
 static SCM
 floor_rsh (SCM n, SCM count)
 {
-  if (!scm_is_unsigned_integer (count, 0, ULONG_MAX))
+  if (!scm_is_unsigned_integer (count, 0, UINTPTR_MAX))
     return scm_is_false (scm_negative_p (n)) ? SCM_INUM0 : SCM_I_MAKINUM (-1);
 
-  unsigned long ucount = scm_to_ulong (count);
+  uintptr_t ucount = scm_to_uintptr_t (count);
   if (ucount == 0)
     return n;
   if (SCM_I_INUMP (n))
@@ -3060,10 +3066,10 @@ floor_rsh (SCM n, SCM count)
 static SCM
 round_rsh (SCM n, SCM count)
 {
-  if (!scm_is_unsigned_integer (count, 0, ULONG_MAX))
+  if (!scm_is_unsigned_integer (count, 0, UINTPTR_MAX))
     return SCM_INUM0;
 
-  unsigned long ucount = scm_to_ulong (count);
+  uintptr_t ucount = scm_to_uintptr_t (count);
   if (ucount == 0)
     return n;
   if (SCM_I_INUMP (n))
@@ -3153,10 +3159,10 @@ SCM_DEFINE (scm_bit_extract, "bit-extract", 3, 0, 0,
   if (!scm_is_exact_integer (n))
     SCM_WRONG_TYPE_ARG (SCM_ARG1, n);
 
-  unsigned long istart = scm_to_ulong (start);
-  unsigned long iend = scm_to_ulong (end);
+  uintptr_t istart = scm_to_uintptr_t (start);
+  uintptr_t iend = scm_to_uintptr_t (end);
   SCM_ASSERT_RANGE (3, end, (iend >= istart));
-  unsigned long bits = iend - istart;
+  uintptr_t bits = iend - istart;
 
   if (SCM_I_INUMP (n))
     return scm_integer_bit_extract_i (SCM_I_INUM (n), istart, bits);
@@ -5308,7 +5314,7 @@ scm_product (SCM x, SCM y)
   if (SCM_UNBNDP (y))
     {
       if (SCM_UNBNDP (x))
-	return SCM_I_MAKINUM (1L);
+	return SCM_I_MAKINUM (L1);
       else if (SCM_NUMBERP (x))
 	return x;
       else
@@ -5436,7 +5442,7 @@ divide (SCM x, SCM y)
 	return scm_i_make_ratio (x, y);
       else if (SCM_REALP (y))
         /* FIXME: Precision may be lost here due to:
-           (1) The cast from 'scm_t_inum' to 'double'
+           (1) The cast from 'intptr_t' to 'double'
            (2) Double rounding */
         return scm_i_from_double ((double) SCM_I_INUM (x) / SCM_REAL_VALUE (y));
       else if (SCM_COMPLEXP (y))
@@ -5476,7 +5482,7 @@ divide (SCM x, SCM y)
       double rx = SCM_REAL_VALUE (x);
       if (SCM_I_INUMP (y))
         /* FIXME: Precision may be lost here due to:
-           (1) The cast from 'scm_t_inum' to 'double'
+           (1) The cast from 'intptr_t' to 'double'
            (2) Double rounding */
         return scm_i_from_double (rx / (double) SCM_I_INUM (y));
       else if (SCM_BIGP (y))
@@ -5500,7 +5506,7 @@ divide (SCM x, SCM y)
       if (SCM_I_INUMP (y))
         {
           /* FIXME: Precision may be lost here due to:
-             (1) The conversion from 'scm_t_inum' to double
+             (1) The conversion from 'intptr_t' to double
              (2) Double rounding */
           double d = SCM_I_INUM (y);
           return scm_c_make_rectangular (rx / d, ix / d);
@@ -6616,18 +6622,18 @@ range_error (SCM bad_val, SCM min, SCM max)
 }
 #define scm_i_range_error range_error
 
-static scm_t_inum
-inum_in_range (SCM x, scm_t_inum min, scm_t_inum max)
+static intptr_t
+inum_in_range (SCM x, intptr_t min, intptr_t max)
 {
   if (SCM_LIKELY (SCM_I_INUMP (x)))
     {
-      scm_t_inum val = SCM_I_INUM (x);
+      intptr_t val = SCM_I_INUM (x);
       if (min <= val && val <= max)
         return val;
     }
   else if (!SCM_BIGP (x))
     scm_wrong_type_arg_msg (NULL, 0, x, "exact integer");
-  range_error (x, scm_from_long (min), scm_from_long (max));
+  range_error (x, scm_from_intptr_t (min), scm_from_intptr_t (max));
 }
 
 SCM
@@ -6667,7 +6673,7 @@ scm_to_unsigned_integer (SCM arg, uintmax_t min, uintmax_t max)
   uint64_t ret;
   if (SCM_I_INUMP (arg))
     {
-      scm_t_inum n = SCM_I_INUM (arg);
+      intptr_t n = SCM_I_INUM (arg);
       if (n < 0)
         goto out_of_range;
       ret = n;
@@ -6736,7 +6742,7 @@ scm_from_uint16 (uint16_t arg)
 int32_t
 scm_to_int32 (SCM arg)
 {
-#if SCM_SIZEOF_LONG == 4
+#if SCM_SIZEOF_INTPTR_T == 4
   if (SCM_I_INUMP (arg))
     return SCM_I_INUM (arg);
   else if (!SCM_BIGP (arg))
@@ -6746,7 +6752,7 @@ scm_to_int32 (SCM arg)
     return ret;
   range_error (arg, scm_integer_from_int32 (INT32_MIN),
                scm_integer_from_int32 (INT32_MAX));
-#elif SCM_SIZEOF_LONG == 8
+#elif SCM_SIZEOF_INTPTR_T == 8
   return inum_in_range (arg, INT32_MIN, INT32_MAX);
 #else
 #error bad inum size
@@ -6756,9 +6762,9 @@ scm_to_int32 (SCM arg)
 SCM
 scm_from_int32 (int32_t arg)
 {
-#if SCM_SIZEOF_LONG == 4
+#if SCM_SIZEOF_INTPTR_T == 4
   return scm_integer_from_int32 (arg);
-#elif SCM_SIZEOF_LONG == 8
+#elif SCM_SIZEOF_INTPTR_T == 8
   return SCM_I_MAKINUM (arg);
 #else
 #error bad inum size
@@ -6768,7 +6774,7 @@ scm_from_int32 (int32_t arg)
 uint32_t
 scm_to_uint32 (SCM arg)
 {
-#if SCM_SIZEOF_LONG == 4
+#if SCM_SIZEOF_INTPTR_T == 4
   if (SCM_I_INUMP (arg))
     {
       if (SCM_I_INUM (arg) >= 0)
@@ -6783,7 +6789,7 @@ scm_to_uint32 (SCM arg)
   else
     scm_wrong_type_arg_msg (NULL, 0, arg, "exact integer");
   range_error (arg, scm_integer_from_uint32 (0), scm_integer_from_uint32 (UINT32_MAX));
-#elif SCM_SIZEOF_LONG == 8
+#elif SCM_SIZEOF_INTPTR_T == 8
   return inum_in_range (arg, 0, UINT32_MAX);
 #else
 #error bad inum size
@@ -6793,9 +6799,9 @@ scm_to_uint32 (SCM arg)
 SCM
 scm_from_uint32 (uint32_t arg)
 {
-#if SCM_SIZEOF_LONG == 4
+#if SCM_SIZEOF_INTPTR_T == 4
   return scm_integer_from_uint32 (arg);
-#elif SCM_SIZEOF_LONG == 8
+#elif SCM_SIZEOF_INTPTR_T == 8
   return SCM_I_MAKINUM (arg);
 #else
 #error bad inum size
@@ -6965,7 +6971,7 @@ scm_is_number (SCM z)
 
 /* Returns log(x * 2^shift) */
 static SCM
-log_of_shifted_double (double x, long shift)
+log_of_shifted_double (double x, intptr_t shift)
 {
   /* cf scm_log10 */
   double ans = log (fabs (x)) + shift * M_LN2;
@@ -6983,7 +6989,7 @@ log_of_exact_integer (SCM n)
     return log_of_shifted_double (SCM_I_INUM (n), 0);
   else if (SCM_BIGP (n))
     {
-      long expon;
+      intptr_t expon;
       double signif = scm_integer_frexp_z (scm_bignum (n), &expon);
       return log_of_shifted_double (signif, expon);
     }
@@ -6995,8 +7001,8 @@ log_of_exact_integer (SCM n)
 static SCM
 log_of_fraction (SCM n, SCM d)
 {
-  long n_size = scm_to_long (scm_integer_length (n));
-  long d_size = scm_to_long (scm_integer_length (d));
+  intptr_t n_size = scm_to_intptr_t (scm_integer_length (n));
+  intptr_t d_size = scm_to_intptr_t (scm_integer_length (d));
 
   if (labs (n_size - d_size) > 1)
     return (scm_difference (log_of_exact_integer (n),
@@ -7152,7 +7158,7 @@ scm_exact_integer_sqrt (SCM k, SCM *sp, SCM *rp)
 {
   if (SCM_I_INUMP (k))
     {
-      scm_t_inum kk = SCM_I_INUM (k);
+      intptr_t kk = SCM_I_INUM (k);
       if (kk >= 0)
         return scm_integer_exact_sqrt_i (kk, sp, rp);
     }
@@ -7183,7 +7189,7 @@ SCM_PRIMITIVE_GENERIC (scm_sqrt, "sqrt", 1, 0, 0,
 {
   if (SCM_I_INUMP (z))
     {
-      scm_t_inum i = SCM_I_INUM (z);
+      intptr_t i = SCM_I_INUM (z);
       if (scm_is_integer_perfect_square_i (i))
         return scm_integer_floor_sqrt_i (i);
       double root = scm_integer_inexact_sqrt_i (i);
@@ -7232,16 +7238,16 @@ SCM_PRIMITIVE_GENERIC (scm_sqrt, "sqrt", 1, 0, 0,
 
       double xx = scm_i_divide2double (n, d);
       double abs_xx = fabs (xx);
-      long shift = 0;
+      intptr_t shift = 0;
 
       if (abs_xx > DBL_MAX || abs_xx < DBL_MIN)
         {
-          shift = (scm_to_long (scm_integer_length (n))
-                   - scm_to_long (scm_integer_length (d))) / 2;
+          shift = (scm_to_intptr_t (scm_integer_length (n))
+                   - scm_to_intptr_t (scm_integer_length (d))) / 2;
           if (shift > 0)
-            d = lsh (d, scm_from_long (2 * shift), FUNC_NAME);
+            d = lsh (d, scm_from_intptr_t (2 * shift), FUNC_NAME);
           else
-            n = lsh (n, scm_from_long (-2 * shift), FUNC_NAME);
+            n = lsh (n, scm_from_intptr_t (-2 * shift), FUNC_NAME);
           xx = scm_i_divide2double (n, d);
         }
 
