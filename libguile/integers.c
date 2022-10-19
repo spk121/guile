@@ -2599,8 +2599,9 @@ scm_integer_length_z (struct scm_bignum *n)
   mpz_t zn;
   alias_bignum_to_mpz (n, zn);
   size_t size = mpz_sizeinbase (zn, 2);
+  mp_bitcnt_t bitcnt_max = (mp_bitcnt_t) ~ (mp_bitcnt_t) 0;
   /* If negative and no 0 bits above the lowest 1, adjust result.  */
-  if (mpz_sgn (zn) < 0 && mpz_scan0 (zn, mpz_scan1 (zn, 0)) == UINTPTR_MAX)
+  if (mpz_sgn (zn) < 0 && mpz_scan0 (zn, mpz_scan1 (zn, 0)) == bitcnt_max)
     size--;
   scm_remember_upto_here_1 (n);
   return scm_from_size_t (size);
