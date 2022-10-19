@@ -71,14 +71,18 @@
 #define INT16_T_unsigned        uint16_t
 #define INT32_T_signed          int32_t
 #define INT32_T_unsigned        uint32_t
+#if !(__MINGW32__ && __x86_64__)
 #define is_signed_int8(_x)      (((_x) >= -128L) && ((_x) <= 127L))
 #define is_unsigned_int8(_x)    ((_x) <= 255UL)
 #define is_signed_int16(_x)     (((_x) >= -32768L) && ((_x) <= 32767L))
 #define is_unsigned_int16(_x)   ((_x) <= 65535UL)
-#if !(__MINGW32__ && __x86_64__)
 #define is_signed_int32(_x)     (((_x) >= -2147483648L) && ((_x) <= 2147483647L))
 #define is_unsigned_int32(_x)   ((_x) <= 4294967295UL)
 #else /* (__MINGW32__ && __x86_64__) */
+#define is_signed_int8(_x)      (((_x) >= -128LL) && ((_x) <= 127LL))
+#define is_unsigned_int8(_x)    ((_x) <= 255ULL)
+#define is_signed_int16(_x)     (((_x) >= -32768LL) && ((_x) <= 32767LL))
+#define is_unsigned_int16(_x)   ((_x) <= 65535ULL)
 #define is_signed_int32(_x)     (((_x) >= -2147483648LL) && ((_x) <= 2147483647LL))
 #define is_unsigned_int32(_x)   ((_x) <= 4294967295ULL)
 #endif /* (__MINGW32__ && __x86_64__) */
