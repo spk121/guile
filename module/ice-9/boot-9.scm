@@ -2060,34 +2060,6 @@ non-locally, that exit determines the continuation."
 ;;; {Load Paths}
 ;;;
 
-(let-syntax ((compile-time-case
-              (lambda (stx)
-                (syntax-case stx ()
-                  ((_ exp clauses ...)
-                   (let ((val (primitive-eval (syntax->datum #'exp))))
-                     (let next-clause ((clauses #'(clauses ...)))
-                       (syntax-case clauses (else)
-                         (()
-                          (syntax-violation 'compile-time-case
-                                            "all clauses failed to match" stx))
-                         (((else form ...))
-                          #'(begin form ...))
-                         ((((k ...) form ...) clauses ...)
-                          (if (memv val (syntax->datum #'(k ...)))
-                              #'(begin form ...)
-                              (next-clause #'(clauses ...))))))))))))
-  ;; emacs: (put 'compile-time-case 'scheme-indent-function 1)
-  (compile-time-case (system-file-name-convention)
-    ((posix)
-     (define (file-name-separator? c)
-       (char=? c #\/))
-
-     (define file-name-separator-string "/")
-
-     (define (absolute-file-name? file-name)
-       (string-prefix? "/" file-name)))
-
-    ((windows)
      (define (file-name-separator? c)
        (or (char=? c #\/)
            (char=? c #\\)))
@@ -2113,7 +2085,7 @@ non-locally, that exit determines the continuation."
        (or (unc-file-name?)
            (if (has-drive-specifier?)
                (file-name-separator-at-index? 2)
-               (file-name-separator-at-index? 0)))))))
+               (file-name-separator-at-index? 0))))
 
 (define (in-vicinity vicinity file)
   (let ((tail (let ((len (string-length vicinity)))
