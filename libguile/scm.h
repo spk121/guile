@@ -845,7 +845,7 @@ typedef struct scm_thread scm_thread;
 
 /* Cast pointer through (void *) in order to avoid compiler warnings
    when strict aliasing is enabled */
-typedef long SCM_STACKITEM;
+typedef intptr_t SCM_STACKITEM;
 #define SCM_STACK_PTR(ptr) ((SCM_STACKITEM *) (void *) (ptr))
 
 
