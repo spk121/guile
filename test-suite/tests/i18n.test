@@ -91,7 +91,7 @@
 
 (define %french-locale-name
   (if mingw?
-      "fra_FRA.850"
+      "French_France.850"
       "fr_FR.iso88591"))         ;"iso88591" is the "normalized codeset"
 
 ;; What we really want for the following locales is that they be Unicode
@@ -99,26 +99,28 @@
 
 (define %french-utf8-locale-name
   (if mingw?
-      "fra_FRA.1252"
+      "French_France.1252"
       "fr_FR.utf8"))                 ;"utf8" is the "normalized codeset"
 
 (define %turkish-utf8-locale-name
   (if mingw?
-      "tur_TRK.1254"
+      "Turkish_Turkey.1254"
       "tr_TR.utf8"))
 
 (define %german-utf8-locale-name
   (if mingw?
-      "deu_DEU.1252"
+      "German_Germany.1252"
       "de_DE.utf8"))
 
 (define %greek-utf8-locale-name
   (if mingw?
-      "grc_ELL.1253"
+      "Greek_Greece.1253"
       "el_GR.utf8"))
 
 (define %american-english-locale-name
-  "en_US.utf8")
+  (if mingw?
+  "English_United States.1252"
+  "en_US.utf8"))
 
 (define %french-locale
   (false-if-exception
@@ -169,14 +171,14 @@
   (under-locale-or-unresolved %french-utf8-locale thunk))
 
 (define (under-turkish-utf8-locale-or-unresolved thunk)
-  ;; FreeBSD 8.2 and 9.1, Solaris 2.10, Darwin 8.11.0, Cygwin, and MinGW have
+  ;; FreeBSD 8.2 and 9.1, Solaris 2.10, Darwin 8.11.0, ane Cygwin have
   ;; a broken tr_TR locale where `i' is mapped to uppercase `I'
   ;; instead of `İ', so disable tests on that platform.
+  ;; Older version of MinGW may also fail.
   (if (or (string-contains %host-type "freebsd8")
           (string-contains %host-type "freebsd9")
           (string-contains %host-type "solaris2.10")
           (string-contains %host-type "darwin8")
-          (string-contains %host-type "mingw32")
           (string-contains %host-type "cygwin"))
       (throw 'unresolved)
       (under-locale-or-unresolved %turkish-utf8-locale thunk)))
@@ -297,7 +299,7 @@
 
   (pass-if "string-locale<? for 'ch'"
     (under-locale-or-unresolved
-     "cs_CZ.utf8"
+	 (if mingw? "Czech_Czechia.1250" "cs_CZ.utf8")
      (lambda ()
        ;; Czech sorts digraph 'ch' between 'h' and 'i'.
        ;;
