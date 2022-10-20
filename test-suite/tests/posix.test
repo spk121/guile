@@ -164,7 +164,7 @@
     ;; This used to crash in 1.8.1 and earlier.
     (let ((file (false-if-exception
                  (open-output-file "/dev/null"))))
-      (if (not file)
+      (if (or (not (defined? 'ttyname)) (not file))
           (throw 'unsupported)
           (ttyname file)))))
 
@@ -191,7 +191,7 @@
 
   (pass-if-equal "AT_SYMLINK_NOFOLLOW"
       '(1 1)
-    (if (defined? 'AT_SYMLINK_NOFOLLOW)
+    (if (and (defined? 'symlink) (defined? 'AT_SYMLINK_NOFOLLOW))
         (let ((file "posix.test-utime"))
           (dynamic-wind
             (lambda ()
