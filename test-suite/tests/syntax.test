@@ -91,7 +91,8 @@
   "sequence of zero expressions")
 
 (define exception:variable-ref
-  '(misc-error . "Unbound variable"))
+  ;; Catch both "Variable is unbound" and "Unbound variable"
+  '(misc-error . "nbound"))
 
 ;; (put 'pass-if-syntax-error 'scheme-indent-function 1)
 (define-syntax pass-if-syntax-error
