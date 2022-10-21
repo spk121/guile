@@ -139,10 +139,11 @@ SCM_DEFINE (scm_srfi60_rotate_bit_field, "rotate-bit-field", 4, 0, 0,
              behavior when shifting negative numbers, we do all
              operations using unsigned values, and then convert to
              signed at the end. */
-          uintptr_t unn = nn;
-          uintptr_t below = unn &  ((1UL << ss) - 1);  /* below start */
-          uintptr_t above = unn & ~((1UL << ee) - 1);  /* above end */
-          uintptr_t fmask = ((1UL << ww) - 1) << ss;   /* field mask */
+          const uintptr_t one = 1;
+          uintptr_t unn = nn;          
+          uintptr_t below = unn &  ((one << ss) - 1);  /* below start */
+          uintptr_t above = unn & ~((one << ee) - 1);  /* above end */
+          uintptr_t fmask = ((one << ww) - 1) << ss;   /* field mask */
           uintptr_t ff = unn & fmask;                  /* field */
           uintptr_t uresult = (above
                                    | ((ff << cc) & fmask)
@@ -243,8 +244,9 @@ SCM_DEFINE (scm_srfi60_reverse_bit_field, "reverse-bit-field", 3, 0, 0,
       if (ee <= SCM_INTPTR_T_BIT-1)
         {
           /* all within a intptr_t */
-          intptr_t smask = 1L << ss;
-          intptr_t emask = 1L << (ee-1);
+          const intptr_t one = 1;
+          intptr_t smask = one << ss;
+          intptr_t emask = one << (ee-1);
           for ( ; swaps > 0; swaps--)
             {
               intptr_t sbit = nn & smask;
