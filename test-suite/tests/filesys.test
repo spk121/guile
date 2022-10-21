@@ -34,6 +34,8 @@
 (define (test-directory2)
   (data-file-name "filesys-test-dir2.tmp"))
 
+(define mingw?
+  (string-contains %host-type "mingw"))
 
 ;;;
 ;;; copy-file
@@ -308,10 +310,58 @@
           (throw 'unresolved)))))
 
 (with-test-prefix "basename"
-
   (pass-if-equal "/" "/" (basename "/"))
   (pass-if-equal "//" "/" (basename "//"))
-  (pass-if-equal "a/b/c" "c" (basename "a/b/c")))
+  (pass-if-equal "a/b/c" "c" (basename "a/b/c"))
+  (when mingw?
+    (pass-if-equal "C:\\DumpStack.log" "DumpStack.log"
+      (basename "C:\\DumpStack.log"))
+    (pass-if-equal "C:\\Users\\jdoe\\Downloads\\tmp.txt" "tmp.txt"
+      (basename "D:\\Users\\jdoe\\Downloads\\tmp.txt"))
+    ))
+
+(with-test-prefix "dirname"
+  (pass-if-equal "/" "/" (dirname "/"))
+  (pass-if-equal "a/b/c" "a/b" (dirname "a/b/c"))
+  (when mingw?
+    (pass-if-equal "C:\\DumpStack.log" "C:\\"
+      (dirname "C:\\DumpStack.log"))
+    (pass-if-equal "C:\\Users\\jdoe\\Downloads\\tmp.txt"
+        "C:\\Users\\jdoe\\Downloads"
+      (dirname "C:\\Users\\jdoe\\Downloads\\tmp.txt"))
+    ))
+
+(with-test-prefix "canonicalize-path"
+  (pass-if-equal "current directory is '.'"
+      (canonizalize-path ".")
+    (canonicalize-path (getcwd)))
+  
+  (when mingw?
+    (let ((cwd (getcwd)))
+      (when (and (string? cwd)
+                 (>= (string-length cwd) 3))
+        (let ((drive (string-ref cwd 0))
+              (colon (string-ref cwd 1))
+              (slash (string-ref cwd 2)))
+          (when (and (or (and (char>=? drive #\a)
+                              (char<=? drive #\z))
+                         (and (char>=? drive #\A)
+                              (char<=? drive #\Z)))
+                     (char=? colon #\:))
+            
+            ;; This is not a UNC path, so we can run these tests
+            (begin
+              (pass-if-equal "lowercase drive letters are capitalized"
+                  (string (char-upcase drive))
+                (string-take
+                 (canonicalize-path (string (char-downcase drive) #\: #\/))
+                 1))
+              
+              (pass-if-equal "uppercase drive letters remain capitalized"
+                  (string (char-upcase drive))
+                (string-take
+                 (canonicalize-path (string (char-upcase drive) #\: #\/))
+                 1)))))))))
 
 (delete-file (test-file))
 (when (file-exists? (test-symlink))
