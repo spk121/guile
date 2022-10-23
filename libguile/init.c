@@ -150,6 +150,7 @@
 #include "version.h"
 #include "vm.h"
 #include "vports.h"
+#include "w32conport.h"
 #include "weak-set.h"
 #include "weak-table.h"
 #include "weak-vector.h"
@@ -194,15 +195,29 @@ scm_init_standard_ports ()
      buffered input on stdin can reset \ex{(current-input-port)} to
      block buffering for higher performance.  */
 
+#ifdef __MINGW32__
+  if (isatty(0))
+    scm_set_current_input_port (scm_make_conport (0));
+  else
+    scm_set_current_input_port (scm_standard_stream_to_port (0, "r"));
+  if (isatty (1))
+    scm_set_current_output_port (scm_make_conport (1));
+  else
+    scm_set_current_output_port (scm_standard_stream_to_port (1, "w"));
+  if (isatty (2))
+    scm_set_current_error_port (scm_make_conport (2));
+  else
+    scm_set_current_error_port (scm_standard_stream_to_port (2, "w"));
+#else
   scm_set_current_input_port 
     (scm_standard_stream_to_port (0, isatty (0) ? "r0" : "r"));
   scm_set_current_output_port
     (scm_standard_stream_to_port (1, isatty (1) ? "w0" : "w"));
   scm_set_current_error_port
     (scm_standard_stream_to_port (2, isatty (2) ? "w0" : "w"));
+#endif
   scm_set_current_warning_port (scm_current_error_port ());
 }
-
 
 
 /* Loading the startup Scheme files.  */
@@ -407,6 +422,7 @@ scm_i_init_guile (void *base)
   scm_register_r6rs_ports ();     /* requires ports */
   scm_init_fports ();
   scm_init_strports ();
+  scm_init_conports ();
   scm_init_hash ();
   scm_init_hashtab ();
   scm_init_deprecation ();

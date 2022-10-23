@@ -233,6 +233,7 @@ libguile_@GUILE_EFFECTIVE_VERSION@_la_SOURCES =				\
 	version.c				\
 	vm.c					\
 	vports.c				\
+	w32conport.c				\
 	weak-set.c				\
 	weak-table.c				\
 	weak-vector.c
@@ -713,6 +714,7 @@ modinclude_HEADERS =				\
 	vm-expand.h				\
 	vm.h					\
 	vports.h				\
+	w32conport.h				\
 	weak-set.h				\
 	weak-table.h				\
 	weak-vector.h
