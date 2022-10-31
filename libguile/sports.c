@@ -55,7 +55,8 @@ typedef struct _scm_t_stream_port
   int id;
 } scm_t_stream_port;
 
-int scm_use_stream_ports = SCM_USE_STREAM_PORTS;
+//int scm_use_stream_ports = SCM_USE_STREAM_PORTS;
+int scm_use_stream_ports = 1;
 static scm_t_port_type *scm_stream_port_type;
 static SCM sym_stdin;
 static SCM sym_stdout;
@@ -166,7 +167,7 @@ do_win32_stream_port_setup (void)
   SetConsoleCP (65001);
   SetConsoleOutputCP (65001);
 
-  for (int i = 0; i < 3; i++)
+  for (int fd = 0; fd < 3; fd++)
     {
       if (fd == 0)
 	device = STD_INPUT_HANDLE;
@@ -174,9 +175,8 @@ do_win32_stream_port_setup (void)
 	device = STD_OUTPUT_HANDLE;
       else if (fd == 2)
 	device = STD_ERROR_HANDLE;
-      handle = GetStdHandle (cp->device);
+      handle = GetStdHandle (device);
       orig_mode = 0;
-      mode = 0;
       GetConsoleMode (handle, &orig_mode);
 
       if (fd == 0)
@@ -224,7 +224,7 @@ scm_init_stream_ports ()
     scm_use_stream_ports = 0;
 #if defined(_WIN32) && !defined(__CYGWIN__)
   if (scm_use_stream_ports)
-    do_mingw_stream_port_setup ();
+    do_win32_stream_port_setup ();
 #endif
 #include "sports.x"
 }
