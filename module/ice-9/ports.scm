@@ -78,6 +78,10 @@
             adjust-port-revealed!
             ;; note: %file-port-name-canonicalization is used in boot-9
 
+            ;; Definitions from sports.c
+            make-stream-port
+            stream-port?
+
             ;; Definitions from ioext.c.
             ftell
             redirect-port
@@ -422,7 +426,7 @@ file with the given name already exists, the effect is unspecified."
   (open-file file (if binary "wb" "w")
              #:encoding encoding))
 
-(define (open-io-file str) 
+(define (open-io-file str)
   "Open file with name STR for both input and output."
   (open-file str OPEN_BOTH))
 
@@ -535,7 +539,7 @@ by the @var{proc} are returned."
 (define (with-input-from-string string thunk)
   "THUNK must be a procedure of no arguments.
 The test of STRING  is opened for
-input, an input port connected to it is made, 
+input, an input port connected to it is made,
 and the THUNK is called with no arguments.
 When the THUNK returns, the port is closed.
 Returns the values yielded by THUNK.  If an

@@ -937,6 +937,7 @@ initialized with the @var{port} argument.
 
 @menu
 * File Ports:: Ports on an operating system file.
+* Stream Ports:: Fallback ports for broken systems.
 * Bytevector Ports:: Ports on a bytevector.
 * String Ports:: Ports on a Scheme string.
 * Custom Ports:: Ports whose implementation you control.
@@ -1150,6 +1151,67 @@ source of data, but only the value that is returned by
 Determine whether @var{obj} is a port that is related to a file.
 @end deffn
 
+@rnindex char-ready?
+@deffn {Scheme Procedure} set-port-polled! port flag
+@deffnx {C Function} scm_set_port_polled_x (port, flag)
+When @var{flag} is @code{#t}, the file port will poll the file
+descriptor to see if input is waiting. When @code{#f}, the file port
+will not poll.  In practice, this means that the @code{char-ready?}
+procedure will always return @code{#t} when called on this file port.
+@end deffn
+
+@rnindex char-ready?
+@deffn {Scheme Procedure} port-polled? port
+@deffnx {C Function} scm_port_polled_p (port)
+Returns @code{#t} if @var{port} is a file port that polls the file
+descriptor to see if input is waiting.  When true @code{char-ready?}
+may return @code{#f} if not input is waiting.  If @code{port-polled?}
+returns @code{#f}, then @code{char-ready?} always returns @code{#t}.
+@end deffn
+
+@node Stream Ports
+@subsubsection Stream Ports
+@cindex Stream port
+@cindex Port, stream
+
+Stream ports are a fallback port type that can be used for the
+@code{current-input-port}, @code{current-output-port} and
+@code{current-error-port}.  For most operating systems, they are
+unnecessary.
+
+Unlike the stream ports described in this subsection, Guile's standard
+file ports expect to be able to poll an underlying file descriptor or
+handle to see if characters are ready to be read. Some hostile operating
+system environments -- certain configurations Windows 11 currently being
+the sole example -- have misfeatures on console input streams that make
+polling unservicable.  Stream ports have no file descriptors to poll and
+will function without them.
+
+It is a compile-time option, set by @code{configure}, to use stream
+ports as the default port for @code{current-input-port},
+@code{current-output-port} and @code{current-error-port}.  Even when
+compiled in, they are only used when, during Guile's initialization, it
+detects that it is running in a TTY.
+
+Note that as stream ports cannot poll, @code{char-ready?} will always
+return @code{#f}.  Also note that the @code{ice-9 readline} library will
+not work with stream ports.
+
+Functions are explicitly not provided to modify the buffering of these
+ports.  Typically, TTY input and output are line buffered by the
+operating system, and error output is unbuffered.
+
+@deffn {Scheme Procedure} make-stream-port id
+This procedure creates a new stream port.  If @var{id} is 0, an input
+port is created that reads the standard input stream.  If @var{id} is 1
+or 2, an output port is created that writes to the standard output or
+error stream respectively.
+@end deffn
+
+@deffn {Scheme Procedure} stream-port? obj
+This procedure returns @code{#t} if @var{obj} is a stream port or
+returns @code{#f} otherwise.
+@end deffn
 
 @node Bytevector Ports
 @subsubsection Bytevector Ports

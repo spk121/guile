@@ -126,6 +126,7 @@
 #include "smob.h"
 #include "socket.h"
 #include "sort.h"
+#include "sports.h"
 #include "srcprop.h"
 #include "srfi-1.h"
 #include "srfi-13.h"
@@ -150,7 +151,6 @@
 #include "version.h"
 #include "vm.h"
 #include "vports.h"
-#include "w32conport.h"
 #include "weak-set.h"
 #include "weak-table.h"
 #include "weak-vector.h"
@@ -193,29 +193,30 @@ scm_init_standard_ports ()
      a subprocess.  For this reason, all shells, including sh, csh,
      and scsh, read stdin unbuffered.  Applications that can tolerate
      buffered input on stdin can reset \ex{(current-input-port)} to
-     block buffering for higher performance.  */
+     block buffering for higher performance.
 
-#ifdef __MINGW32__
-  if (isatty(0))
-    scm_set_current_input_port (scm_make_conport (0));
+     The stream ports are fallback ports to be on systems where
+     polling the file descriptors 0, 1 and 2 is broken.
+  */
+
+  if (scm_use_stream_ports && isatty(0))
+    scm_set_current_input_port (scm_i_make_stream_port (0));
   else
-    scm_set_current_input_port (scm_standard_stream_to_port (0, "r"));
-  if (isatty (1))
-    scm_set_current_output_port (scm_make_conport (1));
+    scm_set_current_input_port
+      (scm_standard_stream_to_port (0, isatty (0) ? "r0" : "r"));
+
+  if (scm_use_stream_ports && isatty(1))
+    scm_set_current_output_port (scm_i_make_stream_port (1));
   else
-    scm_set_current_output_port (scm_standard_stream_to_port (1, "w"));
-  if (isatty (2))
-    scm_set_current_error_port (scm_make_conport (2));
+    scm_set_current_output_port
+      (scm_standard_stream_to_port (1, isatty (1) ? "w0" : "w"));
+
+  if (scm_use_stream_ports && isatty(2))
+    scm_set_current_error_port (scm_i_make_stream_port (2));
   else
-    scm_set_current_error_port (scm_standard_stream_to_port (2, "w"));
-#else
-  scm_set_current_input_port 
-    (scm_standard_stream_to_port (0, isatty (0) ? "r0" : "r"));
-  scm_set_current_output_port
-    (scm_standard_stream_to_port (1, isatty (1) ? "w0" : "w"));
-  scm_set_current_error_port
-    (scm_standard_stream_to_port (2, isatty (2) ? "w0" : "w"));
-#endif
+    scm_set_current_error_port
+      (scm_standard_stream_to_port (2, isatty (2) ? "w0" : "w"));
+
   scm_set_current_warning_port (scm_current_error_port ());
 }
 
@@ -361,7 +362,7 @@ cleanup_for_exit ()
     }
 
   /* This function might be called in non-guile mode, so we need to
-     enter it temporarily. 
+     enter it temporarily.
   */
   scm_with_guile (really_cleanup_for_exit, NULL);
 }
@@ -422,7 +423,7 @@ scm_i_init_guile (void *base)
   scm_register_r6rs_ports ();     /* requires ports */
   scm_init_fports ();
   scm_init_strports ();
-  scm_init_conports ();
+  scm_init_stream_ports ();
   scm_init_hash ();
   scm_init_hashtab ();
   scm_init_deprecation ();
@@ -487,7 +488,7 @@ scm_i_init_guile (void *base)
   scm_init_weak_vectors ();
   scm_init_guardians (); /* requires smob_prehistory */
   scm_init_vports ();
-  scm_init_standard_ports ();  /* Requires fports */
+  scm_init_standard_ports ();  /* Requires fports, sports */
   scm_init_expand ();   /* Requires structs */
   scm_init_memoize ();  /* Requires smob_prehistory */
   scm_init_eval ();     /* Requires smob_prehistory */

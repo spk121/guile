@@ -267,6 +267,17 @@ case "$use_64_calls" in
     ;;
 esac
 
+SCM_I_GSC_USE_STREAM_PORTS=0
+AC_ARG_ENABLE([stream-ports],
+  [AS_HELP_STRING([--enable-stream-ports],
+    [Have guile initialize using stream ports stdin/stdout/stderr])],,
+    enable_conports=yes)
+
+if test "x$enable_stream_ports" = xyes || test "x$enable_stream_ports" = xy; then
+  SCM_I_GSC_USE_STREAM_PORTS=1
+fi
+AC_SUBST([SCM_I_GSC_USE_STREAM_PORTS])
+
 #--------------------------------------------------------------------
 
 dnl Check for dynamic linking

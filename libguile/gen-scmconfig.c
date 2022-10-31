@@ -379,6 +379,13 @@ main (int argc, char *argv[])
   pf ("#define SCM_ENABLE_MINI_GMP 0\n");
 #endif
 
+  pf ("/* Define to 1 to use the simplified port type for stdin/stdout/stderr  */\n");
+#if SCM_I_GSC_USE_STREAM_PORTS == 1
+  pf ("#define SCM_USE_STREAM_PORTS 1\n");
+#else
+  pf ("#define SCM_USE_STREAM_PORTS 0\n");
+#endif
+
   printf ("#endif\n");
 
   return 0;

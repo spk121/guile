@@ -1,5 +1,5 @@
-#ifndef SCM_CONPORTS_H
-#define SCM_CONPORTS_H
+#ifndef SCM_SPORTS_H
+#define SCM_SPORTS_H
 
 /* Copyright 2022
      Free Software Foundation, Inc.
@@ -26,9 +26,10 @@
 
 
 
-SCM_INTERNAL void scm_init_conports (void);
-#ifdef __MINGW32__
-SCM_INTERNAL SCM scm_make_conport (int fd);
-#endif
+SCM_INTERNAL int scm_use_stream_ports;
+SCM_INTERNAL SCM scm_i_make_stream_port (int id);
+SCM_INTERNAL SCM scm_stream_port_p (SCM port);
+SCM_INTERNAL SCM scm_make_stream_port (SCM fd);
+SCM_INTERNAL void scm_init_stream_ports (void);
 
 #endif

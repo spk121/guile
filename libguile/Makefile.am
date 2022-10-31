@@ -208,6 +208,7 @@ libguile_@GUILE_EFFECTIVE_VERSION@_la_SOURCES =				\
 	simpos.c				\
 	smob.c					\
 	sort.c					\
+	sports.c				\
 	srcprop.c				\
 	srfi-1.c				\
 	srfi-4.c				\
@@ -233,7 +234,6 @@ libguile_@GUILE_EFFECTIVE_VERSION@_la_SOURCES =				\
 	version.c				\
 	vm.c					\
 	vports.c				\
-	w32conport.c				\
 	weak-set.c				\
 	weak-table.c				\
 	weak-vector.c
@@ -322,6 +322,7 @@ DOT_X_FILES =					\
 	simpos.x				\
 	smob.x					\
 	sort.x					\
+	sports.x				\
 	srcprop.x				\
 	srfi-1.x				\
 	srfi-4.x				\
@@ -687,6 +688,7 @@ modinclude_HEADERS =				\
 	snarf.h					\
 	socket.h				\
 	sort.h					\
+	sports.h				\
 	srcprop.h				\
 	srfi-1.h				\
 	srfi-4.h				\
@@ -714,7 +716,6 @@ modinclude_HEADERS =				\
 	vm-expand.h				\
 	vm.h					\
 	vports.h				\
-	w32conport.h				\
 	weak-set.h				\
 	weak-table.h				\
 	weak-vector.h

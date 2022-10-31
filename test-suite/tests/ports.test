@@ -1072,6 +1072,21 @@
   (pass-if-exception "proc closes port" exception:wrong-type-arg
     (call-with-output-string close-port)))
 
+
+;;;; Stream ports.
+
+(with-test-prefix "stream ports"
+  (pass-if "make stdin stream port"
+    (stream-port? (make-stream-port 'stdin)))
+  (pass-if "make stdout stream port"
+    (stream-port? (make-stream-port 'stdout)))
+  (pass-if "make stderr stream port"
+    (stream-port? (make-stream-port 'stderr)))
+  (pass-if-equal "char-ready? is #f for input"
+      #f
+    (char-ready? (make-stream-port 'stdin)))
+  (pass-if-exception "get fdes from port" exception:wrong-type-arg
+    (port->fdes (make-stream-port 'stdout))))
 
 
 ;;;; Soft ports.  No tests implemented yet.
