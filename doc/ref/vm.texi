@@ -1,6 +1,6 @@
 @c -*-texinfo-*-
 @c This is part of the GNU Guile Reference Manual.
-@c Copyright (C)  2008-2011, 2013, 2015, 2018, 2019, 2020
+@c Copyright (C)  2008-2011, 2013, 2015, 2018, 2019, 2020, 2022
 @c   Free Software Foundation, Inc.
 @c See the file guile.texi for copying conditions.
 
@@ -1086,7 +1086,7 @@ the locals @var{a}, @var{b}, and @var{c} as arguments.  @var{a} is a
 which fit into @code{size_t} and @code{uint32_t} types, respectively.
 @end deftypefn
 
-@deftypefn Instruction {} call-scm<-u64 s24:@var{dst} c32:@var{idx}
+@deftypefn Instruction {} call-scm<-thread s24:@var{dst} c32:@var{idx}
 Call the @code{SCM}-returning instrinsic with index @var{idx}, passing
 the current @code{scm_thread*} as the argument.  Place the result in
 @var{dst}.
