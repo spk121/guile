@@ -48,6 +48,11 @@ IPv6 support; they can be used with `bind'.
 Likewise, the `IPPROTO_IPV6' and `IPV6_V6ONLY' constants are defined,
 for use with `setsockopt'.
 
+** Disassembler now shows intrinsic names
+
+Disassembler output now includes the name of intrinsics next to each
+`call-' instruction (info "(guile) Intrinsic Call Instructions").
+
 * Bug fixes
 
 ** Type sizes are correctly determined when cross-compiling
