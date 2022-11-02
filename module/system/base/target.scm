@@ -101,6 +101,8 @@
              (endianness little))
             ((string-match "riscv[1-9][0-9]*" cpu)
              (endianness little))
+            ((string-match "loongarch[1-9][0-9]*" cpu)
+             (endianness little))
             (else
              (error "unknown CPU endianness" cpu)))))
 
