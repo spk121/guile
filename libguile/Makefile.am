@@ -53,7 +53,7 @@ ETAGS_ARGS = --regex='/SCM_\(GLOBAL_\)?\(G?PROC\|G?PROC1\|SYMBOL\|VCELL\|CONST_L
    --regex='/[ \t]*SCM_[G]?DEFINE1?[ \t]*(\([^,]*\),[^,]*/\1/'
 
 lib_LTLIBRARIES = libguile-@GUILE_EFFECTIVE_VERSION@.la
-bin_PROGRAMS = guile
+bin_PROGRAMS = guile guildx
 
 noinst_PROGRAMS = guile_filter_doc_snarfage gen-scmconfig
 
@@ -470,6 +470,11 @@ srfi-14.i.c: $(srcdir)/UnicodeData.txt $(srcdir)/unidata_to_charset.awk
 BUILT_INCLUDES = vm-operations.h scmconfig.h libpath.h srfi-14.i.c
 BUILT_SOURCES = cpp-E.c cpp-SIG.c $(BUILT_INCLUDES) \
     $(DOT_X_FILES) $(EXTRA_DOT_X_FILES)
+
+guildx_SOURCES = guild.c
+guildx_CFLAGS = $(GUILE_CFLAGS) $(AM_CFLAGS)
+guildx_LDADD = libguile-@GUILE_EFFECTIVE_VERSION@.la
+guildx_LDFLAGS = $(GUILE_CFLAGS)
 
 # Force the generation of `guile-procedures.texi' because the top-level
 # Makefile expects it to be built.
