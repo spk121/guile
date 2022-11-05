@@ -114,5 +114,5 @@ guild: $(srcdir)/guild.in $(top_builddir)/config.status
 	mv "$@.out" "$@"
 
 CLEANFILES =					\
-  guile-config guild				\
+  guile-config guild guild.c			\
   guile-$(GUILE_EFFECTIVE_VERSION).pc guile-$(GUILE_EFFECTIVE_VERSION)-uninstalled.pc
