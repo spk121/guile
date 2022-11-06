@@ -55,11 +55,12 @@ made up of the same pairs.  Such lists look the same (when printed),
 and @code{equal?} will consider them the same.
 
 @sp 1
-@deffn {Scheme Procedure} eq? x y
+@deffn {Scheme Procedure} eq? @dots{}
 @deffnx {C Function} scm_eq_p (x, y)
 @rnindex eq?
-Return @code{#t} if @var{x} and @var{y} are the same object, except
-for numbers and characters.  For example,
+The Scheme procedure returns @code{#t} if all of its arguments are the
+same object, except for numbers and characters.  The C function does the
+same but takes exactly two arguments.  For example,
 
 @example
 (define x (vector 1 2 3))
@@ -109,15 +110,16 @@ The @code{==} operator should not be used on @code{SCM} values, an
 @end deftypefn
 
 @sp 1
-@deffn {Scheme Procedure} eqv? x y
+@deffn {Scheme Procedure} eqv? @dots{}
 @deffnx {C Function} scm_eqv_p (x, y)
 @rnindex eqv?
-Return @code{#t} if @var{x} and @var{y} are the same object, or for
-characters and numbers the same value.
+The Scheme procedure returns @code{#t} if all of its arguments are the
+same object, or for characters and numbers the same value.  The C function
+is similar but takes exactly two arguments.
 
 On objects except characters and numbers, @code{eqv?} is the same as
-@code{eq?} above, it's true if @var{x} and @var{y} are the same
-object.
+@code{eq?} above.  @code{(eqv? x y)} is true if @var{x} and @var{y} are
+the same object.
 
 If @var{x} and @var{y} are numbers or characters, @code{eqv?} compares
 their type and value.  An exact number is not @code{eqv?} to an
@@ -128,13 +130,13 @@ inexact number (even if their value is the same).
 (eqv? 1 1.0)     @result{} #f
 @end example
 @end deffn
-
 @sp 1
-@deffn {Scheme Procedure} equal? x y
+@deffn {Scheme Procedure} equal? @dots{}
 @deffnx {C Function} scm_equal_p (x, y)
 @rnindex equal?
-Return @code{#t} if @var{x} and @var{y} are the same type, and their
-contents or value are equal.
+The Scheme procedure returns @code{#t} if all of its arguments are the
+same type, and their contents or value are equal.  The C function is
+similar, but takes exactly two arguments.
 
 For a pair, string, vector, array or structure, @code{equal?} compares the
 contents, and does so using the same @code{equal?} recursively,
