@@ -152,10 +152,10 @@ documentation:
 
 @example
 (define-syntax-rule (when test stmt stmt* ...)
-  (if test (begin stmt stmt* ...)))
+  (if test (let () stmt stmt* ...)))
 
 (define-syntax-rule (unless test stmt stmt* ...)
-  (if (not test) (begin stmt stmt* ...)))
+  (if (not test) (let () stmt stmt* ...)))
 @end example
 
 That is to say, @code{when} evaluates its consequent statements in order
@@ -167,11 +167,11 @@ statements if @var{test} is false.
 Each @code{cond}-clause must look like this:
 
 @lisp
-(@var{test} @var{expression} @dots{})
+(@var{test} @var{body} @dots{})
 @end lisp
 
-where @var{test} and @var{expression} are arbitrary expressions, or like
-this
+where @var{test} is an arbitrary expression and @var{body} is a
+lambda-like body, or like this
 
 @lisp
 (@var{test} => @var{expression})
@@ -217,7 +217,7 @@ result of the @code{cond}-expression.
 @var{key} may be any expression, and the @var{clause}s must have the form
 
 @lisp
-((@var{datum1} @dots{}) @var{expr1} @var{expr2} @dots{})
+((@var{datum1} @dots{}) @var{body} @dots{})
 @end lisp
 
 or
@@ -229,7 +229,7 @@ or
 and the last @var{clause} may have the form
 
 @lisp
-(else @var{expr1} @var{expr2} @dots{})
+(else @var{expr1} @var{body} @dots{})
 @end lisp
 
 or
@@ -239,13 +239,14 @@ or
 @end lisp
 
 All @var{datum}s must be distinct.  First, @var{key} is evaluated.  The
-result of this evaluation is compared against all @var{datum} values using
-@code{eqv?}.  When this comparison succeeds, the expression(s) following
-the @var{datum} are evaluated from left to right, returning the value of
-the last expression as the result of the @code{case} expression.
+result of this evaluation is compared against all @var{datum} values
+using @code{eqv?}.  When this comparison succeeds, the @var{body}
+following the @var{datum} is evaluated like the body of a lambda,
+returning the value of the last expression as the result of the
+@code{case} expression.
 
 If the @var{key} matches no @var{datum} and there is an
-@code{else}-clause, the expressions following the @code{else} are
+@code{else}-clause, the @var{body} following the @code{else} is
 evaluated.  If there is no such clause, the result of the expression is
 unspecified.
 

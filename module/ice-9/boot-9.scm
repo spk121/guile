@@ -417,10 +417,10 @@ If returning early, return the return value of F."
 (include-from-path "ice-9/quasisyntax")
 
 (define-syntax-rule (when test stmt stmt* ...)
-  (if test (begin stmt stmt* ...)))
+  (if test (let () stmt stmt* ...)))
 
 (define-syntax-rule (unless test stmt stmt* ...)
-  (if (not test) (begin stmt stmt* ...)))
+  (if (not test) (let () stmt stmt* ...)))
 
 (define-syntax else
   (lambda (x)
@@ -461,7 +461,7 @@ If returning early, return the return value of F."
                          ((else e e* ...)
                           (lambda (tail)
                             (if (null? tail)
-                                #'((begin e e* ...))
+                                #'((let () e e* ...))
                                 (bad-clause "else must be the last clause"))))
                          ((else . _) (bad-clause))
                          ((test => receiver)
@@ -488,7 +488,7 @@ If returning early, return the return value of F."
                          ((test e e* ...)
                           (lambda (tail)
                             #`((if test
-                                   (begin e e* ...)
+                                   (let () e e* ...)
                                    #,@tail))))
                          (_ (bad-clause))))
                      #'(clause clauses ...))))))))
@@ -534,7 +534,7 @@ If returning early, return the return value of F."
                                ((=> receiver ...)
                                 (bad-clause
                                  "wrong number of receiver expressions"))
-                               ((e e* ...) #'(begin e e* ...))
+                               ((e e* ...) #'(let () e e* ...))
                                (_ (bad-clause)))))
                          (syntax-case #'test (else)
                            ((datums ...)
@@ -674,7 +674,7 @@ If returning early, return the return value of F."
          #`(let ((fluid-tmp fluid) ...)
              (let ((val-tmp val) ...)
                #,(emit-with-fluids #'((fluid-tmp val-tmp) ...)
-                                   #'(begin exp exp* ...)))))))))
+                                   #'(let () exp exp* ...)))))))))
 
 (define-syntax current-source-location
   (lambda (x)
