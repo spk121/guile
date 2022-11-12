@@ -31,6 +31,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>   /* for memset used by FD_ZERO on Solaris 10 */
+#include <sys/select.h>
 #include <sys/time.h>
 #include <unistd.h>
 
