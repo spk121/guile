@@ -94,13 +94,15 @@ verify (FLT_RADIX == 2);
 /* Make sure that intptr_t fits within a SCM value.  */
 verify (sizeof (intptr_t) <= sizeof (scm_t_bits));
 
-#if !(__MINGW32__ && __x86_64__)
-#define L1 1L
-#define UL1 1UL
-#else /* (__MINGW32__ && __x86_64__) */
-#define L1 1LL
-#define UL1 1ULL
-#endif /* (__MINGW32__ && __x86_64__) */
+#if SIZEOF_INTPTR_T == 4
+#define L1 INT32_C(1)
+#define UL1 UINT32_C(1)
+#elif SIZEOF_INTPTR_T == 8
+#define L1 INT64_C(1)
+#define UL1 UINT64_C(1)
+#else
+#error "Bad SIZEOF_INTPTR_T"
+#endif
 
 /* Several functions below assume that fixnums fit within a long, and
    furthermore that there is some headroom to spare for other operations

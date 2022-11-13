@@ -60,11 +60,13 @@ extern "C++" {
  */
 
 #define SCM_I_FIXNUM_BIT         (SCM_INTPTR_T_BIT - 2)
-#if !(__MINGW32__ && __x86_64__)
-#define SCM_MOST_NEGATIVE_FIXNUM (-1L << (SCM_I_FIXNUM_BIT - 1))
-#else /* __MINGW32__ && __x86_64__ */
-#define SCM_MOST_NEGATIVE_FIXNUM (-1LL << (SCM_I_FIXNUM_BIT - 1))
-#endif /* __MINGW32__ && __x86_64__ */
+#if SIZEOF_INTPTR_T == 4
+#define SCM_MOST_NEGATIVE_FIXNUM (INT32_C(-1) << (SCM_I_FIXNUM_BIT - 1))
+#elif SIZEOF_INTPTR_T == 8
+#define SCM_MOST_NEGATIVE_FIXNUM (INT64_C(-1) << (SCM_I_FIXNUM_BIT - 1))
+#else
+#error "Bad SIZEOF_INTPTR_T"
+#endif
 #define SCM_MOST_POSITIVE_FIXNUM (- (SCM_MOST_NEGATIVE_FIXNUM + 1))
 
 /* SCM_SRS (X, Y) is signed right shift, defined as floor (X / 2^Y),

@@ -42,11 +42,13 @@ verify (SCM_MOST_POSITIVE_FIXNUM <= (mp_limb_t) -1);
 
 #define NLIMBS_MAX (SSIZE_MAX / sizeof(mp_limb_t))
 
-#if !(__MINGW32__ && __x86_64__)
-#define L1 1L
-#else /* (__MINGW32__ && __x86_64__) */
-#define L1 1LL
-#endif /* (__MINGW32__ && __x86_64__) */
+#if SIZEOF_INTPTR_T == 4
+#define L1 INT32_C(1)
+#elif SIZEOF_INTPTR_T == 8
+#define L1 INT64_C(1)
+#else
+#error "Bad SIZEOF_INTPTR_T"
+#endif
 
 #ifndef NDEBUG
 #define ASSERT(x)                                                       \
