@@ -1187,6 +1187,9 @@ case "$with_threads" in
       pthread_get_stackaddr_np pthread_attr_get_np pthread_sigmask	\
       pthread_cancel])
 
+    # Apple Silicon JIT code arena needs to be unprotected before writing.
+    AC_CHECK_FUNCS([pthread_jit_write_protect_np])
+
     # On past versions of Solaris, believe 8 through 10 at least, you
     # had to write "pthread_once_t foo = { PTHREAD_ONCE_INIT };".
     # This is contrary to POSIX:

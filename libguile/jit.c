@@ -47,6 +47,10 @@
 #include <sys/mman.h>
 #endif
 
+#if defined __APPLE__ && HAVE_PTHREAD_JIT_WRITE_PROTECT_NP
+#include <libkern/OSCacheControl.h>
+#endif
+
 #include "jit.h"
 
 
@@ -1349,9 +1353,13 @@ allocate_code_arena (size_t size, struct code_arena *prev)
   ret->size = size;
   ret->prev = prev;
 #ifndef __MINGW32__
+  int flags = MAP_PRIVATE | MAP_ANONYMOUS;
+#if defined __APPLE__ && HAVE_PTHREAD_JIT_WRITE_PROTECT_NP
+  flags |= MAP_JIT;
+#endif
   ret->base = mmap (NULL, ret->size,
                     PROT_EXEC | PROT_READ | PROT_WRITE,
-                    MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+                    flags, -1, 0);
   if (ret->base == MAP_FAILED)
     {
       perror ("allocating JIT code buffer failed");
@@ -1406,11 +1414,21 @@ emit_code (scm_jit_state *j, void (*emit) (scm_jit_state *))
 
       uint8_t *ret = jit_address (j->jit);
 
+#if defined __APPLE__ && HAVE_PTHREAD_JIT_WRITE_PROTECT_NP
+      pthread_jit_write_protect_np(0);
+#endif
+
       emit (j);
 
       size_t size;
       if (!jit_has_overflow (j->jit) && jit_end (j->jit, &size))
         {
+#if defined __APPLE__ && HAVE_PTHREAD_JIT_WRITE_PROTECT_NP
+          /* protect previous code arena. leave unprotected after emit()
+             since jit_end() also writes to code arena. */
+          pthread_jit_write_protect_np(1);
+          sys_icache_invalidate(arena->base, arena->size);
+#endif
           ASSERT (size <= (arena->size - arena->used));
           DEBUG ("mcode: %p,+%zu\n", ret, size);
           arena->used += size;
@@ -1424,6 +1442,11 @@ emit_code (scm_jit_state *j, void (*emit) (scm_jit_state *))
         }
       else
         {
+#if defined __APPLE__ && HAVE_PTHREAD_JIT_WRITE_PROTECT_NP
+          /* protect previous code arena */
+          pthread_jit_write_protect_np(1);
+          sys_icache_invalidate(arena->base, arena->size);
+#endif
           jit_reset (j->jit);
           if (arena->used == 0)
             {
