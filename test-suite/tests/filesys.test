@@ -1,18 +1,18 @@
 ;;;; filesys.test --- test file system functions -*- scheme -*-
-;;;; 
+;;;;
 ;;;; Copyright (C) 2004, 2006, 2013, 2019, 2021 Free Software Foundation, Inc.
 ;;;; Copyright (C) 2021 Maxime Devos <maximedevos@telenet.be>
-;;;; 
+;;;;
 ;;;; This library is free software; you can redistribute it and/or
 ;;;; modify it under the terms of the GNU Lesser General Public
 ;;;; License as published by the Free Software Foundation; either
 ;;;; version 3 of the License, or (at your option) any later version.
-;;;; 
+;;;;
 ;;;; This library is distributed in the hope that it will be useful,
 ;;;; but WITHOUT ANY WARRANTY; without even the implied warranty of
 ;;;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
 ;;;; Lesser General Public License for more details.
-;;;; 
+;;;;
 ;;;; You should have received a copy of the GNU Lesser General Public
 ;;;; License along with this library; if not, write to the Free Software
 ;;;; Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
@@ -141,14 +141,14 @@
   ;; (a bug?).
   (define (file-exists? filename)
     (catch 'system-error
-      (lambda () (lstat filename) #t)
-      (lambda args
-        (if (= (system-error-errno args) ENOENT)
-            ;; For the purposes of the following tests,
-            ;; it is safe to ignore errors like EPERM, but a correct
-            ;; implementation would return #t for that error.
-            #f
-            (apply throw  args)))))
+           (lambda () (lstat filename) #t)
+           (lambda args
+             (if (= (system-error-errno args) ENOENT)
+                 ;; For the purposes of the following tests,
+                 ;; it is safe to ignore errors like EPERM, but a correct
+                 ;; implementation would return #t for that error.
+                 #f
+                 (apply throw  args)))))
   (define (maybe-delete-directory)
     (when (file-exists? (test-directory))
       (for-each
@@ -313,60 +313,9 @@
   (pass-if-equal "/" "/" (basename "/"))
   (pass-if-equal "//" "/" (basename "//"))
   (pass-if-equal "a/b/c" "c" (basename "a/b/c"))
-  (when mingw?
-    (pass-if-equal "C:\\DumpStack.log" "DumpStack.log"
-      (basename "C:\\DumpStack.log"))
-    (pass-if-equal "C:\\Users\\jdoe\\Downloads\\tmp.txt" "tmp.txt"
-      (basename "D:\\Users\\jdoe\\Downloads\\tmp.txt"))
-    ))
-
-(with-test-prefix "dirname"
-  (pass-if-equal "/" "/" (dirname "/"))
-  (pass-if-equal "a/b/c" "a/b" (dirname "a/b/c"))
-  (when mingw?
-    (pass-if-equal "C:\\DumpStack.log" "C:\\"
-      (dirname "C:\\DumpStack.log"))
-    (pass-if-equal "C:\\Users\\jdoe\\Downloads\\tmp.txt"
-        "C:\\Users\\jdoe\\Downloads"
-      (dirname "C:\\Users\\jdoe\\Downloads\\tmp.txt"))
-    ))
-
-(with-test-prefix "canonicalize-path"
-  (pass-if-equal "current directory is '.'"
-      (canonizalize-path ".")
-    (canonicalize-path (getcwd)))
-  
-  (when mingw?
-    (let ((cwd (getcwd)))
-      (when (and (string? cwd)
-                 (>= (string-length cwd) 3))
-        (let ((drive (string-ref cwd 0))
-              (colon (string-ref cwd 1))
-              (slash (string-ref cwd 2)))
-          (when (and (or (and (char>=? drive #\a)
-                              (char<=? drive #\z))
-                         (and (char>=? drive #\A)
-                              (char<=? drive #\Z)))
-                     (char=? colon #\:))
-            
-            ;; This is not a UNC path, so we can run these tests
-            (begin
-              (pass-if-equal "lowercase drive letters are capitalized"
-                  (string (char-upcase drive))
-                (string-take
-                 (canonicalize-path (string (char-downcase drive) #\: #\/))
-                 1))
-              
-              (pass-if-equal "uppercase drive letters remain capitalized"
-                  (string (char-upcase drive))
-                (string-take
-                 (canonicalize-path (string (char-upcase drive) #\: #\/))
-                 1)))))))))
-
-(delete-file (test-file))
-(when (file-exists? (test-symlink))
-  (delete-file (test-symlink)))
-
+  (delete-file (test-file))
+  (when (file-exists? (test-symlink))
+    (delete-file (test-symlink))))
 
 (with-test-prefix "mkdtemp"
 
@@ -430,28 +379,35 @@
      (open (dirname (test-file)) O_RDONLY)
      (lambda (port)
        (catch 'system-error
-         (lambda ()
-           (chmodat port (basename (test-file)) #o300 AT_SYMLINK_NOFOLLOW))
-         (lambda args
-           (close-port port)
-           ;; AT_SYMLINK_NOFOLLOW is not supported on Linux (at least Linux
-           ;; 5.11.2 with the btrfs file system), even for regular files.
-           (if (= ENOTSUP (system-error-errno args))
-               (begin
-                 (display "fchmodat doesn't support AT_SYMLINK_NOFOLLOW\n")
-                 (throw 'unresolved))
-               (apply throw args))))))
+              (lambda ()
+                (chmodat port (basename (test-file)) #o300 AT_SYMLINK_NOFOLLOW))
+              (lambda args
+                (close-port port)
+                ;; AT_SYMLINK_NOFOLLOW is not supported on Linux (at least Linux
+                ;; 5.11.2 with the btrfs file system), even for regular files.
+                (if (= ENOTSUP (system-error-errno args))
+                    (begin
+                      (display "fchmodat doesn't support AT_SYMLINK_NOFOLLOW\n")
+                      (throw 'unresolved))
+                    (apply throw args))))))
     (stat:perms (stat (test-file))))
 
   (pass-if-exception "not a port" exception:wrong-type-arg
+    (unless (defined? 'chmodat)
+      (throw 'unsupported))
     (chmodat "bogus" (test-file) #o300))
 
   (pass-if-exception "not a file port" exception:wrong-type-arg
+    (unless (defined? 'chmodat)
+      (throw 'unsupported))
     (chmodat (open-input-string "") (test-file) #o300))
 
   (pass-if-exception "closed port" exception:wrong-type-arg
+    (unless (defined? 'chmodat)
+      (throw 'unsupported))
     (chmodat (call-with-port (open "." O_RDONLY) identity) (test-file) #o300))
 
+  (chmod (test-file) #o600)
   (delete-file (test-file)))
 
 (with-test-prefix "chdir"
@@ -524,25 +480,25 @@
           (readlink '(stuff)))))
 
   (pass-if-equal "port representing a regular file" EINVAL
+    (unless (provided? 'readlink-port)
+      (throw 'unsupported))
     (call-with-input-file (test-file)
       (lambda (port)
-        (unless (provided? 'readlink-port)
-          (throw 'unsupported))
         (catch 'system-error
-          (lambda ()
-            (readlink port)
-            (close-port port) ; should be unreachable
-            #f)
-          (lambda args
-            (close-port port)
-            ;; At least Linux 5.10.46 returns ENOENT instead of EINVAL.
-            ;; Possibly surprising, but it is documented in some man
-            ;; pages and it doesn't appear to be an accident:
-            ;; <https://elixir.bootlin.com/linux/v5.10.46/source/fs/stat.c#L419>.
-            (define error (system-error-errno args))
-            (if (= error ENOENT)
-                EINVAL
-                error))))))
+               (lambda ()
+                 (readlink port)
+                 (close-port port) ; should be unreachable
+                 #f)
+               (lambda args
+                 (close-port port)
+                 ;; At least Linux 5.10.46 returns ENOENT instead of EINVAL.
+                 ;; Possibly surprising, but it is documented in some man
+                 ;; pages and it doesn't appear to be an accident:
+                 ;; <https://elixir.bootlin.com/linux/v5.10.46/source/fs/stat.c#L419>.
+                 (define error (system-error-errno args))
+                 (if (= error ENOENT)
+                     EINVAL
+                     error))))))
 
   (pass-if-exception "non-file port" exception:wrong-type-arg
     (readlink (open-input-string "")))
@@ -731,7 +687,7 @@
     (mkdir (test-directory)))
   (define (delete-test-file)
     (when (file-exists? (test-file))
-      (delete-file (test-file))))
+      (false-if-exception (delete-file (test-file)))))
   (define (delete-test-directory)
     (when (file-exists? (test-directory))
       (rmdir (test-directory))))
@@ -811,7 +767,7 @@
      (lambda (port) (port-revealed port))))
 
   (when (file-exists? (test-file))
-    (delete-file (test-file)))
+    (false-if-exception (delete-file (test-file))))
 
   (pass-if-equal "O_CREAT/O_WRONLY" (list #t (logand (lognot (umask)) #o666) "w")
     (skip-if-unsupported)
