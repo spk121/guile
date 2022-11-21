@@ -198,6 +198,7 @@ scm_init_standard_ports ()
      The stream ports are fallback ports to be on systems where
      polling the file descriptors 0, 1 and 2 is broken.
   */
+  scm_use_stream_ports = 0;
 
   if (scm_use_stream_ports && isatty(0))
     scm_set_current_input_port (scm_i_make_stream_port (0));
