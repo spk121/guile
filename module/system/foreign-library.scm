@@ -172,6 +172,25 @@ name."
          (else
           name)))))
 
+
+(define *dll-search-dirs* '())
+
+;; On Win32, loading a DLL will fail when the DLL depends on other DLLs
+;; that are not in the dynamic link library search directories.  With
+;; this, LTDL_LIBRARY_PATH or GUILE_EXTENSIONS_PATH can add directories
+;; to the DLL search.
+(define (add-dll-search-directories search-path)
+  (pk 'add-dll-search-directories search-path)
+  (for-each
+   (lambda (path)
+     (let ((cpath (false-if-exception (canonicalize-path path))))
+       (when (and cpath
+                  (eqv? 'directory (false-if-exception (stat:type (stat cpath))))
+                  (not (member path *dll-search-dirs*)))
+         (add-dll-search-directory cpath)
+         (set! *dll-search-dirs* (cons cpath *dll-search-dirs*)))))
+   search-path))
+
 (define* (load-foreign-library #:optional filename #:key
                                (extensions system-library-extensions)
                                (search-ltdl-library-path? #t)
@@ -190,6 +209,8 @@ name."
   (define (dlopen* name) (dlopen name flags))
   (if (and rename-on-cygwin? (string-contains %host-type "cygwin"))
       (set! filename (lib->cyg filename)))
+  (when (string-contains %host-type "mingw")
+    (add-dll-search-directories search-path))
   (make-foreign-library
    filename
    (cond
