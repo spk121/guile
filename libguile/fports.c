@@ -149,11 +149,11 @@ fport_canonicalize_filename (SCM filename)
   else if (scm_is_eq (mode, sym_absolute))
     {
       char *str, *canon;
-  
+
       str = scm_to_locale_string (filename);
       canon = canonicalize_file_name (str);
       free (str);
-  
+
       return canon ? scm_take_locale_string (canon) : filename;
     }
   else
@@ -458,7 +458,7 @@ scm_i_fdes_to_port (int fdes, long mode_bits, SCM name, unsigned options)
   fp->revealed = 0;
 
   port = scm_c_make_port (scm_file_port_type, mode_bits, (scm_t_bits)fp);
-  
+
   SCM_SET_FILENAME (port, name);
 
   return port;
@@ -483,7 +483,46 @@ fport_input_waiting (SCM port)
   if (poll (&pollfd, 1, 0) < 0)
     scm_syserror ("fport_input_waiting");
 
-  return pollfd.revents & POLLIN ? 1 : 0;
+  if ((pollfd.revents & POLLIN) == 0)
+    return 0;
+
+#ifdef _WIN32
+  {
+    // Work around Windows 11 bug where there's always a return
+    // character in the console input queue.
+    HANDLE h;
+    BOOL bRet;
+    DWORD avail;
+    DWORD nbuffer;
+    int n_chars = 0;
+    int n_returns = 0;
+    INPUT_RECORD *irbuffer;
+    int i;
+    DWORD mode;
+
+    h = (HANDLE) _get_osfhandle (fdes);
+    if (GetConsoleMode (h, &mode) == 0)
+      return 1;
+
+    irbuffer = (INPUT_RECORD *) alloca (nbuffer * sizeof (INPUT_RECORD));
+    bRet = PeekConsoleInput (h, irbuffer, nbuffer, &avail);
+    if (!bRet || avail == 0)
+      return 0;
+
+    for (i = 0; i < avail; i++)
+      if (irbuffer[i].EventType == KEY_EVENT)
+        {
+          n_chars ++;
+          if (irbuffer[i].Event.KeyEvent.uChar.AsciiChar == 13)
+            n_returns ++;
+        }
+
+    if (n_chars == 1 && n_returns == 1)
+      return 0;
+  }
+#endif
+
+  return 1;
 }
 
 
@@ -554,11 +593,11 @@ SCM_DEFINE (scm_adjust_port_revealed_x, "adjust-port-revealed!", 2, 0, 0,
 
 
 
-static int 
+static int
 fport_print (SCM exp, SCM port, scm_print_state *pstate SCM_UNUSED)
 {
   scm_puts ("#<", port);
-  scm_print_port_mode (exp, port);    
+  scm_print_port_mode (exp, port);
   if (SCM_OPFPORTP (exp))
     {
       int fdes;
