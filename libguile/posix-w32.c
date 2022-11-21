@@ -1214,11 +1214,22 @@ sched_setaffinity (int pid, size_t mask_size, cpu_set_t *mask)
 void *
 dlopen_w32 (const char *name, int flags)
 {
+  int i;
   void *ret = NULL;
   if (name == NULL || *name == '\0')
     return (void *) GetModuleHandle (NULL);
-  ret = (void *) LoadLibrary (name);
-  GetModuleHandleEx (0, name, (HMODULE *) & ret);
+
+  char *backname = strdup(name);
+  for (i = 0; i < strlen(name); i ++)
+    if (backname[i] == '/')
+      backname[i] = '\\';
+  SetErrorMode(0);
+  ret = (void *) LoadLibraryExA (backname, NULL,
+                                 LOAD_LIBRARY_SEARCH_DEFAULT_DIRS
+                                 | LOAD_LIBRARY_SEARCH_DLL_LOAD_DIR);
+  if (ret != NULL)
+    GetModuleHandleExA (0, backname, (HMODULE *) & ret);
+  free (backname);
   return ret;
 }
 
