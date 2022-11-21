@@ -71,14 +71,6 @@ static char *get_self_path(char *exec_file)
         u8path[i] = '\0';
         break;
       }
-  len = strlen(u8path);
-  // strip off the last element, which should be 'bin'
-  for (size_t i = len - 1; i >= 0; i --)
-    if (u8path[i] == '\\')
-      {
-        u8path[i] = '\0';
-        break;
-      }
 
   return u8path;
 }
@@ -111,7 +103,7 @@ static char *get_self_path(char *exec_file)
         s[i] = '\0';
         break;
       }
-  
+
   return s;
 }
 #endif

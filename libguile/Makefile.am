@@ -586,6 +586,12 @@ libguile_@GUILE_EFFECTIVE_VERSION@_la_LDFLAGS += -Wl,--version-script="$(srcdir)
 
 endif HAVE_LD_VERSION_SCRIPT
 
+# On Windows, install the libguile DLL in the same directory
+# as the guile executable, rather than in $libdir/../bin
+if MINGW_LIBPATH
+libguile_@GUILE_EFFECTIVE_VERSION@_la_LDFLAGS += -bindir $(DESTDIR)$(bindir)
+endif
+
 
 # These are headers visible as <guile/mumble.h>
 pkginclude_HEADERS =
