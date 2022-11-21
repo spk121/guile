@@ -141,29 +141,29 @@ dnl This needs to go before LT_INIT so libtool picks u
 SCM_I_GSC_USE_RELATIVE_PATHS=0
 AC_ARG_ENABLE([relative-paths],
   [AS_HELP_STRING([--enable-relative-paths],
-    [Use alternate path handline])],,
+    [Guile installs into a single directory])],,
     enable_relative_paths=yes)
 
 if test "x$enable_relative_paths" = xyes || test "x$enable_relative_paths" = xy; then
   SCM_I_GSC_USE_RELATIVE_PATHS=1
-  bindir='${prefix}/_guile/bin'
-  sbindir='${prefix}/_guile/sbin'
-  libexecdir='${prefix}/_guile/libexec'
-  datarootdir='${prefix}/_guile/share'
+  bindir='${prefix}/app'
+  sbindir='${prefix}/app/sbin'
+  libdir='${prefix}/app/lib'
+  libexecdir='${prefix}/app/libexec'
+  datarootdir='${prefix}/app/share'
   datadir='${datarootdir}'
-  sysconfdir='${prefix}/_guile/etc'
-  sharedstatedir='${prefix}/_guile/com'
-  localstatedir='${prefix}/_guile/var'
-  runstatedir='${localstatedir}/_guile/run'
-  includedir='${prefix}/_guile/include'
-  oldincludedir='${prefix}/_guile/include'
+  sysconfdir='${prefix}/app/etc'
+  sharedstatedir='${prefix}/app/com'
+  localstatedir='${prefix}/app/var'
+  runstatedir='${localstatedir}/app/run'
+  includedir='${prefix}/app/include'
+  oldincludedir='${prefix}/app/include'
   docdir='${datarootdir}/doc/${PACKAGE_TARNAME}'
   infodir='${datarootdir}/info'
   htmldir='${docdir}'
   dvidir='${docdir}'
   pdfdir='${docdir}'
   psdir='${docdir}'
-  libdir='${prefix}/_guile/lib'
   localedir='${datarootdir}/locale'
   mandir='${datarootdir}/man'
 fi

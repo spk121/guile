@@ -150,7 +150,7 @@ scm_c_primitive_load (const char *filename)
 }
 
 
-/* Builtin path to scheme library files. */
+
 #ifdef SCM_PKGDATA_DIR
 SCM_DEFINE (scm_sys_package_data_dir, "%package-data-dir", 0, 0, 0, 
             (),
@@ -179,11 +179,13 @@ SCM_DEFINE (scm_sys_package_data_dir, "%package-data-dir", 0, 0, 0,
 #undef FUNC_NAME
 #endif /* SCM_PKGDATA_DIR */
 
+/* Builtin path to where Guile's core scheme library files are installed
+   for a specific major revision of Guile. */
 #ifdef SCM_LIBRARY_DIR
 SCM_DEFINE (scm_sys_library_dir, "%library-dir", 0,0,0,
             (),
 	    "Return the directory where the Guile Scheme library files are installed.\n"
-	    "E.g., may return \"/usr/lib\".")
+	    "E.g., may return \"/usr/share/guile" SCM_EFFECTIVE_VERSION "/\".")
 #define FUNC_NAME s_scm_sys_library_dir
 {
   static int first = 1;
@@ -193,8 +195,9 @@ SCM_DEFINE (scm_sys_library_dir, "%library-dir", 0,0,0,
     {
       if (first)
         {
-          p = malloc (strlen (scm_i_self_path) + 1);
+          p = malloc (strlen (scm_i_self_path) + strlen("/share/guile/") + strlen(SCM_EFFECTIVE_VERSION) + 1);
           strcpy (p, scm_i_self_path);
+          strcat (p, "/share/guile/" SCM_EFFECTIVE_VERSION);
           first = 0;
         }
       return scm_from_utf8_string (p);
@@ -204,10 +207,12 @@ SCM_DEFINE (scm_sys_library_dir, "%library-dir", 0,0,0,
 }
 #undef FUNC_NAME
 
+/* Path to where *.so, *.dll, or *.dynlib are installed by extension
+   libraries for specific major revision of Guile. */
 SCM_DEFINE (scm_sys_extensions_dir, "%extensions-dir", 0,0,0,
             (),
 	    "Return the directory where the Guile Scheme extension library files are installed.\n"
-	    "E.g., may return \"/usr/lib/guile/1.3.5/extensions\".")
+	    "E.g., may return \"/usr/lib/guile/3.0/extensions\".")
 #define FUNC_NAME s_scm_sys_extensions_dir
 {
   static int first = 1;
@@ -217,9 +222,9 @@ SCM_DEFINE (scm_sys_extensions_dir, "%extensions-dir", 0,0,0,
     {
       if (first)
         {
-          p = malloc (strlen (scm_i_self_path) + strlen("/extensions") + 1);
+          p = malloc (strlen (scm_i_self_path) + strlen("/lib/guile/" SCM_EFFECTIVE_VERSION "/extensions") + 1);
           strcpy (p, scm_i_self_path);
-          strcat (p, "/extensions");
+          strcat (p, "/lib/guile/" SCM_EFFECTIVE_VERSION "/extensions");
           first = 0;
         }
       return scm_from_utf8_string (p);
@@ -228,7 +233,6 @@ SCM_DEFINE (scm_sys_extensions_dir, "%extensions-dir", 0,0,0,
   return scm_from_utf8_string (SCM_EXTENSIONS_DIR);
 }
 #undef FUNC_NAME
-
 #endif /* SCM_LIBRARY_DIR */
 
 #ifdef SCM_SITE_DIR
