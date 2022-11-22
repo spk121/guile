@@ -38,75 +38,6 @@
 
 #include <libguile.h>
 
-// from load.c
-extern char *scm_i_self_path;
-
-#if defined(_WIN32) && !defined(__CYGWIN__)
-#include <unistr.h>
-/* used outside this file: */
-static char *get_self_path(char *exec_file)
-{
-  wchar_t *path;
-  char *u8path;
-  DWORD r, sz = 1024;
-  size_t len;
-
-  while (1) {
-    path = (wchar_t *)malloc(sz * sizeof(wchar_t));
-    r = GetModuleFileNameW(NULL, path, sz);
-    if ((r == sz)
-        && (GetLastError() == ERROR_INSUFFICIENT_BUFFER)) {
-      // free(path);
-      sz = 2 * sz;
-    } else
-      break;
-  }
-
-  u8path = u16_to_u8 (path, wcslen(path), NULL, &len);
-
-  // strip off the last element, which should be the .exe
-  for (size_t i = len - 1; i >= 0; i --)
-    if (u8path[i] == '\\')
-      {
-        u8path[i] = '\0';
-        break;
-      }
-
-  return u8path;
-}
-#elif defined(__linux__)
-# include <errno.h>
-# include <unistd.h>
-static char *get_self_path(char *exec_file)
-{
-  char *s;
-  ssize_t len, blen = 256;
-
-  s = malloc(blen);
-
-  while (1) {
-    len = readlink("/proc/self/exe", s, blen-1);
-    if (len == (blen-1)) {
-      free(s);
-      blen *= 2;
-      s = malloc(blen);
-    } else if (len < 0) {
-      fprintf(stderr, "failed to get self (%d)\n", errno);
-      exit(1);
-    } else
-      break;
-  }
-  s[len] = '\0';
-  for (size_t i = len - 1; i >= 0; i --)
-    if (s[i] == '/')
-      {
-        s[i] = '\0';
-        break;
-      }
-
-  return s;
-}
-#endif
 
 static void
 inner_main (void *closure SCM_UNUSED, int argc, char **argv)
@@ -162,7 +93,6 @@ main (int argc, char **argv)
   if (should_install_locale () && setlocale (LC_ALL, "") == NULL)
     fprintf (stderr, "guile: warning: failed to install locale\n");
 
-  scm_i_self_path = get_self_path (argv[0]);
   scm_boot_guile (argc, argv, inner_main, 0);
   return 0; /* never reached */
 }
