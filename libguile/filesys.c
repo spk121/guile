@@ -2035,7 +2035,17 @@ SCM_DEFINE (scm_canonicalize_path, "canonicalize-path", 1, 0, 0,
   free (str);
   
   if (canon)
-    return scm_take_locale_string (canon);
+    {
+#ifdef __MINGW32__
+      int i;
+      for (i = 0; i < strlen(canon); i ++)
+        if (canon[i] == '\\')
+          canon[i] = '/';
+      if (strlen (canon) > 2 && canon[1] == ':')
+        canon[0] = toupper(canon[0]);
+#endif
+      return scm_take_locale_string (canon);
+    }
   else
     SCM_SYSERROR;
 }

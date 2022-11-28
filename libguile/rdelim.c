@@ -127,6 +127,7 @@ SCM_DEFINE (scm_read_line, "%read-line", 0, 1, 0,
   SCM line, strings, result;
   scm_t_wchar buf[LINE_BUFFER_SIZE], delim;
   size_t index;
+  int cr = 0;
 
   if (SCM_UNBNDP (port))
     port = scm_current_input_port ();
@@ -152,12 +153,25 @@ SCM_DEFINE (scm_read_line, "%read-line", 0, 1, 0,
 	  buf[index] = scm_getc (port);
 	  switch (buf[index])
 	    {
-	    case EOF:
 	    case '\n':
 	      delim = buf[index];
-	      break;
+              break;
+
+            case EOF:
+            case 0x85:
+            case 0x2028:
+            case 0x2029:
+              cr = 0;
+              delim = buf[index];
+              break;
+
+            case '\r':
+              cr = 1;
+              index ++;
+              break;
 
 	    default:
+              cr = 0;
 	      index++;
 	    }
 	}
@@ -165,20 +179,33 @@ SCM_DEFINE (scm_read_line, "%read-line", 0, 1, 0,
   while (delim == 0);
 
   if (SCM_LIKELY (scm_is_false (strings)))
-    /* The fast path.  */
-    line = scm_from_utf32_stringn (buf, index);
+    {
+      /* The fast path.  */
+      if (cr)
+        line = scm_from_utf32_stringn (buf, index - 1);
+      else
+        line = scm_from_utf32_stringn (buf, index);
+    }
   else
     {
       /* Aggregate the intermediary results.  */
-      strings = scm_cons (scm_from_utf32_stringn (buf, index), strings);
+      if (cr)
+        strings = scm_cons (scm_from_utf32_stringn (buf, index - 1), strings);
+      else
+        strings = scm_cons (scm_from_utf32_stringn (buf, index), strings);
       line = scm_string_concatenate (scm_reverse (strings));
     }
 
   if (delim == EOF && scm_i_string_length (line) == 0)
     result = scm_cons (SCM_EOF_VAL, SCM_EOF_VAL);
   else
-    result = scm_cons (line,
-		       delim == EOF ? SCM_EOF_VAL : SCM_MAKE_CHAR (delim));
+    {
+      if (cr)
+        result = scm_cons (line, scm_from_latin1_string("\r\n"));
+      else
+        result = scm_cons (line,
+                           delim == EOF ? SCM_EOF_VAL : SCM_MAKE_CHAR (delim));
+    }
 
   return result;
 #undef LINE_BUFFER_SIZE

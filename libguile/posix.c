@@ -263,11 +263,13 @@ SCM_DEFINE (scm_pipe2, "pipe", 0, 1, 0,
 #else
   if (c_flags == 0)
     rv = pipe (fd);
-  else
+  else {
     /* 'pipe2' cannot be emulated on systems that lack it: calling
        'fnctl' afterwards to set the relevant flags is not equivalent
        because it's not atomic.  */
     rv = ENOSYS;
+    errno = ENOSYS;
+  }
 #endif
 
   if (rv)

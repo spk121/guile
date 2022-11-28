@@ -38,6 +38,15 @@
 #include <dlfcn.h>
 #endif
 
+#ifdef _WIN32
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
+#include <windows.h>
+#include <unistr.h>
+#include <stdio.h>
+#endif
+
 #include "boolean.h"
 #include "deprecation.h"
 #include "eval.h"
@@ -117,6 +126,30 @@ SCM_DEFINE_STATIC (scm_dlsym, "dlsym", 2, 0, 0, (SCM obj, SCM name), "")
   }
 
   return scm_from_pointer (sym, NULL);
+}
+#undef FUNC_NAME
+
+SCM_DEFINE_STATIC (scm_add_dll_search_directory, "add-dll-search-directory",
+                   1, 0, 0, (SCM path), "")
+#define FUNC_NAME s_scm_add_dll_search_directory
+{
+#ifdef _WIN32
+  char *c_path = scm_to_utf8_string (path);
+  uint16_t *c_wpath;
+  size_t len;
+  int i;
+  void *ret;
+  for (i = 0; i < strlen(c_path); i ++)
+    {
+      if (c_path[i] == '/')
+        c_path[i] = '\\';
+    }
+  c_wpath = u8_to_u16 (c_path, strlen(c_path) + 1, NULL, &len);
+  free (c_path);
+  ret = AddDllDirectory (c_wpath);
+  free (c_wpath);
+#endif
+  return SCM_UNSPECIFIED;
 }
 #undef FUNC_NAME
 

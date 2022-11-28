@@ -1,4 +1,4 @@
-/* Copyright 2001,2009-2015,2017-2020
+/* Copyright 2001,2009-2015,2017-2020,2022
      Free Software Foundation, Inc.
 
    This file is part of Guile.
@@ -165,11 +165,18 @@ capture_stack (union scm_vm_stack_element *stack_top,
                scm_t_dynstack *dynstack, uint32_t flags)
 {
   struct scm_vm_cont *p;
+  size_t stack_size;
 
-  p = scm_gc_malloc (sizeof (*p), "capture_vm_cont");
-  p->stack_size = stack_top - sp;
-  p->stack_bottom = scm_gc_malloc (p->stack_size * sizeof (*p->stack_bottom),
-                                   "capture_vm_cont");
+  stack_size = stack_top - sp;
+
+  /* Allocate the 'scm_vm_cont' struct and the stack at once.  That way,
+     keeping a pointer to 'p->stack_bottom' around won't retain it.
+     See <https://bugs.gnu.org/59021>.  */
+  p = scm_gc_malloc (sizeof (*p) + stack_size * sizeof (*p->stack_bottom),
+                     "capture_vm_cont");
+
+  p->stack_size = stack_size;
+  p->stack_bottom = (void *) ((char *) p + sizeof (*p));
   p->vra = vra;
   p->mra = mra;
   p->fp_offset = stack_top - fp;

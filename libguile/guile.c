@@ -30,12 +30,14 @@
 
 #include <locale.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 #ifdef HAVE_WINSOCK2_H
 #include <winsock2.h>
 #endif
 
 #include <libguile.h>
+
 
 static void
 inner_main (void *closure SCM_UNUSED, int argc, char **argv)

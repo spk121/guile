@@ -3915,7 +3915,7 @@ SCM_DEFINE (scm_set_port_line_x, "set-port-line!", 2, 0, 0,
 {
   port = SCM_COERCE_OUTPORT (port);
   SCM_VALIDATE_OPENPORT (1, port);
-  scm_to_long (line);
+  scm_to_uintptr_t (line);
   scm_port_position_set_line (SCM_PORT (port)->position, line);
   return SCM_UNSPECIFIED;
 }

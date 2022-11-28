@@ -31,6 +31,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>   /* for memset used by FD_ZERO on Solaris 10 */
+#include <sys/select.h>
 #include <sys/time.h>
 #include <unistd.h>
 
@@ -1022,14 +1023,7 @@ lock_mutex (enum scm_mutex_kind kind, struct scm_mutex *m,
 
         if (err == 0)
           {
-            if (scm_is_eq (m->owner, SCM_BOOL_F))
-              {
-                m->owner = current_thread->handle;
-                scm_i_pthread_mutex_unlock (&m->lock);
-                return SCM_BOOL_T;
-              }
-            else
-              continue;
+            goto maybe_acquire;
           }
         else if (err == ETIMEDOUT)
           {
@@ -1041,7 +1035,7 @@ lock_mutex (enum scm_mutex_kind kind, struct scm_mutex *m,
             scm_i_pthread_mutex_unlock (&m->lock);
             scm_async_tick ();
             scm_i_scm_pthread_mutex_lock (&m->lock);
-            continue;
+            goto maybe_acquire;
           }
         else
           {
@@ -1049,6 +1043,14 @@ lock_mutex (enum scm_mutex_kind kind, struct scm_mutex *m,
             scm_i_pthread_mutex_unlock (&m->lock);
             errno = err;
             SCM_SYSERROR;
+          }
+
+      maybe_acquire:
+        if (scm_is_eq (m->owner, SCM_BOOL_F))
+          {
+            m->owner = current_thread->handle;
+            scm_i_pthread_mutex_unlock (&m->lock);
+            return SCM_BOOL_T;
           }
       }
 }

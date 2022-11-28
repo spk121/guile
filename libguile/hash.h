@@ -23,17 +23,15 @@
 
 
 #include "libguile/scm.h"
+#include "libguile/numbers.h"
 
 
 
-SCM_INTERNAL unsigned long scm_i_locale_string_hash (const char *str,
-                                                     size_t len);
-SCM_INTERNAL unsigned long scm_i_latin1_string_hash (const  char *str,
-                                                     size_t len);
-SCM_INTERNAL unsigned long scm_i_utf8_string_hash (const char *str,
-                                                   size_t len);
+SCM_INTERNAL uintptr_t scm_i_locale_string_hash (const char *str, size_t len);
+SCM_INTERNAL uintptr_t scm_i_latin1_string_hash (const  char *str, size_t len);
+SCM_INTERNAL uintptr_t scm_i_utf8_string_hash (const char *str, size_t len);
 
-SCM_INTERNAL unsigned long scm_i_string_hash (SCM str);
+SCM_INTERNAL uintptr_t scm_i_string_hash (SCM str);
 SCM_API unsigned long scm_ihashq (SCM obj, unsigned long n);
 SCM_API SCM scm_hashq (SCM obj, SCM n);
 SCM_API unsigned long scm_ihashv (SCM obj, unsigned long n);

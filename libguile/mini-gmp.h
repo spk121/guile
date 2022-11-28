@@ -1,6 +1,6 @@
 /* mini-gmp, a minimalistic implementation of a GNU GMP subset.
 
-Copyright 2011-2015, 2017, 2019-2020 Free Software Foundation, Inc.
+Copyright 2011-2015, 2017, 2019-2021 Free Software Foundation, Inc.
 
 This file is part of the GNU MP Library.
 
@@ -53,16 +53,13 @@ void mp_get_memory_functions (void *(**) (size_t),
 			      void *(**) (void *, size_t, size_t),
 			      void (**) (void *, size_t));
 
-#ifndef MINI_GMP_LIMB_TYPE
-#define MINI_GMP_LIMB_TYPE long
-#endif
-
-typedef unsigned MINI_GMP_LIMB_TYPE mp_limb_t;
+typedef uintptr_t mp_limb_t;
 typedef long mp_size_t;
 typedef unsigned long mp_bitcnt_t;
 
 typedef mp_limb_t *mp_ptr;
 typedef const mp_limb_t *mp_srcptr;
+
 
 typedef struct
 {
@@ -131,10 +128,10 @@ void mpz_clear (mpz_t);
 #define mpz_even_p(z)  (! mpz_odd_p (z))
 
 int mpz_sgn (const mpz_t);
-int mpz_cmp_si (const mpz_t, long);
-int mpz_cmp_ui (const mpz_t, unsigned long);
+int mpz_cmp_si (const mpz_t, intptr_t);
+int mpz_cmp_ui (const mpz_t, uintptr_t);
 int mpz_cmp (const mpz_t, const mpz_t);
-int mpz_cmpabs_ui (const mpz_t, unsigned long);
+int mpz_cmpabs_ui (const mpz_t, uintptr_t);
 int mpz_cmpabs (const mpz_t, const mpz_t);
 int mpz_cmp_d (const mpz_t, double);
 int mpz_cmpabs_d (const mpz_t, double);
@@ -143,19 +140,19 @@ void mpz_abs (mpz_t, const mpz_t);
 void mpz_neg (mpz_t, const mpz_t);
 void mpz_swap (mpz_t, mpz_t);
 
-void mpz_add_ui (mpz_t, const mpz_t, unsigned long);
+void mpz_add_ui (mpz_t, const mpz_t, uintptr_t);
 void mpz_add (mpz_t, const mpz_t, const mpz_t);
-void mpz_sub_ui (mpz_t, const mpz_t, unsigned long);
-void mpz_ui_sub (mpz_t, unsigned long, const mpz_t);
+void mpz_sub_ui (mpz_t, const mpz_t, uintptr_t);
+void mpz_ui_sub (mpz_t, uintptr_t, const mpz_t);
 void mpz_sub (mpz_t, const mpz_t, const mpz_t);
 
-void mpz_mul_si (mpz_t, const mpz_t, long int);
-void mpz_mul_ui (mpz_t, const mpz_t, unsigned long int);
+void mpz_mul_si (mpz_t, const mpz_t, intptr_t);
+void mpz_mul_ui (mpz_t, const mpz_t, uintptr_t);
 void mpz_mul (mpz_t, const mpz_t, const mpz_t);
 void mpz_mul_2exp (mpz_t, const mpz_t, mp_bitcnt_t);
-void mpz_addmul_ui (mpz_t, const mpz_t, unsigned long int);
+void mpz_addmul_ui (mpz_t, const mpz_t, uintptr_t);
 void mpz_addmul (mpz_t, const mpz_t, const mpz_t);
-void mpz_submul_ui (mpz_t, const mpz_t, unsigned long int);
+void mpz_submul_ui (mpz_t, const mpz_t, uintptr_t);
 void mpz_submul (mpz_t, const mpz_t, const mpz_t);
 
 void mpz_cdiv_qr (mpz_t, mpz_t, const mpz_t, const mpz_t);
@@ -182,29 +179,29 @@ void mpz_divexact (mpz_t, const mpz_t, const mpz_t);
 int mpz_divisible_p (const mpz_t, const mpz_t);
 int mpz_congruent_p (const mpz_t, const mpz_t, const mpz_t);
 
-unsigned long mpz_cdiv_qr_ui (mpz_t, mpz_t, const mpz_t, unsigned long);
-unsigned long mpz_fdiv_qr_ui (mpz_t, mpz_t, const mpz_t, unsigned long);
-unsigned long mpz_tdiv_qr_ui (mpz_t, mpz_t, const mpz_t, unsigned long);
-unsigned long mpz_cdiv_q_ui (mpz_t, const mpz_t, unsigned long);
-unsigned long mpz_fdiv_q_ui (mpz_t, const mpz_t, unsigned long);
-unsigned long mpz_tdiv_q_ui (mpz_t, const mpz_t, unsigned long);
-unsigned long mpz_cdiv_r_ui (mpz_t, const mpz_t, unsigned long);
-unsigned long mpz_fdiv_r_ui (mpz_t, const mpz_t, unsigned long);
-unsigned long mpz_tdiv_r_ui (mpz_t, const mpz_t, unsigned long);
-unsigned long mpz_cdiv_ui (const mpz_t, unsigned long);
-unsigned long mpz_fdiv_ui (const mpz_t, unsigned long);
-unsigned long mpz_tdiv_ui (const mpz_t, unsigned long);
+uintptr_t mpz_cdiv_qr_ui (mpz_t, mpz_t, const mpz_t, uintptr_t);
+uintptr_t mpz_fdiv_qr_ui (mpz_t, mpz_t, const mpz_t, uintptr_t);
+uintptr_t mpz_tdiv_qr_ui (mpz_t, mpz_t, const mpz_t, uintptr_t);
+uintptr_t mpz_cdiv_q_ui (mpz_t, const mpz_t, uintptr_t);
+uintptr_t mpz_fdiv_q_ui (mpz_t, const mpz_t, uintptr_t);
+uintptr_t mpz_tdiv_q_ui (mpz_t, const mpz_t, uintptr_t);
+uintptr_t mpz_cdiv_r_ui (mpz_t, const mpz_t, uintptr_t);
+uintptr_t mpz_fdiv_r_ui (mpz_t, const mpz_t, uintptr_t);
+uintptr_t mpz_tdiv_r_ui (mpz_t, const mpz_t, uintptr_t);
+uintptr_t mpz_cdiv_ui (const mpz_t, uintptr_t);
+uintptr_t mpz_fdiv_ui (const mpz_t, uintptr_t);
+uintptr_t mpz_tdiv_ui (const mpz_t, uintptr_t);
 
-unsigned long mpz_mod_ui (mpz_t, const mpz_t, unsigned long);
+uintptr_t mpz_mod_ui (mpz_t, const mpz_t, uintptr_t);
 
-void mpz_divexact_ui (mpz_t, const mpz_t, unsigned long);
+void mpz_divexact_ui (mpz_t, const mpz_t, uintptr_t);
 
-int mpz_divisible_ui_p (const mpz_t, unsigned long);
+int mpz_divisible_ui_p (const mpz_t, uintptr_t);
 
-unsigned long mpz_gcd_ui (mpz_t, const mpz_t, unsigned long);
+uintptr_t mpz_gcd_ui (mpz_t, const mpz_t, uintptr_t);
 void mpz_gcd (mpz_t, const mpz_t, const mpz_t);
 void mpz_gcdext (mpz_t, mpz_t, mpz_t, const mpz_t, const mpz_t);
-void mpz_lcm_ui (mpz_t, const mpz_t, unsigned long);
+void mpz_lcm_ui (mpz_t, const mpz_t, uintptr_t);
 void mpz_lcm (mpz_t, const mpz_t, const mpz_t);
 int mpz_invert (mpz_t, const mpz_t, const mpz_t);
 
@@ -212,18 +209,18 @@ void mpz_sqrtrem (mpz_t, mpz_t, const mpz_t);
 void mpz_sqrt (mpz_t, const mpz_t);
 int mpz_perfect_square_p (const mpz_t);
 
-void mpz_pow_ui (mpz_t, const mpz_t, unsigned long);
-void mpz_ui_pow_ui (mpz_t, unsigned long, unsigned long);
+void mpz_pow_ui (mpz_t, const mpz_t, uintptr_t);
+void mpz_ui_pow_ui (mpz_t, uintptr_t, uintptr_t);
 void mpz_powm (mpz_t, const mpz_t, const mpz_t, const mpz_t);
-void mpz_powm_ui (mpz_t, const mpz_t, unsigned long, const mpz_t);
+void mpz_powm_ui (mpz_t, const mpz_t, uintptr_t, const mpz_t);
 
-void mpz_rootrem (mpz_t, mpz_t, const mpz_t, unsigned long);
-int mpz_root (mpz_t, const mpz_t, unsigned long);
+void mpz_rootrem (mpz_t, mpz_t, const mpz_t, uintptr_t);
+int mpz_root (mpz_t, const mpz_t, uintptr_t);
 
-void mpz_fac_ui (mpz_t, unsigned long);
-void mpz_2fac_ui (mpz_t, unsigned long);
-void mpz_mfac_uiui (mpz_t, unsigned long, unsigned long);
-void mpz_bin_uiui (mpz_t, unsigned long, unsigned long);
+void mpz_fac_ui (mpz_t, uintptr_t);
+void mpz_2fac_ui (mpz_t, uintptr_t);
+void mpz_mfac_uiui (mpz_t, uintptr_t, uintptr_t);
+void mpz_bin_uiui (mpz_t, uintptr_t, uintptr_t);
 
 int mpz_probab_prime_p (const mpz_t, int);
 
@@ -244,8 +241,8 @@ mp_bitcnt_t mpz_scan1 (const mpz_t, mp_bitcnt_t);
 
 int mpz_fits_slong_p (const mpz_t);
 int mpz_fits_ulong_p (const mpz_t);
-long int mpz_get_si (const mpz_t);
-unsigned long int mpz_get_ui (const mpz_t);
+intptr_t mpz_get_si (const mpz_t);
+uintptr_t mpz_get_ui (const mpz_t);
 double mpz_get_d (const mpz_t);
 size_t mpz_size (const mpz_t);
 mp_limb_t mpz_getlimbn (const mpz_t, mp_size_t);
@@ -259,13 +256,13 @@ mpz_srcptr mpz_roinit_n (mpz_t, mp_srcptr, mp_size_t);
 
 #define MPZ_ROINIT_N(xp, xs) {{0, (xs),(xp) }}
 
-void mpz_set_si (mpz_t, signed long int);
-void mpz_set_ui (mpz_t, unsigned long int);
+void mpz_set_si (mpz_t, intptr_t);
+void mpz_set_ui (mpz_t, uintptr_t);
 void mpz_set (mpz_t, const mpz_t);
 void mpz_set_d (mpz_t, double);
 
-void mpz_init_set_si (mpz_t, signed long int);
-void mpz_init_set_ui (mpz_t, unsigned long int);
+void mpz_init_set_si (mpz_t, intptr_t);
+void mpz_init_set_ui (mpz_t, uintptr_t);
 void mpz_init_set (mpz_t, const mpz_t);
 void mpz_init_set_d (mpz_t, double);
 

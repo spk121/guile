@@ -119,7 +119,7 @@ guile_filter_doc_snarfage$(EXEEXT): $(guile_filter_doc_snarfage_OBJECTS) $(guile
 
 guile_SOURCES = guile.c
 guile_CFLAGS = $(GUILE_CFLAGS) $(AM_CFLAGS)
-guile_LDADD = libguile-@GUILE_EFFECTIVE_VERSION@.la
+guile_LDADD = libguile-@GUILE_EFFECTIVE_VERSION@.la $(gnulib_library)
 guile_LDFLAGS = $(GUILE_CFLAGS)
 
 libguile_@GUILE_EFFECTIVE_VERSION@_la_CFLAGS = $(GUILE_CFLAGS) $(AM_CFLAGS)
@@ -585,6 +585,12 @@ if HAVE_LD_VERSION_SCRIPT
 libguile_@GUILE_EFFECTIVE_VERSION@_la_LDFLAGS += -Wl,--version-script="$(srcdir)/libguile.map"
 
 endif HAVE_LD_VERSION_SCRIPT
+
+# On Windows, install the libguile DLL in the same directory
+# as the guile executable, rather than in $libdir/../bin
+if MINGW_LIBPATH
+libguile_@GUILE_EFFECTIVE_VERSION@_la_LDFLAGS += -bindir $(DESTDIR)$(bindir)
+endif
 
 
 # These are headers visible as <guile/mumble.h>

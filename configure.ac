@@ -137,6 +137,37 @@ dnl locking support.  See <http://bugs.gnu.org/14404>.
 AC_DEFINE([GNULIB_LOCK], [1],
   [Define to allow Gnulib modules to use Guile's locks.])
 
+dnl This needs to go before LT_INIT so libtool picks u
+SCM_I_GSC_USE_RELATIVE_PATHS=0
+AC_ARG_ENABLE([relative-paths],
+  [AS_HELP_STRING([--enable-relative-paths],
+    [Guile installs into a single directory])],,
+    enable_relative_paths=yes)
+
+if test "x$enable_relative_paths" = xyes || test "x$enable_relative_paths" = xy; then
+  SCM_I_GSC_USE_RELATIVE_PATHS=1
+  bindir='${prefix}/app'
+  sbindir='${prefix}/app/sbin'
+  libdir='${prefix}/app/lib'
+  libexecdir='${prefix}/app/libexec'
+  datarootdir='${prefix}/app/share'
+  datadir='${datarootdir}'
+  sysconfdir='${prefix}/app/etc'
+  sharedstatedir='${prefix}/app/com'
+  localstatedir='${prefix}/app/var'
+  runstatedir='${localstatedir}/app/run'
+  includedir='${prefix}/app/include'
+  oldincludedir='${prefix}/app/include'
+  docdir='${datarootdir}/doc/${PACKAGE_TARNAME}'
+  infodir='${datarootdir}/info'
+  htmldir='${docdir}'
+  dvidir='${docdir}'
+  pdfdir='${docdir}'
+  psdir='${docdir}'
+  localedir='${datarootdir}/locale'
+  mandir='${datarootdir}/man'
+fi
+AC_SUBST([SCM_I_GSC_USE_RELATIVE_PATHS])
 
 LT_INIT([dlopen win32-dll])
 
@@ -693,6 +724,12 @@ AC_ARG_ENABLE(mini-gmp,
 if test "x$enable_mini_gmp" = xyes || test "x$enable_mini_gmp" = xy; then
   SCM_I_GSC_ENABLE_MINI_GMP=1
 else
+  case $host in
+    x86_64-*-mingw*)
+       AC_MSG_ERROR([mini-gmp is required; use --enable-mini-gmp])
+       ;;
+    *) ;;
+  esac
   AC_LIB_HAVE_LINKFLAGS([gmp],[],[#include <gmp.h>], [mpz_import (0,0,0,0,0,0,0);])
   if test "x$HAVE_LIBGMP" != "xyes"; then
     AC_MSG_ERROR([GNU MP 4.1 or greater not found; either install it, or pass '--enable-mini-gmp' to use included less-optimal arbitrary-precision integer support.])
