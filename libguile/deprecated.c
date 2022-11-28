@@ -823,7 +823,7 @@ scm_i_normbig (SCM b)
   /* presume b is a bignum */
   if (mpz_fits_slong_p (SCM_I_BIG_MPZ (b)))
     {
-      scm_t_inum val = mpz_get_si (SCM_I_BIG_MPZ (b));
+      intptr_t val = mpz_get_si (SCM_I_BIG_MPZ (b));
       if (SCM_FIXABLE (val))
         b = SCM_I_MAKINUM (val);
     }

@@ -1,6 +1,6 @@
 /* mini-gmp, a minimalistic implementation of a GNU GMP subset.
 
-Copyright 2011-2015, 2017, 2019-2020 Free Software Foundation, Inc.
+Copyright 2011-2015, 2017, 2019-2021 Free Software Foundation, Inc.
 
 This file is part of the GNU MP Library.
 
@@ -52,6 +52,8 @@ void mp_set_memory_functions (void *(*) (size_t),
 void mp_get_memory_functions (void *(**) (size_t),
 			      void *(**) (void *, size_t, size_t),
 			      void (**) (void *, size_t));
+
+#define MINI_GMP_USE_INTPTR_T
 
 #ifdef MINI_GMP_USE_INTPTR_T
 typedef uintptr_t mp_limb_t;
