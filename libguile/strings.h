@@ -1,7 +1,7 @@
 #ifndef SCM_STRINGS_H
 #define SCM_STRINGS_H
 
-/* Copyright 1995-1998,2000-2001,2004-2006,2008-2011,2013,2015-2019,2022
+/* Copyright 1995-1998,2000-2001,2004-2006,2008-2011,2013,2015-2019,2021,2022
      Free Software Foundation, Inc.
 
    This file is part of Guile.
@@ -26,6 +26,7 @@
 #include <libguile/error.h>
 #include "libguile/inline.h"
 #include <libguile/snarf.h>
+#include "libguile/numbers.h"
 
 
 

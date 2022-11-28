@@ -1,4 +1,4 @@
-/* Copyright 1995-1996,1998,2000-2001,2004,2006,2008-2016,2018-2019
+/* Copyright 1995-1996,1998,2000-2001,2004,2006,2008-2016,2018-2019,2021
      Free Software Foundation, Inc.
 
    This file is part of Guile.
@@ -1219,7 +1219,7 @@ SCM_DEFINE (scm_string_ref, "string-ref", 2, 0, 0,
 #define FUNC_NAME s_scm_string_ref
 {
   size_t len;
-  unsigned long idx;
+  uintptr_t idx;
 
   SCM_VALIDATE_STRING (1, str);
 
@@ -1256,7 +1256,7 @@ SCM_DEFINE (scm_string_set_x, "string-set!", 3, 0, 0,
 #define FUNC_NAME s_scm_string_set_x
 {
   size_t len;
-  unsigned long idx;
+  uintptr_t idx;
 
   SCM_VALIDATE_STRING (1, str);
 
