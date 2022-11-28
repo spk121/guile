@@ -211,7 +211,7 @@ SCM_DEFINE (scm_object_address, "object-address", 1, 0, 0,
 	    "returned by this function for @var{obj}")
 #define FUNC_NAME s_scm_object_address
 {
-  return scm_from_ulong (SCM_UNPACK (obj));
+  return scm_from_uintptr_t (SCM_UNPACK (obj));
 }
 #undef FUNC_NAME
 

@@ -36,41 +36,41 @@ SCM_INTERNAL SCM scm_integer_from_mpz (const mpz_t n);
 SCM_INTERNAL void scm_integer_set_mpz_z (struct scm_bignum *z, mpz_t n);
 SCM_INTERNAL void scm_integer_init_set_mpz_z (struct scm_bignum *z, mpz_t n);
 
-SCM_INTERNAL int scm_is_integer_odd_i (scm_t_inum i);
+SCM_INTERNAL int scm_is_integer_odd_i (intptr_t i);
 SCM_INTERNAL int scm_is_integer_odd_z (struct scm_bignum *z);
 
-SCM_INTERNAL SCM scm_integer_abs_i (scm_t_inum i);
+SCM_INTERNAL SCM scm_integer_abs_i (intptr_t i);
 SCM_INTERNAL SCM scm_integer_abs_z (struct scm_bignum *z);
 
 #define DECLARE_QUOTIENT_OPERATORS(stem)                                \
-  SCM_INTERNAL SCM scm_integer_##stem##_quotient_ii (scm_t_inum x,      \
-                                                     scm_t_inum y);     \
-  SCM_INTERNAL SCM scm_integer_##stem##_quotient_iz (scm_t_inum x,      \
+  SCM_INTERNAL SCM scm_integer_##stem##_quotient_ii (intptr_t x,      \
+                                                     intptr_t y);     \
+  SCM_INTERNAL SCM scm_integer_##stem##_quotient_iz (intptr_t x,      \
                                                      struct scm_bignum *y); \
   SCM_INTERNAL SCM scm_integer_##stem##_quotient_zi (struct scm_bignum *x, \
-                                                     scm_t_inum y);     \
+                                                     intptr_t y);     \
   SCM_INTERNAL SCM scm_integer_##stem##_quotient_zz (struct scm_bignum *x, \
                                                      struct scm_bignum *y);
 
 #define DECLARE_REMAINDER_OPERATORS(stem)                               \
-  SCM_INTERNAL SCM scm_integer_##stem##_remainder_ii (scm_t_inum x,     \
-                                                      scm_t_inum y);    \
-  SCM_INTERNAL SCM scm_integer_##stem##_remainder_iz (scm_t_inum x,     \
+  SCM_INTERNAL SCM scm_integer_##stem##_remainder_ii (intptr_t x,     \
+                                                      intptr_t y);    \
+  SCM_INTERNAL SCM scm_integer_##stem##_remainder_iz (intptr_t x,     \
                                                       struct scm_bignum *y); \
   SCM_INTERNAL SCM scm_integer_##stem##_remainder_zi (struct scm_bignum *x, \
-                                                      scm_t_inum y);    \
+                                                      intptr_t y);    \
   SCM_INTERNAL SCM scm_integer_##stem##_remainder_zz (struct scm_bignum *x, \
                                                       struct scm_bignum *y);
 
 #define DECLARE_DIVIDE_OPERATORS(stem)                                  \
-  SCM_INTERNAL void scm_integer_##stem##_divide_ii (scm_t_inum x,       \
-                                                    scm_t_inum y,       \
+  SCM_INTERNAL void scm_integer_##stem##_divide_ii (intptr_t x,       \
+                                                    intptr_t y,       \
                                                     SCM *qp, SCM *rp);  \
-  SCM_INTERNAL void scm_integer_##stem##_divide_iz (scm_t_inum x,       \
+  SCM_INTERNAL void scm_integer_##stem##_divide_iz (intptr_t x,       \
                                                     struct scm_bignum *y, \
                                                     SCM *qp, SCM *rp);  \
   SCM_INTERNAL void scm_integer_##stem##_divide_zi (struct scm_bignum *x, \
-                                                    scm_t_inum y,       \
+                                                    intptr_t y,       \
                                                     SCM *qp, SCM *rp);  \
   SCM_INTERNAL void scm_integer_##stem##_divide_zz (struct scm_bignum *x, \
                                                     struct scm_bignum *y, \
@@ -87,75 +87,75 @@ DECLARE_DIVISION_OPERATORS(truncate);
 DECLARE_DIVISION_OPERATORS(centered);
 DECLARE_DIVISION_OPERATORS(round);
 
-SCM_INTERNAL SCM scm_integer_gcd_ii (scm_t_inum x, scm_t_inum y);
-SCM_INTERNAL SCM scm_integer_gcd_zi (struct scm_bignum *x, scm_t_inum y);
+SCM_INTERNAL SCM scm_integer_gcd_ii (intptr_t x, intptr_t y);
+SCM_INTERNAL SCM scm_integer_gcd_zi (struct scm_bignum *x, intptr_t y);
 SCM_INTERNAL SCM scm_integer_gcd_zz (struct scm_bignum *x,
                                      struct scm_bignum *y);
 
-SCM_INTERNAL SCM scm_integer_lcm_ii (scm_t_inum x, scm_t_inum y);
-SCM_INTERNAL SCM scm_integer_lcm_zi (struct scm_bignum *x, scm_t_inum y);
+SCM_INTERNAL SCM scm_integer_lcm_ii (intptr_t x, intptr_t y);
+SCM_INTERNAL SCM scm_integer_lcm_zi (struct scm_bignum *x, intptr_t y);
 SCM_INTERNAL SCM scm_integer_lcm_zz (struct scm_bignum *x,
                                      struct scm_bignum *y);
 
-SCM_INTERNAL SCM scm_integer_logand_ii (scm_t_inum x, scm_t_inum y);
-SCM_INTERNAL SCM scm_integer_logand_zi (struct scm_bignum *x, scm_t_inum y);
+SCM_INTERNAL SCM scm_integer_logand_ii (intptr_t x, intptr_t y);
+SCM_INTERNAL SCM scm_integer_logand_zi (struct scm_bignum *x, intptr_t y);
 SCM_INTERNAL SCM scm_integer_logand_zz (struct scm_bignum *x,
                                         struct scm_bignum *y);
 
-SCM_INTERNAL SCM scm_integer_logior_ii (scm_t_inum x, scm_t_inum y);
-SCM_INTERNAL SCM scm_integer_logior_zi (struct scm_bignum *x, scm_t_inum y);
+SCM_INTERNAL SCM scm_integer_logior_ii (intptr_t x, intptr_t y);
+SCM_INTERNAL SCM scm_integer_logior_zi (struct scm_bignum *x, intptr_t y);
 SCM_INTERNAL SCM scm_integer_logior_zz (struct scm_bignum *x,
                                         struct scm_bignum *y);
 
-SCM_INTERNAL SCM scm_integer_logxor_ii (scm_t_inum x, scm_t_inum y);
-SCM_INTERNAL SCM scm_integer_logxor_zi (struct scm_bignum *x, scm_t_inum y);
+SCM_INTERNAL SCM scm_integer_logxor_ii (intptr_t x, intptr_t y);
+SCM_INTERNAL SCM scm_integer_logxor_zi (struct scm_bignum *x, intptr_t y);
 SCM_INTERNAL SCM scm_integer_logxor_zz (struct scm_bignum *x,
                                         struct scm_bignum *y);
 
-SCM_INTERNAL int scm_integer_logtest_ii (scm_t_inum x, scm_t_inum y);
-SCM_INTERNAL int scm_integer_logtest_zi (struct scm_bignum *x, scm_t_inum y);
+SCM_INTERNAL int scm_integer_logtest_ii (intptr_t x, intptr_t y);
+SCM_INTERNAL int scm_integer_logtest_zi (struct scm_bignum *x, intptr_t y);
 SCM_INTERNAL int scm_integer_logtest_zz (struct scm_bignum *x,
                                          struct scm_bignum *y);
 
-SCM_INTERNAL int scm_integer_logbit_ui (unsigned long bit, scm_t_inum n);
-SCM_INTERNAL int scm_integer_logbit_uz (unsigned long bit,
+SCM_INTERNAL int scm_integer_logbit_ui (uintptr_t bit, intptr_t n);
+SCM_INTERNAL int scm_integer_logbit_uz (uintptr_t bit,
                                         struct scm_bignum *n);
 
-SCM_INTERNAL SCM scm_integer_lognot_i (scm_t_inum n);
+SCM_INTERNAL SCM scm_integer_lognot_i (intptr_t n);
 SCM_INTERNAL SCM scm_integer_lognot_z (struct scm_bignum *n);
 
-SCM_INTERNAL SCM scm_integer_expt_ii (scm_t_inum n, scm_t_inum k);
-SCM_INTERNAL SCM scm_integer_expt_zi (struct scm_bignum *n, scm_t_inum k);
+SCM_INTERNAL SCM scm_integer_expt_ii (intptr_t n, intptr_t k);
+SCM_INTERNAL SCM scm_integer_expt_zi (struct scm_bignum *n, intptr_t k);
 
 SCM_INTERNAL SCM scm_integer_modulo_expt_nnn (SCM n, SCM k, SCM m);
 
-SCM_INTERNAL SCM scm_integer_lsh_iu (scm_t_inum n, unsigned long count);
+SCM_INTERNAL SCM scm_integer_lsh_iu (intptr_t n, uintptr_t count);
 SCM_INTERNAL SCM scm_integer_lsh_zu (struct scm_bignum *n,
-                                     unsigned long count);
-SCM_INTERNAL SCM scm_integer_floor_rsh_iu (scm_t_inum n, unsigned long count);
+                                     uintptr_t count);
+SCM_INTERNAL SCM scm_integer_floor_rsh_iu (intptr_t n, uintptr_t count);
 SCM_INTERNAL SCM scm_integer_floor_rsh_zu (struct scm_bignum *n,
-                                           unsigned long count);
-SCM_INTERNAL SCM scm_integer_round_rsh_iu (scm_t_inum n, unsigned long count);
+                                           uintptr_t count);
+SCM_INTERNAL SCM scm_integer_round_rsh_iu (intptr_t n, uintptr_t count);
 SCM_INTERNAL SCM scm_integer_round_rsh_zu (struct scm_bignum *n,
-                                           unsigned long count);
+                                           uintptr_t count);
 
-SCM_INTERNAL SCM scm_integer_bit_extract_i (scm_t_inum n, unsigned long start,
-                                            unsigned long bits);
+SCM_INTERNAL SCM scm_integer_bit_extract_i (intptr_t n, uintptr_t start,
+                                            uintptr_t bits);
 SCM_INTERNAL SCM scm_integer_bit_extract_z (struct scm_bignum *n,
-                                            unsigned long start,
-                                            unsigned long bits);
+                                            uintptr_t start,
+                                            uintptr_t bits);
 
-SCM_INTERNAL SCM scm_integer_logcount_i (scm_t_inum n);
+SCM_INTERNAL SCM scm_integer_logcount_i (intptr_t n);
 SCM_INTERNAL SCM scm_integer_logcount_z (struct scm_bignum *n);
 
-SCM_INTERNAL SCM scm_integer_length_i (scm_t_inum n);
+SCM_INTERNAL SCM scm_integer_length_i (intptr_t n);
 SCM_INTERNAL SCM scm_integer_length_z (struct scm_bignum *n);
 
-SCM_INTERNAL SCM scm_integer_to_string_i (scm_t_inum n, int base);
+SCM_INTERNAL SCM scm_integer_to_string_i (intptr_t n, int base);
 SCM_INTERNAL SCM scm_integer_to_string_z (struct scm_bignum *n, int base);
 
-SCM_INTERNAL int scm_is_integer_equal_ir (scm_t_inum x, double y);
-SCM_INTERNAL int scm_is_integer_equal_ic (scm_t_inum x,
+SCM_INTERNAL int scm_is_integer_equal_ir (intptr_t x, double y);
+SCM_INTERNAL int scm_is_integer_equal_ic (intptr_t x,
                                           double real, double imag);
 SCM_INTERNAL int scm_is_integer_equal_zz (struct scm_bignum *x,
                                           struct scm_bignum *y);
@@ -163,8 +163,8 @@ SCM_INTERNAL int scm_is_integer_equal_zr (struct scm_bignum *x, double y);
 SCM_INTERNAL int scm_is_integer_equal_zc (struct scm_bignum *x,
                                           double real, double imag);
 
-SCM_INTERNAL int scm_is_integer_less_than_ir (scm_t_inum x, double y);
-SCM_INTERNAL int scm_is_integer_less_than_ri (double x, scm_t_inum y);
+SCM_INTERNAL int scm_is_integer_less_than_ir (intptr_t x, double y);
+SCM_INTERNAL int scm_is_integer_less_than_ri (double x, intptr_t y);
 SCM_INTERNAL int scm_is_integer_less_than_zz (struct scm_bignum *x,
                                               struct scm_bignum *y);
 SCM_INTERNAL int scm_is_integer_less_than_zr (struct scm_bignum *x, double y);
@@ -173,41 +173,41 @@ SCM_INTERNAL int scm_is_integer_less_than_rz (double y, struct scm_bignum *x);
 SCM_INTERNAL int scm_is_integer_positive_z (struct scm_bignum *x);
 SCM_INTERNAL int scm_is_integer_negative_z (struct scm_bignum *x);
 
-SCM_INTERNAL double scm_integer_frexp_z (struct scm_bignum *x, long *exp);
+SCM_INTERNAL double scm_integer_frexp_z (struct scm_bignum *x, intptr_t *exp);
 SCM_INTERNAL double scm_integer_to_double_z (struct scm_bignum *x);
 SCM_INTERNAL SCM scm_integer_from_double (double val);
 
-SCM_INTERNAL SCM scm_integer_add_ii (scm_t_inum x, scm_t_inum y);
-SCM_INTERNAL SCM scm_integer_add_zi (struct scm_bignum *x, scm_t_inum y);
+SCM_INTERNAL SCM scm_integer_add_ii (intptr_t x, intptr_t y);
+SCM_INTERNAL SCM scm_integer_add_zi (struct scm_bignum *x, intptr_t y);
 SCM_INTERNAL SCM scm_integer_add_zz (struct scm_bignum *x, struct scm_bignum *y);
 
-SCM_INTERNAL SCM scm_integer_negate_i (scm_t_inum x);
+SCM_INTERNAL SCM scm_integer_negate_i (intptr_t x);
 SCM_INTERNAL SCM scm_integer_negate_z (struct scm_bignum *x);
 
-SCM_INTERNAL SCM scm_integer_sub_ii (scm_t_inum x, scm_t_inum y);
-SCM_INTERNAL SCM scm_integer_sub_iz (scm_t_inum x, struct scm_bignum *y);
-SCM_INTERNAL SCM scm_integer_sub_zi (struct scm_bignum *x, scm_t_inum y);
+SCM_INTERNAL SCM scm_integer_sub_ii (intptr_t x, intptr_t y);
+SCM_INTERNAL SCM scm_integer_sub_iz (intptr_t x, struct scm_bignum *y);
+SCM_INTERNAL SCM scm_integer_sub_zi (struct scm_bignum *x, intptr_t y);
 SCM_INTERNAL SCM scm_integer_sub_zz (struct scm_bignum *x, struct scm_bignum *y);
 
-SCM_INTERNAL SCM scm_integer_mul_ii (scm_t_inum x, scm_t_inum y);
-SCM_INTERNAL SCM scm_integer_mul_zi (struct scm_bignum *x, scm_t_inum y);
+SCM_INTERNAL SCM scm_integer_mul_ii (intptr_t x, intptr_t y);
+SCM_INTERNAL SCM scm_integer_mul_zi (struct scm_bignum *x, intptr_t y);
 SCM_INTERNAL SCM scm_integer_mul_zz (struct scm_bignum *x, struct scm_bignum *y);
 
-SCM_INTERNAL int scm_is_integer_divisible_ii (scm_t_inum x, scm_t_inum y);
+SCM_INTERNAL int scm_is_integer_divisible_ii (intptr_t x, intptr_t y);
 SCM_INTERNAL int scm_is_integer_divisible_zi (struct scm_bignum *x,
-                                              scm_t_inum y);
+                                              intptr_t y);
 SCM_INTERNAL int scm_is_integer_divisible_zz (struct scm_bignum *x,
                                               struct scm_bignum *y);
 
-SCM_INTERNAL SCM scm_integer_exact_quotient_ii (scm_t_inum n, scm_t_inum d);
-SCM_INTERNAL SCM scm_integer_exact_quotient_iz (scm_t_inum n,
+SCM_INTERNAL SCM scm_integer_exact_quotient_ii (intptr_t n, intptr_t d);
+SCM_INTERNAL SCM scm_integer_exact_quotient_iz (intptr_t n,
                                                 struct scm_bignum *d);
 SCM_INTERNAL SCM scm_integer_exact_quotient_zi (struct scm_bignum *n,
-                                                scm_t_inum d);
+                                                intptr_t d);
 SCM_INTERNAL SCM scm_integer_exact_quotient_zz (struct scm_bignum *n,
                                                 struct scm_bignum *d);
 
-#if SCM_SIZEOF_LONG == 4
+#if SCM_SIZEOF_INTPTR_T == 4
 SCM_INTERNAL SCM scm_integer_from_int32 (int32_t n);
 SCM_INTERNAL SCM scm_integer_from_uint32 (uint32_t n);
 SCM_INTERNAL int scm_integer_to_int32_z (struct scm_bignum *z, int32_t *val);
@@ -219,18 +219,18 @@ SCM_INTERNAL int scm_integer_to_uint64_z (struct scm_bignum *z, uint64_t *val);
 SCM_INTERNAL SCM scm_integer_from_int64 (int64_t n);
 SCM_INTERNAL SCM scm_integer_from_uint64 (uint64_t n);
 
-SCM_INTERNAL void scm_integer_exact_sqrt_i (scm_t_inum k, SCM *s, SCM *r);
+SCM_INTERNAL void scm_integer_exact_sqrt_i (intptr_t k, SCM *s, SCM *r);
 SCM_INTERNAL void scm_integer_exact_sqrt_z (struct scm_bignum *k,
                                             SCM *s, SCM *r);
 
-SCM_INTERNAL int scm_is_integer_perfect_square_i (scm_t_inum k);
+SCM_INTERNAL int scm_is_integer_perfect_square_i (intptr_t k);
 SCM_INTERNAL int scm_is_integer_perfect_square_z (struct scm_bignum *k);
-SCM_INTERNAL SCM scm_integer_floor_sqrt_i (scm_t_inum k);
+SCM_INTERNAL SCM scm_integer_floor_sqrt_i (intptr_t k);
 SCM_INTERNAL SCM scm_integer_floor_sqrt_z (struct scm_bignum *k);
-SCM_INTERNAL double scm_integer_inexact_sqrt_i (scm_t_inum k);
+SCM_INTERNAL double scm_integer_inexact_sqrt_i (intptr_t k);
 SCM_INTERNAL double scm_integer_inexact_sqrt_z (struct scm_bignum *k);
 
-SCM_INTERNAL SCM scm_integer_scan1_i (scm_t_inum n);
+SCM_INTERNAL SCM scm_integer_scan1_i (intptr_t n);
 SCM_INTERNAL SCM scm_integer_scan1_z (struct scm_bignum *n);
 
 
