@@ -693,6 +693,12 @@ AC_ARG_ENABLE(mini-gmp,
 if test "x$enable_mini_gmp" = xyes || test "x$enable_mini_gmp" = xy; then
   SCM_I_GSC_ENABLE_MINI_GMP=1
 else
+  case $host in
+    x86_64-*-mingw*)
+       AC_MSG_ERROR([mini-gmp is required; use --enable-mini-gmp])
+       ;;
+    *) ;;
+  esac
   AC_LIB_HAVE_LINKFLAGS([gmp],[],[#include <gmp.h>], [mpz_import (0,0,0,0,0,0,0);])
   if test "x$HAVE_LIBGMP" != "xyes"; then
     AC_MSG_ERROR([GNU MP 4.1 or greater not found; either install it, or pass '--enable-mini-gmp' to use included less-optimal arbitrary-precision integer support.])

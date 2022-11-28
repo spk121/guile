@@ -576,14 +576,14 @@ SCM_DEFINE (scm_array_index_map_x, "array-index-map!", 2, 0, 0,
 
 static int
 array_compare (scm_t_array_handle *hx, scm_t_array_handle *hy,
-               size_t dim, unsigned long posx, unsigned long posy)
+               size_t dim, uintptr_t posx, uintptr_t posy)
 {
   if (dim == scm_array_handle_rank (hx))
     return scm_is_true (scm_equal_p (scm_array_handle_ref (hx, posx),
                                      scm_array_handle_ref (hy, posy)));
   else
     {
-      long incx, incy;
+      intptr_t incx, incy;
       size_t i;
 
       if (hx->dims[dim].lbnd != hy->dims[dim].lbnd
