@@ -68,6 +68,16 @@ open-pipe.  The new procedure allows modification of that command. This
 is useful on systems that prefer other shells or on systems that don't
 have 'sh' in /bin.
 
+** Add support for x86_64-pc-mingw64
+
+On 64-bit _WIN32 platforms, the base integer size for hashes, fixnums,
+and GMP integers is now set to 8-bytes rather than 4-byte longs.  4-byte
+long integers violate a constraint for Guile that requires that the base
+integer size can hold a pointer.
+
+Internally, the scm_t_inum type has been replaced by intptr_t or
+uintptr_t as appropriate.
+
 * Bug fixes
 
 ** (ice-9 suspendable-ports) incorrect UTF-8 decoding

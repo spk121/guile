@@ -32,6 +32,7 @@
 #include <string.h>
 #include <alloca.h>
 #include <assert.h>
+#include <stdint.h>
 
 #include "scm.h"
 
@@ -72,12 +73,23 @@
 #define INT16_T_unsigned        uint16_t
 #define INT32_T_signed          int32_t
 #define INT32_T_unsigned        uint32_t
-#define is_signed_int8(_x)      (((_x) >= -128L) && ((_x) <= 127L))
-#define is_unsigned_int8(_x)    ((_x) <= 255UL)
-#define is_signed_int16(_x)     (((_x) >= -32768L) && ((_x) <= 32767L))
-#define is_unsigned_int16(_x)   ((_x) <= 65535UL)
-#define is_signed_int32(_x)     (((_x) >= -2147483648L) && ((_x) <= 2147483647L))
-#define is_unsigned_int32(_x)   ((_x) <= 4294967295UL)
+#if SIZEOF_INTPTR_T == 4
+#define is_signed_int8(_x)      (((_x) >= INT32_C(-128)) && ((_x) <= INT32_C(127)))
+#define is_unsigned_int8(_x)    ((_x) <= UINT32_C(255))
+#define is_signed_int16(_x)     (((_x) >= INT32_C(-32768)) && ((_x) <= INT32_C(32767)))
+#define is_unsigned_int16(_x)   ((_x) <= UINT32_C(65535))
+#define is_signed_int32(_x)     (((_x) >= INT32_C(-2147483328)) && ((_x) <= INT32_C(2147483647)))
+#define is_unsigned_int32(_x)   ((_x) <= UINT32_C(4294967295))
+#elif SIZEOF_INTPTR_T == 8
+#define is_signed_int8(_x)      (((_x) >= INT64_C(-128)) && ((_x) <= INT64_C(127)))
+#define is_unsigned_int8(_x)    ((_x) <= UINT64_C(255))
+#define is_signed_int16(_x)     (((_x) >= INT64_C(-32768)) && ((_x) <= INT64_C(32767)))
+#define is_unsigned_int16(_x)   ((_x) <= UINT64_C(65535))
+#define is_signed_int32(_x)     (((_x) >= INT64_C(-2147483648)) && ((_x) <= INT64_C(2147483647)))
+#define is_unsigned_int32(_x)   ((_x) <= UINT64_C(4294967295))
+#else
+#error "Bad SIZEOF_INTPTR_T"
+#endif
 #define SIGNEDNESS_signed       1
 #define SIGNEDNESS_unsigned     0
 
@@ -493,7 +505,7 @@ scm_i_print_bytevector (SCM bv, SCM port, scm_print_state *pstate SCM_UNUSED)
 {
   ssize_t ubnd, inc, i;
   scm_t_array_handle h;
-  
+
   scm_array_get_handle (bv, &h);
 
   scm_putc ('#', port);
@@ -641,7 +653,7 @@ SCM_DEFINE (scm_bytevector_fill_partial_x, "bytevector-fill!", 2, 2, 0,
   int value  = scm_to_int (fill);
   if (SCM_UNLIKELY ((value < -128) || (value > 255)))
     scm_out_of_range (FUNC_NAME, fill);
-  
+
   size_t i = 0;
   size_t c_end = SCM_BYTEVECTOR_LENGTH (bv);
   uint8_t *c_bv = (uint8_t *) SCM_BYTEVECTOR_CONTENTS (bv);
@@ -742,7 +754,7 @@ SCM_DEFINE (scm_uniform_array_to_bytevector, "uniform-array->bytevector",
   size_t len, sz, byte_len;
   scm_t_array_handle h;
   const void *elts;
-  
+
   contents = scm_array_contents (array, SCM_BOOL_T);
   if (scm_is_false (contents))
     scm_wrong_type_arg_msg (FUNC_NAME, 0, array, "uniform contiguous array");
@@ -889,14 +901,14 @@ SCM_DEFINE (scm_u8_list_to_bytevector, "u8-list->bytevector", 1, 0, 0,
 static inline void
 twos_complement (mpz_t value, size_t size)
 {
-  unsigned long bit_count;
+  uintptr_t bit_count;
 
-  /* We expect BIT_COUNT to fit in a unsigned long thanks to the range
+  /* We expect BIT_COUNT to fit in a uintptr_t thanks to the range
      checking on SIZE performed earlier.  */
-  bit_count = (unsigned long) size << 3UL;
+  bit_count = (uintptr_t) size << 3ULL;
 
-  if (SCM_LIKELY (bit_count < sizeof (unsigned long)))
-    mpz_ui_sub (value, 1UL << bit_count, value);
+  if (SCM_LIKELY (bit_count < sizeof (uintptr_t)))
+    mpz_ui_sub (value, 1ULL << bit_count, value);
   else
     {
       mpz_t max;
@@ -2049,7 +2061,7 @@ utf_encoding_name (char *name, size_t utf_width, SCM endianness)
   memcpy (SCM_BYTEVECTOR_CONTENTS (utf), c_utf, c_utf_len);             \
   scm_dynwind_end ();                                                   \
                                                                         \
-  return (utf); 
+  return (utf);
 
 
 
@@ -2110,7 +2122,7 @@ SCM_DEFINE (scm_string_to_utf32, "string->utf32",
   if (!scm_is_eq (SCM_UNBNDP (endianness) ? scm_endianness_big : endianness,
                   scm_i_native_endianness))
     swap_u32 (wchars, wchar_len);
-  
+
   bv = make_bytevector (bytes_len, SCM_ARRAY_ELEMENT_TYPE_VU8);
   memcpy (SCM_BYTEVECTOR_CONTENTS (bv), wchars, bytes_len);
   free (wchars);

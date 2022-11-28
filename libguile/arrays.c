@@ -1023,8 +1023,8 @@ SCM_DEFINE (scm_array_contents, "array-contents", 1, 1, 0,
             return SCM_BOOL_F;
           if (scm_is_bitvector (SCM_I_ARRAY_V (ra))
               && (len != scm_c_bitvector_length (SCM_I_ARRAY_V (ra)) ||
-                  SCM_I_ARRAY_BASE (ra) % SCM_LONG_BIT ||
-                  len % SCM_LONG_BIT))
+                  SCM_I_ARRAY_BASE (ra) % SCM_INTPTR_T_BIT ||
+                  len % SCM_INTPTR_T_BIT))
             return SCM_BOOL_F;
         }
 
