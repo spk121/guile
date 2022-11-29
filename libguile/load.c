@@ -519,9 +519,9 @@ scm_init_load_path ()
 #endif /* HAVE_GETPWENT */
 #ifdef __MINGW32__
     else if ((e = getenv ("LOCALAPPDATA")))
-      snprintf (cachedir, sizeof (cachedir), "%s/.cache/" FALLBACK_DIR, e);
+      snprintf (cachedir, sizeof (cachedir), "%s/" FALLBACK_DIR, e);
     else if ((e = getenv ("APPDATA")))
-      snprintf (cachedir, sizeof (cachedir), "%s/.cache/" FALLBACK_DIR, e);
+      snprintf (cachedir, sizeof (cachedir), "%s/" FALLBACK_DIR, e);
 #endif /* __MINGW32__ */
     else
       cachedir[0] = 0;
