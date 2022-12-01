@@ -401,6 +401,17 @@
   (pass-if-equal "foo bar" 'qux (test-proc 'foo 'bar))
   (pass-if-equal "foo two" 'foo (test-proc 'foo 'two)))
 
+(with-test-prefix "size effects in multi-arg eq / <"
+  (pass-if-equal "eq?" 42
+    (compile '(catch 'foo
+                (lambda () (= 0 1 (throw 'foo)))
+                (lambda (k) 42))))
+
+  (pass-if-equal "<" 42
+    (compile '(catch 'foo
+                (lambda () (< 0 -1 (throw 'foo)))
+                (lambda (k) 42)))))
+
 (with-test-prefix "read-and-compile tree-il"
   (let ((code
          "\
