@@ -1,7 +1,7 @@
 ;;;; tree-il.test --- test suite for compiling tree-il   -*- scheme -*-
 ;;;; Andy Wingo <wingo@pobox.com> --- May 2009
 ;;;;
-;;;; 	Copyright (C) 2009-2014, 2017, 2020 Free Software Foundation, Inc.
+;;;; 	Copyright (C) 2009-2014, 2017, 2020, 2022 Free Software Foundation, Inc.
 ;;;;
 ;;;; This library is free software; you can redistribute it and/or
 ;;;; modify it under the terms of the GNU Lesser General Public
@@ -1348,6 +1348,14 @@
   (pass-if-peval
     (apply (lambda (x y) (cons x y)) (list 1 2))
     (primcall cons (const 1) (const 2)))
+
+  (pass-if-peval
+    (apply = (list 0 0 0))
+    (const #t))
+
+  (pass-if-peval
+    (apply char<? (list #\a #\b #\c))
+    (const #t))
 
   ;; Disable after removal of abort-in-tail-position optimization, in
   ;; hopes that CPS does a uniformly better job.
