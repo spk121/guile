@@ -180,7 +180,6 @@ name."
 ;; this, LTDL_LIBRARY_PATH or GUILE_EXTENSIONS_PATH can add directories
 ;; to the DLL search.
 (define (add-dll-search-directories search-path)
-  (pk 'add-dll-search-directories search-path)
   (for-each
    (lambda (path)
      (let ((cpath (false-if-exception (canonicalize-path path))))
