@@ -118,7 +118,7 @@ read_command_file (char *argv0, int *n)
   char buf[1024];
   char *str;
 
-  FILE *fp = fopen("command-args.txt", "rt");
+  FILE *fp = fopen("cmdargs.txt", "rt");
   if (fp == NULL)
     {
       *n = 1;
