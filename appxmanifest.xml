@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Package
+  xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
+  xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
+  xmlns:uap5="http://schemas.microsoft.com/appx/manifest/uap/windows10/5"
+  xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities">
+  <Identity Name="MichaelGran.Argyle.Guile" Version="3.0.8.1"
+	    Publisher="CN=Michael Gran, O=Michael Gran, S=California, C=US"
+	    ProcessorArchitecture="x64" />
+  <Properties>
+    <DisplayName>Guile</DisplayName>
+    <PublisherDisplayName>Michael Gran</PublisherDisplayName>
+    <Description>An unofficial respin of GNU Guile</Description>
+    <Logo>images\gears-up-150.png</Logo>
+  </Properties>
+  <Resources>
+    <Resource Language="en-US" />
+  </Resources>
+  <Dependencies>
+    <TargetDeviceFamily Name="Windows.Desktop" MinVersion="10.0.14316.0" MaxVersionTested="10.0.15063.0" />
+  </Dependencies>
+  <Capabilities>
+    <rescap:Capability Name="runFullTrust"/>
+  </Capabilities>
+  <Applications>
+    <Application Id="Guile" Executable="guile.exe" EntryPoint="Windows.FullTrustApplication">
+      <uap:VisualElements
+	BackgroundColor="#464646"
+	DisplayName="Guile"
+	Square150x150Logo="images\gears-up-150.png"
+	Square44x44Logo="images\gears-up-44.png"
+	Description="An unofficial re-spin of GNU Guile for Windows" />
+      <Extensions>
+	<uap5:Extension Category="windows.appExecutionAlias">
+	  <uap5:AppExecutionAlias>
+	    <uap5:ExecutionAlias Alias="guile.exe" />
+	  </uap5:AppExecutionAlias>
+	</uap5:Extension>
+      </Extensions>
+    </Application>
+  </Applications>
+</Package>
