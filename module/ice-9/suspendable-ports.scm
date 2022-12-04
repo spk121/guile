@@ -710,7 +710,6 @@
                  (let ((c (read-char port)))
                    (cond
                     ((or (eof-object? c)
-                         (char=? c #\x85)
                          (char=? c #\x2028)
                          (char=? c #\x2029))
                      (set! cr #f)

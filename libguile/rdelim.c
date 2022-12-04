@@ -158,7 +158,6 @@ SCM_DEFINE (scm_read_line, "%read-line", 0, 1, 0,
               break;
 
             case EOF:
-            case 0x85:
             case 0x2028:
             case 0x2029:
               cr = 0;
