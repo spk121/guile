@@ -6136,7 +6136,7 @@ accessed element in the list.
 
 Vectors can contain any kind of Scheme object; it is even possible to
 have different types of objects in the same vector.  For vectors
-containing vectors, you may wish to use @ref{Arrays,arrays} instead.
+containing vectors, you may wish to use @ref{Arrays} instead.
 Note, too, that vectors are a special case of one dimensional
 non-uniform arrays and that array procedures operate happily on vectors.
 
