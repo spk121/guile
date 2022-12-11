@@ -57,7 +57,11 @@ locale's encoding, and then passed to the C library's regular expression
 routines (@pxref{Regular Expressions,,, libc, The GNU C Library
 Reference Manual}).  The returned match structures always point to
 characters in the strings, not to individual bytes, even in the case of
-multi-byte encodings.
+multi-byte encodings.  This ensures that the match structures are
+correct when performing matching with characters that have a multi-byte
+representation in the locale encoding.  Note, however, that using
+characters which cannot be represented in the locale encoding can
+lead to surprising results.
 
 @deffn {Scheme Procedure} string-match pattern str [start]
 Compile the string @var{pattern} into a regular expression and compare
@@ -325,7 +329,7 @@ example the following is the date example from
 @code{string-match} call.
 
 @lisp
-(define date-regex 
+(define date-regex
    "([0-9][0-9][0-9][0-9])([0-9][0-9])([0-9][0-9])")
 (define s "Date 20020429 12am.")
 (regexp-substitute/global #f date-regex s
