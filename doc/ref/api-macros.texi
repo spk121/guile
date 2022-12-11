@@ -63,7 +63,7 @@ transformers, consider the following example macro definition:
          (begin exp ...)))))
 
 (when #t
-  (display "hey ho\n") 
+  (display "hey ho\n")
   (display "let's go\n"))
 @print{} hey ho
 @print{} let's go
@@ -87,7 +87,7 @@ One can also establish local syntactic bindings with @code{let-syntax}.
 Bind each @var{keyword} to its corresponding @var{transformer} while
 expanding @var{exp1} @var{exp2} @enddots{}.
 
-A @code{let-syntax} binding only exists at expansion-time. 
+A @code{let-syntax} binding only exists at expansion-time.
 
 @example
 (let-syntax ((unless
@@ -1236,14 +1236,19 @@ But if a syntactic definition needs to call out to a normal procedure at
 expansion-time, it might well need need special declarations to indicate that
 the procedure should be made available at expansion-time.
 
-For example, the following code will work at a REPL, but not in a file:
+For example, the following code tries to embed a compilation
+timestamp in the compiled bytecode using a macro that expands
+to the date as a string literal.  It will work at a REPL, but
+not in a file, as it cannot be byte-compiled:
 
 @example
-;; incorrect
 (use-modules (srfi srfi-19))
-(define (date) (date->string (current-date)))
-(define-syntax %date (identifier-syntax (date)))
-(define *compilation-date* %date)
+(define start-date (date->string (current-date)))
+(define-syntax *compilation-date*
+ (lambda (sintax)
+    start-date))
+(display *compilation-date*)
+(newline)
 @end example
 
 It works at a REPL because the expressions are evaluated one-by-one, in order,
@@ -1253,12 +1258,14 @@ evaluated until the compiled file is loaded.
 The fix is to use @code{eval-when}.
 
 @example
-;; correct: using eval-when
 (use-modules (srfi srfi-19))
 (eval-when (expand load eval)
-  (define (date) (date->string (current-date))))
-(define-syntax %date (identifier-syntax (date)))
-(define *compilation-date* %date)
+  (define start-date (date->string (current-date))))
+(define-syntax *compilation-date*
+ (lambda (sintax)
+    start-date))
+(display *compilation-date*)
+(newline)
 @end example
 
 @deffn {Syntax} eval-when conditions exp...
