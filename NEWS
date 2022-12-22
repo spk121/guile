@@ -99,6 +99,8 @@ Disassembler output now includes the name of intrinsics next to each
    mode was set explicitly.  However, this is not the case.
 ** 'system*' honors output/error port redirects
    (https://bugs.gnu.org/52835)
+** 'open-input-pipe' & co. are now much faster
+   (https://bugs.gnu.org/59321)
 
 
 Changes in 3.0.8 (since 3.0.7)

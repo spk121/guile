@@ -24,6 +24,7 @@
 #  include <config.h>
 #endif
 
+#include <dirent.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <stdio.h>
@@ -1317,6 +1318,41 @@ SCM_DEFINE (scm_fork, "primitive-fork", 0, 0, 0,
 #undef FUNC_NAME
 #endif /* HAVE_FORK */
 
+static void
+close_inherited_fds_slow (posix_spawn_file_actions_t *actions, int max_fd)
+{
+  while (--max_fd > 2)
+    posix_spawn_file_actions_addclose (actions, max_fd);
+}
+
+static void
+close_inherited_fds (posix_spawn_file_actions_t *actions, int max_fd)
+{
+  DIR *dirp;
+  struct dirent *d;
+  int fd;
+
+  /* Try to use the platform-specific list of open file descriptors, so
+     we don't need to use the brute force approach. */
+  dirp = opendir ("/proc/self/fd");
+
+  if (dirp == NULL)
+    return close_inherited_fds_slow (actions, max_fd);
+
+  while ((d = readdir (dirp)) != NULL)
+    {
+      fd = atoi (d->d_name);
+
+      /* Skip "." and "..", garbage entries, stdin/stdout/stderr. */
+      if (fd <= 2)
+        continue;
+
+      posix_spawn_file_actions_addclose (actions, fd);
+    }
+
+  closedir (dirp);
+}
+
 static pid_t
 do_spawn (char *exec_file, char **exec_argv, char **exec_env,
           int in, int out, int err, int spawnp)
@@ -1341,7 +1377,7 @@ do_spawn (char *exec_file, char **exec_argv, char **exec_env,
   int free_fd_slots = 0;
   int fd_slot[3];
 
-  for (int fdnum = 3;free_fd_slots < 3 && fdnum < max_fd;fdnum++)
+  for (int fdnum = 3; free_fd_slots < 3 && fdnum < max_fd; fdnum++)
     {
       if (fdnum != in && fdnum != out && fdnum != err)
         {
@@ -1360,8 +1396,7 @@ do_spawn (char *exec_file, char **exec_argv, char **exec_env,
   posix_spawn_file_actions_adddup2 (&actions, fd_slot[1], 1);
   posix_spawn_file_actions_adddup2 (&actions, fd_slot[2], 2);
 
-  while (--max_fd > 2)
-    posix_spawn_file_actions_addclose (&actions, max_fd);
+  close_inherited_fds (&actions, max_fd);
 
   int res = -1;
   if (spawnp)
