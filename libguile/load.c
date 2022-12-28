@@ -71,8 +71,7 @@
 
 // Set in guile.c
 char *scm_i_self_path;
-//static int scm_i_relative_paths_p = SCM_I_GSC_USE_RELATIVE_PATHS;
-static int scm_i_relative_paths_p = 1;
+static int scm_i_relative_paths_p = SCM_USE_RELATIVE_PATHS;
 
 
 /* Loading a file, given an absolute filename.  */

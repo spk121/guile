@@ -340,7 +340,7 @@ main (int argc, char *argv[])
 #else
   pf ("typedef int scm_t_off;\n");
   pf ("#define SCM_T_OFF_MAX INT_MAX\n");
-  pf ("#define SCM_T_OFF_MIN INT_MIN\n");  
+  pf ("#define SCM_T_OFF_MIN INT_MIN\n");
 #endif
 
   pf ("/* Define to 1 if the compiler supports the "
@@ -365,7 +365,7 @@ main (int argc, char *argv[])
   pf ("#define SCM_ICONVEH_QUESTION_MARK %d\n",
       SCM_I_GSC_ICONVEH_QUESTION_MARK);
   pf ("#define SCM_ICONVEH_ESCAPE_SEQUENCE %d\n",
-      SCM_I_GSC_ICONVEH_ESCAPE_SEQUENCE);  
+      SCM_I_GSC_ICONVEH_ESCAPE_SEQUENCE);
 
   pf ("\n");
   pf ("/* Define to 1 if there is an auxiliary stack, as in ia64.  */\n");
@@ -377,6 +377,11 @@ main (int argc, char *argv[])
   pf ("#define SCM_ENABLE_MINI_GMP 1\n");
 #else
   pf ("#define SCM_ENABLE_MINI_GMP 0\n");
+#endif
+#if SCM_I_GSC_USE_RELATIVE_PATHS == 1
+  pf ("#define SCM_USE_RELATIVE_PATHS 1\n");
+#else
+  pf ("#define SCM_USE_RELATIVE_PATHS 0\n");
 #endif
 
   printf ("#endif\n");
