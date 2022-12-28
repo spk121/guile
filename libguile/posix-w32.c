@@ -1220,15 +1220,42 @@ dlopen_w32 (const char *name, int flags)
     return (void *) GetModuleHandle (NULL);
 
   char *backname = strdup(name);
+  int relative = 0;
   for (i = 0; i < strlen(name); i ++)
-    if (backname[i] == '/')
-      backname[i] = '\\';
+    {
+      if (backname[i] == '/')
+        {
+          backname[i] = '\\';
+          relative = 1;
+        }
+      else if (backname[i] == '\\')
+        relative = 1;
+    }
+
   SetErrorMode(0);
-  ret = (void *) LoadLibraryExA (backname, NULL,
-                                 LOAD_LIBRARY_SEARCH_DEFAULT_DIRS
-                                 | LOAD_LIBRARY_SEARCH_DLL_LOAD_DIR);
-  if (ret != NULL)
-    GetModuleHandleExA (0, backname, (HMODULE *) & ret);
+  if (relative)
+    {
+      // LoadLibraryExA may drop relative paths, so need to make it a full
+      // path.
+      char fullpath[1024];
+      GetFullPathNameA (backname, 1023, fullpath, NULL);
+
+      ret = (void *) LoadLibraryExA (fullpath, NULL,
+                                     LOAD_LIBRARY_SEARCH_DEFAULT_DIRS
+                                     | LOAD_LIBRARY_SEARCH_DLL_LOAD_DIR);
+      printf("LoadLibraryExA %s %p %lu\n", fullpath, ret, GetLastError());
+      if (ret != NULL)
+        GetModuleHandleExA (0, fullpath, (HMODULE *) & ret);
+    }
+  else
+    {
+      ret = (void *) LoadLibraryExA (backname, NULL,
+                                     LOAD_LIBRARY_SEARCH_DEFAULT_DIRS
+                                     | LOAD_LIBRARY_SEARCH_DLL_LOAD_DIR);
+      if (ret != NULL)
+        GetModuleHandleExA (0, backname, (HMODULE *) & ret);
+      printf("LoadLibraryExA %s %p %lu\n", backname, ret, GetLastError());
+    }
   free (backname);
   return ret;
 }

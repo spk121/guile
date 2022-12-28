@@ -135,21 +135,23 @@ SCM_DEFINE_STATIC (scm_add_dll_search_directory, "add-dll-search-directory",
 {
 #ifdef _WIN32
   char *c_path = scm_to_utf8_string (path);
-  uint16_t *c_wpath;
-  size_t len;
-  int i;
-  void *ret;
-  for (i = 0; i < strlen(c_path); i ++)
+  for (int i = 0; i < strlen(c_path); i ++)
     {
       if (c_path[i] == '/')
         c_path[i] = '\\';
     }
-  c_wpath = u8_to_u16 (c_path, strlen(c_path) + 1, NULL, &len);
+  size_t len;
+  uint16_t *c_wpath = u8_to_u16 (c_path, strlen(c_path) + 1, NULL, &len);
   free (c_path);
-  ret = AddDllDirectory (c_wpath);
+  void *ret = AddDllDirectory (c_wpath);
   free (c_wpath);
+
+  // A NULL return value indicates failure.
+  if (ret)
+    return SCM_BOOL_T;
+  return SCM_BOOL_F;
 #endif
-  return SCM_UNSPECIFIED;
+  return SCM_BOOL_F;
 }
 #undef FUNC_NAME
 
