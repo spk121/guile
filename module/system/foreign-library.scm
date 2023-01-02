@@ -96,14 +96,21 @@
     ("" '())
     (val (string-split val path-separator))))
 
+;; Since 3.0.6, this is the preferred environment variable for
+;; augmenting the search path for Guile extension libraries.  It has
+;; highest priority.
 (define guile-extensions-path
   (make-parameter
    (or (parse-path "GUILE_EXTENSIONS_PATH") '())))
 
+;; After GUILE_EXTENSIONS_PATH, there is LTDL_LIBRARY_PATH. Before
+;; 3.0.6, libtool was used. It allowed the paths in LTDL_LIBRARY_PATH
+;; preference over using OS's dynamic linker's standard search strategy.
 (define ltdl-library-path
   (make-parameter
    (or (parse-path "LTDL_LIBRARY_PATH") '())))
 
+;; 3rd priority.
 (define guile-system-extensions-path
   (make-parameter
    (or (parse-path "GUILE_SYSTEM_EXTENSIONS_PATH")
@@ -138,7 +145,15 @@
 ;; use-case working.  So as a stopgap solution, we add a ".libs" subdir
 ;; to the path for each entry in LTDL_LIBRARY_PATH, in case the .so is
 ;; there instead of alongside the .la file.
+
+;; Furthermore, libtool --mode=execute augments the environment variable
+;; LD_LIBRARY_PATH on Linux, where the shared library loader ld.so will
+;; use it.  On Windows, however, libtool --mode=execute augments the
+;; environment variable PATH.
+
 (define (augment-ltdl-library-path path)
+  "For each directory entry in the PATH list, inserts an additional
+entry for the .libs subdirectory of that directory, when present."
   (match path
     (() '())
     ((dir . path)
@@ -146,6 +161,9 @@
             (augment-ltdl-library-path path)))))
 
 (define (default-search-path search-ltdl-library-path?)
+  "Returns the search paths for guile extensions. These are compile-time
+defaults augmented by paths in the GUILE_EXTENSIONS_PATH and
+LTDL_LIBRARY_PATH environment variables."
   (append
    (guile-extensions-path)
    (if search-ltdl-library-path?
@@ -174,21 +192,29 @@ name."
 
 
 (define *dll-search-dirs* '())
-
 ;; On Win32, loading a DLL will fail when the DLL depends on other DLLs
-;; that are not in the dynamic link library search directories.  With
-;; this, LTDL_LIBRARY_PATH or GUILE_EXTENSIONS_PATH can add directories
-;; to the DLL search.
+;; that are not in the dynamic link library search directories.  Should
+;; one extension depend on another extension or a system DLL, paths in
+;; GUILE_EXTENSIONS_PATH, LTDL_LIBRARY_PATH, and PATH need to be added
+;; via add-dll-search-directory before trying to load a DLL.
+(define base-path
+  (make-parameter
+   (or (parse-path "PATH") '())))
+
 (define (add-dll-search-directories search-path)
-  (for-each
-   (lambda (path)
-     (let ((cpath (false-if-exception (canonicalize-path path))))
-       (when (and cpath
-                  (eqv? 'directory (false-if-exception (stat:type (stat cpath))))
-                  (not (member path *dll-search-dirs*)))
-         (add-dll-search-directory cpath)
-         (set! *dll-search-dirs* (cons cpath *dll-search-dirs*)))))
-   search-path))
+  "This procedure adds a list of absolute paths to the set of directories
+that are searched for a DLL."
+  (define (addp path)
+    (let ((cpath (false-if-exception (canonicalize-path path))))
+      (when (and cpath
+                 (eqv? 'directory (false-if-exception (stat:type (stat cpath))))
+                 (not (member cpath *dll-search-dirs*)))
+        (add-dll-search-directory cpath)
+        (set! *dll-search-dirs* (cons cpath *dll-search-dirs*)))))
+  (when (zero? (length *dll-search-dirs*))
+    (for-each addp (base-path)))
+  (for-each addp search-path)
+  (pk 'dll-search *dll-search-dirs*))
 
 (define* (load-foreign-library #:optional filename #:key
                                (extensions system-library-extensions)
@@ -208,8 +234,10 @@ name."
   (define (dlopen* name) (dlopen name flags))
   (if (and rename-on-cygwin? (string-contains %host-type "cygwin"))
       (set! filename (lib->cyg filename)))
+
   (when (string-contains %host-type "mingw")
     (add-dll-search-directories search-path))
+
   (make-foreign-library
    filename
    (cond

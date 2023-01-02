@@ -32,6 +32,7 @@
 #include <signal.h>
 #include <io.h>
 #include <fcntl.h>
+#include <unistr.h>
 
 #include "gc.h"        /* for scm_*alloc, scm_strdup */
 #include "threads.h"   /* for scm_i_scm_pthread_mutex_lock */
@@ -1209,6 +1210,7 @@ sched_setaffinity (int pid, size_t mask_size, cpu_set_t *mask)
   return -1;
 }
 
+
 /* This only implements the absolute minimum features for
    foreign-library.scm. */
 void *
@@ -1219,44 +1221,44 @@ dlopen_w32 (const char *name, int flags)
   if (name == NULL || *name == '\0')
     return (void *) GetModuleHandle (NULL);
 
-  char *backname = strdup(name);
+  // LoadLibrary expects a wchar_t string that is either an absolute
+  // path using backslashes or is just a filename.
+  size_t len;
+  uint16_t *c_wpath = u8_to_u16 (name, strlen(name) + 1, NULL, &len);
   int relative = 0;
-  for (i = 0; i < strlen(name); i ++)
+  for (size_t i = 0; i < len; i ++)
     {
-      if (backname[i] == '/')
+      if (c_wpath[i] == L'/')
         {
-          backname[i] = '\\';
+          c_wpath[i] = L'\\';
           relative = 1;
         }
-      else if (backname[i] == '\\')
+      // The ':' is because c:foo.dll is also a relative path.
+      else if (c_wpath[i] == L'\\' || c_wpath[i] == L':')
         relative = 1;
     }
-
-  SetErrorMode(0);
   if (relative)
     {
-      // LoadLibraryExA may drop relative paths, so need to make it a full
-      // path.
-      char fullpath[1024];
-      GetFullPathNameA (backname, 1023, fullpath, NULL);
-
-      ret = (void *) LoadLibraryExA (fullpath, NULL,
-                                     LOAD_LIBRARY_SEARCH_DEFAULT_DIRS
-                                     | LOAD_LIBRARY_SEARCH_DLL_LOAD_DIR);
-      printf("LoadLibraryExA %s %p %lu\n", fullpath, ret, GetLastError());
-      if (ret != NULL)
-        GetModuleHandleExA (0, fullpath, (HMODULE *) & ret);
+      wchar_t buffer[4096];
+      DWORD outlen = GetFullPathNameW (c_wpath, 4096, buffer, NULL);
+      if (outlen < 4096)
+        {
+          ret = (void *) LoadLibraryW (buffer);
+          wprintf(L"LoadLibrary %ls %p %lu\n", buffer, ret, GetLastError());
+          if (ret != NULL)
+            GetModuleHandleExW (0, buffer, (HMODULE *) & ret);
+        }
+      else
+        ret = NULL;
     }
   else
     {
-      ret = (void *) LoadLibraryExA (backname, NULL,
-                                     LOAD_LIBRARY_SEARCH_DEFAULT_DIRS
-                                     | LOAD_LIBRARY_SEARCH_DLL_LOAD_DIR);
+      ret = (void *) LoadLibraryW (c_wpath);
+      wprintf(L"LoadLibrary %ls %p %lu\n", c_wpath, ret, GetLastError());
       if (ret != NULL)
-        GetModuleHandleExA (0, backname, (HMODULE *) & ret);
-      printf("LoadLibraryExA %s %p %lu\n", backname, ret, GetLastError());
+        GetModuleHandleExW (0, c_wpath, (HMODULE *) & ret);
     }
-  free (backname);
+  free (c_wpath);
   return ret;
 }
 
@@ -1294,3 +1296,5 @@ dlerror_w32 ()
     snprintf (dlerror_str, DLERROR_LEN, "error %ld: %s", (long) dw, msg_buf);
   return dlerror_str;
 }
+
+
