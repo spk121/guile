@@ -2335,7 +2335,7 @@ SCM_DEFINE (scm_sethostname, "sethostname", 1, 0, 0,
 #endif /* HAVE_SETHOSTNAME */
 
 
-#if HAVE_GETHOSTNAME
+#if HAVE_GETHOSTNAME && 0
 SCM_DEFINE (scm_gethostname, "gethostname", 0, 0, 0, 
             (void),
 	    "Return the host name of the current processor.")
