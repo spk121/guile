@@ -1523,6 +1523,12 @@ scm_from_stringn (const char *str, size_t len, const char *encoding,
 
   if (c_strcasecmp (encoding, "ISO-8859-1") == 0 || len == 0)
     return scm_from_latin1_stringn (str, len);
+#ifdef _WIN32
+  // This is a workaround for code pages unhandled by gnulib's
+  // locale_charset().
+  else if (c_strcasecmp (encoding, "CPUTF-8") == 0)
+    return scm_from_stringn (str, len, "UTF-8", handler);
+#endif
   else if (c_strcasecmp (encoding, "UTF-8") == 0
            && handler == SCM_FAILED_CONVERSION_ERROR)
     return scm_from_utf8_stringn (str, len);
@@ -2199,6 +2205,13 @@ scm_to_stringn (SCM str, size_t *lenp, const char *encoding,
 
   if (encoding == NULL)
     encoding = "ISO-8859-1";
+
+#ifdef _WIN32
+  // This is a workaround for code pages unhandled by gnulib's
+  // locale_charset().
+  if (c_strcasecmp (encoding, "CPUTF-8") == 0)
+    return scm_to_stringn (str, lenp, "UTF-8", handler);
+#endif
 
   if (c_strcasecmp (encoding, "UTF-8") == 0)
     /* This is the most common case--e.g., when calling libc bindings
