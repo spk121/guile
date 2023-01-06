@@ -2314,36 +2314,51 @@ procedure with label @var{rw-init}.  @var{rw-init} may be false.  If
            (words (if rw (+ words 4) words))
            (words (if rw-init (+ words 2) words))
            (words (if frame-maps (+ words 2) words))
-           (bv (make-bytevector (* word-size words) 0))
-           (set-uword!
-            (lambda (i uword)
-              (%set-uword! bv (* i word-size) uword endianness)))
-           (relocs '())
-           (set-label!
-            (lambda (i label)
-              (set! relocs (cons (make-linker-reloc 'reloc-type
-                                                    (* i word-size) 0 label)
-                                 relocs))
-              (%set-uword! bv (* i word-size) 0 endianness))))
-      (set-uword! 0 DT_GUILE_VM_VERSION)
-      (set-uword! 1 (logior (ash *bytecode-major-version* 16)
-                            *bytecode-minor-version*))
-      (set-uword! 2 DT_GUILE_ENTRY)
-      (set-label! 3 '.rtl-text)
-      (when rw
-        ;; Add roots to GC.
-        (set-uword! 4 DT_GUILE_GC_ROOT)
-        (set-label! 5 '.data)
-        (set-uword! 6 DT_GUILE_GC_ROOT_SZ)
-        (set-uword! 7 (bytevector-length (linker-object-bv rw)))
-        (when rw-init
-          (set-uword! 8 DT_INIT)        ; constants
-          (set-label! 9 rw-init)))
-      (when frame-maps
-        (set-uword! (- words 4) DT_GUILE_FRAME_MAPS)
-        (set-label! (- words 3) '.guile.frame-maps))
-      (set-uword! (- words 2) DT_NULL)
-      (set-uword! (- words 1) 0)
+           (bv (make-bytevector (* word-size words) 0)))
+
+      (define relocs
+        ;; This must match the 'set-label!' calls below.
+        (let ((reloc (lambda (i label)
+                       (make-linker-reloc 'reloc-type
+                                          (* i word-size) 0 label))))
+          `(,(reloc 3 '.rtl-text)
+            ,@(if rw
+                  (list (reloc 5 '.data))
+                  '())
+            ,@(if (and rw rw-init)
+                  (list (reloc 9 rw-init))
+                  '())
+            ,@(if frame-maps
+                  (list (reloc (- words 3) '.guile.frame-maps))
+                  '()))))
+
+      (define (write! bv)
+        (define (set-uword! i uword)
+          (%set-uword! bv (* i word-size) uword endianness))
+        (define (set-label! i label)
+          (%set-uword! bv (* i word-size) 0 endianness))
+
+        (set-uword! 0 DT_GUILE_VM_VERSION)
+        (set-uword! 1 (logior (ash *bytecode-major-version* 16)
+                              *bytecode-minor-version*))
+        (set-uword! 2 DT_GUILE_ENTRY)
+        (set-label! 3 '.rtl-text)
+        (when rw
+          ;; Add roots to GC.
+          (set-uword! 4 DT_GUILE_GC_ROOT)
+          (set-label! 5 '.data)
+          (set-uword! 6 DT_GUILE_GC_ROOT_SZ)
+          (set-uword! 7 (bytevector-length (linker-object-bv rw)))
+          (when rw-init
+            (set-uword! 8 DT_INIT)                ; constants
+            (set-label! 9 rw-init)))
+        (when frame-maps
+          (set-uword! (- words 4) DT_GUILE_FRAME_MAPS)
+          (set-label! (- words 3) '.guile.frame-maps))
+        (set-uword! (- words 2) DT_NULL)
+        (set-uword! (- words 1) 0))
+
+      (write! bv)
       (make-object asm '.dynamic bv relocs '()
                    #:type SHT_DYNAMIC #:flags SHF_ALLOC)))
   (case (asm-word-size asm)
