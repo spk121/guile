@@ -2369,21 +2369,28 @@ procedure with label @var{rw-init}.  @var{rw-init} may be false.  If
          (bv (make-bytevector (* n size) 0)))
     (define (intern-string! name)
       (string-table-intern! strtab (if name (symbol->string name) "")))
-    (for-each
-     (lambda (meta n)
-       (let ((name (intern-string! (meta-name meta))))
-         (write-elf-symbol bv (* n size) endianness word-size
-                           (make-elf-symbol
-                            #:name name
-                            ;; Symbol value and size are measured in
-                            ;; bytes, not u32s.
-                            #:value (meta-low-pc meta)
-                            #:size (- (meta-high-pc meta)
-                                      (meta-low-pc meta))
-                            #:type STT_FUNC
-                            #:visibility STV_HIDDEN
-                            #:shndx (elf-section-index text-section)))))
-     meta (iota n))
+    (define names
+      (map (lambda (meta n)
+             (intern-string! (meta-name meta)))
+           meta (iota n)))
+    (define (write-symbols! bv offset)
+      (for-each (lambda (name meta n)
+                  (write-elf-symbol bv (+ offset (* n size))
+                                    endianness word-size
+                                    (make-elf-symbol
+                                     #:name name
+                                     ;; Symbol value and size are measured in
+                                     ;; bytes, not u32s.
+                                     #:value (meta-low-pc meta)
+                                     #:size (- (meta-high-pc meta)
+                                               (meta-low-pc meta))
+                                     #:type STT_FUNC
+                                     #:visibility STV_HIDDEN
+                                     #:shndx (elf-section-index
+                                              text-section))))
+                names meta (iota n)))
+
+    (write-symbols! bv 0)
     (let ((strtab (make-object asm '.strtab
                                (link-string-table! strtab)
                                '() '()
