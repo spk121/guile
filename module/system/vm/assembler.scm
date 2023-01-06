@@ -2262,25 +2262,30 @@ needed."
            (header-pos frame-maps-prefix-len)
            (map-pos (+ header-pos (* count frame-map-header-len)))
            (bv (make-bytevector (+ map-pos map-len) 0)))
-      (bytevector-u32-set! bv 4 map-pos endianness)
-      (let lp ((maps maps) (header-pos header-pos) (map-pos map-pos))
-        (match maps
-          (()
-           (make-object asm '.guile.frame-maps bv
-                        (list (make-linker-reloc 'abs32/1 0 0 '.rtl-text))
-                        '() #:type SHT_PROGBITS #:flags SHF_ALLOC))
-          (((pos proc-slot . map) . maps)
-           (bytevector-u32-set! bv header-pos pos endianness)
-           (bytevector-u32-set! bv (+ header-pos 4) map-pos endianness)
-           (let write-bytes ((map-pos map-pos)
-                             (map map)
-                             (byte-length (map-byte-length proc-slot)))
-             (if (zero? byte-length)
-                 (lp maps (+ header-pos frame-map-header-len) map-pos)
-                 (begin
-                   (bytevector-u8-set! bv map-pos (logand map #xff))
-                   (write-bytes (1+ map-pos) (ash map -8)
-                                (1- byte-length))))))))))
+      (define (write! bv)
+        (bytevector-u32-set! bv 4 map-pos endianness)
+        (let lp ((maps maps) (header-pos header-pos) (map-pos map-pos))
+          (match maps
+            (()
+             #t)
+            (((pos proc-slot . map) . maps)
+             (bytevector-u32-set! bv header-pos pos endianness)
+             (bytevector-u32-set! bv (+ header-pos 4) map-pos endianness)
+             (let write-bytes ((map-pos map-pos)
+                               (map map)
+                               (byte-length (map-byte-length proc-slot)))
+               (if (zero? byte-length)
+                   (lp maps (+ header-pos frame-map-header-len) map-pos)
+                   (begin
+                     (bytevector-u8-set! bv map-pos (logand map #xff))
+                     (write-bytes (1+ map-pos) (ash map -8)
+                                  (1- byte-length)))))))))
+
+      (write! bv)
+      (make-object asm '.guile.frame-maps
+                   bv
+                   (list (make-linker-reloc 'abs32/1 0 0 '.rtl-text))
+                   '() #:type SHT_PROGBITS #:flags SHF_ALLOC)))
   (match (asm-slot-maps asm)
     (() #f)
     (in
