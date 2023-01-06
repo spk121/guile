@@ -1,6 +1,6 @@
 ;;; Guile bytecode assembler
 
-;;; Copyright (C) 2001, 2009-2021 Free Software Foundation, Inc.
+;;; Copyright (C) 2001, 2009-2023 Free Software Foundation, Inc.
 ;;;
 ;;; This library is free software; you can redistribute it and/or
 ;;; modify it under the terms of the GNU Lesser General Public
@@ -2159,40 +2159,55 @@ these may be @code{#f}."
 ;;; Linking program text.
 ;;;
 
-(define (process-relocs buf relocs labels)
+(define (process-relocs relocs labels)
+  "Return a list of linker relocations for references to symbols defined
+outside the text section."
+  (fold (lambda (reloc tail)
+          (match reloc
+            ((type label base offset)
+             (let ((abs (hashq-ref labels label))
+                   (dst (+ base offset)))
+               (case type
+                 ((s32)
+                  (if abs
+                      tail
+                      (cons (make-linker-reloc 'rel32/4 dst offset label)
+                            tail)))
+                 ((x8-s24)
+                  (unless abs
+                    (error "unbound near relocation" reloc))
+                  tail)
+                 (else (error "bad relocation kind" reloc)))))))
+        '()
+        relocs))
+
+(define (patch-relocs! buf relocs labels)
   "Patch up internal x8-s24 relocations, and any s32 relocations that
-reference symbols in the text section.  Return a list of linker
-relocations for references to symbols defined outside the text section."
-  (fold
-   (lambda (reloc tail)
-     (match reloc
-       ((type label base offset)
-        (let ((abs (hashq-ref labels label))
-              (dst (+ base offset)))
-          (case type
-            ((s32)
-             (if abs
-                 (let ((rel (- abs base)))
-                   (unless (zero? (logand rel #x3))
-                     (error "reloc not in 32-bit units!"))
-                   (bytevector-s32-native-set! buf dst (ash rel -2))
-                   tail)
-                 (cons (make-linker-reloc 'rel32/4 dst offset label)
-                       tail)))
-            ((x8-s24)
-             (unless abs
-               (error "unbound near relocation" reloc))
-             (let ((rel (- abs base))
-                   (u32 (bytevector-u32-native-ref buf dst)))
-               (unless (zero? (logand rel #x3))
-                 (error "reloc not in 32-bit units!"))
-               (bytevector-u32-native-set! buf dst
-                                           (pack-u8-s24 (logand u32 #xff)
-                                                        (ash rel -2)))
-               tail))
-            (else (error "bad relocation kind" reloc)))))))
-   '()
-   relocs))
+reference symbols in the text section."
+  (for-each (lambda (reloc)
+              (match reloc
+                ((type label base offset)
+                 (let ((abs (hashq-ref labels label))
+                       (dst (+ base offset)))
+                   (case type
+                     ((s32)
+                      (when abs
+                        (let ((rel (- abs base)))
+                          (unless (zero? (logand rel #x3))
+                            (error "reloc not in 32-bit units!"))
+                          (bytevector-s32-native-set! buf dst (ash rel -2)))))
+                     ((x8-s24)
+                      (unless abs
+                        (error "unbound near relocation" reloc))
+                      (let ((rel (- abs base))
+                            (u32 (bytevector-u32-native-ref buf dst)))
+                        (unless (zero? (logand rel #x3))
+                          (error "reloc not in 32-bit units!"))
+                        (bytevector-u32-native-set! buf dst
+                                                    (pack-u8-s24 (logand u32 #xff)
+                                                                 (ash rel -2)))))
+                     (else (error "bad relocation kind" reloc)))))))
+            relocs))
 
 (define (process-labels labels)
   "Define linker symbols for the label-offset map in @var{labels}.
@@ -2208,9 +2223,10 @@ needed."
     (bytevector-copy! (asm-buf asm) 0 buf 0 (bytevector-length buf))
     (unless (eq? (asm-endianness asm) (native-endianness))
       (byte-swap/4! buf))
+    (patch-relocs! buf (asm-relocs asm) (asm-labels asm))
     (make-object asm '.rtl-text
                  buf
-                 (process-relocs buf (asm-relocs asm)
+                 (process-relocs (asm-relocs asm)
                                  (asm-labels asm))
                  (process-labels (asm-labels asm)))))
 
