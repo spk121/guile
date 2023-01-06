@@ -2684,16 +2684,19 @@ procedure with label @var{rw-init}.  @var{rw-init} may be false.  If
          (docstrings (find-docstrings))
          (strtab (make-string-table))
          (bv (make-bytevector (* (length docstrings) docstr-size) 0)))
-    (fold (lambda (pair pos)
-            (match pair
-              ((pc . string)
-               (bytevector-u32-set! bv pos pc endianness)
-               (bytevector-u32-set! bv (+ pos 4)
-                                    (string-table-intern! strtab string)
-                                    endianness)
-               (+ pos docstr-size))))
-          0
-          docstrings)
+    (define (write-docstrings! bv offset)
+      (fold (lambda (pair pos)
+              (match pair
+                ((pc . string)
+                 (bytevector-u32-set! bv pos pc endianness)
+                 (bytevector-u32-set! bv (+ pos 4)
+                                      (string-table-intern! strtab string)
+                                      endianness)
+                 (+ pos docstr-size))))
+            offset
+            docstrings))
+
+    (write-docstrings! bv 0)
     (let ((strtab (make-object asm '.guile.docstrs.strtab
                                (link-string-table! strtab)
                                '() '()
