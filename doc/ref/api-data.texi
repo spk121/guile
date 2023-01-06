@@ -1,6 +1,6 @@
 @c -*-texinfo-*-
 @c This is part of the GNU Guile Reference Manual.
-@c Copyright (C)  1996, 1997, 2000-2004, 2006-2017, 2019-2020, 2022
+@c Copyright (C)  1996, 1997, 2000-2004, 2006-2017, 2019-2020, 2022-2023
 @c   Free Software Foundation, Inc.
 @c See the file guile.texi for copying conditions.
 
@@ -6673,6 +6673,7 @@ Bytevectors can be used with the binary input/output primitives
 * Bytevectors as Strings::      Interpreting bytes as Unicode strings.
 * Bytevectors as Arrays::       Guile extension to the bytevector API.
 * Bytevectors as Uniform Vectors::  Bytevectors and SRFI-4.
+* Bytevector Slices::           Aliases for parts of a bytevector.
 @end menu
 
 @node Bytevector Endianness
@@ -7107,6 +7108,49 @@ APIs, bytes are accessed one at a time as 8-bit unsigned integers:
 Bytevectors may also be accessed with the SRFI-4 API. @xref{SRFI-4 and
 Bytevectors}, for more information.
 
+
+@node Bytevector Slices
+@subsubsection Bytevector Slices
+
+@cindex subset, of a bytevector
+@cindex slice, of a bytevector
+@cindex slice, of a uniform vector
+As an extension to the R6RS specification, the @code{(rnrs bytevectors
+gnu)} module provides the @code{bytevector-slice} procedure, which
+returns a bytevector aliasing part of an existing bytevector.
+
+@deffn {Scheme Procedure} bytevector-slice @var{bv} @var{offset} [@var{size}]
+@deffnx {C Function} scm_bytevector_slice (@var{bv}, @var{offset}, @var{size})
+Return the slice of @var{bv} starting at @var{offset} and counting
+@var{size} bytes.  When @var{size} is omitted, the slice covers all
+of @var{bv} starting from @var{offset}.  The returned slice shares
+storage with @var{bv}: changes to the slice are visible in @var{bv}
+and vice-versa.
+
+When @var{bv} is actually a SRFI-4 uniform vector, its element
+type is preserved unless @var{offset} and @var{size} are not aligned
+on its element type size.
+@end deffn
+
+Here is an example showing how to use it:
+
+@lisp
+(use-modules (rnrs bytevectors)
+             (rnrs bytevectors gnu))
+
+(define bv (u8-list->bytevector (iota 10)))
+(define slice (bytevector-slice bv 2 3))
+
+slice
+@result{} #vu8(2 3 4)
+
+(bytevector-u8-set! slice 0 77)
+slice
+@result{} #vu8(77 3 4)
+
+bv
+@result{} #vu8(0 1 77 3 4 5 6 7 8 9)
+@end lisp
 
 @node Arrays
 @subsection Arrays

@@ -1,4 +1,4 @@
-/* Copyright 2009-2015,2018-2019
+/* Copyright 2009-2015,2018-2019,2023
      Free Software Foundation, Inc.
 
    This file is part of Guile.
@@ -24,6 +24,7 @@
 
 #include <limits.h>
 #include <byteswap.h>
+#include <intprops.h>
 #include <errno.h>
 #include <striconveh.h>
 #include <uniconv.h>
@@ -324,6 +325,66 @@ scm_c_take_typed_bytevector (signed char *contents, size_t len,
 
   return ret;
 }
+
+SCM_DEFINE (scm_bytevector_slice, "bytevector-slice", 2, 1, 0,
+            (SCM bv, SCM offset, SCM size),
+            "Return the slice of @var{bv} starting at @var{offset} and counting\n"
+            "@var{size} bytes.  When @var{size} is omitted, the slice covers all\n"
+            "of @var{bv} starting from @var{offset}.  The returned slice shares\n"
+            "storage with @var{bv}: changes to the slice are visible in @var{bv}\n"
+            "and vice-versa.\n"
+            "\n"
+            "When @var{bv} is actually a SRFI-4 uniform vector, its element\n"
+            "type is preserved unless @var{offset} and @var{size} are not aligned\n"
+            "on its element type size.\n")
+#define FUNC_NAME s_scm_bytevector_slice
+{
+  SCM ret;
+  size_t c_offset, c_size;
+  scm_t_array_element_type element_type;
+
+  SCM_VALIDATE_BYTEVECTOR (1, bv);
+
+  c_offset = scm_to_size_t (offset);
+
+  if (SCM_UNBNDP (size))
+    {
+      if (c_offset < SCM_BYTEVECTOR_LENGTH (bv))
+        c_size = SCM_BYTEVECTOR_LENGTH (bv) - c_offset;
+      else
+        c_size = 0;
+    }
+  else
+    c_size = scm_to_size_t (size);
+
+  if (INT_ADD_OVERFLOW (c_offset, c_size)
+      || (c_offset + c_size > SCM_BYTEVECTOR_LENGTH (bv)))
+    scm_out_of_range (FUNC_NAME, offset);
+
+  /* Preserve the element type of BV, unless we're not slicing on type
+     boundaries.  */
+  element_type = SCM_BYTEVECTOR_ELEMENT_TYPE (bv);
+  if ((c_offset % SCM_BYTEVECTOR_TYPE_SIZE (bv) != 0)
+      || (c_size % SCM_BYTEVECTOR_TYPE_SIZE (bv) != 0))
+    element_type = SCM_ARRAY_ELEMENT_TYPE_VU8;
+  else
+    c_size /= (scm_i_array_element_type_sizes[element_type] / 8);
+
+  ret = make_bytevector_from_buffer (c_size,
+                                     SCM_BYTEVECTOR_CONTENTS (bv) + c_offset,
+                                     element_type);
+  if (!SCM_MUTABLE_BYTEVECTOR_P (bv))
+    {
+      /* Preserve the immutability property.  */
+      scm_t_bits flags = SCM_BYTEVECTOR_FLAGS (ret);
+      SCM_SET_BYTEVECTOR_FLAGS (ret, flags | SCM_F_BYTEVECTOR_IMMUTABLE);
+    }
+
+  SCM_BYTEVECTOR_SET_PARENT (ret, bv);
+
+  return ret;
+}
+#undef FUNC_NAME
 
 /* Shrink BV to C_NEW_LEN (which is assumed to be smaller than its current
    size) and return the new bytevector (possibly different from BV).  */

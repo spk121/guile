@@ -249,6 +249,7 @@ SOURCES =					\
   rnrs/arithmetic/fixnums.scm			\
   rnrs/arithmetic/flonums.scm			\
   rnrs/bytevectors.scm				\
+  rnrs/bytevectors/gnu.scm			\
   rnrs/io/simple.scm				\
   rnrs/io/ports.scm				\
   rnrs/records/inspection.scm			\

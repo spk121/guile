@@ -65,6 +65,13 @@ IPv6 support; they can be used with `bind'.
 Likewise, the `IPPROTO_IPV6' and `IPV6_V6ONLY' constants are defined,
 for use with `setsockopt'.
 
+** New `bytevector-slice' procedure
+
+As an extension to the R6RS interface, the new (rnrs bytevectors gnu)
+module defines `bytevector-slice', which returns a bytevector that
+aliases part of an existing bytevector.  See "Bytevector Slices" in the
+manual.
+
 ** Disassembler now shows intrinsic names
 
 Disassembler output now includes the name of intrinsics next to each

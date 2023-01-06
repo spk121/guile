@@ -1,7 +1,7 @@
 #ifndef SCM_BYTEVECTORS_H
 #define SCM_BYTEVECTORS_H
 
-/* Copyright 2009,2011,2018
+/* Copyright 2009, 2011, 2018, 2023
      Free Software Foundation, Inc.
 
    This file is part of Guile.
@@ -52,6 +52,7 @@ SCM_API uint8_t scm_c_bytevector_ref (SCM, size_t);
 SCM_API void scm_c_bytevector_set_x (SCM, size_t, uint8_t);
 
 SCM_API SCM scm_make_bytevector (SCM, SCM);
+SCM_API SCM scm_bytevector_slice (SCM, SCM, SCM);
 SCM_API SCM scm_native_endianness (void);
 SCM_API SCM scm_bytevector_p (SCM);
 SCM_API SCM scm_bytevector_length (SCM);

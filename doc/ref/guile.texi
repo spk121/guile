@@ -13,7 +13,7 @@
 @copying
 This manual documents Guile version @value{VERSION}.
 
-Copyright (C) 1996-1997, 2000-2005, 2009-2021 Free Software Foundation,
+Copyright (C) 1996-1997, 2000-2005, 2009-2023 Free Software Foundation,
 Inc. @*
 Copyright (C) 2021 Maxime Devos
 

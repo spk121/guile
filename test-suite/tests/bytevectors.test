@@ -1,6 +1,6 @@
 ;;;; bytevectors.test --- R6RS bytevectors. -*- mode: scheme; coding: utf-8; -*-
 ;;;;
-;;;; Copyright (C) 2009-2015, 2018, 2021 Free Software Foundation, Inc.
+;;;; Copyright (C) 2009-2015, 2018, 2021, 2023 Free Software Foundation, Inc.
 ;;;;
 ;;;; Ludovic Courtès
 ;;;;
@@ -22,6 +22,8 @@
   #:use-module (test-suite lib)
   #:use-module (system base compile)
   #:use-module (rnrs bytevectors)
+  #:use-module (rnrs bytevectors gnu)
+  #:use-module ((system foreign) #:select (sizeof size_t))
   #:use-module (srfi srfi-1)
   #:use-module (srfi srfi-4))
 
@@ -665,6 +667,69 @@
   (pass-if-exception "out-of-range integers"
     exception:out-of-range
     (with-input-from-string "#vu8(0 256)" read)))
+
+
+(with-test-prefix "bytevector-slice"
+
+  (pass-if-exception "wrong size"
+      exception:out-of-range
+    (let ((b #vu8(1 2 3)))
+      (bytevector-slice b 1 3)))
+
+  (pass-if-equal "slices"
+      (list #vu8(1 2) #vu8(2 3)
+            #vu8(1)   #vu8(2) #vu8(3))
+    (let ((b #vu8(1 2 3)))
+      (list (bytevector-slice b 0 2)
+            (bytevector-slice b 1)
+            (bytevector-slice b 0 1)
+            (bytevector-slice b 1 1)
+            (bytevector-slice b 2))))
+
+  (pass-if-exception "immutable flag preserved"
+      exception:wrong-type-arg
+    (compile '(begin
+                (use-modules (rnrs bytevectors)
+                             (rnrs bytevectors gnu))
+
+                ;; The literal bytevector below is immutable.
+                (let ((bv #vu8(1 2 3)))
+                  (bytevector-u8-set! (bytevector-slice bv 1) 0 0)))
+
+             ;; Disable optimizations to invoke the full-blown
+             ;; 'scm_bytevector_u8_set_x' procedure, which checks for
+             ;; the SCM_F_BYTEVECTOR_IMMUTABLE flag.
+             #:optimization-level 0
+             #:to 'value))
+
+  (pass-if-exception "size + offset overflows"
+      exception:out-of-range
+    (let ((size_t-max (expt 2 (* 8 (sizeof size_t)))))
+      ;; Without overflow checks, this would read arbitrary memory.
+      (bytevector-slice #vu8(1 2 3) (- size_t-max 10) 10)))
+
+  (pass-if-equal "slice of f32vector"
+      '(8 2)
+    (let* ((v #f32(1.1 1.2 3.14))
+           (s (bytevector-slice v 4)))
+      (and (= (f32vector-ref s 0)
+              (f32vector-ref v 1))
+           (list (bytevector-length s)
+                 (f32vector-length s)))))
+
+  (pass-if-equal "unaligned offset for f32vector"
+      10
+    (let* ((v #f32(1.1 1.2 3.14))
+           (s (bytevector-slice v 2)))
+      (and (not (f32vector? s))
+           (bytevector-length s))))
+
+  (pass-if-equal "unaligned size for f32vector"
+      1
+    (let* ((v #f32(1.1 1.2 3.14))
+           (s (bytevector-slice v 0 1)))
+      (and (not (f32vector? s))
+           (bytevector-length s)))))
 
 
 (with-test-prefix "Arrays"
