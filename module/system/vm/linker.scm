@@ -1,6 +1,6 @@
 ;;; Guile ELF linker
 
-;; Copyright (C)  2011, 2012, 2013, 2014, 2018 Free Software Foundation, Inc.
+;; Copyright (C)  2011, 2012, 2013, 2014, 2018, 2023 Free Software Foundation, Inc.
 
 ;;;; This library is free software; you can redistribute it and/or
 ;;;; modify it under the terms of the GNU Lesser General Public
@@ -550,9 +550,8 @@ list of objects, augmented with objects for the special ELF sections."
                                             #:type SHT_PROGBITS
                                             #:flags 0
                                             #:size size)))
-      (define (write-and-reloc section-label section relocs)
+      (define (compute-reloc section-label section relocs)
         (let ((offset (* shentsize (elf-section-index section))))
-          (write-elf-section-header bv offset endianness word-size section)
           (if (= (elf-section-type section) SHT_NULL)
               relocs
               (let ((relocs
@@ -572,15 +571,26 @@ list of objects, augmented with objects for the special ELF sections."
                             0
                             section-label)
                           relocs))))))
+
+      (define (write-object-elf-header! bv offset object)
+        (let ((section (linker-object-section object)))
+          (let ((offset (+ offset
+                           (* shentsize (elf-section-index section)))))
+            (write-elf-section-header bv offset endianness word-size section))))
+
+      (for-each (lambda (object)
+                  (write-object-elf-header! bv 0 object))
+                objects)
+
       (let ((relocs (fold-values
                      (lambda (object relocs)
-                       (write-and-reloc
+                       (compute-reloc
                         (linker-symbol-name
                          (linker-object-section-symbol object))
                         (linker-object-section object)
                         relocs))
                      objects
-                     (write-and-reloc shoff-label section-table '()))))
+                     (compute-reloc shoff-label section-table '()))))
         (%make-linker-object #f section-table bv relocs
                              (list (make-linker-symbol shoff-label 0))))))
 
