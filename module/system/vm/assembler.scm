@@ -2744,20 +2744,32 @@ procedure with label @var{rw-init}.  @var{rw-init} may be false.  If
   (let* ((endianness (asm-endianness asm))
          (procprops (find-procprops))
          (bv (make-bytevector (* (length procprops) procprops-size) 0)))
-    (let lp ((procprops procprops) (pos 0) (relocs '()))
-      (match procprops
-        (()
-         (make-object asm '.guile.procprops
-                      bv
-                      relocs '()
-                      #:type SHT_PROGBITS #:flags 0))
-        (((pc . props) . procprops)
-         (bytevector-u32-set! bv pos pc endianness)
-         (lp procprops
-             (+ pos procprops-size)
-             (cons (make-linker-reloc 'abs32/1 (+ pos 4) 0
-                                      (intern-constant asm props))
-                   relocs)))))))
+    (define (write-procprops! bv offset)
+      (let lp ((procprops procprops) (pos offset))
+        (match procprops
+          (()
+           #t)
+          (((pc . props) . procprops)
+           (bytevector-u32-set! bv pos pc endianness)
+           (lp procprops (+ pos procprops-size))))))
+
+    (define relocs
+      (let lp ((procprops procprops) (pos 0) (relocs '()))
+        (match procprops
+          (()
+           relocs)
+          (((pc . props) . procprops)
+           (lp procprops
+               (+ pos procprops-size)
+               (cons (make-linker-reloc 'abs32/1 (+ pos 4) 0
+                                        (intern-constant asm props))
+                     relocs))))))
+
+    (write-procprops! bv 0)
+    (make-object asm '.guile.procprops
+                 bv
+                 relocs '()
+                 #:type SHT_PROGBITS #:flags 0)))
 
 ;;;
 ;;; The DWARF .debug_info, .debug_abbrev, .debug_str, and .debug_loc
