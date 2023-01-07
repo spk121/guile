@@ -66,6 +66,7 @@
 
 (define-module (system vm linker)
   #:use-module (rnrs bytevectors)
+  #:use-module (rnrs bytevectors gnu)
   #:use-module (system foreign)
   #:use-module (system base target)
   #:use-module ((srfi srfi-1) #:select (append-map))
@@ -81,13 +82,15 @@
             linker-object?
             linker-object-name
             linker-object-section
-            linker-object-bv
+            linker-object-size
+            linker-object-writer
             linker-object-relocs
             (linker-object-symbols* . linker-object-symbols)
 
             make-string-table
             string-table-intern!
-            link-string-table!
+            string-table-size
+            string-table-writer
 
             link-elf))
 
@@ -134,20 +137,22 @@
   (address linker-symbol-address))
 
 (define-record-type <linker-object>
-  (%make-linker-object name section bv relocs symbols)
+  (%make-linker-object name section size writer relocs symbols)
   linker-object?
   (name linker-object-name)
   (section linker-object-section)
-  (bv linker-object-bv)
+  (size linker-object-size)
+  (writer linker-object-writer set-linker-object-writer!)
   (relocs linker-object-relocs)
   (symbols linker-object-symbols))
 
-(define (make-linker-object name section bv relocs symbols)
+(define (make-linker-object name section size writer relocs symbols)
   "Create a linker object named @var{name} (a string, or #f for no name),
-@code{<elf-section>} header @var{section}, bytevector contents @var{bv},
+@code{<elf-section>} header @var{section}, its @var{size} in bytes,
+a procedure @code{writer} to write its contents to a bytevector, a
 list of linker relocations @var{relocs}, and list of linker symbols
 @var{symbols}."
-  (%make-linker-object name section bv relocs
+  (%make-linker-object name section size writer relocs
                        ;; Hide a symbol to the beginning of the section
                        ;; in the symbols.
                        (cons (make-linker-symbol (gensym "*section*") 0)
@@ -168,6 +173,10 @@ list of linker relocations @var{relocs}, and list of linker symbols
 (define (make-string-table)
   "Return a string table with one entry: the empty string."
   (%make-string-table '(("" 0 #vu8())) #f))
+
+(define (string-table-size strtab)
+  "Return the size in bytes of the wire representation of @var{strtab}."
+  (string-table-length (string-table-strings strtab)))
 
 (define (string-table-length strings)
   "Return the number of bytes needed for the @var{strings}."
@@ -192,19 +201,19 @@ Returns the byte index of the string in that table."
                                            strings))
           next))))))
 
-(define (link-string-table! table)
-  "Link the functional string table @var{table} into a sequence of
-bytes, suitable for use as the contents of an ELF string table section."
-  (match table
-    (($ <string-table> strings #f)
-     (let ((out (make-bytevector (string-table-length strings) 0)))
-       (for-each
-        (match-lambda
-         ((_ pos bytes)
-          (bytevector-copy! bytes 0 out pos (bytevector-length bytes))))
-        strings)
-       (set-string-table-linked?! table #t)
-       out))))
+(define (string-table-writer table)
+  "Return a <linker-object> \"writer\" procedure that links the string
+table @var{table} into a sequence of bytes, suitable for use as the
+contents of an ELF string table section."
+  (lambda (bv offset)
+    (match table
+      (($ <string-table> strings #f)
+       (for-each (match-lambda
+                   ((_ pos bytes)
+                    (bytevector-copy! bytes 0 bv (+ pos offset)
+                                      (bytevector-length bytes))))
+                 strings)
+       (set-string-table-linked?! table #t)))))
 
 (define (segment-kind section)
   "Return the type of segment needed to store @var{section}, as a pair.
@@ -401,7 +410,8 @@ the segment table using @code{write-segment-header!}."
               (cons (make-linker-object
                      (linker-object-name o)
                      (relocate-section-header section addr)
-                     (linker-object-bv o)
+                     (linker-object-size o)
+                     (linker-object-writer o)
                      (linker-object-relocs o)
                      (linker-object-symbols o))
                     out)
@@ -458,7 +468,6 @@ locations, as given in @var{symtab}."
   (let* ((section (linker-object-section o))
          (offset (elf-section-offset section))
          (len (elf-section-size section))
-         (bytes (linker-object-bv o))
          (relocs (linker-object-relocs o)))
     (if (zero? (logand SHF_ALLOC (elf-section-flags section)))
         (unless (zero? (elf-section-addr section))
@@ -467,9 +476,9 @@ locations, as given in @var{symtab}."
           (error "loadable section has offset != addr" section)))
     (if (not (= (elf-section-type section) SHT_NOBITS))
         (begin
-          (if (not (= len (bytevector-length bytes)))
-              (error "unexpected length" section bytes))
-          (bytevector-copy! bytes 0 bv offset len)
+          (unless (= len (linker-object-size o))
+            (error "unexpected length" section o))
+          ((linker-object-writer o) bv offset)
           (for-each (lambda (reloc)
                       (process-reloc reloc bv offset symtab endianness))
                     relocs)))))
@@ -515,7 +524,7 @@ list of objects, augmented with objects for the special ELF sections."
     (make-linker-object ""
                         (make-elf-section #:index 0 #:type SHT_NULL
                                           #:flags 0 #:addralign 0)
-                        #vu8() '() '()))
+                        0 (lambda (bv offset) #t) '() '()))
 
   ;; The ELF header and the segment table.
   ;;
@@ -529,15 +538,15 @@ list of objects, augmented with objects for the special ELF sections."
                                            (elf-header-shoff-offset word-size)
                                            0
                                            shoff-label))
-           (size (+ phoff (* phnum phentsize)))
-           (bv (make-bytevector size 0)))
-      (write-elf-header bv header)
+           (size (+ phoff (* phnum phentsize))))
       ;; Leave the segment table uninitialized; it will be filled in
       ;; later by calls to the write-segment-header! closure.
       (make-linker-object #f
                           (make-elf-section #:index index #:type SHT_PROGBITS
                                             #:flags SHF_ALLOC #:size size)
-                          bv
+                          size
+                          (lambda (bv offset)
+                            (write-elf-header (bytevector-slice bv offset) header))
                           (list shoff-reloc)
                           '())))
 
@@ -545,7 +554,6 @@ list of objects, augmented with objects for the special ELF sections."
   ;;
   (define (make-footer objects shoff-label)
     (let* ((size (* shentsize shnum))
-           (bv (make-bytevector size 0))
            (section-table (make-elf-section #:index (length objects)
                                             #:type SHT_PROGBITS
                                             #:flags 0
@@ -578,10 +586,6 @@ list of objects, augmented with objects for the special ELF sections."
                            (* shentsize (elf-section-index section)))))
             (write-elf-section-header bv offset endianness word-size section))))
 
-      (for-each (lambda (object)
-                  (write-object-elf-header! bv 0 object))
-                objects)
-
       (let ((relocs (fold-values
                      (lambda (object relocs)
                        (compute-reloc
@@ -591,7 +595,14 @@ list of objects, augmented with objects for the special ELF sections."
                         relocs))
                      objects
                      (compute-reloc shoff-label section-table '()))))
-        (%make-linker-object #f section-table bv relocs
+        (%make-linker-object #f section-table size
+                             (lambda (bv offset)
+                               (for-each (lambda (object)
+                                           (write-object-elf-header! bv
+                                                                     offset
+                                                                     object))
+                                         objects))
+                             relocs
                              (list (make-linker-symbol shoff-label 0))))))
 
   (let* ((null-section (make-null-section))
@@ -602,7 +613,8 @@ list of objects, augmented with objects for the special ELF sections."
          (objects (cons header objects))
 
          (footer (make-footer objects shoff))
-         (objects (cons footer objects)))
+         (objects (cons footer objects))
+         (segments '()))
 
     ;; The header includes the segment table, which needs offsets and
     ;; sizes of the segments.  Normally we would use relocs to rewrite
@@ -611,16 +623,27 @@ list of objects, augmented with objects for the special ELF sections."
     ;; between two symbols, and it's probably a bad idea architecturally
     ;; to create one.
     ;;
-    ;; So instead we return a closure to patch up the segment table.
-    ;; Normally we'd shy away from such destructive interfaces, but it's
-    ;; OK as we create the header section ourselves.
-    ;;
-    (define (write-segment-header! segment)
-      (let ((bv (linker-object-bv header))
-            (offset (+ phoff (* (elf-segment-index segment) phentsize))))
-        (write-elf-program-header bv offset endianness word-size segment)))
+    ;; So instead change HEADER's writer to patch up the segment table.
+    (define (add-header-segment! segment)
+      (set! segments (cons segment segments)))
 
-    (values write-segment-header! objects)))
+    (define write-header!
+      (linker-object-writer header))
+
+    (define (write-header+segments! bv offset)
+      (for-each (lambda (segment)
+                  (let ((offset (+ offset
+                                   phoff
+                                   (* (elf-segment-index segment) phentsize))))
+                    (write-elf-program-header bv offset
+                                              endianness
+                                              word-size
+                                              segment)))
+                segments)
+      (write-header! bv offset))
+
+    (set-linker-object-writer! header write-header+segments!)
+    (values add-header-segment! objects)))
 
 (define (record-special-segments write-segment-header! phidx all-objects)
   (let lp ((phidx phidx) (objects all-objects))
@@ -735,7 +758,7 @@ Returns a bytevector."
   (receive (size objects symtab)
       (allocate-elf objects page-aligned? endianness word-size
                     abi type machine-type)
-    (let ((bv (make-bytevector size 0)))
+    (let ((bv (make-bytevector size 0)))       ;TODO: Remove allocation.
       (for-each
        (lambda (object)
          (write-linker-object bv object symtab endianness))
