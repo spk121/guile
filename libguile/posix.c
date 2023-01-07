@@ -78,6 +78,7 @@
 #include "threads.h"
 #include "values.h"
 #include "vectors.h"
+#include "verify.h"
 #include "version.h"
 
 #if (SCM_ENABLE_DEPRECATED == 1)
@@ -95,6 +96,13 @@
 #ifndef WIFEXITED
 # define WIFEXITED(stat_val) (((stat_val) & 255) == 0)
 #endif
+
+#ifndef W_EXITCODE
+/* Macro for constructing a status value.  Found in glibc.  */
+# define W_EXITCODE(ret, sig)   ((ret) << 8 | (sig))
+#endif
+verify (WEXITSTATUS (W_EXITCODE (127, 0)) == 127);
+
 
 #include <signal.h>
 
@@ -1309,125 +1317,6 @@ SCM_DEFINE (scm_fork, "primitive-fork", 0, 0, 0,
 #undef FUNC_NAME
 #endif /* HAVE_FORK */
 
-#ifdef HAVE_FORK
-/* 'renumber_file_descriptor' is a helper function for 'start_child'
-   below, and is specialized for that particular environment where it
-   doesn't make sense to report errors via exceptions.  It uses dup(2)
-   to duplicate the file descriptor FD, closes the original FD, and
-   returns the new descriptor.  If dup(2) fails, print an error message
-   to ERR and abort.  */
-static int
-renumber_file_descriptor (int fd, int err)
-{
-  int new_fd;
-
-  do
-    new_fd = dup (fd);
-  while (new_fd == -1 && errno == EINTR);
-
-  if (new_fd == -1)
-    {
-      /* At this point we are in the child process before exec.  We
-         cannot safely raise an exception in this environment.  */
-      const char *msg = strerror (errno);
-      fprintf (fdopen (err, "a"), "start_child: dup failed: %s\n", msg);
-      _exit (127);  /* Use exit status 127, as with other exec errors. */
-    }
-
-  close (fd);
-  return new_fd;
-}
-#endif /* HAVE_FORK */
-
-#ifdef HAVE_FORK
-#define HAVE_START_CHILD 1
-/* Since Guile uses threads, we have to be very careful to avoid calling
-   functions that are not async-signal-safe in the child.  That's why
-   this function is implemented in C.  */
-static pid_t
-start_child (const char *exec_file, char **exec_argv,
-	     int reading, int c2p[2], int writing, int p2c[2],
-             int in, int out, int err)
-{
-  int pid;
-  int max_fd = 1024;
-
-#if defined (HAVE_GETRLIMIT) && defined (RLIMIT_NOFILE)
-  {
-    struct rlimit lim = { 0, 0 };
-    if (getrlimit (RLIMIT_NOFILE, &lim) == 0)
-      max_fd = lim.rlim_cur;
-  }
-#endif
-
-  pid = fork ();
-
-  if (pid != 0)
-    /* The parent, with either and error (pid == -1), or the PID of the
-       child.  Return directly in either case.  */
-    return pid;
-
-  /* The child.  */
-  if (reading)
-    close (c2p[0]);
-  if (writing)
-    close (p2c[1]);
-
-  /* Close all file descriptors in ports inherited from the parent
-     except for in, out, and err.  Heavy-handed, but robust.  */
-  while (max_fd--)
-    if (max_fd != in && max_fd != out && max_fd != err)
-      close (max_fd);
-
-  /* Ignore errors on these open() calls.  */
-  if (in == -1)
-    in = open ("/dev/null", O_RDONLY);
-  if (out == -1)
-    out = open ("/dev/null", O_WRONLY);
-  if (err == -1)
-    err = open ("/dev/null", O_WRONLY);
-
-  if (in > 0)
-    {
-      if (out == 0)
-        out = renumber_file_descriptor (out, err);
-      if (err == 0)
-        err = renumber_file_descriptor (err, err);
-      do dup2 (in, 0); while (errno == EINTR);
-      close (in);
-    }
-  if (out > 1)
-    {
-      if (err == 1)
-        err = renumber_file_descriptor (err, err);
-      do dup2 (out, 1); while (errno == EINTR);
-      if (out > 2)
-        close (out);
-    }
-  if (err > 2)
-    {
-      do dup2 (err, 2); while (errno == EINTR);
-      close (err);
-    }
-
-  execvp (exec_file, exec_argv);
-
-  /* The exec failed!  There is nothing sensible to do.  */
-  {
-    const char *msg = strerror (errno);
-    fprintf (fdopen (2, "a"), "In execvp of %s: %s\n",
-             exec_file, msg);
-  }
-
-  /* Use exit status 127, like shells in this case, as per POSIX
-     <http://pubs.opengroup.org/onlinepubs/007904875/utilities/xcu_chap02.html#tag_02_09_01_01>.  */
-  _exit (127);
-
-  /* Not reached.  */
-  return -1;
-}
-#endif
-
 static pid_t
 do_spawn (char *exec_file, char **exec_argv, char **exec_env,
           int in, int out, int err, int spawnp)
@@ -1578,18 +1467,18 @@ SCM_DEFINE (scm_spawn_process, "spawn", 2, 0, 1,
 }
 #undef FUNC_NAME
 
-#ifdef HAVE_START_CHILD
-static SCM
-scm_piped_process (SCM prog, SCM args, SCM from, SCM to)
+#ifdef HAVE_FORK
+static int
+piped_process (pid_t *pid, SCM prog, SCM args, SCM from, SCM to)
 #define FUNC_NAME "piped-process"
 {
   int reading, writing;
   int c2p[2]; /* Child to parent.  */
   int p2c[2]; /* Parent to child.  */
   int in = -1, out = -1, err = -1;
-  int pid;
   char *exec_file;
   char **exec_argv;
+  char **exec_env = environ;
 
   exec_file = scm_to_locale_string (prog);
   exec_argv = scm_i_allocate_string_pointers (scm_cons (prog, args));
@@ -1622,31 +1511,57 @@ scm_piped_process (SCM prog, SCM args, SCM from, SCM to)
       in = SCM_FPORT_FDES (port);
   }
 
-  pid = start_child (exec_file, exec_argv, reading, c2p, writing, p2c,
-                     in, out, err);
-
-  if (pid == -1)
-    {
-      int errno_save = errno;
-      free (exec_file);
-      if (reading)
-        {
-          close (c2p[0]);
-          close (c2p[1]);
-        }
-      if (writing)
-        {
-          close (p2c[0]);
-          close (p2c[1]);
-        }
-      errno = errno_save;
-      SCM_SYSERROR;
-    }
+  *pid = do_spawn (exec_file, exec_argv, exec_env, in, out, err, 1);
+  int errno_save = (*pid < 0) ? errno : 0;
 
   if (reading)
     close (c2p[1]);
   if (writing)
     close (p2c[0]);
+
+  if (*pid == -1)
+    switch (errno_save)
+      {
+        /* Errors that seemingly come from fork.  */
+      case EAGAIN:
+      case ENOMEM:
+      case ENOSYS:
+        errno = err;
+        free (exec_file);
+        SCM_SYSERROR;
+        break;
+
+      default:    /* ENOENT, etc. */
+        /* Report the error on the console (before switching to
+           'posix_spawn', the child process would do exactly that.)  */
+        dprintf (err, "In execvp of %s: %s\n", exec_file,
+                 strerror (errno_save));
+      }
+
+  free (exec_file);
+
+  return errno_save;
+}
+#undef FUNC_NAME
+
+static SCM
+scm_piped_process (SCM prog, SCM args, SCM from, SCM to)
+#define FUNC_NAME "piped-process"
+{
+  pid_t pid;
+
+  (void) piped_process (&pid, prog, args, from, to);
+  if (pid == -1)
+    {
+      /* Create a dummy process that exits with value 127 to mimic the
+         previous fork + exec implementation.  TODO: This is a
+         compatibility shim to remove in the next stable series.  */
+      pid = fork ();
+      if (pid == -1)
+        SCM_SYSERROR;
+      if (pid == 0)
+        _exit (127);
+    }
 
   return scm_from_int (pid);
 }
@@ -1693,8 +1608,9 @@ SCM_DEFINE (scm_system_star, "system*", 0, 0, 1,
 "Example: (system* \"echo\" \"foo\" \"bar\")")
 #define FUNC_NAME s_scm_system_star
 {
-  SCM prog, pid;
-  int status, wait_result;
+  SCM prog;
+  pid_t pid;
+  int err, status, wait_result;
 
   if (scm_is_null (args))
     SCM_WRONG_NUM_ARGS ();
@@ -1712,17 +1628,27 @@ SCM_DEFINE (scm_system_star, "system*", 0, 0, 1,
                          SCM_UNDEFINED);
 #endif
 
-  pid = scm_piped_process (prog, args, SCM_UNDEFINED, SCM_UNDEFINED);
-  SCM_SYSCALL (wait_result = waitpid (scm_to_int (pid), &status, 0));
-  if (wait_result == -1)
-    SCM_SYSERROR;
+  err = piped_process (&pid, prog, args,
+                       SCM_UNDEFINED, SCM_UNDEFINED);
+  if (err != 0)
+    /* ERR might be ENOENT or similar.  For backward compatibility with
+       the previous implementation based on fork + exec, pretend the
+       child process exited with code 127.  TODO: Remove this
+       compatibility shim in the next stable series.  */
+    status = W_EXITCODE (127, 0);
+  else
+    {
+      SCM_SYSCALL (wait_result = waitpid (pid, &status, 0));
+      if (wait_result == -1)
+        SCM_SYSERROR;
+    }
 
   scm_dynwind_end ();
 
   return scm_from_int (status);
 }
 #undef FUNC_NAME
-#endif /* HAVE_START_CHILD */
+#endif /* HAVE_FORK */
 
 #ifdef HAVE_UNAME
 SCM_DEFINE (scm_uname, "uname", 0, 0, 0,
@@ -2568,13 +2494,13 @@ SCM_DEFINE (scm_gethostname, "gethostname", 0, 0, 0,
 #endif /* HAVE_GETHOSTNAME */
 
 
-#ifdef HAVE_START_CHILD
+#ifdef HAVE_FORK
 static void
 scm_init_popen (void)
 {
   scm_c_define_gsubr ("piped-process", 2, 2, 0, scm_piped_process);
 }
-#endif /* HAVE_START_CHILD */
+#endif /* HAVE_FORK */
 
 void
 scm_init_posix ()
@@ -2692,8 +2618,6 @@ scm_init_posix ()
 
 #ifdef HAVE_FORK
   scm_add_feature ("fork");
-#endif	/* HAVE_FORK */
-#ifdef HAVE_START_CHILD
   scm_add_feature ("popen");
   scm_c_register_extension ("libguile-" SCM_EFFECTIVE_VERSION,
                             "scm_init_popen",

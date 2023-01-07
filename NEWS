@@ -24,6 +24,10 @@ robust, and more efficient than the combination of `primitive-fork' and
 paper entitled "A fork() in the road" (Andrew Baumann et al.) for
 background information.
 
+`system*', as well as the `open-pipe' and `pipeline' procedures of
+(ice-9 popen) are now implemented in terms of `posix_spawn' as well,
+which fixes bugs such as redirects: <https://bugs.gnu.org/52835>.
+
 ** `open-file' now supports an "e" flag for O_CLOEXEC
 
 Until now, the high-level `open-file' facility did not provide a way to
@@ -93,6 +97,8 @@ Disassembler output now includes the name of intrinsics next to each
 ** Fix documentation of ‘mkdir’
    Previously, the documentation implied the umask was ignored if the
    mode was set explicitly.  However, this is not the case.
+** 'system*' honors output/error port redirects
+   (https://bugs.gnu.org/52835)
 
 
 Changes in 3.0.8 (since 3.0.7)
