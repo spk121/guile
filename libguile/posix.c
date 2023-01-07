@@ -1,4 +1,4 @@
-/* Copyright 1995-2014, 2016-2019, 2021-2022
+/* Copyright 1995-2014, 2016-2019, 2021-2023
      Free Software Foundation, Inc.
    Copyright 2021 Maxime Devos <maximedevos@telenet.be>
 
@@ -33,6 +33,7 @@
 #include <sys/types.h>
 #include <uniconv.h>
 #include <unistd.h>
+#include <spawn.h>
 
 #ifdef HAVE_SCHED_H
 # include <sched.h>
@@ -63,6 +64,7 @@
 #include "fports.h"
 #include "gettext.h"
 #include "gsubr.h"
+#include "keywords.h"
 #include "list.h"
 #include "modules.h"
 #include "numbers.h"
@@ -1426,6 +1428,156 @@ start_child (const char *exec_file, char **exec_argv,
 }
 #endif
 
+static pid_t
+do_spawn (char *exec_file, char **exec_argv, char **exec_env,
+          int in, int out, int err, int spawnp)
+{
+  pid_t pid = -1;
+
+  posix_spawn_file_actions_t actions;
+  posix_spawnattr_t *attrp = NULL;
+
+  int max_fd = 1024;
+
+#if defined (HAVE_GETRLIMIT) && defined (RLIMIT_NOFILE)
+  {
+    struct rlimit lim = { 0, 0 };
+    if (getrlimit (RLIMIT_NOFILE, &lim) == 0)
+      max_fd = lim.rlim_cur;
+  }
+#endif
+
+  posix_spawn_file_actions_init (&actions);
+
+  int free_fd_slots = 0;
+  int fd_slot[3];
+
+  for (int fdnum = 3;free_fd_slots < 3 && fdnum < max_fd;fdnum++)
+    {
+      if (fdnum != in && fdnum != out && fdnum != err)
+        {
+          fd_slot[free_fd_slots] = fdnum;
+          free_fd_slots++;
+        }
+    }
+
+  /* Move the fds out of the way, so that duplicate fds or fds equal
+     to 0, 1, 2 don't trample each other */
+
+  posix_spawn_file_actions_adddup2 (&actions, in, fd_slot[0]);
+  posix_spawn_file_actions_adddup2 (&actions, out, fd_slot[1]);
+  posix_spawn_file_actions_adddup2 (&actions, err, fd_slot[2]);
+  posix_spawn_file_actions_adddup2 (&actions, fd_slot[0], 0);
+  posix_spawn_file_actions_adddup2 (&actions, fd_slot[1], 1);
+  posix_spawn_file_actions_adddup2 (&actions, fd_slot[2], 2);
+
+  while (--max_fd > 2)
+    posix_spawn_file_actions_addclose (&actions, max_fd);
+
+  int res = -1;
+  if (spawnp)
+    res = posix_spawnp (&pid, exec_file, &actions, attrp,
+                        exec_argv, exec_env);
+  else
+    res = posix_spawn (&pid, exec_file, &actions, attrp,
+                       exec_argv, exec_env);
+  if (res != 0)
+    return -1;
+
+  return pid;
+}
+
+SCM_KEYWORD (kw_environment, "environment");
+SCM_KEYWORD (kw_input, "input");
+SCM_KEYWORD (kw_output, "output");
+SCM_KEYWORD (kw_error, "error");
+SCM_KEYWORD (kw_search_path, "search-path?");
+
+SCM_DEFINE (scm_spawn_process, "spawn", 2, 0, 1,
+            (SCM program, SCM arguments, SCM keyword_args),
+            "Spawn a new child process executing @var{program} with the\n"
+            "given @var{arguments}, a list of one or more strings (by\n"
+            "convention, the first argument is typically @var{program}),\n"
+            "and return its PID.  Raise a @code{system-error} exception if\n"
+            "@var{program} could not be found or could not be executed.\n\n"
+            "If the keyword argument @code{#:search-path?} is true, it\n"
+            "selects whether the @env{PATH} environment variable should be\n"
+            "inspected to find @var{program}.  It is true by default.\n\n"
+            "The @code{#:environment} keyword parameter specifies the\n"
+            "list of environment variables of the child process.  It\n"
+            "defaults to @code{(environ)}.\n\n"
+            "The keyword arguments @code{#:input}, @code{#:output}, and\n"
+            "@code{#:error} specify the port or file descriptor for the\n"
+            "child process to use as standard input, standard output, and\n"
+            "standard error.  No other file descriptors are inherited\n"
+            "from the parent process.\n")
+#define FUNC_NAME s_scm_spawn_process
+{
+  SCM env, in_scm, out_scm, err_scm, use_path;
+  int pid = -1;
+  char *exec_file, **exec_argv, **exec_env;
+  int in, out, err;
+
+  /* In theory 'exec' accepts zero arguments, but programs are typically
+     not prepared for that and POSIX says: "The value in argv[0] should
+     point to a filename string that is associated with the process
+     image being started" (see
+     <https://pubs.opengroup.org/onlinepubs/9699919799/functions/posix_spawn.html>). */
+  SCM_VALIDATE_NONEMPTYLIST (1, arguments);
+
+  env = SCM_UNDEFINED;
+  in_scm = SCM_UNDEFINED;
+  out_scm = SCM_UNDEFINED;
+  err_scm = SCM_UNDEFINED;
+  use_path = SCM_BOOL_T;
+
+  scm_c_bind_keyword_arguments (FUNC_NAME, keyword_args, 0,
+                                kw_environment, &env,
+                                kw_input, &in_scm,
+                                kw_output, &out_scm,
+                                kw_error, &err_scm,
+                                kw_search_path, &use_path,
+                                SCM_UNDEFINED);
+
+  scm_dynwind_begin (0);
+
+  exec_file = scm_to_locale_string (program);
+  scm_dynwind_free (exec_file);
+
+  exec_argv = scm_i_allocate_string_pointers (arguments);
+
+  if (SCM_UNBNDP (env))
+    exec_env = environ;
+  else
+    exec_env = scm_i_allocate_string_pointers (env);
+
+  if (SCM_UNBNDP (in_scm))
+    in_scm = scm_current_input_port ();
+  if (SCM_UNBNDP (out_scm))
+    out_scm = scm_current_output_port ();
+  if (SCM_UNBNDP (err_scm))
+    err_scm = scm_current_error_port ();
+
+#define FDES_FROM_PORT_OR_INTEGER(obj)                                  \
+  (scm_is_integer (obj) ? scm_to_int (obj) : SCM_FPORT_FDES (obj))
+
+  in  = FDES_FROM_PORT_OR_INTEGER (in_scm);
+  out = FDES_FROM_PORT_OR_INTEGER (out_scm);
+  err = FDES_FROM_PORT_OR_INTEGER (err_scm);
+
+#undef FDES_FROM_PORT_OR_INTEGER
+
+  pid = do_spawn (exec_file, exec_argv, exec_env,
+                  in, out, err, scm_to_bool (use_path));
+  if (pid == -1)
+    SCM_SYSERROR;
+
+  scm_dynwind_end ();
+
+  return scm_from_int (pid);
+}
+#undef FUNC_NAME
+
 #ifdef HAVE_START_CHILD
 static SCM
 scm_piped_process (SCM prog, SCM args, SCM from, SCM to)
@@ -2547,5 +2699,5 @@ scm_init_posix ()
                             "scm_init_popen",
 			    (scm_t_extension_init_func) scm_init_popen,
 			    NULL);
-#endif /* HAVE_START_CHILD */
+#endif /* HAVE_FORK */
 }

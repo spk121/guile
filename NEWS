@@ -1,5 +1,5 @@
 Guile NEWS --- history of user-visible changes.
-Copyright (C) 1996-2022 Free Software Foundation, Inc.
+Copyright (C) 1996-2023 Free Software Foundation, Inc.
 See the end for copying conditions.
 
 Please send Guile bug reports to bug-guile@gnu.org.
@@ -10,6 +10,19 @@ Changes in 3.0.9 (since 3.0.8)
 * Notable changes
 
 * New interfaces and functionality
+
+** New `spawn' procedure to spawn child processes
+
+The new `spawn' procedure creates a child processes executing the given
+program.  It lets you control the environment variables of that process
+and redirect its standard input, standard output, and standard error
+streams.
+
+Being implemented in terms of `posix_spawn', it is more portable, more
+robust, and more efficient than the combination of `primitive-fork' and
+`execl'.  See "Processes" in the manual for details, and see the 2019
+paper entitled "A fork() in the road" (Andrew Baumann et al.) for
+background information.
 
 ** `open-file' now supports an "e" flag for O_CLOEXEC
 

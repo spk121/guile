@@ -2045,14 +2045,66 @@ safe to call after a multithreaded fork, which is a very limited set.
 Guile issues a warning if it detects a fork from a multi-threaded
 program.
 
-If you are going to @code{exec} soon after forking, the procedures in
-@code{(ice-9 popen)} may be useful to you, as they fork and exec within
-an async-signal-safe function carefully written to ensure robust program
-behavior, even in the presence of threads.  @xref{Pipes}, for more.
+@quotation Note
+If you are looking to spawn a process with some pipes set up, using the
+@code{spawn} procedure described below will be more robust (in
+particular in multi-threaded contexts), more portable, and usually more
+efficient than the combination of @code{primitive-fork} and
+@code{execl}.
+
+@c Recommended reading: ``A fork() in the road'', HotOS 2019,
+@c <https://dx.doi.org/10.1145/3317550.3321435> (paywalled :-/).
+@end quotation
 
 This procedure has been renamed from @code{fork} to avoid a naming conflict
 with the scsh fork.
 @end deffn
+
+@deffn {Scheme Procedure} spawn @var{program} @var{arguments} @
+       [#:environment=(environ)] @
+       [#:input=(current-input-port)] @
+       [#:output=(current-output-port)] @
+       [#:error=(current-error-port)] @
+       [#:search-path?=#t]
+Spawn a new child process executing @var{program} with the
+given @var{arguments}, a list of one or more strings (by
+convention, the first argument is typically @var{program}),
+and return its PID.  Raise a @code{system-error} exception if
+@var{program} could not be found or could not be executed.
+
+If the keyword argument @code{#:search-path?} is true, it
+selects whether the @env{PATH} environment variable should be
+inspected to find @var{program}.  It is true by default.
+
+The @code{#:environment} keyword parameter specifies the
+list of environment variables of the child process.  It
+defaults to @code{(environ)}.
+
+The keyword arguments @code{#:input}, @code{#:output}, and
+@code{#:error} specify the port or file descriptor for the
+child process to use as standard input, standard output, and
+standard error.  No other file descriptors are inherited
+from the parent process.
+@end deffn
+
+The example below shows how to spawn the @command{uname} program with
+the @option{-o} option (@pxref{uname invocation,,, coreutils, GNU
+Coreutils}), redirect its standard output to a pipe, and read from it:
+
+@lisp
+(use-modules (rnrs io ports))
+
+(let* ((input+output (pipe))
+       (pid (spawn "uname" '("uname" "-o")
+                    #:output (cdr input+output))))
+  (close-port (cdr input+output))
+  (format #t "read ~s~%" (get-string-all (car input+output)))
+  (close-port (car input+output))
+  (waitpid pid))
+
+@print{} read "GNU/Linux\n"
+@result{} (1234 . 0)
+@end lisp
 
 @deffn {Scheme Procedure} nice incr
 @deffnx {C Function} scm_nice (incr)

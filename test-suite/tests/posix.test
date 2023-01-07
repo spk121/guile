@@ -1,6 +1,6 @@
 ;;;; posix.test --- Test suite for Guile POSIX functions. -*- scheme -*-
 ;;;;
-;;;; Copyright 2003-2004, 2006-2007, 2010, 2012, 2015, 2017-2019, 2021-2022
+;;;; Copyright 2003-2004, 2006-2007, 2010, 2012, 2015, 2017-2019, 2021-2023
 ;;;;   Free Software Foundation, Inc.
 ;;;; Copyright 2021 Maxime Devos <maximedevos@telenet.be>
 ;;;;
@@ -19,7 +19,8 @@
 ;;;; Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
 (define-module (test-suite test-posix)
-  :use-module (test-suite lib))
+  #:use-module (test-suite lib)
+  #:use-module ((rnrs io ports) #:select (get-string-all)))
 
 
 ;; FIXME: The following exec tests are disabled since on an i386 debian with
@@ -358,6 +359,80 @@
     ;; segfault, leading to a wrong exit code.
     (parameterize ((current-output-port (current-error-port)))
       (status:exit-val (system* "something-that-does-not-exist")))))
+
+;;
+;; spawn
+;;
+
+(with-test-prefix "spawn"
+
+  (pass-if-equal "basic"
+      0
+    (cdr (waitpid (spawn "true" '("true")))))
+
+  (pass-if-equal "uname with stdout redirect"
+      (list 0                                     ;exit value
+            (string-append (utsname:sysname (uname)) " "
+                           (utsname:machine (uname)) "\n"))
+    (let* ((input+output (pipe))
+           (pid (spawn "uname" '("uname" "-s" "-m")
+                       #:output (cdr input+output))))
+      (close-port (cdr input+output))
+      (let ((str (get-string-all (car input+output))))
+        (close-port (car input+output))
+        (list (cdr (waitpid pid)) str))))
+
+  (pass-if-equal "wc with stdin and stdout redirects"
+      "2\n"
+    (let* ((a+b (pipe))
+           (c+d (pipe))
+           (pid (spawn "wc" '("wc" "-w")
+                       #:input (car a+b)
+                       #:output (cdr c+d))))
+      (close-port (car a+b))
+      (close-port (cdr c+d))
+
+      (display "Hello world.\n" (cdr a+b))
+      (close-port (cdr a+b))
+
+      (let ((str (get-string-all (car c+d))))
+        (close-port (car c+d))
+        (waitpid pid)
+        str)))
+
+  (pass-if-equal "env with #:environment and #:output"
+      "GNU=guile\n"
+    (let* ((input+output (pipe))
+           (pid (spawn "env" '("env")
+                       #:environment '("GNU=guile")
+                       #:output (cdr input+output))))
+      (close-port (cdr input+output))
+      (let ((str (get-string-all (car input+output))))
+        (close-port (car input+output))
+        (waitpid pid)
+        str)))
+
+  (pass-if-equal "ls /proc/self/fd"
+      "0\n1\n2\n3\n"                     ;fourth FD is for /proc/self/fd
+    (if (file-exists? "/proc/self/fd")   ;Linux
+        (let* ((input+output (pipe))
+               (pid (spawn "ls" '("ls" "/proc/self/fd")
+                           #:output (cdr input+output))))
+          (close-port (cdr input+output))
+          (let ((str (get-string-all (car input+output))))
+            (close-port (car input+output))
+            (waitpid pid)
+            str))
+        (throw 'unresolved)))
+
+  (pass-if-equal "file not found"
+      ENOENT
+    (catch 'system-error
+      (lambda ()
+        (spawn "this-does-not-exist" '("nope")
+               #:search-path? #f))
+      (lambda args
+        (system-error-errno args)))))
 
 ;;
 ;; crypt
