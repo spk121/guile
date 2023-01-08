@@ -46,8 +46,8 @@
            (endianness (target-endianness))
            (sec (make-object 1 name
                              (bytevector-length bytes)
-                             (lambda (bv offset)
-                               (bytevector-copy! bytes 0 bv offset
+                             (lambda (bv)
+                               (bytevector-copy! bytes 0 bv 0
                                                  (bytevector-length
                                                   bytes)))
                              '()))

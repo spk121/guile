@@ -205,12 +205,12 @@ Returns the byte index of the string in that table."
   "Return a <linker-object> \"writer\" procedure that links the string
 table @var{table} into a sequence of bytes, suitable for use as the
 contents of an ELF string table section."
-  (lambda (bv offset)
+  (lambda (bv)
     (match table
       (($ <string-table> strings #f)
        (for-each (match-lambda
                    ((_ pos bytes)
-                    (bytevector-copy! bytes 0 bv (+ pos offset)
+                    (bytevector-copy! bytes 0 bv pos
                                       (bytevector-length bytes))))
                  strings)
        (set-string-table-linked?! table #t)))))
@@ -478,7 +478,7 @@ locations, as given in @var{symtab}."
         (begin
           (unless (= len (linker-object-size o))
             (error "unexpected length" section o))
-          ((linker-object-writer o) bv offset)
+          ((linker-object-writer o) (bytevector-slice bv offset len))
           (for-each (lambda (reloc)
                       (process-reloc reloc bv offset symtab endianness))
                     relocs)))))
@@ -524,7 +524,7 @@ list of objects, augmented with objects for the special ELF sections."
     (make-linker-object ""
                         (make-elf-section #:index 0 #:type SHT_NULL
                                           #:flags 0 #:addralign 0)
-                        0 (lambda (bv offset) #t) '() '()))
+                        0 (lambda (bv) #t) '() '()))
 
   ;; The ELF header and the segment table.
   ;;
@@ -545,8 +545,8 @@ list of objects, augmented with objects for the special ELF sections."
                           (make-elf-section #:index index #:type SHT_PROGBITS
                                             #:flags SHF_ALLOC #:size size)
                           size
-                          (lambda (bv offset)
-                            (write-elf-header (bytevector-slice bv offset) header))
+                          (lambda (bv)
+                            (write-elf-header bv header))
                           (list shoff-reloc)
                           '())))
 
@@ -580,10 +580,9 @@ list of objects, augmented with objects for the special ELF sections."
                             section-label)
                           relocs))))))
 
-      (define (write-object-elf-header! bv offset object)
+      (define (write-object-elf-header! bv object)
         (let ((section (linker-object-section object)))
-          (let ((offset (+ offset
-                           (* shentsize (elf-section-index section)))))
+          (let ((offset (* shentsize (elf-section-index section))))
             (write-elf-section-header bv offset endianness word-size section))))
 
       (let ((relocs (fold-values
@@ -596,10 +595,9 @@ list of objects, augmented with objects for the special ELF sections."
                      objects
                      (compute-reloc shoff-label section-table '()))))
         (%make-linker-object #f section-table size
-                             (lambda (bv offset)
+                             (lambda (bv)
                                (for-each (lambda (object)
                                            (write-object-elf-header! bv
-                                                                     offset
                                                                      object))
                                          objects))
                              relocs
@@ -630,17 +628,16 @@ list of objects, augmented with objects for the special ELF sections."
     (define write-header!
       (linker-object-writer header))
 
-    (define (write-header+segments! bv offset)
+    (define (write-header+segments! bv)
       (for-each (lambda (segment)
-                  (let ((offset (+ offset
-                                   phoff
+                  (let ((offset (+ phoff
                                    (* (elf-segment-index segment) phentsize))))
                     (write-elf-program-header bv offset
                                               endianness
                                               word-size
                                               segment)))
                 segments)
-      (write-header! bv offset))
+      (write-header! bv))
 
     (set-linker-object-writer! header write-header+segments!)
     (values add-header-segment! objects)))
