@@ -71,6 +71,7 @@
   #:use-module (system base target)
   #:use-module ((srfi srfi-1) #:select (append-map))
   #:use-module (srfi srfi-9)
+  #:use-module (ice-9 binary-ports)
   #:use-module (ice-9 receive)
   #:use-module (ice-9 vlist)
   #:use-module (ice-9 match)
@@ -446,16 +447,16 @@ symbol, as present in @var{symtab}."
           (let ((diff (+ (- target offset) (linker-reloc-addend reloc))))
             (unless (zero? (modulo diff 4))
               (error "Bad offset" reloc symbol offset))
-            (bytevector-s32-set! bv offset (/ diff 4) endianness)))
+            (bytevector-s32-set! bv (- offset section-offset) (/ diff 4) endianness)))
          ((rel32/1)
           (let ((diff (- target offset)))
-            (bytevector-s32-set! bv offset
+            (bytevector-s32-set! bv (- offset section-offset)
                                  (+ diff (linker-reloc-addend reloc))
                                  endianness)))
          ((abs32/1)
-          (bytevector-u32-set! bv offset target endianness))
+          (bytevector-u32-set! bv (- offset section-offset) target endianness))
          ((abs64/1)
-          (bytevector-u64-set! bv offset target endianness))
+          (bytevector-u64-set! bv (- offset section-offset) target endianness))
          (else
           (error "bad reloc type" reloc)))))))
 
@@ -478,7 +479,7 @@ locations, as given in @var{symtab}."
         (begin
           (unless (= len (linker-object-size o))
             (error "unexpected length" section o))
-          ((linker-object-writer o) (bytevector-slice bv offset len))
+          ((linker-object-writer o) bv)
           (for-each (lambda (reloc)
                       (process-reloc reloc bv offset symtab endianness))
                     relocs)))))
@@ -755,9 +756,56 @@ Returns a bytevector."
   (receive (size objects symtab)
       (allocate-elf objects page-aligned? endianness word-size
                     abi type machine-type)
-    (let ((bv (make-bytevector size 0)))       ;TODO: Remove allocation.
-      (for-each
-       (lambda (object)
-         (write-linker-object bv object symtab endianness))
-       objects)
-      bv)))
+    ;; XXX: When PAGE-ALIGNED? is false, assume the caller expects to
+    ;; see a bytevector.  Otherwise return a procedure that will write
+    ;; the ELF stream to the given port.
+    (if (not page-aligned?)
+        (let ((bv (make-bytevector size 0)))
+          (for-each
+           (lambda (object)
+             (let* ((section (linker-object-section object))
+                    (offset (elf-section-offset section))
+                    (len (elf-section-size section)))
+               (write-linker-object (bytevector-slice bv offset len)
+                                    object symtab endianness)))
+           objects)
+          bv)
+        (lambda (port)
+          (define write-padding
+            (let ((blank (make-bytevector 4096 0)))
+              (lambda (port size)
+                ;; Write SIZE bytes of padding to PORT.
+                (let loop ((size size))
+                  (unless (zero? size)
+                    (let ((count (min size
+                                      (bytevector-length blank))))
+                     (put-bytevector port blank 0 count)
+                     (loop (- size count))))))))
+
+          (define (compute-padding objects)
+            ;; Return the list of padding in between OBJECTS--the list
+            ;; of sizes of padding to be inserted before each object.
+            (define object-offset
+              (compose elf-section-offset linker-object-section))
+
+            (let loop ((objects objects)
+                       (offset  0)
+                       (result '()))
+              (match objects
+                (()
+                 (reverse result))
+                ((object . tail)
+                 (loop tail
+                       (+ (linker-object-size object)
+                          (object-offset object))
+                       (cons (- (object-offset object) offset)
+                             result))))))
+
+          (for-each
+           (lambda (object padding)
+             (let ((bv (make-bytevector (linker-object-size object) 0)))
+               (write-padding port padding)
+               (write-linker-object bv object symtab endianness)
+               (put-bytevector port bv)))
+           objects
+           (compute-padding objects))))))

@@ -55,6 +55,7 @@
            ;; sections adds entries to the string table.
            (shstrtab (make-shstrtab)))
       (link-elf (list sec shstrtab)
+                #:page-aligned? #f                ;return a bytevector
                 #:endianness endianness #:word-size word-size))))
 
 (with-test-prefix "simple"
