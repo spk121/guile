@@ -22,6 +22,7 @@
   :use-module ((system vm vm) :select (call-with-stack-overflow-handler))
   :use-module ((system vm frame) :select (frame-call-representation))
   :use-module (ice-9 documentation)
+  :use-module (ice-9 exceptions)
   :use-module (ice-9 local-eval))
 
 
@@ -387,7 +388,27 @@
       (and (eq? (car (frame-call-representation (car frames)))
                 'make-stack)
            (eq? (car (frame-call-representation (car (last-pair frames))))
-                'with-exception-handler)))))
+                'with-exception-handler))))
+
+  (pass-if "avoid frame-local-ref out of range"
+    (with-exception-handler
+        (lambda (ex)
+          ;; If frame-call-representation fails, we'll catch that
+          ;; instead of the expected "Wrong type to apply" error.
+          (string-prefix? "Wrong type to apply" (exception-message ex)))
+      (lambda ()
+        (with-exception-handler
+            (lambda (ex)
+              (let* ((stack (make-stack #t))
+                     (frames (stack->frames stack)))
+                (for-each frame-call-representation frames))
+              (raise-exception ex))
+          (lambda ()
+            ;; This throws a "Wrong type to apply" error, creating a
+            ;; frame with an incorrect number of local slots as
+            ;; described in bug <https://bugs.gnu.org/56493>.
+            (primitive-eval '(define foo (#t))))))
+      #:unwind? #t)))
 
 ;;;
 ;;; letrec init evaluation
