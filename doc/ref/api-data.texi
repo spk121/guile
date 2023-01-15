@@ -6635,14 +6635,15 @@ and writing.
 @cindex bytevector
 @cindex R6RS
 
-A @dfn{bytevector} is a raw bit string.  The @code{(rnrs bytevectors)}
+A @dfn{bytevector} is a raw byte string.  The @code{(rnrs bytevectors)}
 module provides the programming interface specified by the
 @uref{http://www.r6rs.org/, Revised^6 Report on the Algorithmic Language
 Scheme (R6RS)}.  It contains procedures to manipulate bytevectors and
-interpret their contents in a number of ways: bytevector contents can be
-accessed as signed or unsigned integer of various sizes and endianness,
-as IEEE-754 floating point numbers, or as strings.  It is a useful tool
-to encode and decode binary data.
+interpret their contents in a number of ways: as signed or unsigned
+integer of various sizes and endianness, as IEEE-754 floating point
+numbers, or as strings.  It is a useful tool to encode and decode binary
+data.  The @ref{R7RS Support,R7RS} offers its own set of bytevector
+procedures (@pxref{Bytevector Procedures in R7RS}).
 
 The R6RS (Section 4.3.4) specifies an external representation for
 bytevectors, whereby the octets (integers in the range 0--255) contained
@@ -6673,6 +6674,7 @@ Bytevectors can be used with the binary input/output primitives
 * Bytevectors as Strings::      Interpreting bytes as Unicode strings.
 * Bytevectors as Arrays::       Guile extension to the bytevector API.
 * Bytevectors as Uniform Vectors::  Bytevectors and SRFI-4.
+* Bytevector Procedures in R7RS:: R7RS interface for bytevectors.
 * Bytevector Slices::           Aliases for parts of a bytevector.
 @end menu
 
@@ -6722,6 +6724,7 @@ The objects denoting big- and little-endianness, respectively.
 Bytevectors can be created, copied, and analyzed with the following
 procedures and C functions.
 
+@anchor{x-make-bytevector}
 @deffn {Scheme Procedure} make-bytevector len [fill]
 @deffnx {C Function} scm_make_bytevector (len, fill)
 @deffnx {C Function} scm_c_make_bytevector (size_t len)
@@ -6730,6 +6733,7 @@ is given, fill it with @var{fill}; @var{fill} must be in the range
 [-128,255].
 @end deffn
 
+@anchor{x-bytevector?}
 @deffn {Scheme Procedure} bytevector? obj
 @deffnx {C Function} scm_bytevector_p (obj)
 Return true if @var{obj} is a bytevector.
@@ -6739,6 +6743,7 @@ Return true if @var{obj} is a bytevector.
 Equivalent to @code{scm_is_true (scm_bytevector_p (obj))}.
 @end deftypefn
 
+@anchor{x-bytevector-length}
 @deffn {Scheme Procedure} bytevector-length bv
 @deffnx {C Function} scm_bytevector_length (bv)
 Return the length in bytes of bytevector @var{bv}.
@@ -6750,31 +6755,33 @@ Likewise, return the length in bytes of bytevector @var{bv}.
 
 @deffn {Scheme Procedure} bytevector=? bv1 bv2
 @deffnx {C Function} scm_bytevector_eq_p (bv1, bv2)
-Return is @var{bv1} equals to @var{bv2}---i.e., if they have the same
+Return @code{#t} if @var{bv1} equals @var{bv2}---i.e., if they have the same
 length and contents.
 @end deffn
 
 @deffn {Scheme Procedure} bytevector-fill! bv fill [start [end]]
 @deffnx {C Function} scm_bytevector_fill_x (bv, fill)
 Fill positions [@var{start} ... @var{end}) of bytevector @var{bv} with
-byte @var{fill}. @var{start} defaults to 0 and @var{end} defaults to the
-length of @var{bv}.@footnote{R6RS defines @code{(bytevector-fill! bv
-fill)}. Arguments @var{start} and @var{end} are a Guile extension
+byte @var{fill}.  @var{start} defaults to 0 and @var{end} defaults to the
+length of @var{bv}.@footnote{R6RS only defines @code{(bytevector-fill! bv
+fill)}.  Arguments @var{start} and @var{end} are a Guile extension
 (cf. @ref{x-vector-fill!,@code{vector-fill!}},
 @ref{x-string-fill!,@code{string-fill!}}).}
 @end deffn
 
+@anchor{x-r6:bytevector-copy!}
 @deffn {Scheme Procedure} bytevector-copy! source source-start target target-start len
 @deffnx {C Function} scm_bytevector_copy_x (source, source_start, target, target_start, len)
 Copy @var{len} bytes from @var{source} into @var{target}, starting
-reading from @var{source-start} (a positive index within @var{source})
+reading from @var{source-start} (an index index within @var{source})
 and writing at @var{target-start}.
 
 It is permitted for the @var{source} and @var{target} regions to
-overlap. In that case, copying takes place as if the source is first
+overlap.  In that case, copying takes place as if the source is first
 copied into a temporary bytevector and then into the destination.
 @end deffn
 
+@anchor{x-r6:bytevector-copy}
 @deffn {Scheme Procedure} bytevector-copy bv
 @deffnx {C Function} scm_bytevector_copy (bv)
 Return a newly allocated copy of @var{bv}.
@@ -6852,6 +6859,7 @@ Set the @var{size}-byte long signed integer at @var{index} to
 The following procedures are similar to the ones above, but specialized
 to a given integer size:
 
+@anchor{x-bytevector-u8-ref}
 @deffn {Scheme Procedure} bytevector-u8-ref bv index
 @deffnx {Scheme Procedure} bytevector-s8-ref bv index
 @deffnx {Scheme Procedure} bytevector-u16-ref bv index endianness
@@ -6873,6 +6881,7 @@ Return the unsigned @var{n}-bit (signed) integer (where @var{n} is 8,
 @var{endianness}.
 @end deffn
 
+@anchor{x-bytevector-u8-set!}
 @deffn {Scheme Procedure} bytevector-u8-set! bv index value
 @deffnx {Scheme Procedure} bytevector-s8-set! bv index value
 @deffnx {Scheme Procedure} bytevector-u16-set! bv index value endianness
@@ -6952,6 +6961,7 @@ Return a newly allocated list of unsigned 8-bit integers from the
 contents of @var{bv}.
 @end deffn
 
+@anchor{x-u8-list->bytevector}
 @deffn {Scheme Procedure} u8-list->bytevector lst
 @deffnx {C Function} scm_u8_list_to_bytevector (lst)
 Return a newly allocated bytevector consisting of the unsigned 8-bit
@@ -7109,6 +7119,87 @@ Bytevectors may also be accessed with the SRFI-4 API. @xref{SRFI-4 and
 Bytevectors}, for more information.
 
 
+@node Bytevector Procedures in R7RS
+@subsubsection Bytevector Procedures in R7RS
+
+The @ref{R7RS Support,R7RS} (Section 6.9) defines a set of
+bytevector manipulation procedures, accessible with
+
+@example
+(use-modules (scheme base))
+@end example
+
+Of these, @ref{x-make-bytevector,@code{make-bytevector}},
+@ref{x-bytevector?,@code{bytevector?}},
+@ref{x-bytevector-length,@code{bytevector-length}},
+@ref{x-bytevector-u8-ref,@code{bytevector-u8-ref}} and
+@ref{x-bytevector-u8-set!,@code{bytevector-u8-set!}} have the same
+definition as in R6RS.  The procedures listed below either have a
+different definition in R7RS and R6RS, or are not defined in R6RS.
+
+@deffn {Scheme Procedure} bytevector arg @dots{}
+Return a newly allocated bytevector composed of the given arguments.
+Analogous to @code{list}.
+
+@lisp
+(bytevector 2 3 4) @result{} #vu8(2 3 4)
+@end lisp
+
+See also @ref{x-u8-list->bytevector,@code{u8-list->bytevector}}.
+@end deffn
+
+@anchor{x-r7:bytevector-copy}
+@deffn {Scheme Procedure} bytevector-copy bv [start [end]]
+Returns a newly allocated bytevector containing the elements of @var{bv}
+in the range [@var{start} ... @var{end}).  @var{start} defaults to 0 and
+@var{end} defaults to the length of @var{bv}.
+
+@lisp
+(define bv #vu8(0 1 2 3 4 5))
+(bytevector-copy bv) @result{} #vu8(0 1 2 3 4 5)
+(bytevector-copy bv 2) @result{} #vu8(2 3 4 5)
+(bytevector-copy bv 2 4) @result{} #vu8(2 3)
+@end lisp
+
+See also @ref{x-r6:bytevector-copy,the R6RS version}.
+@end deffn
+
+@anchor{x-r7:bytevector-copy!}
+@deffn {Scheme Procedure} bytevector-copy! dst at src [start [end]]
+Copy the block of elements from bytevector @var{src} in the range
+[@var{start} ... @var{end}) into bytevector @var{dst}, starting at
+position @var{at}.  @var{start} defaults to 0 and @var{end} defaults to
+the length of @var{src}.  It is an error for @var{dst}
+to have a length less than @var{at} + (@var{end} - @var{start}).
+
+See also @ref{x-r6:bytevector-copy!,the R6RS version}.  With
+
+@lisp
+(use-modules ((rnrs bytevectors) #:prefix r6:)
+             ((scheme base) #:prefix r7:))
+@end lisp
+
+the following calls are equivalent:
+
+@lisp
+(r6:bytevector-copy! source source-start target target-start len)
+(r7:bytevector-copy! target target-start source source-start (+ source-start len))
+@end lisp
+
+@end deffn
+
+@rnindex bytevector-append
+@deffn {Scheme Procedure} bytevector-append arg @dots{}
+Return a newly allocated bytevector whose characters form the
+concatenation of the given bytevectors @var{arg} @enddots{}
+
+@lisp
+(bytevector-append #vu8(0 1 2) #vu8(3 4 5))
+@result{} #vu8(0 1 2 3 4 5)
+@end lisp
+@end deffn
+
+
 @node Bytevector Slices
 @subsubsection Bytevector Slices
 
@@ -7151,6 +7242,7 @@ slice
 bv
 @result{} #vu8(0 1 77 3 4 5 6 7 8 9)
 @end lisp
+
 
 @node Arrays
 @subsection Arrays

@@ -150,12 +150,14 @@ some different kind of port, that's not the case: all ports in Guile are
 both binary and textual ports.
 
 @cindex binary input
+@anchor{x-get-u8}
 @deffn {Scheme Procedure} get-u8 port
 @deffnx {C Function} scm_get_u8 (port)
 Return an octet read from @var{port}, an input port, blocking as
 necessary, or the end-of-file object.
 @end deffn
 
+@anchor{x-lookahead-u8}
 @deffn {Scheme Procedure} lookahead-u8 port
 @deffnx {C Function} scm_lookahead_u8 (port)
 Like @code{get-u8} but does not update @var{port}'s position to point
@@ -227,6 +229,7 @@ will be read again in last-in first-out order.
 To perform binary output on a port, use @code{put-u8} or
 @code{put-bytevector}.
 
+@anchor{x-put-u8}
 @deffn {Scheme Procedure} put-u8 port octet
 @deffnx {C Function} scm_put_u8 (port, octet)
 Write @var{octet}, an integer in the 0--255 range, to @var{port}, a
@@ -237,6 +240,124 @@ binary output port.
 @deffnx {C Function} scm_put_bytevector (port, bv, start, count)
 Write the contents of @var{bv} to @var{port}, optionally starting at
 index @var{start} and limiting to @var{count} octets.
+@end deffn
+
+@subsubheading Binary I/O in R7RS
+
+@ref{R7RS Standard Libraries,R7RS} defines the following binary I/O
+procedures.  Access them with
+
+@example
+(use-modules (scheme base))
+@end example
+
+@anchor{x-open-output-bytevector}
+@deffn {Scheme Procedure} open-output-bytevector
+Returns a binary output port that will accumulate bytes
+for retrieval by @ref{x-get-output-bytevector,@code{get-output-bytevector}}.
+@end deffn
+
+@deffn {Scheme Procedure} write-u8 byte [out]
+Writes @var{byte} to the given binary output port @var{out} and returns
+an unspecified value.  @var{out} defaults to @code{(current-output-port)}.
+
+See also @ref{x-put-u8,@code{put-u8}}.
+@end deffn
+
+@deffn {Scheme Procedure} read-u8 [in]
+Returns the next byte available from the binary input port @var{in},
+updating the port to point to the following byte.  If no more bytes are
+available, an end-of-file object is returned.  @var{in} defaults to
+@code{(current-input-port)}.
+
+See also @ref{x-get-u8,@code{get-u8}}.
+@end deffn
+
+@deffn {Scheme Procedure} peek-u8 [in]
+Returns the next byte available from the binary input port @var{in},
+but without updating the port to point to the following
+byte.  If no more bytes are available, an end-of-file object
+is returned.  @var{in} defaults to @code{(current-input-port)}.
+
+See also @ref{x-lookahead-u8,@code{lookahead-u8}}.
+@end deffn
+
+@anchor{x-get-output-bytevector}
+@deffn {Scheme Procedure} get-output-bytevector port
+Returns a bytevector consisting of the bytes that have been output to
+@var{port} so far in the order they were output.  It is an error if
+@var{port} was not created with
+@ref{x-open-output-bytevector,@code{open-output-bytevector}}.
+
+@example
+(define out (open-output-bytevector))
+(write-u8 1 out)
+(write-u8 2 out)
+(write-u8 3 out)
+(get-output-bytevector out) @result{} #vu8(1 2 3)
+@end example
+@end deffn
+
+@deffn {Scheme Procedure} open-input-bytevector bv
+Takes a bytevector @var{bv} and returns a binary input port that
+delivers bytes from @var{bv}.
+
+@example
+(define in (open-input-bytevector #vu8(1 2 3)))
+(read-u8 in) @result{} 1
+(peek-u8 in) @result{} 2
+(read-u8 in) @result{} 2
+(read-u8 in) @result{} 3
+(read-u8 in) @result{} #<eof>
+@end example
+@end deffn
+
+@deffn {Scheme Procedure} read-bytevector! bv [port [start [end]]]
+Reads the next @var{end} - @var{start} bytes, or as many as are
+available before the end of file, from the binary input port into the
+bytevector @var{bv} in left-to-right order beginning at the @var{start}
+position.  If @var{end} is not supplied, reads until the end of @var{bv}
+has been reached.  If @var{start} is not supplied, reads beginning at
+position 0.
+
+Returns the number of bytes read.  If no bytes are available, an
+end-of-file object is returned.
+
+@example
+(define in (open-input-bytevector #vu8(1 2 3)))
+(define bv (make-bytevector 5 0))
+(read-bytevector! bv in 1 3) @result{} 2
+bv @result{} #vu8(0 1 2 0 0 0)
+@end example
+
+@end deffn
+
+@deffn {Scheme Procedure} read-bytevector k in
+Reads the next @var{k} bytes, or as many as are available before the end
+of file if that is less than @var{k}, from the binary input port
+@var{in} into a newly allocated bytevector in left-to-right order, and
+returns the bytevector.  If no bytes are available before the end of
+file, an end-of-file object is returned.
+
+@example
+(define bv #vu8(1 2 3))
+(read-bytevector 2 (open-input-bytevector bv)) @result{} #vu8(1 2)
+(read-bytevector 10 (open-input-bytevector bv)) @result{} #vu8(1 2 3)
+@end example
+
+@end deffn
+
+@deffn {Scheme Procedure} write-bytevector bv [port [start [end]]]
+Writes the bytes of bytevector @var{bv} from @var{start} to @var{end} in
+left-to-right order to the binary output @var{port}.  @var{start}
+defaults to 0 and @var{end} defaults to the length of @var{bv}.
+
+@example
+(define out (open-output-bytevector))
+(write-bytevector #vu8(0 1 2 3 4) out 2 4)
+(get-output-bytevector out) @result{} #vu8(2 3)
+@end example
+
 @end deffn
 
 @node Encoding

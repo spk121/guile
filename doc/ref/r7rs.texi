@@ -8,9 +8,9 @@
 @section R7RS Support
 @cindex R7RS
 
-The R7RS standard is essentially R5RS (directly supported by Guile),
-plus a module facility, plus an organization of bindings into a standard
-set of modules.
+The @uref{https://small.r7rs.org/,R7RS} standard is essentially R5RS
+(directly supported by Guile), plus a module facility, plus an
+organization of bindings into a standard set of modules.
 
 Happily, the syntax for R7RS modules was chosen to be compatible with
 R6RS, and so Guile's documentation there applies.  @xref{R6RS
