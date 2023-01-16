@@ -904,7 +904,7 @@ AC_CACHE_VAL(guile_cv_localtime_cache,
 AC_RUN_IFELSE([AC_LANG_SOURCE([[#include <time.h>
 #include <stdlib.h>
 extern char **environ;
-unset_TZ ()
+int unset_TZ ()
 {
   char **from, **to;
   for (to = from = environ; (*to = *from); from++)
@@ -913,7 +913,7 @@ unset_TZ ()
 }
 char TZ_GMT0[] = "TZ=GMT0";
 char TZ_PST8[] = "TZ=PST8";
-main()
+int main()
 {
   time_t now = time ((time_t *) 0);
   int hour_GMT0, hour_unset;
