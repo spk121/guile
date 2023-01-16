@@ -1,6 +1,6 @@
 ;;; open-coding primitive procedures
 
-;; Copyright (C) 2009-2015, 2017-2022 Free Software Foundation, Inc.
+;; Copyright (C) 2009-2015, 2017-2023 Free Software Foundation, Inc.
 
 ;;;; This library is free software; you can redistribute it and/or
 ;;;; modify it under the terms of the GNU Lesser General Public
@@ -471,8 +471,8 @@
     (make-primcall src 'make-vector (list len (make-const src *unspecified*))))
    ((src len init)
     (make-primcall src 'make-vector (list len init)))
-   ((src . args)
-    (make-call src (make-primitive-ref src 'make-vector) args))))
+   ((src . args)                              ;wrong number of arguments
+    #f)))
 
 (define-primitive-expander caar (x) (car (car x)))
 (define-primitive-expander cadr (x) (car (cdr x)))

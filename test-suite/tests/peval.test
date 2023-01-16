@@ -1,7 +1,7 @@
 ;;;; tree-il.test --- test suite for compiling tree-il   -*- scheme -*-
 ;;;; Andy Wingo <wingo@pobox.com> --- May 2009
 ;;;;
-;;;; 	Copyright (C) 2009-2014, 2017, 2020, 2022 Free Software Foundation, Inc.
+;;;; 	Copyright (C) 2009-2014, 2017, 2020, 2022-2023 Free Software Foundation, Inc.
 ;;;;
 ;;;; This library is free software; you can redistribute it and/or
 ;;;; modify it under the terms of the GNU Lesser General Public
@@ -1445,7 +1445,16 @@
                   (primcall + (const 1) (lexical n _))))))
              (call (lexical add1 _)
                    (const 1)
-                   (const 2))))))))
+                   (const 2)))))))
+
+  (pass-if-peval (make-vector 123 x)
+    (primcall make-vector (const 123) (toplevel x)))
+
+  (pass-if-peval (make-vector)
+    ;; This used to trigger an infinite loop between
+    ;; 'resolve-primitives' and 'expand-primcall':
+    ;; <https://bugs.gnu.org/60522>.
+    (primcall make-vector)))
 
 (with-test-prefix "eqv?"
   (pass-if-peval (eqv? x #f)
