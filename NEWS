@@ -77,6 +77,12 @@ manual.
 Disassembler output now includes the name of intrinsics next to each
 `call-' instruction (info "(guile) Intrinsic Call Instructions").
 
+** Linker and assembler consume less memory
+
+Previously, the entire output ELF file contents would be stored in
+memory when compiling as with `guild compile'.  This is no longer the
+case.
+
 * Bug fixes
 
 ** Type sizes are correctly determined when cross-compiling
@@ -96,11 +102,11 @@ Disassembler output now includes the name of intrinsics next to each
 ** (web http) capitalizes the "Basic" authorization header
 ** (web http) terminates chunked encoding with an extra \r\n
 ** (web client) retries TLS handshake upon non-fatal errors
-   (<https://bugs.gnu.org/49223>)
+   (https://bugs.gnu.org/49223)
 ** 'primitive-load' opens files as O_CLOEXEC
-   (<https://bugs.gnu.org/57567>)
+   (https://bugs.gnu.org/57567)
 ** Baseline compiler no longer crashes on (not (list 1 2))
-   (<https://bugs.gnu.org/58217>)
+   (https://bugs.gnu.org/58217)
 ** Fix documentation of ‘mkdir’
    Previously, the documentation implied the umask was ignored if the
    mode was set explicitly.  However, this is not the case.
@@ -108,6 +114,10 @@ Disassembler output now includes the name of intrinsics next to each
    (https://bugs.gnu.org/52835)
 ** 'open-input-pipe' & co. are now much faster
    (https://bugs.gnu.org/59321)
+** Fix crash with out-of-bound indexes with `string-ref' and `fluid-ref*'
+   (https://bugs.gnu.org/60488, https://bugs.gnu.org/58154)
+** Fix infinite loop when compiling (make-vector)
+   (https://bugs.gnu.org/60522)
 
 
 Changes in 3.0.8 (since 3.0.7)
