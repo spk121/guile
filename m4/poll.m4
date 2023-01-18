@@ -1,5 +1,5 @@
-# poll.m4 serial 20
-dnl Copyright (c) 2003, 2005-2007, 2009-2022 Free Software Foundation, Inc.
+# poll.m4 serial 21
+dnl Copyright (c) 2003, 2005-2007, 2009-2023 Free Software Foundation, Inc.
 dnl This file is free software; the Free Software Foundation
 dnl gives unlimited permission to copy and/or distribute it,
 dnl with or without modifications, as long as this notice is preserved.
@@ -15,7 +15,7 @@ AC_DEFUN([gl_FUNC_POLL],
   else
     AC_CHECK_FUNC([poll],
       [# Check whether poll() works on special files (like /dev/null) and
-       # and ttys (like /dev/tty). On Mac OS X 10.4.0 and AIX 5.3, it doesn't.
+       # and ttys (like /dev/tty). On macOS 10.15 and AIX 5.3, it doesn't.
        AC_RUN_IFELSE([AC_LANG_SOURCE([[
 #include <fcntl.h>
 #include <poll.h>
@@ -76,7 +76,7 @@ This is MacOSX or AIX
   fi
 
   dnl Determine the needed libraries.
-  LIB_POLL="$LIBSOCKET"
+  POLL_LIB="$LIBSOCKET"
   if test $HAVE_POLL = 0 || test $REPLACE_POLL = 1; then
     case "$host_os" in
       mingw*)
@@ -94,10 +94,13 @@ main ()
   return 0;
 }]])],
           [],
-          [LIB_POLL="$LIB_POLL -luser32"])
+          [POLL_LIB="$POLL_LIB -luser32"])
         ;;
     esac
   fi
+  AC_SUBST([POLL_LIB])
+  dnl For backward compatibility.
+  LIB_POLL="$POLL_LIB"
   AC_SUBST([LIB_POLL])
 ])
 

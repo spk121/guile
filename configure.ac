@@ -3,7 +3,7 @@ dnl   Process this file with autoconf to produce configure.
 dnl
 
 define(GUILE_CONFIGURE_COPYRIGHT,[[
-Copyright 1998-2022 Free Software Foundation, Inc.
+Copyright 1998-2023 Free Software Foundation, Inc.
 
 This file is part of Guile.
 
@@ -62,6 +62,7 @@ AC_CANONICAL_HOST
 
 AC_PROG_INSTALL
 AC_PROG_CC
+gl_EARLY
 
 AC_MSG_CHECKING([whether the compiler supports -flto])
 old_CFLAGS="$CFLAGS"
@@ -121,7 +122,6 @@ if ! test -f ".tarball-version"; then
   fi
 fi
 
-gl_EARLY
 AC_PROG_CPP
 AC_PROG_SED
 AC_PROG_AWK

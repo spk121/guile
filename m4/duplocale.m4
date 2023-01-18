@@ -1,5 +1,5 @@
-# duplocale.m4 serial 12
-dnl Copyright (C) 2009-2022 Free Software Foundation, Inc.
+# duplocale.m4 serial 14
+dnl Copyright (C) 2009-2023 Free Software Foundation, Inc.
 dnl This file is free software; the Free Software Foundation
 dnl gives unlimited permission to copy and/or distribute it,
 dnl with or without modifications, as long as this notice is preserved.
@@ -111,12 +111,15 @@ int main ()
     HAVE_DUPLOCALE=0
   fi
   if test $REPLACE_DUPLOCALE = 1; then
-    LIB_DUPLOCALE="$LIB_SETLOCALE_NULL"
+    DUPLOCALE_LIB="$SETLOCALE_NULL_LIB"
   else
-    LIB_DUPLOCALE=
+    DUPLOCALE_LIB=
   fi
-  dnl LIB_DUPLOCALE is expected to be '-pthread' or '-lpthread' on AIX
+  dnl DUPLOCALE_LIB is expected to be '-pthread' or '-lpthread' on AIX
   dnl with gcc or xlc, and empty otherwise.
+  AC_SUBST([DUPLOCALE_LIB])
+  dnl For backward compatibility.
+  LIB_DUPLOCALE="$DUPLOCALE_LIB"
   AC_SUBST([LIB_DUPLOCALE])
 ])
 

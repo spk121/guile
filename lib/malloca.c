@@ -1,5 +1,5 @@
 /* Safe automatic memory allocation.
-   Copyright (C) 2003, 2006-2007, 2009-2022 Free Software Foundation, Inc.
+   Copyright (C) 2003, 2006-2007, 2009-2023 Free Software Foundation, Inc.
    Written by Bruno Haible <bruno@clisp.org>, 2003, 2018.
 
    This file is free software: you can redistribute it and/or modify
@@ -24,7 +24,6 @@
 #include <stdckdint.h>
 
 #include "idx.h"
-#include "verify.h"
 
 /* The speed critical point in this file is freea() applied to an alloca()
    result: it must be fast, to match the speed of alloca().  The speed of
@@ -40,7 +39,7 @@
 /* Type for holding very small pointer differences.  */
 typedef unsigned char small_t;
 /* Verify that it is wide enough.  */
-verify (2 * sa_alignment_max - 1 <= (small_t) -1);
+static_assert (2 * sa_alignment_max - 1 <= (small_t) -1);
 
 void *
 mmalloca (size_t n)

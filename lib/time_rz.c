@@ -1,6 +1,6 @@
 /* Time zone functions such as tzalloc and localtime_rz
 
-   Copyright 2015-2022 Free Software Foundation, Inc.
+   Copyright 2015-2023 Free Software Foundation, Inc.
 
    This file is free software: you can redistribute it and/or modify
    it under the terms of the GNU Lesser General Public License as
@@ -27,7 +27,6 @@
 #include <time.h>
 
 #include <errno.h>
-#include <stdbool.h>
 #include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
