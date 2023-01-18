@@ -100,7 +100,11 @@
 
 #ifndef W_EXITCODE
 /* Macro for constructing a status value.  Found in glibc.  */
-# define W_EXITCODE(ret, sig)   ((ret) << 8 | (sig))
+# ifdef _WIN32                            /* see Gnulib's posix-w32.h */
+#  define W_EXITCODE(ret, sig)   (ret)
+# else
+#  define W_EXITCODE(ret, sig)   ((ret) << 8 | (sig))
+# endif
 #endif
 verify (WEXITSTATUS (W_EXITCODE (127, 0)) == 127);
 
