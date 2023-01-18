@@ -1447,7 +1447,7 @@ SCM_DEFINE (scm_spawn_process, "spawn", 2, 0, 1,
      point to a filename string that is associated with the process
      image being started" (see
      <https://pubs.opengroup.org/onlinepubs/9699919799/functions/posix_spawn.html>). */
-  SCM_VALIDATE_NONEMPTYLIST (1, arguments);
+  SCM_VALIDATE_NONEMPTYLIST (2, arguments);
 
   env = SCM_UNDEFINED;
   in_scm = SCM_UNDEFINED;
