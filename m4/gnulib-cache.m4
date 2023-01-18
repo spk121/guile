@@ -116,6 +116,10 @@
 #  pipe2 \
 #  poll \
 #  posix_spawn \
+#  posix_spawn_file_actions_addclose \
+#  posix_spawn_file_actions_adddup2 \
+#  posix_spawn_file_actions_addopen \
+#  posix_spawn_file_actions_init \
 #  posix_spawnp \
 #  putenv \
 #  readlink \
@@ -217,6 +221,10 @@ gl_MODULES([
   pipe2
   poll
   posix_spawn
+  posix_spawn_file_actions_addclose
+  posix_spawn_file_actions_adddup2
+  posix_spawn_file_actions_addopen
+  posix_spawn_file_actions_init
   posix_spawnp
   putenv
   readlink

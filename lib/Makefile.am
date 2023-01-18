@@ -111,6 +111,10 @@
 #  pipe2 \
 #  poll \
 #  posix_spawn \
+#  posix_spawn_file_actions_addclose \
+#  posix_spawn_file_actions_adddup2 \
+#  posix_spawn_file_actions_addopen \
+#  posix_spawn_file_actions_init \
 #  posix_spawnp \
 #  putenv \
 #  readlink \
@@ -2067,6 +2071,46 @@ endif
 EXTRA_DIST += spawn_int.h
 
 ## end   gnulib module posix_spawn-internal
+
+## begin gnulib module posix_spawn_file_actions_addclose
+
+if GL_COND_OBJ_SPAWN_FACTION_ADDCLOSE
+libgnu_la_SOURCES += spawn_faction_addclose.c
+endif
+
+EXTRA_DIST += spawn_int.h
+
+## end   gnulib module posix_spawn_file_actions_addclose
+
+## begin gnulib module posix_spawn_file_actions_adddup2
+
+if GL_COND_OBJ_SPAWN_FACTION_ADDDUP2
+libgnu_la_SOURCES += spawn_faction_adddup2.c
+endif
+
+EXTRA_DIST += spawn_int.h
+
+## end   gnulib module posix_spawn_file_actions_adddup2
+
+## begin gnulib module posix_spawn_file_actions_addopen
+
+if GL_COND_OBJ_SPAWN_FACTION_ADDOPEN
+libgnu_la_SOURCES += spawn_faction_addopen.c
+endif
+
+EXTRA_DIST += spawn_int.h
+
+## end   gnulib module posix_spawn_file_actions_addopen
+
+## begin gnulib module posix_spawn_file_actions_init
+
+if GL_COND_OBJ_SPAWN_FACTION_INIT
+libgnu_la_SOURCES += spawn_faction_init.c
+endif
+
+EXTRA_DIST += spawn_int.h
+
+## end   gnulib module posix_spawn_file_actions_init
 
 ## begin gnulib module posix_spawnp
 
