@@ -135,6 +135,7 @@
 #  stdlib \
 #  striconveh \
 #  string \
+#  sys_select \
 #  sys_stat \
 #  time \
 #  times \

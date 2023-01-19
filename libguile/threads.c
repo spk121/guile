@@ -1,4 +1,4 @@
-/* Copyright 1995-1998,2000-2014,2018-2019
+/* Copyright 1995-1998,2000-2014,2018-2019,2023
      Free Software Foundation, Inc.
 
    This file is part of Guile.
@@ -32,6 +32,7 @@
 #include <stdlib.h>
 #include <string.h>   /* for memset used by FD_ZERO on Solaris 10 */
 #include <sys/time.h>
+#include <sys/select.h>                           /* from Gnulib */
 #include <unistd.h>
 
 #if HAVE_PTHREAD_NP_H

@@ -140,6 +140,7 @@
 #  stdlib \
 #  striconveh \
 #  string \
+#  sys_select \
 #  sys_stat \
 #  time \
 #  times \
@@ -246,6 +247,7 @@ gl_MODULES([
   stdlib
   striconveh
   string
+  sys_select
   sys_stat
   time
   times
