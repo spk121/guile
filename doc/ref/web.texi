@@ -1,6 +1,6 @@
 @c -*-texinfo-*-
 @c This is part of the GNU Guile Reference Manual.
-@c Copyright (C) 2010, 2011, 2012, 2013, 2015, 2018, 2019, 2020 Free Software Foundation, Inc.
+@c Copyright (C) 2010, 2011, 2012, 2013, 2015, 2018, 2019, 2020, 2023 Free Software Foundation, Inc.
 @c See the file guile.texi for copying conditions.
 
 @node Web
@@ -1460,8 +1460,10 @@ the lower-level HTTP, request, and response modules.
 
 @deffn {Scheme Procedure} open-socket-for-uri uri [#:verify-certificate? #t]
 Return an open input/output port for a connection to URI.  Guile
-dynamically loads GnuTLS for HTTPS support.
-@xref{Guile Preparations,
+dynamically loads Guile-GnuTLS for HTTPS support.
+
+See the @uref{https://gitlab.com/gnutls/guile/, Web site of Guile-GnuTLS}, and
+@pxref{Guile Preparations,
 how to install the GnuTLS bindings for Guile,, gnutls-guile,
 GnuTLS-Guile}, for more information.
 
