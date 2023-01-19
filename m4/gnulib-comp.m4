@@ -109,6 +109,7 @@ AC_DEFUN([gl_EARLY],
   # Code from module gendocs:
   # Code from module getaddrinfo:
   # Code from module getdtablesize:
+  # Code from module gethostname:
   # Code from module getlogin:
   # Code from module getpeername:
   # Code from module getrandom:
@@ -422,6 +423,12 @@ AC_DEFUN([gl_INIT],
   gl_CONDITIONAL([GL_COND_OBJ_GAI_STRERROR],
                  [test $HAVE_DECL_GAI_STRERROR = 0 || test $REPLACE_GAI_STRERROR = 1])
   gl_NETDB_MODULE_INDICATOR([getaddrinfo])
+  gl_FUNC_GETHOSTNAME
+  gl_CONDITIONAL([GL_COND_OBJ_GETHOSTNAME], [test $HAVE_GETHOSTNAME = 0])
+  AM_COND_IF([GL_COND_OBJ_GETHOSTNAME], [
+    gl_PREREQ_GETHOSTNAME
+  ])
+  gl_UNISTD_MODULE_INDICATOR([gethostname])
   gl_FUNC_GETLOGIN
   gl_CONDITIONAL([GL_COND_OBJ_GETLOGIN], [test $HAVE_GETLOGIN = 0])
   gl_UNISTD_MODULE_INDICATOR([getlogin])
@@ -1664,6 +1671,9 @@ AC_SUBST([LTALLOCA])
   if test $HAVE_GETADDRINFO = 0 || test $REPLACE_GETADDRINFO = 1; then
     func_gl_gnulib_m4code_sockets
   fi
+  if test $HAVE_GETHOSTNAME = 0; then
+    func_gl_gnulib_m4code_sockets
+  fi
   if test $HAVE_INET_NTOP = 0 || test $REPLACE_INET_NTOP = 1; then
     func_gl_gnulib_m4code_netinet_in
   fi
@@ -2113,6 +2123,7 @@ AC_DEFUN([gl_FILE_LIST], [
   lib/gai_strerror.c
   lib/getaddrinfo.c
   lib/getdtablesize.c
+  lib/gethostname.c
   lib/getlogin.c
   lib/getpeername.c
   lib/getrandom.c
@@ -2381,6 +2392,7 @@ AC_DEFUN([gl_FILE_LIST], [
   m4/func.m4
   m4/getaddrinfo.m4
   m4/getdtablesize.m4
+  m4/gethostname.m4
   m4/getlogin.m4
   m4/getrandom.m4
   m4/gnulib-common.m4

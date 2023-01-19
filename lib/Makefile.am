@@ -73,6 +73,7 @@
 #  func \
 #  gendocs \
 #  getaddrinfo \
+#  gethostname \
 #  getlogin \
 #  getpeername \
 #  getsockname \
@@ -179,6 +180,7 @@ libgnu_la_LDFLAGS += $(DUPLOCALE_LIB)
 libgnu_la_LDFLAGS += $(FLOOR_LIBM)
 libgnu_la_LDFLAGS += $(FREXP_LIBM)
 libgnu_la_LDFLAGS += $(GETADDRINFO_LIB)
+libgnu_la_LDFLAGS += $(GETHOSTNAME_LIB)
 libgnu_la_LDFLAGS += $(GETLOGIN_LIB)
 libgnu_la_LDFLAGS += $(GETRANDOM_LIB)
 libgnu_la_LDFLAGS += $(HARD_LOCALE_LIB)
@@ -855,6 +857,16 @@ endif
 
 endif
 ## end   gnulib module getdtablesize
+
+## begin gnulib module gethostname
+
+if GL_COND_OBJ_GETHOSTNAME
+libgnu_la_SOURCES += gethostname.c
+endif
+
+EXTRA_DIST += w32sock.h
+
+## end   gnulib module gethostname
 
 ## begin gnulib module getlogin
 
