@@ -2,7 +2,7 @@
 ##
 ##  	Copyright (C) 1998, 1999, 2000, 2001, 2002, 2006, 2007,
 ##        2008, 2009, 2010, 2011, 2012, 2013,
-##        2014, 2015, 2016, 2022 Free Software Foundation, Inc.
+##        2014, 2015, 2016, 2022, 2023 Free Software Foundation, Inc.
 ##
 ##   This file is part of GUILE.
 ##
@@ -91,7 +91,7 @@ ACLOCAL_AMFLAGS = -I m4
 CLEANFILES = libguile/guile-procedures.txt
 DISTCLEANFILES = check-guile.log
 
-DISTCHECK_CONFIGURE_FLAGS = --enable-error-on-warning
+DISTCHECK_CONFIGURE_FLAGS = --enable-error-on-warning --enable-mini-gmp
 
 dist-hook: gen-ChangeLog gen-tarball-version assert-no-store-file-names
 
