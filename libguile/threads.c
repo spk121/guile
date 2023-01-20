@@ -355,8 +355,10 @@ scm_i_pthread_key_t scm_i_thread_key;
    itself in TLS (rather than a pointer to some malloc'd memory) is not
    possible since thread objects may live longer than the actual thread they
    represent.  */
-/* SCM_INTERNAL fixes https://debbugs.gnu.org/60234 */
-SCM_INTERNAL SCM_THREAD_LOCAL scm_thread *scm_i_current_thread = NULL;
+# ifdef __APPLE__ /* XXX: hack to address <https://bugs.gnu.org/60234> */
+SCM_INTERNAL
+# endif
+SCM_THREAD_LOCAL scm_thread *scm_i_current_thread = NULL;
 
 #endif /* SCM_HAVE_THREAD_STORAGE_CLASS */
 
