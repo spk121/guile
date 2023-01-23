@@ -105,8 +105,8 @@
 # else
 #  define W_EXITCODE(ret, sig)   ((ret) << 8 | (sig))
 # endif
-#endif
 verify (WEXITSTATUS (W_EXITCODE (127, 0)) == 127);
+#endif
 
 
 #include <signal.h>
