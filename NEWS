@@ -85,6 +85,8 @@ case.
 
 * Bug fixes
 
+** JIT compilation is now supported on Apple M1 processors
+   (https://bugs.gnu.org/44505)
 ** Type sizes are correctly determined when cross-compiling
    (https://bugs.gnu.org/54198)
 ** psyntax honors source properties coming from read hash extensions
