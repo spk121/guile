@@ -93,7 +93,20 @@ DISTCLEANFILES = check-guile.log
 
 DISTCHECK_CONFIGURE_FLAGS = --enable-error-on-warning --enable-mini-gmp
 
-dist-hook: gen-ChangeLog gen-tarball-version assert-no-store-file-names
+dist-hook: gen-ChangeLog gen-tarball-version		\
+  assert-no-store-file-names ensure-guile-readline
+
+# 'guile-readline/Makefile.am' conditionally includes various files to
+# the distribution.  Bail out when 'HAVE_READLINE' is false.
+if HAVE_READLINE
+ensure-guile-readline:
+	@true
+else !HAVE_READLINE
+ensure-guile-readline:
+	@echo "error: Readline support is required for 'make dist'." >&2
+	@exit 1
+endif !HAVE_READLINE
+.PHONY: ensure-guile-readline
 
 clean-local:
 	rm -rf cache/
