@@ -138,6 +138,11 @@ The most basic local binding construct is @code{let}.
 that is zero or more two-element lists of a variable and an arbitrary
 expression each.  All @var{variable} names must be distinct.
 
+@cindex body, of a @code{let} expression
+
+@var{body} is a sequence of expressions and definitions, ending in an
+expression.
+
 A @code{let} expression is evaluated as follows.
 
 @itemize @bullet
@@ -151,9 +156,9 @@ New storage is allocated for the @var{variables}.
 The values of the @var{init} expressions are stored into the variables.
 
 @item
-The expressions in @var{body} are evaluated in order, and the value of
-the last expression is returned as the value of the @code{let}
-expression.
+The expressions and definitions in @var{body} are evaluated in order
+(@pxref{Internal Definitions}), and the values of the last expression
+are returned as the result of the @code{let} expression.
 @end itemize
 
 The @var{init} expressions are not allowed to refer to any of the

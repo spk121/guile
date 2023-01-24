@@ -47,8 +47,8 @@ output port, then display a newline.  We use @code{begin} to form a
 compound expression out of this sequence of sub-expressions.
 
 @deffn syntax begin expr @dots{}
-The expression(s) are evaluated in left-to-right order and the value of
-the last expression is returned as the value of the
+The expression(s) are evaluated in left-to-right order and the values of
+the last expression are returned as the result of the
 @code{begin}-expression.  This expression type is used when the
 expressions before the last one are evaluated for their side effects.
 @end deffn
@@ -117,7 +117,7 @@ abuses the @code{begin} form for these two tasks.
 
 Guile provides three syntactic constructs for conditional evaluation.
 @code{if} is the normal if-then-else expression (with an optional else
-branch), @code{cond} is a conditional expression with multiple branches
+branch), @code{cond} is a conditional expression with multiple branches,
 and @code{case} branches if an expression has one of a set of constant
 values.
 
@@ -141,14 +141,14 @@ expression.  (By convention, we use the word @dfn{statement} to refer to
 an expression that is evaluated for effect, not for value).
 
 In such a case, it is considered more clear to express these intentions
-with these special forms, @code{when} and @code{unless}.  As an added
-bonus, these forms accept multiple statements to evaluate, which are
-implicitly wrapped in a @code{begin}.
+with the special forms @code{when} and @code{unless}.  As an added
+bonus, these forms take a @emph{body} like in a @code{let} expression,
+which can contain internal definitions and multiple statements to
+evaluate (@pxref{Local Bindings}).
 
-@deffn {Scheme Syntax} when test statement1 statement2 ...
-@deffnx {Scheme Syntax} unless test statement1 statement2 ...
-The actual definitions of these forms are in many ways their most clear
-documentation:
+@deffn {Scheme Syntax} when test body
+@deffnx {Scheme Syntax} unless test body
+The actual definitions of these forms may be their most clear documentation:
 
 @example
 (define-syntax-rule (when test stmt stmt* ...)
@@ -167,11 +167,10 @@ statements if @var{test} is false.
 Each @code{cond}-clause must look like this:
 
 @lisp
-(@var{test} @var{body} @dots{})
+(@var{test} @var{body})
 @end lisp
 
-where @var{test} is an arbitrary expression and @var{body} is a
-lambda-like body, or like this
+where @var{test} is an arbitrary expression, or like this
 
 @lisp
 (@var{test} => @var{expression})
@@ -180,9 +179,9 @@ lambda-like body, or like this
 where @var{expression} must evaluate to a procedure.
 
 The @var{test}s of the clauses are evaluated in order and as soon as one
-of them evaluates to a true value, the corresponding @var{expression}s
-are evaluated in order and the last value is returned as the value of
-the @code{cond}-expression.  For the @code{=>} clause type,
+of them evaluates to a true value, the corresponding @var{body} is
+evaluated to produce the result of the @code{cond}-expression.  For the
+@code{=>} clause type,
 @var{expression} is evaluated and the resulting procedure is applied to
 the value of @var{test}.  The result of this procedure application is
 then the result of the @code{cond}-expression.
@@ -209,7 +208,7 @@ procedure to the value(s) of @var{test}, in the same manner as the
 
 The @var{test} of the last @var{clause} may be the symbol @code{else}.
 Then, if none of the preceding @var{test}s is true, the
-@var{expression}s following the @code{else} are evaluated to produce the
+@var{body} following the @code{else} is evaluated to produce the
 result of the @code{cond}-expression.
 @end deffn
 
@@ -217,7 +216,7 @@ result of the @code{cond}-expression.
 @var{key} may be any expression, and the @var{clause}s must have the form
 
 @lisp
-((@var{datum1} @dots{}) @var{body} @dots{})
+((@var{datum1} @dots{}) @var{body})
 @end lisp
 
 or
@@ -229,7 +228,7 @@ or
 and the last @var{clause} may have the form
 
 @lisp
-(else @var{expr1} @var{body} @dots{})
+(else @var{body})
 @end lisp
 
 or
@@ -241,14 +240,13 @@ or
 All @var{datum}s must be distinct.  First, @var{key} is evaluated.  The
 result of this evaluation is compared against all @var{datum} values
 using @code{eqv?}.  When this comparison succeeds, the @var{body}
-following the @var{datum} is evaluated like the body of a lambda,
-returning the value of the last expression as the result of the
+following the @var{datum} is evaluated to produce the result of the
 @code{case} expression.
 
 If the @var{key} matches no @var{datum} and there is an
 @code{else}-clause, the @var{body} following the @code{else} is
-evaluated.  If there is no such clause, the result of the expression is
-unspecified.
+evaluated to produce the result of the @code{case} expression.  If there
+is no such clause, the result of the expression is unspecified.
 
 For the @code{=>} clause types, @var{expression} is evaluated and the
 resulting procedure is applied to the value of @var{key}.  The result of
@@ -970,13 +968,12 @@ same as specified by SRFI-8 (@pxref{SRFI-8}).
 (use-modules (ice-9 receive))
 @end lisp
 
-@deffn {library syntax} receive formals expr body @dots{}
+@deffn {library syntax} receive formals expr body
 Evaluate the expression @var{expr}, and bind the result values (zero
 or more) to the formal arguments in @var{formals}.  @var{formals} is a
 list of symbols, like the argument list in a @code{lambda}
-(@pxref{Lambda}).  After binding the variables, the expressions in
-@var{body} @dots{} are evaluated in order, the return value is the
-result from the last expression.
+(@pxref{Lambda}).  After binding the variables, the @var{body} is
+evaluated to produce the result of the @code{receive} expression.
 
 For example getting results from @code{partition} in SRFI-1
 (@pxref{SRFI-1}),
@@ -1950,8 +1947,8 @@ set/restored when control enter or leaves the established dynamic
 extent.
 @end deffn
 
-@deffn {Scheme Macro} with-fluids ((fluid value) @dots{}) body1 body2 @dots{}
-Execute body @var{body1} @var{body2} @dots{}  while each @var{fluid} is
+@deffn {Scheme Macro} with-fluids ((fluid value) @dots{}) body
+Execute @var{body} (@pxref{Local Bindings}) while each @var{fluid} is
 set to the corresponding @var{value}.  Both @var{fluid} and @var{value}
 are evaluated and @var{fluid} must yield a fluid.  The body is executed
 inside a @code{dynamic-wind} and the fluids are set/restored when
