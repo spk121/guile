@@ -446,8 +446,15 @@ cannot programmatically generate identifiers.
 The solution to all of these problems is to use @code{syntax-case} if you need
 its features. But if for some reason you're stuck with @code{syntax-rules}, you
 might enjoy Joe Marshall's
-@uref{http://sites.google.com/site/evalapply/eccentric.txt,@code{syntax-rules}
-Primer for the Merely Eccentric}.
+@uref{https://web.archive.org/web/20121111060531/@/
+https://d655165b-a-62cb3a1a-s-sites.googlegroups.com/site/evalapply/@/
+eccentric.txt?attachauth=ANoY7cqZJK0iAkVoFlTZqjKSFX1rW6pgA71to347P957URfJwmFRH@/
+5Yyddp6gASBSaG38_9MfSlq59KN5Ozzja0WMVuHWi5a_bfGeJHv13bfhYbtwA8WcVHaL_xTA5AvlLH@/
+__qHKE2UVPj2qrWYyrcBCx3ihmR8CWUfyo8D4GbdvFGkNon3owtrR_CL_wbPr7VGE_8Gq0aJp7tWGt@/
+tZSjip9rySlqAO4aQ%3D%3D&attredirects=0,@code{syntax-rules}
+Primer for the Merely Eccentric}.@footnote{Archived from
+@uref{http://sites.google.com/site/evalapply/eccentric.txt,the original} on
+2013-05-03.}
 
 @node Syntax Case
 @subsection Support for the @code{syntax-case} System
