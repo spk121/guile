@@ -124,7 +124,6 @@ When building from a Git checkout, these additional packages are needed:
   - GNU Libtool
   - Flex
   - GNU Gettext
-  - GNU Autopoint
   - GNU Texinfo
   - GNU Gperf
 
