@@ -33,7 +33,7 @@ TARGET."
     (name (string-append (package-name package) "." system
                          (if target
                              (string-append "." target)
-                             "'")))
+                             "")))
     (item (with-parameters ((%current-system system)
                             (%current-target-system target))
             package))))
