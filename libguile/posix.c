@@ -1486,12 +1486,20 @@ SCM_DEFINE (scm_spawn_process, "spawn", 2, 0, 1,
   if (SCM_UNBNDP (err_scm))
     err_scm = scm_current_error_port ();
 
-#define FDES_FROM_PORT_OR_INTEGER(obj)                                  \
-  (scm_is_integer (obj) ? scm_to_int (obj) : SCM_FPORT_FDES (obj))
+#define FDES_FROM_PORT_OR_INTEGER(fd, obj, pos) \
+  {                                             \
+    if (scm_is_integer (obj))                   \
+      fd = scm_to_int (obj);                    \
+    else                                        \
+      {                                         \
+        SCM_VALIDATE_OPFPORT (pos, obj);        \
+        fd = SCM_FPORT_FDES (obj);              \
+      }                                         \
+  }
 
-  in  = FDES_FROM_PORT_OR_INTEGER (in_scm);
-  out = FDES_FROM_PORT_OR_INTEGER (out_scm);
-  err = FDES_FROM_PORT_OR_INTEGER (err_scm);
+  FDES_FROM_PORT_OR_INTEGER (in, in_scm, 3);
+  FDES_FROM_PORT_OR_INTEGER (out, out_scm, 4);
+  FDES_FROM_PORT_OR_INTEGER (err, err_scm, 5);
 
 #undef FDES_FROM_PORT_OR_INTEGER
 

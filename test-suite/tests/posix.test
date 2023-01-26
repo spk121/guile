@@ -386,6 +386,11 @@
       0
     (cdr (waitpid (spawn "true" '("true")))))
 
+  (pass-if-exception "non-file port argument" ;<https://bugs.gnu.org/61073>
+      exception:wrong-type-arg
+    (spawn "true" '("true")
+           #:error (%make-void-port "w")))
+
   (pass-if-equal "uname with stdout redirect"
       (list 0                                     ;exit value
             (string-append (utsname:sysname (uname)) " "
