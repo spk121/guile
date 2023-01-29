@@ -19,10 +19,8 @@
 ;; integration service running at <https://ci.guix.gnu.org>.
 
 (use-modules (guix)
-             (guix profiles))
-
-(define guile
-  (load "../guix.scm"))
+             (guix profiles)
+             (guile-package))
 
 (define* (package->manifest-entry* package system
                                    #:key target)
@@ -40,11 +38,25 @@ TARGET."
 
 (define native-builds
   (manifest
-   (map (lambda (system)
-          (package->manifest-entry* guile system))
-        '("x86_64-linux" "i686-linux"
-          "aarch64-linux" "armhf-linux"
-          "powerpc64le-linux"))))
+   (append (map (lambda (system)
+                  (package->manifest-entry* guile system))
+
+                '("x86_64-linux" "i686-linux"
+                  "aarch64-linux" "armhf-linux"
+                  "powerpc64le-linux"))
+           (map (lambda (guile)
+                  (package->manifest-entry* guile "x86_64-linux"))
+                (cons (package
+                        (inherit (package-with-c-toolchain
+                                  guile
+                                  `(("clang-toolchain"
+                                     ,(specification->package
+                                       "clang-toolchain")))))
+                        (name "guile-clang"))
+                      (list guile-without-threads
+                            guile-without-networking
+                            guile-debug
+                            guile-strict-typing))))))
 
 (define cross-builds
   (manifest

@@ -40,10 +40,9 @@
   #:use-module (guix build-system gnu)
   #:use-module ((guix licenses) #:prefix license:)
   #:use-module (gnu packages)
-  #:use-module (gnu packages pkg-config)
-  #:export (guile))
+  #:use-module (gnu packages pkg-config))
 
-(define guile
+(define-public guile
   (let ((vcs-file? (or (git-predicate
                         (string-append (current-source-directory)
                                        "/../.."))
@@ -146,5 +145,38 @@ provide a convenient means of extending the functionality of the application
 without requiring the source code to be rewritten.")
       (home-page "https://www.gnu.org/software/guile/")
       (license license:lgpl3+))))
+
+(define (package-with-configure-flags p flags)
+  "Return P with FLAGS as addition 'configure' flags."
+  (package/inherit p
+    (arguments
+     (substitute-keyword-arguments (package-arguments p)
+       ((#:configure-flags original-flags #~'())
+        #~(append #$original-flags #$flags))))))
+
+(define-public guile-without-threads
+  (package
+    (inherit (package-with-configure-flags guile
+                                           #~'("--without-threads")))
+    (name "guile-without-threads")))
+
+(define-public guile-without-networking
+  (package
+    (inherit (package-with-configure-flags guile
+                                           #~'("--disable-networking")))
+    (name "guile-without-networking")))
+
+(define-public guile-debug
+  (package
+    (inherit (package-with-configure-flags guile
+                                           #~'("--enable-guile-debug")))
+    (name "guile-debug")))
+
+(define-public guile-strict-typing
+  (package
+    (inherit (package-with-configure-flags
+              guile
+              #~'("CPPFLAGS=-DSCM_DEBUG_TYPING_STRICTNESS=2")))
+    (name "guile-strict-typing")))
 
 guile
