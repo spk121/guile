@@ -458,8 +458,8 @@ Git Repository Access ================================================
 Guile's source code is stored in a Git repository at Savannah.  Anyone
 can access it using `git-clone' from one of the following URLs:
 
-  git://git.sv.gnu.org/guile.git
-  http://git.sv.gnu.org/r/guile.git
+  git://git.savannah.gnu.org/guile.git
+  https://git.savannah.gnu.org/git/guile.git
 
 Developers with a Savannah SSH account can also access it from:
 
@@ -467,10 +467,10 @@ Developers with a Savannah SSH account can also access it from:
 
 The repository can also be browsed on-line at the following address:
 
-  http://git.sv.gnu.org/gitweb/?p=guile.git
+  https://git.savannah.gnu.org/cgit/guile.git/
 
 For more information on Git, please see:
 
-  http://git.or.cz/
+  https://git-scm.com
 
 Please send problem reports to <bug-guile@gnu.org>.
