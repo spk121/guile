@@ -318,7 +318,3 @@
          
          (else x)))
      x)))
-
-;;; Local Variables:
-;;; eval: (put 'record-case 'scheme-indent-function 1)
-;;; End:
