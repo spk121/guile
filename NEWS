@@ -5,6 +5,23 @@ See the end for copying conditions.
 Please send Guile bug reports to bug-guile@gnu.org.
 
 
+Changes in 3.0.10 (since 3.0.9)
+
+* New interfaces and functionality
+
+** New warning: unused-module
+
+This analysis, enabled at `-W2', issues warnings for modules that appear
+in a `use-modules' form or as a #:use-module clause of `define-module',
+and whose bindings are unused.  This is useful to trim the list of
+imports of a module.
+
+In some cases, the compiler cannot conclude whether a module is
+definitely unused---this is notably the case for modules that are only
+used at macro-expansion time, such as (srfi srfi-26).  In those cases,
+the compiler reports it as "possibly unused".
+
+
 Changes in 3.0.9 (since 3.0.8)
 
 * Notable changes

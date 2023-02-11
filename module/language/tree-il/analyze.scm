@@ -1,6 +1,6 @@
 ;;; Diagnostic warnings for Tree-IL
 
-;; Copyright (C) 2001,2008-2014,2016,2018-2022 Free Software Foundation, Inc.
+;; Copyright (C) 2001,2008-2014,2016,2018-2023 Free Software Foundation, Inc.
 
 ;;;; This library is free software; you can redistribute it and/or
 ;;;; modify it under the terms of the GNU Lesser General Public
@@ -333,6 +333,155 @@ given `tree-il' element."
                            unused))))
 
      (make-reference-graph vlist-null vlist-null #f))))
+
+
+;;;
+;;; Unused module analysis.
+;;;
+
+;; Module uses and references to bindings of imported modules.
+(define-record-type <module-info>
+  (module-info location qualified-references
+               toplevel-references toplevel-definitions)
+  module-info?
+  (location              module-info-location)    ;location vector | #f
+  (qualified-references  module-info-qualified-references) ;module name vhash
+  (toplevel-references   module-info-toplevel-references) ;list of symbols
+  (toplevel-definitions  module-info-toplevel-definitions)) ;symbol vhash
+
+(define unused-module-analysis
+  ;; Report unused modules in the given tree.
+  (make-tree-analysis
+   (lambda (x info env locs)
+     ;; Going down into X: extend INFO accordingly.
+     (match x
+       ((or ($ <module-ref> loc module name)
+            ($ <module-set> loc module name))
+        (let ((references (module-info-qualified-references info)))
+          (if (vhash-assoc module references)
+              info
+              (module-info (module-info-location info)
+                           (vhash-cons module #t references)
+                           (module-info-toplevel-references info)
+                           (module-info-toplevel-definitions info)))))
+       ((or ($ <toplevel-ref> loc module name)
+            ($ <toplevel-set> loc module name))
+        (if (equal? module (module-name env))
+            (let ((references (module-info-toplevel-references info)))
+              (module-info (module-info-location info)
+                           (module-info-qualified-references info)
+                           (cons x references)
+                           (module-info-toplevel-definitions info)))
+            (let ((references (module-info-qualified-references info)))
+              (module-info (module-info-location info)
+                           (vhash-cons module #t references)
+                           (module-info-toplevel-references info)
+                           (module-info-toplevel-definitions info)))))
+       (($ <toplevel-define> loc module name)
+        (module-info (module-info-location info)
+                     (module-info-qualified-references info)
+                     (module-info-toplevel-references info)
+                     (vhash-consq name x
+                                  (module-info-toplevel-definitions info))))
+
+       ;; Record the approximate location of the module import.  We
+       ;; could parse the #:imports arguments to determine the location
+       ;; of each #:use-module but we'll leave that as an exercise for
+       ;; the reader.
+       (($ <call> loc ($ <module-ref> _ '(guile) 'define-module*))
+        (module-info loc
+                     (module-info-qualified-references info)
+                     (module-info-toplevel-references info)
+                     (module-info-toplevel-definitions info)))
+       (($ <call> loc ($ <module-ref> _ '(guile) 'process-use-modules))
+        (module-info loc
+                     (module-info-qualified-references info)
+                     (module-info-toplevel-references info)
+                     (module-info-toplevel-definitions info)))
+
+       (_
+        info)))
+
+   (lambda (x info env locs)                      ;leaving X's scope
+     info)
+
+   (lambda (info env)                             ;finishing
+     (define (defining-module ref env)
+       ;; Return the name of the module that defines REF, a
+       ;; <toplevel-ref> or <toplevel-set>, in ENV.
+       (let ((name (if (toplevel-ref? ref)
+                       (toplevel-ref-name ref)
+                       (toplevel-set-name ref))))
+         (match (vhash-assq name (module-info-toplevel-definitions info))
+           (#f
+            ;; NAME is not among the top-level definitions of this
+            ;; compilation unit, so check which module provides it.
+            (and=> (module-variable env name)
+                   (lambda (variable)
+                     (and=> (find (lambda (module)
+                                    (module-reverse-lookup module variable))
+                                  (module-uses env))
+                            module-name))))
+           (_
+            (if (toplevel-ref? ref)
+                (toplevel-ref-mod ref)
+                (toplevel-set-mod ref))))))
+
+     (define (module-bindings-reexported? module env)
+       ;; Return true if ENV reexports one or more bindings from MODULE.
+       (let ((module (resolve-interface module))
+             (tag (make-prompt-tag)))
+         (call-with-prompt tag
+           (lambda ()
+             (module-for-each (lambda (symbol variable)
+                                (when (module-reverse-lookup module variable)
+                                  (abort-to-prompt tag)))
+                              (module-public-interface env))
+             #f)
+           (const #t))))
+
+     (define (module-exports-macros? module)
+       ;; Return #t if MODULE exports one or more macros.
+       (let ((tag (make-prompt-tag)))
+         (call-with-prompt tag
+           (lambda ()
+             (module-for-each (lambda (symbol variable)
+                                (when (and (variable-bound? variable)
+                                           (macro?
+                                            (variable-ref variable)))
+                                  (abort-to-prompt tag)))
+                              module)
+             #f)
+           (const #t))))
+
+     (let ((used-modules                  ;list of modules actually used
+            (fold (lambda (reference modules)
+                    (let ((module (defining-module reference env)))
+                      (if (or (not module) (vhash-assoc module modules))
+                          modules
+                          (vhash-cons module #t modules))))
+                  (module-info-qualified-references info)
+                  (module-info-toplevel-references info))))
+
+       ;; Compare the modules imported by ENV with USED-MODULES, the
+       ;; list of modules actually referenced.  When a module is not in
+       ;; USED-MODULES, check whether ENV reexports bindings from it.
+       (for-each (lambda (module)
+                   (unless (or (vhash-assoc (module-name module)
+                                            used-modules)
+                               (module-bindings-reexported?
+                                (module-name module) env))
+                     ;; If MODULE exports macros, and if the expansion
+                     ;; of those macros doesn't contain <module-ref>s
+                     ;; inside MODULE, then we cannot conclude whether
+                     ;; or not MODULE is used.
+                     (warning 'unused-module
+                              (module-info-location info)
+                              (module-name module)
+                              (not (module-exports-macros? module)))))
+                 (module-uses env))))
+
+   (module-info #f vlist-null '() vlist-null)))
 
 
 ;;;
@@ -1268,6 +1417,8 @@ resort, return #t when EXP refers to the global variable SPECIAL-NAME."
   #:level 3 #:kind unused-variable #:analysis unused-variable-analysis)
 (define-analysis make-unused-toplevel-analysis
   #:level 2 #:kind unused-toplevel #:analysis unused-toplevel-analysis)
+(define-analysis make-unused-module-analysis
+  #:level 2 #:kind unused-module #:analysis unused-module-analysis)
 (define-analysis make-shadowed-toplevel-analysis
   #:level 2 #:kind shadowed-toplevel #:analysis shadowed-toplevel-analysis)
 (define-analysis make-arity-analysis
@@ -1287,6 +1438,7 @@ resort, return #t when EXP refers to the global variable SPECIAL-NAME."
            (analysis (cons analysis tail)))))))
   (let ((analyses (compute-analyses make-unused-variable-analysis
                                     make-unused-toplevel-analysis
+                                    make-unused-module-analysis
                                     make-shadowed-toplevel-analysis
                                     make-arity-analysis
                                     make-format-analysis

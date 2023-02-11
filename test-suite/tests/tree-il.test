@@ -1,7 +1,7 @@
 ;;;; tree-il.test --- test suite for compiling tree-il   -*- scheme -*-
 ;;;; Andy Wingo <wingo@pobox.com> --- May 2009
 ;;;;
-;;;; Copyright (C) 2009-2014,2018-2021 Free Software Foundation, Inc.
+;;;; Copyright (C) 2009-2014,2018-2021,2023 Free Software Foundation, Inc.
 ;;;;
 ;;;; This library is free software; you can redistribute it and/or
 ;;;; modify it under the terms of the GNU Lesser General Public
@@ -217,6 +217,9 @@
 (define %opts-w-unused-toplevel
   '(#:warnings (unused-toplevel)))
 
+(define %opts-w-unused-module
+  '(#:warnings (unused-module)))
+
 (define %opts-w-shadowed-toplevel
   '(#:warnings (shadowed-toplevel)))
 
@@ -413,6 +416,158 @@
                   (compile '(define #{gensym name}# 'ignore-me)
                            #:to 'cps
                            #:opts %opts-w-unused-toplevel))))))
+
+   (with-test-prefix "unused-module"
+
+     (pass-if-equal "quiet"
+         '()
+       (call-with-warnings
+        (lambda ()
+          (compile '(begin
+                      (use-modules (ice-9 popen))
+                      (define (proc cmd)
+                        (open-input-pipe cmd)))
+                   #:env (make-fresh-user-module)
+                   #:opts %opts-w-unused-module))))
+
+     (pass-if-equal "quiet, renamer"
+         '()
+       (call-with-warnings
+        (lambda ()
+          (compile '(begin
+                      (use-modules ((ice-9 popen) #:prefix p-))
+                      (define (proc cmd)
+                        (p-open-input-pipe cmd)))
+                   #:env (make-fresh-user-module)
+                   #:opts %opts-w-unused-module))))
+
+     (pass-if "definitely unused"
+       (let* ((defmod '(define-module (foo)
+                         #:use-module (ice-9 vlist)
+                         #:use-module (ice-9 popen)
+                         #:export (proc)))
+              (w (call-with-warnings
+                  (lambda ()
+                    (set-source-properties! defmod
+                                            '((filename . "foo.scm")
+                                              (line . 0)
+                                              (column . 0)))
+                    (compile `(begin
+                                ,defmod
+                                (define (frob x)
+                                  (vlist-cons x vlist-null)))
+                             #:env (make-fresh-user-module)
+                             #:opts %opts-w-unused-module)))))
+         (and (= (length w) 1)
+              (string-prefix? "foo.scm:1:0" (car w))
+              (number? (string-contains (car w)
+                                        "unused module (ice-9 popen)")))))
+
+     (pass-if "definitely unused, use-modules"
+       (let* ((usemod '(use-modules (rnrs bytevectors)
+                                    (ice-9 q)))
+              (w (call-with-warnings
+                  (lambda ()
+                    (set-source-properties! usemod
+                                            '((filename . "bar.scm")
+                                              (line . 5)
+                                              (column . 0)))
+                    (compile `(begin
+                                ,usemod
+                                (define (square x)
+                                  (* x x)))
+                             #:env (make-fresh-user-module)
+                             #:opts %opts-w-unused-module)))))
+         (and (= (length w) 2)
+              (string-prefix? "bar.scm:6:0" (car w))
+              (number? (string-contains (car w)
+                                        "unused module (rnrs bytevectors)"))
+              (number? (string-contains (cadr w)
+                                        "unused module (ice-9 q)")))))
+
+     (pass-if "definitely unused, local binding shadows imported one"
+       (let ((w (call-with-warnings
+                 (lambda ()
+                   (compile `(begin
+                               (define-module (whatever x y z)
+                                 #:use-module (ice-9 popen)
+                                 #:export (frob))
+
+                               (define (open-input-pipe x)
+                                 ;; Shadows the one from (ice-9 popen).
+                                 x)
+                               (define (frob y)
+                                 (close-port (open-input-pipe y))))
+                            #:env (make-fresh-user-module)
+                            #:opts %opts-w-unused-module)))))
+         (and (= (length w) 1)
+              (number? (string-contains (car w)
+                                        "unused module (ice-9 popen)")))))
+
+     (pass-if-equal "(ice-9 match) is actually used"
+         '()
+       ;; (ice-9 match) is used and the macro expansion of the 'match'
+       ;; form refers to (@@ (ice-9 match) car) and the likes.
+       (call-with-warnings
+        (lambda ()
+          (compile '(begin
+                      (use-modules (ice-9 match))
+                      (define (proc lst)
+                        (match lst
+                          ((a b c) (+ a (* b c))))))
+                   #:env (make-fresh-user-module)
+                   #:opts %opts-w-unused-module))))
+
+     (pass-if-equal "re-exporting is using"
+         '()
+       ;; This module re-exports a binding from (ice-9 q), so (ice-9 q)
+       ;; should be considered as used.
+       (call-with-warnings
+        (lambda ()
+          (compile '(begin
+                      (define-module (this is an ice-9 q user)
+                        #:use-module (ice-9 q)
+                        #:re-export (make-q)
+                        #:export (proc))
+                      (define (proc a b)
+                        (* a b)))
+                   #:env (make-fresh-user-module)
+                   #:opts %opts-w-unused-module))))
+
+     (pass-if "(srfi srfi-26) might be unused"
+       ;; At the tree-il level, it is impossible to know whether (srfi
+       ;; srfi-26) is actually use, because all we see is the output of
+       ;; macro expansion, and in this case it doesn't capture any
+       ;; binding from (srfi srfi-26).
+       (let* ((w (call-with-warnings
+                  (lambda ()
+                    (compile `(begin
+                                (define-module (whatever)
+                                  #:use-module (srfi srfi-26)
+                                  #:export (square))
+                                (define double
+                                  (cut * 2 <>)))
+                             #:env (make-fresh-user-module)
+                             #:opts %opts-w-unused-module)))))
+         (and (= (length w) 1)
+              (number? (string-contains (car w)
+                                        "possibly unused module (srfi srfi-26)")))))
+
+     (pass-if-equal "(ice-9 format) is actually used"
+         '()
+       ;; The 'format' binding of (ice-9 format) takes precedence over
+       ;; (@@ (guile) format), so (ice-9 format) must not be reported as
+       ;; unused.
+       (call-with-warnings
+        (lambda ()
+          (compile '(begin
+                      (define-module (whatever-else)
+                        #:use-module (ice-9 format)
+                        #:export (proc))
+                      (define (proc lst)
+                        (format #f "~{~a ~}~%" lst)))
+                   #:env (make-fresh-user-module)
+                   #:opts %opts-w-unused-module)))))
 
    (with-test-prefix "shadowed-toplevel"
 
