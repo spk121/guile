@@ -58,10 +58,8 @@
   #:use-module (ice-9 match)
   #:use-module (system vm vm)
   #:use-module (system vm debug)
-  #:use-module (system vm frame)
   #:use-module (system vm program)
   #:use-module (system xref)
-  #:use-module (rnrs bytevectors)
   #:export (trap-at-procedure-call
             trap-in-procedure
             trap-instructions-in-procedure

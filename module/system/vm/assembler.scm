@@ -51,12 +51,10 @@
   #:use-module (system syntax internal)
   #:use-module (language bytecode)
   #:use-module (rnrs bytevectors)
-  #:use-module (rnrs bytevectors gnu)
   #:use-module (ice-9 binary-ports)
   #:use-module (ice-9 vlist)
   #:use-module (ice-9 match)
   #:use-module (srfi srfi-1)
-  #:use-module (srfi srfi-4)
   #:use-module (srfi srfi-9)
   #:use-module (srfi srfi-11)
   #:export (make-assembler

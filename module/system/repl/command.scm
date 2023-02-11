@@ -20,7 +20,6 @@
 ;;; Code:
 
 (define-module (system repl command)
-  #:use-module (system base syntax)
   #:use-module (system base pmatch)
   #:autoload   (system base compile) (compile-file)
   #:use-module (system repl common)
@@ -31,14 +30,12 @@
   #:use-module (system vm loader)
   #:use-module (system vm program)
   #:use-module (system vm trap-state)
-  #:use-module (system vm vm)
   #:autoload (system base language) (lookup-language language-reader
                                      language-title language-name)
   #:autoload (system vm trace) (call-with-trace)
   #:use-module (ice-9 format)
   #:use-module (ice-9 session)
   #:use-module (ice-9 documentation)
-  #:use-module (ice-9 and-let-star)
   #:use-module (ice-9 rdelim)
   #:use-module (ice-9 control)
   #:use-module ((ice-9 pretty-print) #:select ((pretty-print . pp)))

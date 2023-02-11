@@ -31,7 +31,6 @@
 
 (define-module (ice-9 threads)
   #:use-module (ice-9 match)
-  #:use-module (ice-9 control)
   ;; These bindings are marked as #:replace because when deprecated code
   ;; is enabled, (ice-9 deprecated) also exports these names.
   ;; (Referencing one of the deprecated names prints a warning directing

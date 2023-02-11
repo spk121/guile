@@ -29,9 +29,7 @@
   #:use-module (rnrs bytevectors)
   #:use-module (ice-9 format)
   #:use-module (ice-9 match)
-  #:use-module (ice-9 vlist)
   #:use-module (srfi srfi-1)
-  #:use-module (srfi srfi-4)
   #:export (disassemble-program
             fold-program-code
             disassemble-image

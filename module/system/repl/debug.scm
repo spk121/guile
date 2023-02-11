@@ -19,17 +19,11 @@
 ;;; Code:
 
 (define-module (system repl debug)
-  #:use-module (system base pmatch)
   #:use-module (system base syntax)
-  #:use-module (system base language)
-  #:use-module (system vm vm)
   #:use-module (system vm frame)
   #:use-module (system vm debug)
   #:use-module (ice-9 format)
   #:use-module (ice-9 match)
-  #:use-module (ice-9 rdelim)
-  #:use-module (ice-9 pretty-print)
-  #:use-module ((system vm inspect) #:select ((inspect . %inspect)))
   #:use-module (system vm program)
   #:export (<debug>
             make-debug debug?

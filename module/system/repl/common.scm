@@ -22,8 +22,6 @@
   #:use-module (system base syntax)
   #:use-module (system base compile)
   #:use-module (system base language)
-  #:use-module (system base message)
-  #:use-module (system vm program)
   #:use-module (system vm loader)
   #:use-module (ice-9 control)
   #:use-module (ice-9 copy-tree)

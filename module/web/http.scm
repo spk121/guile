@@ -30,7 +30,6 @@
 ;;; Code:
 
 (define-module (web http)
-  #:use-module ((srfi srfi-1) #:select (append-map! map!))
   #:use-module (srfi srfi-9)
   #:use-module (srfi srfi-19)
   #:use-module (ice-9 rdelim)
@@ -39,7 +38,6 @@
   #:use-module (ice-9 binary-ports)
   #:use-module (ice-9 textual-ports)
   #:use-module (ice-9 exceptions)
-  #:use-module (rnrs bytevectors)
   #:use-module (web uri)
   #:export (string->header
             header->string

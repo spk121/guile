@@ -21,7 +21,6 @@
 (define-module (ice-9 eval-string)
   #:use-module (system base compile)
   #:use-module (system base language)
-  #:use-module (system vm program)
   #:use-module (system vm loader)
   #:replace (eval-string))
 
