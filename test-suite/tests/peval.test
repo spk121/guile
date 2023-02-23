@@ -1456,6 +1456,78 @@
     ;; <https://bugs.gnu.org/60522>.
     (primcall make-vector)))
 
+(with-test-prefix "case-lambda"
+  ;; one case
+  (pass-if-peval
+   ((case-lambda (() 0)))
+   (const 0))
+
+  ;; middle
+  (pass-if-peval
+   ((case-lambda (() 0) ((a b) 1) ((a) 2)) 1 2)
+   (const 1))
+
+  ;; last
+  (pass-if-peval
+   ((case-lambda ((a b) 0) ((a) 1) (() 2)))
+   (const 2))
+
+  ;; first
+  (pass-if-peval
+   ((case-lambda ((a) 0) (() 1) ((a b) 2)) 1)
+   (const 0))
+
+  ;; rest arg
+  (pass-if-peval
+   ((case-lambda (args 0) ((a b) 1) ((a) 2)) 1 2)
+   (const 0))
+
+  ;; req before rest I
+  (pass-if-peval
+   ((case-lambda ((a b) 0) (args 1) ((a) 1)) 1 2)
+   (const 0))
+
+  ;; req before rest II
+  (pass-if-peval
+   ((case-lambda ((a) 0) (args 1) ((a b) 2)) 1 2)
+   (const 1))
+
+  ;; optional
+  (pass-if-peval
+   ((case-lambda* ((a #:optional x) 0) (args 1) ((a) 2)) 1 2)
+   (const 0))
+
+  ;; optional and rest, no match I
+  (pass-if-peval
+   ((case-lambda* ((a #:optional x . rest) 0) (args 1) ((a) 2)))
+   (const 1))
+
+  ;; optional and rest, match I
+  (pass-if-peval
+   ((case-lambda* (() 0) ((a #:optional x . rest) 1) ((a) 2)) 1)
+   (const 1))
+
+  ;; optional and rest, match II
+  (pass-if-peval
+   ((case-lambda* ((a #:optional x . rest) 0) (args 1) ((a) 2)) 1)
+   (const 0))
+
+  ;; optional and rest, match III
+  (pass-if-peval
+   ((case-lambda* ((a #:optional x . rest) 0) (args 1) ((a) 2)) 1 2)
+   (const 0))
+
+  ;; optional and rest, match IV
+  (pass-if-peval
+   ((case-lambda* ((a #:optional x . rest) 0) (args 1) ((a) 2)) 1 2 3)
+   (const 0))
+
+  ;; keyword cases survive
+  (pass-if (= 1 ((case-lambda* ((a b) 0) ((a #:key x) 1)) 0 #:x 1)))
+  (pass-if (= 0 ((case-lambda* ((a b c) 0) ((a #:key x) 1)) 0 #:x 1)))
+  (pass-if (= 0 ((case-lambda* ((a #:key x) 0) ((a b) 0)) 0 #:x 1)))
+  (pass-if (= 1 ((case-lambda* ((a #:key x) 0) ((a b c) 1)) 0 1 2))))
+
 (with-test-prefix "eqv?"
   (pass-if-peval (eqv? x #f)
     (primcall eq? (toplevel x) (const #f)))

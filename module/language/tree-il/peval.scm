@@ -1668,6 +1668,29 @@ top-level bindings from ENV and return the resulting expression."
 
                   (log 'inline-end result exp)
                   result)))))
+           (($ <lambda> src-proc meta orig-body)
+            ;; If there are multiple cases and one matches nargs, omit all the others.
+            (or (and
+                 (lambda-case-alternate orig-body)
+                 (let ((nargs (length orig-args)))
+                   (let loop ((body orig-body))
+                     (match body
+                       (#f #f) ;; No matching case; an error.
+                       (($ <lambda-case> src-case req opt rest kw inits gensyms case-body alt)
+                        (cond (kw
+                               ;; FIXME: Not handling keyword cases.
+                               #f)
+                              ((let ((nreq (length req)))
+                                 (if rest
+                                   (<= nreq nargs)
+                                   (<= nreq nargs (+ nreq (if opt (length opt) 0)))))
+                               ;; Keep only this case.
+                               (revisit-proc
+                                (make-lambda
+                                 src-proc meta
+                                 (make-lambda-case src-case req opt rest kw inits gensyms case-body #f))))
+                              (else (loop alt))))))))
+                (make-call src (for-call orig-proc) (map for-value orig-args))))
            (($ <let> _ _ _ vals _)
             ;; Attempt to inline `let' in the operator position.
             ;;
