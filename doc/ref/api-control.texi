@@ -1284,7 +1284,7 @@ An exception object describes an exceptional situation.  To bring that
 description to the attention of the user or to handle the situation
 programmatically, the first step is to @dfn{raise} the exception.
 
-@deffn {Scheme Procedure} raise-exception obj [#:continuable=#f]
+@deffn {Scheme Procedure} raise-exception obj [#:continuable?=#f]
 Raise an exception by invoking the current exception handler on
 @var{obj}. The handler is called with a continuation whose dynamic
 environment is that of the call to @code{raise}, except that the current
