@@ -192,6 +192,13 @@ This is handy for tracing function calls, e.g.:
 
 (define pk peek)
 
+(define (peek-error . stuff)
+  "Like PEEK (PK), writing to (CURRENT-ERROR-PORT)."
+  (with-output-to-port (current-error-port)
+    (lambda _ (apply peek stuff))))
+
+(define pke peek-error)
+
 (define (warn . stuff)
   (newline (current-warning-port))
   (display ";;; WARNING " (current-warning-port))

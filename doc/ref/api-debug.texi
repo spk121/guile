@@ -34,13 +34,20 @@ covered in the rest of this section and elsewhere in this manual
 (@pxref{Interactive Debugging}).  Here we deal with a more primitive
 approach, commonly called ``print debugging,'' which is a quick way to
 diagnose simple errors by printing values during a program's execution.
-Guile provides the @code{peek} procedure, more commonly known as
-@code{pk} (pronounced by naming the letters), as a convenient and
-powerful tool for this kind of debugging.
+Guile provides the @code{peek} and @code{peek-error} procedures, more
+commonly known as @code{pk} and @code{pke} respectively (pronounced by
+naming the letters), as a convenient and powerful tool for this kind of
+debugging.
 
 @deffn {Scheme Procedure} peek stuff @dots{}
 @deffnx {Scheme Procedure} pk stuff @dots{}
 Print @var{stuff} to the current output port using @code{write}.  Return
+the last argument.
+@end deffn
+
+@deffn {Scheme Procedure} peek-error stuff @dots{}
+@deffnx {Scheme Procedure} pke stuff @dots{}
+Print @var{stuff} to the current error port using @code{write}.  Return
 the last argument.
 @end deffn
 
