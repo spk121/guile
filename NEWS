@@ -21,6 +21,18 @@ definitely unused---this is notably the case for modules that are only
 used at macro-expansion time, such as (srfi srfi-26).  In those cases,
 the compiler reports it as "possibly unused".
 
+* Bug fixes
+
+* Hashing of UTF-8 symbols with non-ASCII characters avoids corruption
+
+This issue could cause `scm_from_utf8_symbol' and
+`scm_from_utf8_symboln` to incorrectly conclude that the symbol hadn't
+already been interned, and then create a new one, which of course
+wouldn't be `eq?' to the other(s).  The incorrect hash was the result of
+a buffer overrun, and so might vary.  This problem affected a number of
+other operations, given the internal use of those functions.
+(<https://bugs.gnu.org/56413>)
+
 
 Changes in 3.0.9 (since 3.0.8)
 

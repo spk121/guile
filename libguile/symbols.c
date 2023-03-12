@@ -239,7 +239,7 @@ static SCM
 scm_i_str2symbol (SCM str)
 {
   SCM symbol;
-  size_t raw_hash = scm_i_string_hash (str);
+  unsigned long raw_hash = scm_i_string_hash (str);
 
   symbol = lookup_interned_symbol (str, raw_hash);
   if (scm_is_true (symbol))
@@ -261,7 +261,7 @@ scm_i_str2symbol (SCM str)
 static SCM
 scm_i_str2uninterned_symbol (SCM str)
 {
-  size_t raw_hash = scm_i_string_hash (str);
+  unsigned long raw_hash = scm_i_string_hash (str);
 
   return scm_i_make_symbol (str, SCM_I_F_SYMBOL_UNINTERNED, raw_hash);
 }

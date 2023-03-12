@@ -185,7 +185,7 @@ scm_i_utf8_string_hash (const char *str, size_t len)
     /* Invalid UTF-8; punt.  */
     return scm_i_string_hash (scm_from_utf8_stringn (str, len));
 
-  length = u8_strnlen (ustr, len);
+  length = u8_mbsnlen (ustr, len);
 
   /* Set up the internal state.  */
   a = b = c = 0xdeadbeef + ((uint32_t)(length<<2)) + 47;

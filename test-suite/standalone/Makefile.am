@@ -167,6 +167,13 @@ test_conversion_LDADD = $(LIBGUILE_LDADD) $(top_builddir)/lib/libgnu.la
 check_PROGRAMS += test-conversion
 TESTS += test-conversion
 
+# test-hashing
+test_hashing_SOURCES = test-hashing.c
+test_hashing_CFLAGS = ${test_cflags}
+test_hashing_LDADD = $(LIBGUILE_LDADD) $(top_builddir)/lib/libgnu.la
+check_PROGRAMS += test-hashing
+TESTS += test-hashing
+
 # test-loose-ends
 test_loose_ends_SOURCES = test-loose-ends.c
 test_loose_ends_CFLAGS = ${test_cflags}
