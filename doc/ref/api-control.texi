@@ -1323,7 +1323,7 @@ exception handlers are invoked within the continuation of the error,
 without unwinding the stack.  The dynamic environment of the handler
 call will be that of the @code{raise-exception} call, with the
 difference that the current exception handler will be ``unwound'' to the
-\"outer\" handler (the one that was in place when the corresponding
+``outer'' handler (the one that was in place when the corresponding
 @code{with-exception-handler} was called).
 
 However, it's often the case that one would like to handle an exception

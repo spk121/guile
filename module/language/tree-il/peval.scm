@@ -1671,6 +1671,7 @@ top-level bindings from ENV and return the resulting expression."
            (($ <lambda> src-proc meta orig-body)
             ;; If there are multiple cases and one matches nargs, omit all the others.
             (or (and
+                 orig-body
                  (lambda-case-alternate orig-body)
                  (let ((nargs (length orig-args)))
                    (let loop ((body orig-body))
