@@ -1063,6 +1063,13 @@
        error                ;; 88: not a valid starting byte
        error                ;; 88: not a valid starting byte
        error                ;; 88: not a valid starting byte
+       eof))
+
+    (test-decoding-error (#xf4 #xa4 #xbd #xa4) "UTF-8"
+      (error                ;; 2nd byte should be in the 90..BF range
+       error                ;; 88: not a valid starting byte
+       error                ;; 88: not a valid starting byte
+       error                ;; 88: not a valid starting byte
        eof))))
 
 (with-test-prefix "call-with-output-string"

@@ -23,6 +23,9 @@ the compiler reports it as "possibly unused".
 
 * Bug fixes
 
+** (ice-9 suspendable-ports) incorrect UTF-8 decoding
+   (https://bugs.gnu.org/62290)
+
 * Hashing of UTF-8 symbols with non-ASCII characters avoids corruption
 
 This issue could cause `scm_from_utf8_symbol' and
