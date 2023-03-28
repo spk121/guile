@@ -1,6 +1,6 @@
 ;;; Lightweight compiler directly from Tree-IL to bytecode
 
-;; Copyright (C) 2020, 2021 Free Software Foundation, Inc.
+;; Copyright (C) 2020-2021,2023 Free Software Foundation, Inc.
 
 ;;; This library is free software; you can redistribute it and/or modify it
 ;;; under the terms of the GNU Lesser General Public License as published by
@@ -638,7 +638,7 @@
     (()
      (let ()
        (define x-thunk
-         (let ((src (tree-il-src exp)))
+         (let ((src (tree-il-srcv exp)))
            (make-lambda src '()
                         (make-lambda-case src '() #f #f #f '() '() exp #f))))
        (values (cons (make-closure 'init x-thunk #f '())

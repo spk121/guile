@@ -71,7 +71,7 @@ given `tree-il' element."
                    (cdr results))))))
 
   ;; Extending and shrinking the location stack.
-  (define (extend-locs x locs) (cons (tree-il-src x) locs))
+  (define (extend-locs x locs) (cons (tree-il-srcv x) locs))
   (define (shrink-locs x locs) (cdr locs))
 
   (let ((results
@@ -114,7 +114,7 @@ given `tree-il' element."
      ;; accordingly.
      (let ((refs (binding-info-refs info))
            (vars (binding-info-vars info))
-           (src  (tree-il-src x)))
+           (src  (tree-il-srcv x)))
        (define (extend inner-vars inner-names)
          (fold (lambda (var name vars)
                  (vhash-consq var (list name src) vars))
@@ -499,7 +499,7 @@ given `tree-il' element."
         (match (vhash-assq name defs)
           ((_ . previous-definition)
            (warning 'shadowed-toplevel src name
-                    (tree-il-src previous-definition))
+                    (tree-il-srcv previous-definition))
            defs)
           (#f
            (vhash-consq name x defs))))
@@ -900,7 +900,7 @@ given `tree-il' element."
                     (values #f #f))))))))
 
   (let ((args (call-args call))
-        (src  (tree-il-src call)))
+        (src  (tree-il-srcv call)))
     (call-with-values (lambda () (arities proc))
       (lambda (name arities)
         (define matches?

@@ -1,6 +1,6 @@
 ;;; Tree-IL partial evaluator
 
-;; Copyright (C) 2011-2014, 2017, 2019, 2020, 2021, 2022 Free Software Foundation, Inc.
+;; Copyright (C) 2011-2014,2017,2019-2023 Free Software Foundation, Inc.
 
 ;;;; This library is free software; you can redistribute it and/or
 ;;;; modify it under the terms of the GNU Lesser General Public
@@ -110,7 +110,7 @@
   "Discard all but the first value of X."
   (if (singly-valued-expression? x)
       x
-      (make-primcall (tree-il-src x) 'values (list x))))
+      (make-primcall (tree-il-srcv x) 'values (list x))))
 
 ;; Peval will do a one-pass analysis on the source program to determine
 ;; the set of assigned lexicals, and to identify unreferenced and

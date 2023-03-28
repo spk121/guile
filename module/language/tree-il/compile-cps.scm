@@ -1,6 +1,6 @@
 ;;; Continuation-passing style (CPS) intermediate language (IL)
 
-;; Copyright (C) 2013-2015,2017-2021 Free Software Foundation, Inc.
+;; Copyright (C) 2013-2015,2017-2021,2023 Free Software Foundation, Inc.
 
 ;;;; This library is free software; you can redistribute it and/or
 ;;;; modify it under the terms of the GNU Lesser General Public
@@ -1542,7 +1542,7 @@ use as the proc slot."
 (define (init-default-value cps name sym subst init body)
   (match (hashq-ref subst sym)
     ((orig-var subst-var box?)
-     (let ((src (tree-il-src init)))
+     (let ((src (tree-il-srcv init)))
        (define (maybe-box cps k make-body)
          (if box?
              (with-cps cps
@@ -2150,10 +2150,10 @@ use as the proc slot."
                    (lambda (cps thunk)
                      (with-cps cps
                        (letk kbody ($kargs () ()
-                                     ($continue krest (tree-il-src body)
+                                     ($continue krest (tree-il-srcv body)
                                        ($primcall 'call-thunk/no-inline #f
                                                   (thunk)))))
-                       (build-term ($prompt kbody khargs (tree-il-src body)
+                       (build-term ($prompt kbody khargs (tree-il-srcv body)
                                      #f tag)))))))
            (with-cps cps
              (letv prim vals apply)
@@ -2394,7 +2394,7 @@ integer."
       (letk kclause ($kclause ('() '() #f '() #f) kbody #f))
       ($ ((lambda (cps)
             (let ((init (build-cont
-                          ($kfun (tree-il-src exp) '() init ktail kclause))))
+                          ($kfun (tree-il-srcv exp) '() init ktail kclause))))
               (with-cps (persistent-intmap (intmap-replace! cps kinit init))
                 kinit))))))))
 
