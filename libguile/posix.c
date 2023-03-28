@@ -1326,7 +1326,24 @@ static void
 close_inherited_fds_slow (posix_spawn_file_actions_t *actions, int max_fd)
 {
   while (--max_fd > 2)
-    posix_spawn_file_actions_addclose (actions, max_fd);
+    {
+      /* Adding a 'close' action for a file descriptor that is not open
+         causes 'posix_spawn' to fail on GNU/Hurd and on OpenBSD, but
+         not on GNU/Linux: <https://bugs.gnu.org/61095>.  Hence this
+         strategy:
+
+           - On GNU/Linux, close every FD, since that's the only
+             race-free way to make sure the child doesn't inherit one.
+           - On other systems, only close FDs currently open in the
+             parent; it works, but it's racy (XXX).
+
+         The only reliable option is 'addclosefrom'.  */
+#if ! (defined __GLIBC__ && defined __linux__)
+      int flags = fcntl (max_fd, F_GETFD, NULL);
+      if (flags >= 0)
+#endif
+        posix_spawn_file_actions_addclose (actions, max_fd);
+    }
 }
 
 static void
