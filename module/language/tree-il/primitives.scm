@@ -283,24 +283,25 @@
   ;; have the same semantics as the primitives.
   (unless (eq? mod the-root-module)
     (let collect-local-definitions ((x x))
-      (record-case x
-        ((<toplevel-define> name)
+      (match x
+        (($ <toplevel-define> src mod name)
          (hashq-set! local-definitions name #t))
-        ((<seq> head tail)
+        (($ <seq> src head tail)
          (collect-local-definitions head)
          (collect-local-definitions tail))
-        (else #f))))
+        (_ #f))))
   
   (post-order
    (lambda (x)
      (or
-      (record-case x
-        ((<toplevel-ref> src name)
+      (match x
+        ;; FIXME: Use `mod' field?
+        (($ <toplevel-ref> src mod* name)
          (and=> (and (not (hashq-ref local-definitions name))
                      (hashq-ref *interesting-primitive-vars*
                                 (module-variable mod name)))
                 (lambda (name) (make-primitive-ref src name))))
-        ((<module-ref> src mod name public?)
+        (($ <module-ref> src mod name public?)
          ;; for the moment, we're disabling primitive resolution for
          ;; public refs because resolve-interface can raise errors.
          (and=> (and=> (resolve-module mod)
@@ -312,10 +313,10 @@
                                     (module-variable m name))
                          (lambda (name)
                            (make-primitive-ref src name))))))
-        ((<call> src proc args)
+        (($ <call> src proc args)
          (and (primitive-ref? proc)
               (make-primcall src (primitive-ref-name proc) args)))
-        (else #f))
+        (_ #f))
       x))
    x))
 
@@ -324,8 +325,8 @@
 (define *primitive-expand-table* (make-hash-table))
 
 (define (expand-primcall x)
-  (record-case x
-    ((<primcall> src name args)
+  (match x
+    (($ <primcall> src name args)
      (let ((expand (hashq-ref *primitive-expand-table* name)))
        (or (and expand (apply expand src args))
            x)))

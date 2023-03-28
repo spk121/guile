@@ -122,24 +122,24 @@ given `tree-il' element."
                inner-vars
                inner-names))
 
-       (record-case x
-         ((<lexical-ref> gensym)
+       (match x
+         (($ <lexical-ref> src name gensym)
           (make-binding-info vars (vhash-consq gensym #t refs)))
-         ((<lexical-set> gensym)
+         (($ <lexical-set> src name gensym)
           (make-binding-info vars (vhash-consq gensym #t refs)))
-         ((<lambda-case> req opt inits rest kw gensyms)
+         (($ <lambda-case> src req opt rest kw inits gensyms body alt)
           (let ((names `(,@req
                          ,@(or opt '())
                          ,@(if rest (list rest) '())
                          ,@(if kw (map cadr (cdr kw)) '()))))
             (make-binding-info (extend gensyms names) refs)))
-         ((<let> gensyms names)
+         (($ <let> src names gensyms)
           (make-binding-info (extend gensyms names) refs))
-         ((<letrec> gensyms names)
+         (($ <letrec> src in-order? names gensyms)
           (make-binding-info (extend gensyms names) refs))
-         ((<fix> gensyms names)
+         (($ <fix> src names gensyms)
           (make-binding-info (extend gensyms names) refs))
-         (else info))))
+         (_ info))))
 
    (lambda (x info env locs)
      ;; Leaving X's scope: shrink INFO's variable list
@@ -169,16 +169,16 @@ given `tree-il' element."
        ;; names of variables that are now going out of scope.
        ;; It doesn't hurt as these are unique names, it just
        ;; makes REFS unnecessarily fat.
-       (record-case x
-         ((<lambda-case> gensyms)
+       (match x
+         (($ <lambda-case> src req opt rest kw inits gensyms)
           (make-binding-info (shrink gensyms refs) refs))
-         ((<let> gensyms)
+         (($ <let> src names gensyms)
           (make-binding-info (shrink gensyms refs) refs))
-         ((<letrec> gensyms)
+         (($ <letrec> src in-order? names gensyms)
           (make-binding-info (shrink gensyms refs) refs))
-         ((<fix> gensyms)
+         (($ <fix> src names gensyms)
           (make-binding-info (shrink gensyms refs) refs))
-         (else info))))
+         (_ info))))
 
    (lambda (result env) #t)
    (make-binding-info vlist-null vlist-null)))
@@ -278,26 +278,26 @@ given `tree-il' element."
        (let ((ctx  (reference-graph-toplevel-context graph))
              (refs (reference-graph-refs graph))
              (defs (reference-graph-defs graph)))
-         (record-case x
-           ((<toplevel-ref> name src)
+         (match x
+           (($ <toplevel-ref> src mod name)
             (add-ref-from-context graph name))
-           ((<toplevel-define> name src)
+           (($ <toplevel-define> src mod name expr)
             (let ((refs refs)
                   (defs (vhash-consq name (or src (find pair? locs))
                                      defs)))
               (make-reference-graph refs defs name)))
-           ((<toplevel-set> name src)
+           (($ <toplevel-set> src mod name expr)
             (add-ref-from-context graph name))
-           (else graph))))
+           (_ graph))))
 
      (lambda (x graph env locs)
        ;; Leaving X's scope.
-       (record-case x
-         ((<toplevel-define>)
+       (match x
+         (($ <toplevel-define>)
           (let ((refs (reference-graph-refs graph))
                 (defs (reference-graph-defs graph)))
             (make-reference-graph refs defs #f)))
-         (else graph)))
+         (_ graph)))
 
      (lambda (graph env)
        ;; Process the resulting reference graph: determine all private definitions
@@ -494,16 +494,16 @@ given `tree-il' element."
   (make-tree-analysis
    (lambda (x defs env locs)
      ;; Going down into X.
-     (record-case x
-                  ((<toplevel-define> name)
-                   (match (vhash-assq name defs)
-                     ((_ . previous-definition)
-                      (warning 'shadowed-toplevel (tree-il-src x) name
-                               (tree-il-src previous-definition))
-                      defs)
-                     (#f
-                      (vhash-consq name x defs))))
-                  (else defs)))
+     (match x
+       (($ <toplevel-define> src mod name expr)
+        (match (vhash-assq name defs)
+          ((_ . previous-definition)
+           (warning 'shadowed-toplevel src name
+                    (tree-il-src previous-definition))
+           defs)
+          (#f
+           (vhash-consq name x defs))))
+       (else defs)))
 
    (lambda (x defs env locs)
      ;; Leaving X's scope.
@@ -887,16 +887,16 @@ given `tree-il' element."
                       (arities '()))
              (if (not proc)
                  (values name (reverse arities))
-                 (record-case proc
-                   ((<lambda-case> req opt rest kw alternate)
-                    (loop name alternate
+                 (match proc
+                   (($ <lambda-case> src req opt rest kw inits gensyms body alt)
+                    (loop name alt
                           (cons (list (len req) (len opt) rest
                                       (and (pair? kw) (map car (cdr kw)))
                                       (and (pair? kw) (car kw)))
                                 arities)))
-                   ((<lambda> meta body)
+                   (($ <lambda> src meta body)
                     (loop (assoc-ref meta 'name) body arities))
-                   (else
+                   (_
                     (values #f #f))))))))
 
   (let ((args (call-args call))
@@ -935,38 +935,38 @@ given `tree-il' element."
        (let ((toplevel-calls   (toplevel-procedure-calls info))
              (lexical-lambdas  (lexical-lambdas info))
              (toplevel-lambdas (toplevel-lambdas info)))
-         (record-case val
-           ((<lambda> body)
+         (match val
+           (($ <lambda> src meta body)
             (make-arity-info toplevel-calls
                              (vhash-consq lexical-name val
                                           lexical-lambdas)
                              toplevel-lambdas))
-           ((<lexical-ref> gensym)
+           (($ <lexical-ref> src name gensym)
             ;; lexical alias
             (let ((val* (vhash-assq gensym lexical-lambdas)))
               (if (pair? val*)
                   (extend lexical-name (cdr val*) info)
                   info)))
-           ((<toplevel-ref> name)
+           (($ <toplevel-ref> src mod name)
             ;; top-level alias
             (make-arity-info toplevel-calls
                              (vhash-consq lexical-name val
                                           lexical-lambdas)
                              toplevel-lambdas))
-           (else info))))
+           (_ info))))
 
      (let ((toplevel-calls   (toplevel-procedure-calls info))
            (lexical-lambdas  (lexical-lambdas info))
            (toplevel-lambdas (toplevel-lambdas info)))
 
-       (record-case x
-         ((<toplevel-define> name exp)
-          (record-case exp
-            ((<lambda> body)
+       (match x
+         (($ <toplevel-define> src mod name exp)
+          (match exp
+            (($ <lambda> src' meta body)
              (make-arity-info toplevel-calls
                               lexical-lambdas
                               (vhash-consq name exp toplevel-lambdas)))
-            ((<toplevel-ref> name)
+            (($ <toplevel-ref> src' mod name)
              ;; alias for another toplevel
              (let ((proc (vhash-assq name toplevel-lambdas)))
                (make-arity-info toplevel-calls
@@ -976,41 +976,39 @@ given `tree-il' element."
                                                  (cdr proc)
                                                  exp)
                                              toplevel-lambdas))))
-            (else info)))
-         ((<let> gensyms vals)
+            (_ info)))
+         (($ <let> src names gensyms vals)
           (fold extend info gensyms vals))
-         ((<letrec> gensyms vals)
+         (($ <letrec> src in-order? names gensyms vals)
           (fold extend info gensyms vals))
-         ((<fix> gensyms vals)
+         (($ <fix> src names gensyms vals)
           (fold extend info gensyms vals))
 
-         ((<call> proc args src)
-          (record-case proc
-            ((<lambda> body)
+         (($ <call> src proc args)
+          (match proc
+            (($ <lambda> src' meta body)
              (validate-arity proc x #t)
              info)
-            ((<toplevel-ref> name)
+            (($ <toplevel-ref> src' mod name)
              (make-arity-info (vhash-consq name x toplevel-calls)
                               lexical-lambdas
                               toplevel-lambdas))
-            ((<lexical-ref> gensym)
-             (let ((proc (vhash-assq gensym lexical-lambdas)))
-               (if (pair? proc)
-                   (record-case (cdr proc)
-                     ((<toplevel-ref> name)
-                      ;; alias to toplevel
-                      (make-arity-info (vhash-consq name x toplevel-calls)
-                                       lexical-lambdas
-                                       toplevel-lambdas))
-                     (else
-                      (validate-arity (cdr proc) x #t)
-                      info))
-
-                   ;; If GENSYM wasn't found, it may be because it's an
-                   ;; argument of the procedure being compiled.
-                   info)))
-            (else info)))
-         (else info))))
+            (($ <lexical-ref> src' name gensym)
+             (match (vhash-assq gensym lexical-lambdas)
+               ((gensym . ($ <toplevel-ref> src'' mod name'))
+                ;; alias to toplevel
+                (make-arity-info (vhash-consq name' x toplevel-calls)
+                                 lexical-lambdas
+                                 toplevel-lambdas))
+               ((gensym . proc)
+                (validate-arity proc x #t)
+                info)
+               (#f
+                ;; If GENSYM wasn't found, it may be because it's an
+                ;; argument of the procedure being compiled.
+                info)))
+            (_ info)))
+         (_ info))))
 
    (lambda (x info env locs)
      ;; Up from X.
@@ -1028,15 +1026,15 @@ given `tree-il' element."
      (let ((toplevel-calls   (toplevel-procedure-calls info))
            (lexical-lambdas  (lexical-lambdas info))
            (toplevel-lambdas (toplevel-lambdas info)))
-       (record-case x
-         ((<let> gensyms vals)
+       (match x
+         (($ <let> src names gensyms vals)
           (fold shrink info gensyms vals))
-         ((<letrec> gensyms vals)
+         (($ <letrec> src in-order? names gensyms vals)
           (fold shrink info gensyms vals))
-         ((<fix> gensyms vals)
+         (($ <fix> src names gensyms vals)
           (fold shrink info gensyms vals))
 
-         (else info))))
+         (_ info))))
 
    (lambda (result env)
      ;; Post-processing: check all top-level procedure calls that have been
