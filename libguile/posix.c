@@ -1322,6 +1322,12 @@ SCM_DEFINE (scm_fork, "primitive-fork", 0, 0, 0,
 #undef FUNC_NAME
 #endif /* HAVE_FORK */
 
+#ifdef HAVE_POSIX_SPAWN_FILE_ACTIONS_ADDCLOSEFROM_NP
+# define HAVE_ADDCLOSEFROM 1
+#endif
+
+#ifndef HAVE_ADDCLOSEFROM
+
 static void
 close_inherited_fds (posix_spawn_file_actions_t *actions, int max_fd)
 {
@@ -1345,6 +1351,8 @@ close_inherited_fds (posix_spawn_file_actions_t *actions, int max_fd)
         posix_spawn_file_actions_addclose (actions, max_fd);
     }
 }
+
+#endif
 
 static pid_t
 do_spawn (char *exec_file, char **exec_argv, char **exec_env,
@@ -1389,7 +1397,13 @@ do_spawn (char *exec_file, char **exec_argv, char **exec_env,
   posix_spawn_file_actions_adddup2 (&actions, fd_slot[1], 1);
   posix_spawn_file_actions_adddup2 (&actions, fd_slot[2], 2);
 
+#ifdef HAVE_ADDCLOSEFROM
+  /* This function appears in glibc 2.34.  It's both free from race
+     conditions and more efficient than the alternative.  */
+  posix_spawn_file_actions_addclosefrom_np (&actions, 3);
+#else
   close_inherited_fds (&actions, max_fd);
+#endif
 
   int res = -1;
   if (spawnp)

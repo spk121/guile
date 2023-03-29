@@ -515,6 +515,7 @@ AC_CHECK_HEADERS([crt_externs.h])
 #   sched_getaffinity, sched_setaffinity - GNU extensions (glibc)
 #   sendfile - non-POSIX, found in glibc
 #   pipe2 - non-POSIX, found in glibc (GNU/Linux and GNU/Hurd)
+#   posix_spawn_file_actions_addclosefrom_np - glibc >= 2.34
 #
 AC_CHECK_FUNCS([DINFINITY DQNAN cexp chsize clog clog10 ctermid         \
   fesetround ftime ftruncate fchown fchownat fchmod fchdir readlinkat	\
@@ -528,7 +529,8 @@ AC_CHECK_FUNCS([DINFINITY DQNAN cexp chsize clog clog10 ctermid         \
   index bcopy rindex truncate isblank _NSGetEnviron              \
   strcoll_l strtod_l strtol_l newlocale uselocale utimensat     \
   fstatat futimens openat						\
-  sched_getaffinity sched_setaffinity sendfile pipe2])
+  sched_getaffinity sched_setaffinity sendfile pipe2
+  posix_spawn_file_actions_addclosefrom_np])
 
 # The newlib C library uses _NL_ prefixed locale langinfo constants.
 AC_CHECK_DECLS([_NL_NUMERIC_GROUPING], [], [], [[#include <langinfo.h>]])
