@@ -529,7 +529,7 @@ AC_CHECK_FUNCS([DINFINITY DQNAN cexp chsize clog clog10 ctermid         \
   index bcopy rindex truncate isblank _NSGetEnviron              \
   strcoll_l strtod_l strtol_l newlocale uselocale utimensat     \
   fstatat futimens openat						\
-  sched_getaffinity sched_setaffinity sendfile pipe2
+  sched_getaffinity sched_setaffinity sendfile pipe2			\
   posix_spawn_file_actions_addclosefrom_np])
 
 # The newlib C library uses _NL_ prefixed locale langinfo constants.
