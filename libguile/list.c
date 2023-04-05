@@ -224,7 +224,7 @@ SCM_DEFINE (scm_length, "length", 1, 0, 0,
 
 SCM_DEFINE (scm_append, "append", 0, 0, 1, 
             (SCM args),
-	    "Return a list consisting of the elements the lists passed as\n"
+	    "Return a list consisting of the elements of the lists passed as\n"
 	    "arguments.\n"
 	    "@lisp\n"
 	    "(append '(x) '(y))          @result{}  (x y)\n"
