@@ -1755,11 +1755,30 @@ SCM_DEFINE (scm_environ, "environ", 0, 1, 0,
 	    "then the return value is unspecified.")
 #define FUNC_NAME s_scm_environ
 {
+  /* Accessing `environ' directly in a multi-threaded program is
+     undefined behavior since at anytime it could point to anything else
+     while reading it.  Not only that, but all accesses are protected by
+     an internal mutex of libc.  Thus, it is only truly safe to modify
+     the environment directly in a single-threaded program.  */
+  if (scm_ilength (scm_all_threads ()) != 1)
+    scm_display
+      (scm_from_latin1_string
+       ("warning: call to environ while multiple threads are running;\n"
+        "         further behavior unspecified.\n"),
+       scm_current_warning_port ());
+
   if (SCM_UNBNDP (env))
     return scm_makfromstrs (-1, environ);
   else
     {
-      environ = scm_i_allocate_string_pointers (env);
+      /* Arrange to not use GC-allocated storage for what goes into
+         'environ' as libc might reallocate it behind our back.  */
+      clearenv ();
+      while (!scm_is_null (env))
+        {
+          scm_putenv (scm_car (env));
+          env = scm_cdr (env);
+        }
       return SCM_UNSPECIFIED;
     }
 }
