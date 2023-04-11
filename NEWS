@@ -33,6 +33,8 @@ the compiler reports it as "possibly unused".
    (<https://bugs.gnu.org/63024>)
 ** Fix possible deadlock in 'sigaction' (aka. 'scm_sigaction_for_thread')
    (<https://bugs.gnu.org/64666>)
+** Avoid module resolution in 'call-with-new-thread', which could deadlock
+   (<https://bugs.gnu.org/62691>)
 ** Hashing of UTF-8 symbols with non-ASCII characters avoids corruption
    (<https://bugs.gnu.org/56413>)
 
