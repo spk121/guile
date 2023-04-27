@@ -1783,11 +1783,11 @@ compile_subr_call (scm_jit_state *j, uint32_t idx)
   jit_gpr_t t = T0, ret = T1;
   void *subr;
   jit_reloc_t immediate;
-  jit_operand_t args[10];
+  jit_operand_t args[SCM_GSUBR_MAX];
 
   ASSERT (j->frame_size_min == j->frame_size_max);
   size_t argc = j->frame_size_max - 1;
-  ASSERT (argc <= 10);
+  ASSERT (argc <= SCM_GSUBR_MAX);
 
   subr = scm_subr_function_by_index (idx);
   emit_store_current_ip (j, t);

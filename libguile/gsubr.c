@@ -274,7 +274,7 @@ get_subr_stub_code (uint32_t subr_idx,
 {
   enum arity_kind kind = NULLARY;
 
-  if (SCM_UNLIKELY (rest > 1 || nreq + nopt + rest > 10))
+  if (SCM_UNLIKELY (rest > 1 || nreq + nopt + rest > SCM_GSUBR_MAX))
     scm_out_of_range ("make-subr", scm_from_uint (nreq + nopt + rest));
       
   if (nreq) kind += REQ;
@@ -500,7 +500,7 @@ scm_apply_subr (union scm_vm_stack_element *sp, uint32_t idx, ptrdiff_t nslots)
       return subr (ARG (9), ARG (8), ARG (7), ARG (6), ARG (5),
                    ARG (4), ARG (3), ARG (2), ARG (1), ARG (0));
     default:
-      abort ();
+      abort (); /* SCM_GSUBR_MAX */
     }
 #undef ARG
 }
