@@ -1390,12 +1390,19 @@ do_spawn (char *exec_file, char **exec_argv, char **exec_env,
   /* Move the fds out of the way, so that duplicate fds or fds equal
      to 0, 1, 2 don't trample each other */
 
-  posix_spawn_file_actions_adddup2 (&actions, in, fd_slot[0]);
-  posix_spawn_file_actions_adddup2 (&actions, out, fd_slot[1]);
-  posix_spawn_file_actions_adddup2 (&actions, err, fd_slot[2]);
-  posix_spawn_file_actions_adddup2 (&actions, fd_slot[0], 0);
-  posix_spawn_file_actions_adddup2 (&actions, fd_slot[1], 1);
-  posix_spawn_file_actions_adddup2 (&actions, fd_slot[2], 2);
+  int dup2_action_from[] = {in, out, err,
+                            fd_slot[0], fd_slot[1], fd_slot[2]};
+  int dup2_action_to  [] = {fd_slot[0], fd_slot[1], fd_slot[2],
+                            0, 1, 2};
+
+  errno = 0;
+  for (int i = 0; i < sizeof (dup2_action_from) / sizeof (int); i++)
+    {
+      errno = posix_spawn_file_actions_adddup2 (&actions, dup2_action_from[i],
+                                                dup2_action_to[i]);
+      if (errno != 0)
+        return -1;
+    }
 
 #ifdef HAVE_ADDCLOSEFROM
   /* This function appears in glibc 2.34.  It's both free from race
