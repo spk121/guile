@@ -374,7 +374,17 @@
                     (system* "sh" "-c" "echo bong >&2"))))))))
 
       (and (zero? (status:exit-val status))
-           (call-with-input-file file get-string-all)))))
+           (call-with-input-file file get-string-all))))
+
+  (pass-if-equal "https://bugs.gnu.org/63024"
+      0
+    (if (file-exists? "/proc/self/fd/0")          ;on GNU/Linux?
+        (parameterize ((current-output-port (%make-void-port "w0")))
+          (system* "guile" "-c"
+                   (object->string
+                    '(exit (string=? "/dev/null"
+                                     (readlink "/proc/self/fd/1"))))))
+        (throw 'unresolved))))
 
 ;;
 ;; spawn

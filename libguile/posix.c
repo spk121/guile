@@ -1562,10 +1562,22 @@ piped_process (pid_t *pid, SCM prog, SCM args, SCM from, SCM to)
 
     if (SCM_OPOUTFPORTP ((port = scm_current_error_port ())))
       err = SCM_FPORT_FDES (port);
-    if (out == -1 && SCM_OPOUTFPORTP ((port = scm_current_output_port ())))
-      out = SCM_FPORT_FDES (port);
-    if (in == -1 && SCM_OPINFPORTP ((port = scm_current_input_port ())))
-      in = SCM_FPORT_FDES (port);
+    else
+      err = open ("/dev/null", O_WRONLY | O_CLOEXEC);
+    if (out == -1)
+      {
+        if (SCM_OPOUTFPORTP ((port = scm_current_output_port ())))
+          out = SCM_FPORT_FDES (port);
+        else
+          out = open ("/dev/null", O_WRONLY | O_CLOEXEC);
+      }
+    if (in == -1)
+      {
+        if (SCM_OPINFPORTP ((port = scm_current_input_port ())))
+          in = SCM_FPORT_FDES (port);
+        else
+          in = open ("/dev/null", O_RDONLY | O_CLOEXEC);
+      }
   }
 
   *pid = do_spawn (exec_file, exec_argv, exec_env, in, out, err, 1);
