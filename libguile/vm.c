@@ -1,4 +1,4 @@
-/* Copyright 2001,2009-2015,2017-2020,2022
+/* Copyright 2001,2009-2015,2017-2020,2022-2023
      Free Software Foundation, Inc.
 
    This file is part of Guile.
@@ -451,11 +451,12 @@ define_vm_builtins (void)
 
   const uint32_t call_with_values_code[] = {
     SCM_PACK_OP_24 (assert_nargs_ee, 3),
-    SCM_PACK_OP_24 (alloc_frame, 8),
-    SCM_PACK_OP_12_12 (mov, 0, 6),
-    SCM_PACK_OP_24 (call, 7), SCM_PACK_OP_ARG_8_24 (0, 1),
-    SCM_PACK_OP_24 (long_fmov, 0), SCM_PACK_OP_ARG_8_24 (0, 2),
-    SCM_PACK_OP_12_12 (shuffle_down, 7, 1),
+    SCM_PACK_OP_24 (alloc_frame, 6),
+    SCM_PACK_OP_12_12 (mov, 0, 4),
+    SCM_PACK_OP_12_12 (mov, 4, 3),
+    SCM_PACK_OP_24 (call, 5), SCM_PACK_OP_ARG_8_24 (0, 1),
+    SCM_PACK_OP_24 (long_fmov, 0), SCM_PACK_OP_ARG_8_24 (0, 1),
+    SCM_PACK_OP_12_12 (shuffle_down, 5, 1),
     SCM_PACK_OP_24 (tail_call, 0)
   };
 

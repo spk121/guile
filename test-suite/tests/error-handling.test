@@ -1,0 +1,37 @@
+;;; Test for call-with-error-handling.  -*- scheme -*-
+;;; Copyright (C) 2023
+;;;   Free Software Foundation, Inc.
+;;;
+;;; This library is free software: you can redistribute it and/or modify
+;;; it under the terms of the GNU Lesser General Public License as
+;;; published by the Free Software Foundation, either version 3 of the
+;;; License, or (at your option) any later version.
+;;;
+;;; This library is distributed in the hope that it will be useful, but
+;;; WITHOUT ANY WARRANTY; without even the implied warranty of
+;;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+;;; Lesser General Public License for more details.
+;;;
+;;; You should have received a copy of the GNU Lesser General Public
+;;; License along with this program.  If not, see
+;;; <http://www.gnu.org/licenses/>.
+
+(define-module (test-suite test-error-handling)
+  #:use-module (test-suite lib)
+  #:use-module (system base compile)
+  #:use-module (system repl error-handling))
+
+(with-test-prefix "call-with-values"
+  (pass-if "backtrace with builtin"
+    (let* ((thunk (compile '(lambda ()
+                              (symbol?
+                               (call-with-values (lambda () (error 'oh-no))
+                                 list)))))
+           (str (with-output-to-string
+                  (lambda ()
+                    (call-with-error-handling thunk #:on-error 'backtrace))))
+           (lines (string-split str #\newline)))
+      ;; For https://debbugs.gnu.org/63279, we just want to ensure that
+      ;; the backtrace completes.  The check is just that the backtrace
+      ;; has at least a couple frames.
+      (>= (length lines) 4))))

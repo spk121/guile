@@ -1,6 +1,6 @@
 ## Process this file with automake to produce Makefile.in.
 ##
-## Copyright 2001-2020 Software Foundation, Inc.
+## Copyright 2001-2020, 2023 Software Foundation, Inc.
 ##
 ## This file is part of GUILE.
 ##
@@ -43,14 +43,15 @@ SCM_TESTS = tests/00-initial-env.test		\
 	    tests/cross-compilation.test	\
 	    tests/curried-definitions.test	\
 	    tests/dwarf.test			\
-	    tests/encoding-escapes.test		\
-	    tests/encoding-iso88591.test	\
-	    tests/encoding-iso88597.test	\
-	    tests/encoding-utf8.test		\
 	    tests/ecmascript.test		\
 	    tests/elisp.test			\
 	    tests/elisp-compiler.test		\
 	    tests/elisp-reader.test		\
+	    tests/encoding-escapes.test		\
+	    tests/encoding-iso88591.test	\
+	    tests/encoding-iso88597.test	\
+	    tests/encoding-utf8.test		\
+	    tests/error-handling.test		\
 	    tests/eval.test			\
 	    tests/eval-string.test		\
 	    tests/exceptions.test		\
