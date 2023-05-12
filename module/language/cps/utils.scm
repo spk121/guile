@@ -418,7 +418,7 @@ by a label, respectively."
                                'tail-pointer-ref/immediate))
               (intmap-add representations var 'ptr))
              (($ $code)
-              (intmap-add representations var 'u64))
+              (intmap-add representations var 'ptr))
              (_
               (intmap-add representations var 'scm))))
           (vars
