@@ -32,8 +32,6 @@
 ;; Author: Marc Feeley (feeley@iro.umontreal.ca)
 ;; Distribution restrictions: none
 
-(define genwrite:newline-str (make-string 1 #\newline))
-
 (define (generic-write
          obj display? width max-expr-width per-line-prefix output)
 
@@ -87,7 +85,7 @@
     (define (indent to col)
       (and col
            (if (< to col)
-             (and (out genwrite:newline-str col)
+             (and (out "\n" col)
 		  (out per-line-prefix 0)
 		  (spaces to 0))
              (spaces (- to col) col))))
@@ -246,7 +244,7 @@
 
   (out per-line-prefix 0)
   (if width
-    (out genwrite:newline-str (pp obj 0))
+    (out "\n" (pp obj 0))
     (wr obj 0))
   ;; Return `unspecified'
   (if #f #f))
