@@ -1,7 +1,7 @@
 ;;;; -*- coding: utf-8; mode: scheme -*-
 ;;;;
 ;;;; 	Copyright (C) 2001, 2004, 2006, 2009, 2010,
-;;;;      2012, 2013, 2014 Free Software Foundation, Inc.
+;;;;      2012, 2013, 2014, 2023 Free Software Foundation, Inc.
 ;;;; 
 ;;;; This library is free software; you can redistribute it and/or
 ;;;; modify it under the terms of the GNU Lesser General Public
@@ -102,7 +102,7 @@
               (set! left (- left (string-length str)))
               (> left 0)))
           (if (> left 0) ; all can be printed on one line
-            (out (reverse-string-append result) col)
+            (out (string-concatenate-reverse result) col)
             (if (pair? obj)
               (pp-pair obj col extra)
               (pp-list (vector->list obj) (out "#" col) extra pp-expr))))
@@ -250,25 +250,6 @@
     (wr obj 0))
   ;; Return `unspecified'
   (if #f #f))
-
-; (reverse-string-append l) = (apply string-append (reverse l))
-
-(define (reverse-string-append l)
-
-  (define (rev-string-append l i)
-    (if (pair? l)
-      (let* ((str (car l))
-             (len (string-length str))
-             (result (rev-string-append (cdr l) (+ i len))))
-        (let loop ((j 0) (k (- (- (string-length result) i) len)))
-          (if (< j len)
-            (begin
-              (string-set! result k (string-ref str j))
-              (loop (+ j 1) (+ k 1)))
-            result)))
-      (make-string i)))
-
-  (rev-string-append l 0))
 
 (define* (pretty-print obj #:optional port*
                        #:key 
