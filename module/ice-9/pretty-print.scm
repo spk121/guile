@@ -35,33 +35,18 @@
 (define (generic-write
          obj display? width max-expr-width per-line-prefix output)
 
-  (define (read-macro? l)
-    (define (length1? l) (and (pair? l) (null? (cdr l))))
-    (let ((head (car l)) (tail (cdr l)))
-      (case head
-        ((quote quasiquote unquote unquote-splicing) (length1? tail))
-        (else                                        #f))))
-
-  (define (read-macro-body l)
-    (cadr l))
-
-  (define (read-macro-prefix l)
-    (let ((head (car l)))
-      (case head
-        ((quote)            "'")
-        ((quasiquote)       "`")
-        ((unquote)          ",")
-        ((unquote-splicing) ",@"))))
-
   (define (out str col)
     (and col (output str) (+ col (string-length str))))
 
   (define (wr obj col)
     (let loop ((obj obj)
                (col col))
+      (define (wr-read-macro prefix x) (wr x (out prefix col)))
       (match obj
-        (((or 'quote 'quasiquote 'unquote 'unquote-splicing) body)
-         (wr body (out (read-macro-prefix obj) col)))
+        (('quote x)            (wr-read-macro "'" x))
+        (('quasiquote x)       (wr-read-macro "`" x))
+        (('unquote x)          (wr-read-macro "," x))
+        (('unquote-splicing x) (wr-read-macro ",@" x))
         ((head . (rest ...))
          ;; A proper list: do our own list printing so as to catch read
          ;; macros that appear in the middle of the list.
@@ -107,21 +92,22 @@
         (wr obj col)))
 
     (define (pp-expr expr col extra)
-      (if (read-macro? expr)
-        (pr (read-macro-body expr)
-            (out (read-macro-prefix expr) col)
-            extra
-            pp-expr)
-        (let ((head (car expr)))
-          (if (symbol? head)
-            (let ((proc (style head)))
-              (if proc
-                (proc expr col extra)
-                (if (> (string-length (symbol->string head))
-                       max-call-head-width)
-                  (pp-general expr col extra #f #f #f pp-expr)
-                  (pp-call expr col extra pp-expr))))
-            (pp-list expr col extra pp-expr)))))
+      (define (pp-read-macro prefix x)
+        (pr x (out prefix col) extra pp-expr))
+      (match expr
+        (('quote x)            (pp-read-macro "'" x))
+        (('quasiquote x)       (pp-read-macro "`" x))
+        (('unquote x)          (pp-read-macro "," x))
+        (('unquote-splicing x) (pp-read-macro ",@" x))
+        (((? symbol? head) . _)
+         (let ((proc (style head)))
+           (if proc
+               (proc expr col extra)
+               (if (> (string-length (symbol->string head))
+                      max-call-head-width)
+                   (pp-general expr col extra #f #f #f pp-expr)
+                   (pp-call expr col extra pp-expr)))))
+        (_ (pp-list expr col extra pp-expr))))
 
     ; (head item1
     ;       item2
