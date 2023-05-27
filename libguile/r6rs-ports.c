@@ -1,4 +1,4 @@
-/* Copyright 2009-2011,2013-2015,2018-2019
+/* Copyright 2009-2011,2013-2015,2018-2019,2023
      Free Software Foundation, Inc.
 
    This file is part of Guile.
@@ -32,6 +32,7 @@
 #include "eval.h"
 #include "extensions.h"
 #include "gsubr.h"
+#include "modules.h"
 #include "numbers.h"
 #include "ports-internal.h"
 #include "procs.h"
@@ -192,179 +193,6 @@ SCM_DEFINE (scm_open_bytevector_input_port,
   return make_bytevector_input_port (bv);
 }
 #undef FUNC_NAME
-
-
-
-
-/* Custom binary ports.  The following routines are shared by input and
-   output custom binary ports.  */
-
-struct custom_binary_port {
-  SCM read;
-  SCM write;
-  SCM get_position;
-  SCM set_position_x;
-  SCM close;
-};
-
-static int
-custom_binary_port_random_access_p (SCM port)
-{
-  struct custom_binary_port *stream = (void *) SCM_STREAM (port);
-
-  return scm_is_true (stream->set_position_x);
-}
-
-static scm_t_off
-custom_binary_port_seek (SCM port, scm_t_off offset, int whence)
-#define FUNC_NAME "custom_binary_port_seek"
-{
-  SCM result;
-  struct custom_binary_port *stream = (void *) SCM_STREAM (port);
-  scm_t_off c_result = 0;
-
-  switch (whence)
-    {
-    case SEEK_CUR:
-      {
-	if (SCM_LIKELY (scm_is_true (stream->get_position)))
-	  result = scm_call_0 (stream->get_position);
-	else
-	  scm_wrong_type_arg_msg (FUNC_NAME, 0, port,
-				  "R6RS custom binary port with "
-				  "`port-position' support");
-	c_result = scm_to_off_t (result);
-	if (offset == 0)
-	  /* We just want to know the current position.  */
-	  break;
-
-        if (INT_ADD_OVERFLOW (offset, c_result))
-          scm_num_overflow (FUNC_NAME);
-
-	offset += c_result;
-	/* Fall through.  */
-      }
-
-    case SEEK_SET:
-      {
-	if (SCM_LIKELY (scm_is_true (stream->set_position_x)))
-	  result = scm_call_1 (stream->set_position_x, scm_from_off_t (offset));
-	else
-	  scm_wrong_type_arg_msg (FUNC_NAME, 0, port,
-				  "seekable R6RS custom binary port");
-
-	/* Assuming setting the position succeeded.  */
-	c_result = offset;
-	break;
-      }
-
-    default:
-      /* `SEEK_END' cannot be supported.  */
-      scm_wrong_type_arg_msg (FUNC_NAME, 0, port,
-			      "R6RS custom binary ports do not "
-			      "support `SEEK_END'");
-    }
-
-  return c_result;
-}
-#undef FUNC_NAME
-
-static void
-custom_binary_port_close (SCM port)
-{
-  struct custom_binary_port *stream = (void *) SCM_STREAM (port);
-
-  if (scm_is_true (stream->close))
-    /* Invoke the `close' thunk.  */
-    scm_call_0 (stream->close);
-}
-
-
-
-
-/* Custom binary input ports.  */
-
-static scm_t_port_type *custom_binary_input_port_type = 0;
-
-static inline SCM
-make_custom_binary_input_port (SCM read_proc, SCM get_position_proc,
-                               SCM set_position_proc, SCM close_proc)
-{
-  struct custom_binary_port *stream;
-  const unsigned long mode_bits = SCM_RDNG;
-
-  stream = scm_gc_typed_calloc (struct custom_binary_port);
-  stream->read = read_proc;
-  stream->write = SCM_BOOL_F;
-  stream->get_position = get_position_proc;
-  stream->set_position_x = set_position_proc;
-  stream->close = close_proc;
-
-  return scm_c_make_port_with_encoding (custom_binary_input_port_type,
-                                        mode_bits,
-                                        sym_ISO_8859_1, sym_error,
-                                        (scm_t_bits) stream);
-}
-
-static size_t
-custom_binary_input_port_read (SCM port, SCM dst, size_t start, size_t count)
-#define FUNC_NAME "custom_binary_input_port_read"
-{
-  struct custom_binary_port *stream = (void *) SCM_STREAM (port);
-  SCM octets;
-  size_t c_octets;
-
-  octets = scm_call_3 (stream->read, dst, scm_from_size_t (start),
-                       scm_from_size_t (count));
-  c_octets = scm_to_size_t (octets);
-  if (c_octets > count)
-    scm_out_of_range (FUNC_NAME, octets);
-
-  return c_octets;
-}
-#undef FUNC_NAME
-
-
-SCM_DEFINE (scm_make_custom_binary_input_port,
-	    "make-custom-binary-input-port", 5, 0, 0,
-	    (SCM id, SCM read_proc, SCM get_position_proc,
-	     SCM set_position_proc, SCM close_proc),
-	    "Return a new custom binary input port whose input is drained "
-	    "by invoking @var{read_proc} and passing it a bytevector, an "
-	    "index where octets should be written, and an octet count.")
-#define FUNC_NAME s_scm_make_custom_binary_input_port
-{
-  SCM_VALIDATE_STRING (1, id);
-  SCM_VALIDATE_PROC (2, read_proc);
-
-  if (!scm_is_false (get_position_proc))
-    SCM_VALIDATE_PROC (3, get_position_proc);
-
-  if (!scm_is_false (set_position_proc))
-    SCM_VALIDATE_PROC (4, set_position_proc);
-
-  if (!scm_is_false (close_proc))
-    SCM_VALIDATE_PROC (5, close_proc);
-
-  return make_custom_binary_input_port (read_proc, get_position_proc,
-                                        set_position_proc, close_proc);
-}
-#undef FUNC_NAME
-
-
-/* Instantiate the custom binary input port type.  */
-static inline void
-initialize_custom_binary_input_ports (void)
-{
-  custom_binary_input_port_type =
-    scm_make_port_type ("r6rs-custom-binary-input-port",
-			custom_binary_input_port_read, NULL);
-
-  scm_set_port_seek (custom_binary_input_port_type, custom_binary_port_seek);
-  scm_set_port_random_access_p (custom_binary_input_port_type,
-                                custom_binary_port_random_access_p);
-  scm_set_port_close (custom_binary_input_port_type, custom_binary_port_close);
-}
 
 
 
@@ -941,169 +769,35 @@ initialize_bytevector_output_ports (void)
 
 
 
-/* Custom binary output ports.  */
+/* Custom ports.  */
 
-static scm_t_port_type *custom_binary_output_port_type;
-
-
-static inline SCM
-make_custom_binary_output_port (SCM write_proc, SCM get_position_proc,
-                                SCM set_position_proc, SCM close_proc)
-{
-  struct custom_binary_port *stream;
-  const unsigned long mode_bits = SCM_WRTNG;
-
-  stream = scm_gc_typed_calloc (struct custom_binary_port);
-  stream->read = SCM_BOOL_F;
-  stream->write = write_proc;
-  stream->get_position = get_position_proc;
-  stream->set_position_x = set_position_proc;
-  stream->close = close_proc;
-
-  return scm_c_make_port_with_encoding (custom_binary_output_port_type,
-                                        mode_bits,
-                                        sym_ISO_8859_1, sym_error,
-                                        (scm_t_bits) stream);
+SCM scm_make_custom_binary_input_port (SCM id, SCM read_proc,
+                                       SCM get_position_proc,
+                                       SCM set_position_proc, SCM close_proc) {
+  return scm_call_5 (scm_c_public_ref ("ice-9 binary-ports",
+                                       "make-custom-binary-input-port"),
+                     id, read_proc, get_position_proc, set_position_proc,
+                     close_proc);
 }
 
-/* Flush octets from BUF to the backing store.  */
-static size_t
-custom_binary_output_port_write (SCM port, SCM src, size_t start, size_t count)
-#define FUNC_NAME "custom_binary_output_port_write"
-{
-  struct custom_binary_port *stream = (void *) SCM_STREAM (port);
-  size_t written;
-  SCM result;
-
-  result = scm_call_3 (stream->write, src, scm_from_size_t (start),
-                       scm_from_size_t (count));
-
-  written = scm_to_size_t (result);
-  if (written > count)
-    scm_wrong_type_arg_msg (FUNC_NAME, 0, result,
-                            "R6RS custom binary output port `write!' "
-                            "returned a incorrect integer");
-
-  return written;
-}
-#undef FUNC_NAME
-
-
-SCM_DEFINE (scm_make_custom_binary_output_port,
-	    "make-custom-binary-output-port", 5, 0, 0,
-	    (SCM id, SCM write_proc, SCM get_position_proc,
-	     SCM set_position_proc, SCM close_proc),
-	    "Return a new custom binary output port whose output is drained "
-	    "by invoking @var{write_proc} and passing it a bytevector, an "
-	    "index where octets should be written, and an octet count.")
-#define FUNC_NAME s_scm_make_custom_binary_output_port
-{
-  SCM_VALIDATE_STRING (1, id);
-  SCM_VALIDATE_PROC (2, write_proc);
-
-  if (!scm_is_false (get_position_proc))
-    SCM_VALIDATE_PROC (3, get_position_proc);
-
-  if (!scm_is_false (set_position_proc))
-    SCM_VALIDATE_PROC (4, set_position_proc);
-
-  if (!scm_is_false (close_proc))
-    SCM_VALIDATE_PROC (5, close_proc);
-
-  return make_custom_binary_output_port (write_proc, get_position_proc,
-                                         set_position_proc, close_proc);
-}
-#undef FUNC_NAME
-
-
-/* Instantiate the custom binary output port type.  */
-static inline void
-initialize_custom_binary_output_ports (void)
-{
-  custom_binary_output_port_type =
-    scm_make_port_type ("r6rs-custom-binary-output-port",
-			NULL, custom_binary_output_port_write);
-
-  scm_set_port_seek (custom_binary_output_port_type, custom_binary_port_seek);
-  scm_set_port_random_access_p (custom_binary_output_port_type,
-                                custom_binary_port_random_access_p);
-  scm_set_port_close (custom_binary_output_port_type, custom_binary_port_close);
+SCM scm_make_custom_binary_output_port (SCM id, SCM write_proc,
+                                       SCM get_position_proc,
+                                       SCM set_position_proc, SCM close_proc) {
+  return scm_call_5 (scm_c_public_ref ("ice-9 binary-ports",
+                                       "make-custom-binary-output-port"),
+                     id, write_proc, get_position_proc, set_position_proc,
+                     close_proc);
 }
 
-
-
-
-/* Custom binary input_output ports.  */
-
-static scm_t_port_type *custom_binary_input_output_port_type;
-
-
-static inline SCM
-make_custom_binary_input_output_port (SCM read_proc, SCM write_proc,
-                                      SCM get_position_proc,
-                                      SCM set_position_proc, SCM close_proc)
-{
-  struct custom_binary_port *stream;
-  const unsigned long mode_bits = SCM_WRTNG | SCM_RDNG;
-
-  stream = scm_gc_typed_calloc (struct custom_binary_port);
-  stream->read = read_proc;
-  stream->write = write_proc;
-  stream->get_position = get_position_proc;
-  stream->set_position_x = set_position_proc;
-  stream->close = close_proc;
-
-  return scm_c_make_port_with_encoding (custom_binary_input_output_port_type,
-                                        mode_bits, sym_ISO_8859_1, sym_error,
-                                        (scm_t_bits) stream);
-}
-
-SCM_DEFINE (scm_make_custom_binary_input_output_port,
-	    "make-custom-binary-input/output-port", 6, 0, 0,
-	    (SCM id, SCM read_proc, SCM write_proc, SCM get_position_proc,
-	     SCM set_position_proc, SCM close_proc),
-	    "Return a new custom binary input/output port.  The port's input\n"
-            "is drained by invoking @var{read_proc} and passing it a\n"
-            "bytevector, an index where octets should be written, and an\n"
-            "octet count.  The output is drained by invoking @var{write_proc}\n"
-            "and passing it a bytevector, an index where octets should be\n"
-            "written, and an octet count.")
-#define FUNC_NAME s_scm_make_custom_binary_input_output_port
-{
-  SCM_VALIDATE_STRING (1, id);
-  SCM_VALIDATE_PROC (2, read_proc);
-  SCM_VALIDATE_PROC (3, write_proc);
-
-  if (!scm_is_false (get_position_proc))
-    SCM_VALIDATE_PROC (4, get_position_proc);
-
-  if (!scm_is_false (set_position_proc))
-    SCM_VALIDATE_PROC (5, set_position_proc);
-
-  if (!scm_is_false (close_proc))
-    SCM_VALIDATE_PROC (6, close_proc);
-
-  return make_custom_binary_input_output_port
-    (read_proc, write_proc, get_position_proc, set_position_proc, close_proc);
-}
-#undef FUNC_NAME
-
-
-/* Instantiate the custom binary input_output port type.  */
-static inline void
-initialize_custom_binary_input_output_ports (void)
-{
-  custom_binary_input_output_port_type =
-    scm_make_port_type ("r6rs-custom-binary-input/output-port",
-			custom_binary_input_port_read,
-			custom_binary_output_port_write);
-
-  scm_set_port_seek (custom_binary_input_output_port_type,
-                     custom_binary_port_seek);
-  scm_set_port_random_access_p (custom_binary_input_output_port_type,
-                                custom_binary_port_random_access_p);
-  scm_set_port_close (custom_binary_input_output_port_type,
-                      custom_binary_port_close);
+SCM scm_make_custom_binary_input_output_port (SCM id, SCM read_proc,
+                                              SCM write_proc,
+                                              SCM get_position_proc,
+                                              SCM set_position_proc,
+                                              SCM close_proc) {
+  return scm_call_6 (scm_c_public_ref ("ice-9 binary-ports",
+                                       "make-custom-binary-input/output-port"),
+                     id, read_proc, write_proc, get_position_proc,
+                     set_position_proc, close_proc);
 }
 
 
@@ -1234,10 +928,7 @@ scm_register_r6rs_ports (void)
 			    NULL);
 
   initialize_bytevector_input_ports ();
-  initialize_custom_binary_input_ports ();
   initialize_bytevector_output_ports ();
-  initialize_custom_binary_output_ports ();
-  initialize_custom_binary_input_output_ports ();
   initialize_transcoded_ports ();
 }
 

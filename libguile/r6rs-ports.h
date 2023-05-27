@@ -1,7 +1,7 @@
 #ifndef SCM_R6RS_PORTS_H
 #define SCM_R6RS_PORTS_H
 
-/* Copyright 2009-2011,2013,2018-2019
+/* Copyright 2009-2011,2013,2018-2019,2023
      Free Software Foundation, Inc.
 
    This file is part of Guile.
@@ -28,7 +28,6 @@
 
 SCM_API SCM scm_eof_object (void);
 SCM_API SCM scm_open_bytevector_input_port (SCM, SCM);
-SCM_API SCM scm_make_custom_binary_input_port (SCM, SCM, SCM, SCM, SCM);
 SCM_API SCM scm_get_u8 (SCM);
 SCM_API SCM scm_lookahead_u8 (SCM);
 SCM_API SCM scm_get_bytevector_n (SCM, SCM);
@@ -38,9 +37,12 @@ SCM_API SCM scm_get_bytevector_all (SCM);
 SCM_API SCM scm_put_u8 (SCM, SCM);
 SCM_API SCM scm_put_bytevector (SCM, SCM, SCM, SCM);
 SCM_API SCM scm_open_bytevector_output_port (SCM);
+
+SCM_API SCM scm_make_custom_binary_input_port (SCM, SCM, SCM, SCM, SCM);
 SCM_API SCM scm_make_custom_binary_output_port (SCM, SCM, SCM, SCM, SCM);
 SCM_API SCM scm_make_custom_binary_input_output_port (SCM, SCM, SCM,
                                                       SCM, SCM, SCM);
+
 SCM_API SCM scm_get_string_n_x (SCM, SCM, SCM, SCM);
 
 SCM_API void scm_init_r6rs_ports (void);
