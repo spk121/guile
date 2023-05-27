@@ -1,7 +1,7 @@
 @c -*-texinfo-*-
 @c This is part of the GNU Guile Reference Manual.
 @c Copyright (C)  1996, 1997, 2000, 2001, 2002, 2003, 2004, 2007, 2009,
-@c   2010, 2011, 2013, 2016, 2019, 2021  Free Software Foundation, Inc.
+@c   2010, 2011, 2013, 2016, 2019, 2021, 2023  Free Software Foundation, Inc.
 @c See the file guile.texi for copying conditions.
 
 @node Input and Output
@@ -20,7 +20,6 @@
 * Port Types::                  Types of port and how to make them.
 * Venerable Port Interfaces::   Procedures from the last millenium.
 * Using Ports from C::          Nice interfaces for C.
-* I/O Extensions::              Implementing new port types in C.
 * Non-Blocking I/O::            How Guile deals with EWOULDBLOCK.
 * BOM Handling::                Handling of Unicode byte order marks.
 @end menu
@@ -1063,6 +1062,8 @@ initialized with the @var{port} argument.
 * Custom Ports:: Ports whose implementation you control.
 * Soft Ports:: An older version of custom ports.
 * Void Ports:: Ports on nothing at all.
+* Low-Level Custom Ports:: Implementing new kinds of port.
+* Low-Level Custom Ports in C:: A C counterpart to make-custom-port.
 @end menu
 
 
@@ -1548,6 +1549,253 @@ specifies the input/output modes for this port: see the
 documentation for @code{open-file} in @ref{File Ports}.
 @end deffn
 
+@node Low-Level Custom Ports
+@subsubsection Low-Level Custom Ports
+
+This section describes how to implement a new kind of port using Guile's
+lowest-level, most primitive interfaces.  First, load the @code{(ice-9
+custom-ports)} module:
+
+@example
+(use-modules (ice-9 custom-ports))
+@end example
+
+Then to make a new port, call @code{make-custom-port}:
+
+@deffn {Scheme Procedure} make-custom-port @
+       [#:read] [#:write] @
+       [#:read-wait-fd] [#:write-wait-fd] [#:input-waiting?] @
+       [#:seek] [#:random-access?] [#:get-natural-buffer-sizes] @
+       [#:id] [#:print] @
+       [#:close] [#:close-on-gc?] @
+       [#:truncate] @
+       [#:encoding] [#:conversion-strategy]
+Make a new custom port.
+
+@xref{Encoding}, for more on @code{#:encoding} and
+@code{#:conversion-strategy}.
+@end deffn
+
+A port has a number of associated procedures and properties which
+collectively implement its behavior.  Creating a new custom port mostly
+involves writing these procedures, which are passed as keyword arguments
+to @code{make-custom-port}.
+
+@deffn {Scheme Port Method} #:read port dst start count
+A port's @code{#:read} implementation fills read buffers.  It should
+copy bytes to the supplied bytevector @var{dst}, starting at offset
+@var{start} and continuing for @var{count} bytes, and return the number
+of bytes that were read, or @code{#f} to indicate that reading any bytes
+would block.
+@end deffn
+
+@deffn {Scheme Port Method} #:write port src start count
+A port's @code{#:write} implementation flushes write buffers to the
+mutable store.  It should write out bytes from the supplied bytevector
+@var{src}, starting at offset @var{start} and continuing for @var{count}
+bytes, and return the number of bytes that were written, or @code{#f} to
+indicate writing any bytes would block.
+@end deffn
+
+If @code{make-custom-port} is passed a @code{#:read} argument, the port
+will be an input port.  Passing a @code{#:write} argument will make an
+output port, and passing both will make an input-output port.
+
+@deffn {Scheme Port Method} #:read-wait-fd port
+@deffnx {Scheme Port Method} #:write-wait-fd port
+If a port's @code{#:read} or @code{#:write} method returns @code{#f},
+that indicates that reading or writing would block, and that Guile
+should instead @code{poll} on the file descriptor returned by the port's
+@code{#:read-wait-fd} or @code{#:write-wait-fd} method, respectively,
+until the operation can complete.  @xref{Non-Blocking I/O}, for a more
+in-depth discussion.
+
+These methods must be implemented if the @code{#:read} or @code{#:write}
+method can return @code{#f}, and should return a non-negative integer
+file descriptor.  However they may be called explicitly by a user, for
+example to determine if a port may eventually be readable or writeable.
+If there is no associated file descriptor with the port, they should
+return @code{#f}.  The default implementation returns @code{#f}.
+@end deffn
+
+@deffn {Scheme Port Method} #:input-waiting? port
+In rare cases it is useful to be able to know whether data can be read
+from a port.  For example, if the user inputs @code{1 2 3} at the
+interactive console, after reading and evaluating @code{1} the console
+shouldn't then print another prompt before reading and evaluating
+@code{2} because there is input already waiting.  If the port can look
+ahead, then it should implement the @code{#:input-waiting?} method,
+which returns @code{#t} if input is available, or @code{#f} reading the
+next byte would block.  The default implementation returns @code{#t}.
+@end deffn
+
+@deffn {Scheme Port Method} #:seek port offset whence
+Set or get the current byte position of the port.  Guile will flush read
+and/or write buffers before seeking, as appropriate.  The @var{offset}
+and @var{whence} parameters are as for the @code{seek} procedure;
+@xref{Random Access}.
+
+The @code{#:seek} method returns the byte position after seeking.  To
+query the current position, @code{#:seek} will be called with an
+@var{offset} of 0 and @code{SEEK_CUR} for @var{whence}.  Other values of
+@var{offset} and/or @var{whence} will actually perform the seek.  The
+@code{#:seek} method should throw an error if the port is not seekable,
+which is what the default implementation does.
+@end deffn
+
+@deffn {Scheme Port Method} #:truncate port
+Truncate the port data to be specified length.  Guile will flush buffers
+beforehand, as appropriate.  The default implementation throws an error,
+indicating that truncation is not supported for this port.
+@end deffn
+
+@deffn {Scheme Port Method} #:random-access? port
+Return @code{#t} if @var{port} is open for random access, or @code{#f}
+otherwise.
+
+@cindex random access
+Seeking on a random-access port with buffered input, or switching to
+writing after reading, will cause the buffered input to be discarded and
+Guile will seek the port back the buffered number of bytes.  Likewise
+seeking on a random-access port with buffered output, or switching to
+reading after writing, will flush pending bytes with a call to the
+@code{write} procedure.  @xref{Buffering}.
+
+Indicate to Guile that your port needs this behavior by returning true
+from your @code{#:random-access?} method.  The default implementation of
+this function returns @code{#t} if the port has a @code{#:seek}
+implementation.
+@end deffn
+
+@deffn {Scheme Port Method} #:get-natural-buffer-sizes read-buf-size write-buf-size
+Guile will internally attach buffers to ports.  An input port always has
+a read buffer, and an output port always has a write buffer.
+@xref{Buffering}.  A port buffer consists of a bytevector, along with
+some cursors into that bytevector denoting where to get and put data.
+
+Port implementations generally don't have to be concerned with
+buffering: a port's @code{#:read} or @code{#:write} method will receive
+the buffer's bytevector as an argument, along with an offset and a
+length into that bytevector, and should then either fill or empty that
+bytevector.  However in some cases, port implementations may be able to
+provide an appropriate default buffer size to Guile.  For example file
+ports implement @code{#:get-natural-buffer-sizes} to let the operating
+system inform Guile about the appropriate buffer sizes for the
+particular file opened by the port.
+
+This method returns two values, corresponding to the natural read and
+write buffer sizes for the ports.  The two parameters
+@var{read-buf-size} and @var{write-buf-size} are Guile's guesses for
+what sizes might be good.  A custom @code{#:get-natural-buffer-sizes}
+method could override Guile's choices, or just pass them on, as the
+default implementation does.
+@end deffn
+
+@deffn {Scheme Port Method} #:print port out
+Called when the port @var{port} is written to @var{out}, e.g. via
+@code{(write port out)}.
+
+If @code{#:print} is not explicitly supplied, the default implementation
+prints something like @code{#<@var{mode}:@var{id} @var{address}>}, where
+@var{mode} is either @code{input}, @code{output}, or
+@code{input-output}, @var{id} comes from the @code{#:id} keyword
+argument (defaulting to @code{"custom-port"}), and @var{address} is a
+unique integer associated with the port.
+@end deffn
+
+@deffn {Scheme Port Method} #:close port
+Called when @var{port} is closed.  It should release any
+explicitly-managed resources used by the port.
+@end deffn
+
+By default, ports that are garbage collected just go away without
+closing or flushing any buffered output.  If your port needs to release
+some external resource like a file descriptor, or needs to make sure
+that its internal buffers are flushed even if the port is collected
+while it was open, then pass @code{#:close-on-gc? #t} to
+@code{make-custom-port}.  Note that in that case, the @code{#:close}
+method will probably be called on a separate thread.
+
+Note that calls to all of these methods can proceed in parallel and
+concurrently and from any thread up until the point that the port is
+closed.  The call to @code{close} will happen when no other method is
+running, and no method will be called after the @code{close} method is
+called.  If your port implementation needs mutual exclusion to prevent
+concurrency, it is responsible for locking appropriately.
+
+@node Low-Level Custom Ports in C
+@subsubsection Low-Level Custom Ports in C
+
+The @code{make-custom-port} procedure described in the previous section
+has similar functionality on the C level, though it is organized a bit
+differently.
+
+In C, the mechanism is that one creates a new @dfn{port type object}.
+The methods are then associated with the port type object instead of the
+port itself.  The port type object is an opaque pointer allocated when
+defining the port type, which serves as a key into the port API.
+
+Ports themselves have associated @dfn{stream} values.  The stream is a
+pointer controlled by the user, which is set when the port is created.
+Given a port, the @code{SCM_STREAM} macro returns its associated stream
+value, as a @code{scm_t_bits}.  Note that your port methods are only
+ever called with ports of your type, so port methods can safely cast
+this value to the expected type.  Contrast this to Scheme, which doesn't
+need access to the stream because the @code{make-custom-port} methods
+can be closures that share port-specific data directly.
+
+A port type is created by calling @code{scm_make_port_type}.
+
+@deftypefun scm_t_port_type* scm_make_port_type (char *name, size_t (*read) (SCM port, SCM dst, size_t start, size_t count), size_t (*write) (SCM port, SCM src, size_t start, size_t count))
+Define a new port type.  The @var{name} parameter is like the
+@code{#:id} parameter to @code{make-custom-port}; and @var{read} and
+@var{write} are like @code{make-custom-port}'s @code{#:read} and
+@code{#:write}, except that they should return @code{(size_t)-1} if the
+read or write operation would block, instead of @code{#f}.
+@end deftypefun
+
+@deftypefun void scm_set_port_read_wait_fd (scm_t_port_type *type, int (*wait_fd) (SCM port))
+@deftypefunx void scm_set_port_write_wait_fd (scm_t_port_type *type, int (*wait_fd) (SCM port))
+@deftypefunx void scm_set_port_print (scm_t_port_type *type, int (*print) (SCM port, SCM dest_port, scm_print_state *pstate))
+@deftypefunx void scm_set_port_close (scm_t_port_type *type, void (*close) (SCM port))
+@deftypefunx void scm_set_port_needs_close_on_gc (scm_t_port_type *type, int needs_close_p)
+@deftypefunx void scm_set_port_seek (scm_t_port_type *type, scm_t_off (*seek) (SCM port, scm_t_off offset, int whence))
+@deftypefunx void scm_set_port_truncate (scm_t_port_type *type, void (*truncate) (SCM port, scm_t_off length))
+@deftypefunx void scm_set_port_random_access_p (scm_t_port_type *type, int (*random_access_p) (SCM port));
+@deftypefunx void scm_set_port_input_waiting (scm_t_port_type *type, int (*input_waiting) (SCM port));
+@deftypefunx void scm_set_port_get_natural_buffer_sizes @
+  (scm_t_port_type *type, void (*get_natural_buffer_sizes) (SCM, size_t *read_buf_size, size_t *write_buf_size))
+Port method definitions.  @xref{Low-Level Custom Ports}, for more
+details on each of these methods.
+@end deftypefun
+
+Once you have your port type, you can create ports with
+@code{scm_c_make_port}, or @code{scm_c_make_port_with_encoding}.
+
+@deftypefun SCM scm_c_make_port_with_encoding (scm_t_port_type *type, unsigned long mode_bits, SCM encoding, SCM conversion_strategy, scm_t_bits stream)
+@deftypefunx SCM scm_c_make_port (scm_t_port_type *type, unsigned long mode_bits, scm_t_bits stream)
+Make a port with the given @var{type}.  The @var{stream} indicates the
+private data associated with the port, which your port implementation
+may later retrieve with @code{SCM_STREAM}.  The mode bits should include
+one or more of the flags @code{SCM_RDNG} or @code{SCM_WRTNG}, indicating
+that the port is an input and/or an output port, respectively.  The mode
+bits may also include @code{SCM_BUF0} or @code{SCM_BUFLINE}, indicating
+that the port should be unbuffered or line-buffered, respectively.  The
+default is that the port will be block-buffered.  @xref{Buffering}.
+
+As you would imagine, @var{encoding} and @var{conversion_strategy}
+specify the port's initial textual encoding and conversion strategy.
+Both are symbols.  @code{scm_c_make_port} is the same as
+@code{scm_c_make_port_with_encoding}, except it uses the default port
+encoding and conversion strategy.
+@end deftypefun
+
+At this point you may be wondering whether to implement your custom port
+type in C or Scheme.  The answer is that probably you want to use
+Scheme's @code{make-custom-port}.  The speed is similar between C and
+Scheme, and ports implemented in C have the disadvantage of not being
+suspendable.  @xref{Non-Blocking I/O}.
+
 
 @node Venerable Port Interfaces
 @subsection Venerable Port Interfaces
@@ -1692,179 +1940,6 @@ second, the @code{scm_t_uint32*} buffer is a string in the UTF-32
 encoding.  These routines will update the port's line and column.
 @end deftypefn
 
-@node I/O Extensions
-@subsection Implementing New Port Types in C
-
-This section describes how to implement a new port type in C.  Although
-ports support many operations, as a data structure they present an
-opaque interface to the user.  To the port implementor, you have two
-pieces of information to work with: the port type, and the port's
-``stream''.  The port type is an opaque pointer allocated when defining
-your port type.  It is your key into the port API, and it helps you
-identify which ports are actually yours.  The ``stream'' is a pointer
-you control, and which you set when you create a port.  Get a stream
-from a port using the @code{SCM_STREAM} macro.  Note that your port
-methods are only ever called with ports of your type.
-
-A port type is created by calling @code{scm_make_port_type}.  Once you
-have your port type, you can create ports with @code{scm_c_make_port},
-or @code{scm_c_make_port_with_encoding}.
-
-@deftypefun scm_t_port_type* scm_make_port_type (char *name, size_t (*read) (SCM port, SCM dst, size_t start, size_t count), size_t (*write) (SCM port, SCM src, size_t start, size_t count))
-Define a new port type.  The @var{name}, @var{read} and @var{write}
-parameters are initial values for those port type fields, as described
-below.  The other fields are initialized with default values and can be
-changed later.
-@end deftypefun
-
-@deftypefun SCM scm_c_make_port_with_encoding (scm_t_port_type *type, unsigned long mode_bits, SCM encoding, SCM conversion_strategy, scm_t_bits stream)
-@deftypefunx SCM scm_c_make_port (scm_t_port_type *type, unsigned long mode_bits, scm_t_bits stream)
-Make a port with the given @var{type}.  The @var{stream} indicates the
-private data associated with the port, which your port implementation
-may later retrieve with @code{SCM_STREAM}.  The mode bits should include
-one or more of the flags @code{SCM_RDNG} or @code{SCM_WRTNG}, indicating
-that the port is an input and/or an output port, respectively.  The mode
-bits may also include @code{SCM_BUF0} or @code{SCM_BUFLINE}, indicating
-that the port should be unbuffered or line-buffered, respectively.  The
-default is that the port will be block-buffered.  @xref{Buffering}.
-
-As you would imagine, @var{encoding} and @var{conversion_strategy}
-specify the port's initial textual encoding and conversion strategy.
-Both are symbols.  @code{scm_c_make_port} is the same as
-@code{scm_c_make_port_with_encoding}, except it uses the default port
-encoding and conversion strategy.
-@end deftypefun
-
-The port type has a number of associate procedures and properties which
-collectively implement the port's behavior.  Creating a new port type
-mostly involves writing these procedures.
-
-@table @code
-@item name
-A pointer to a NUL terminated string: the name of the port type.  This
-property is initialized via the first argument to
-@code{scm_make_port_type}.
-
-@item read
-A port's @code{read} implementation fills read buffers.  It should copy
-bytes to the supplied bytevector @code{dst}, starting at offset
-@code{start} and continuing for @code{count} bytes, returning the number
-of bytes read.
-
-@item write
-A port's @code{write} implementation flushes write buffers to the
-mutable store.
-It should write out bytes from the supplied bytevector @code{src},
-starting at offset @code{start} and continuing for @code{count} bytes,
-and return the number of bytes that were written.
-
-@item read_wait_fd
-@itemx write_wait_fd
-If a port's @code{read} or @code{write} function returns @code{(size_t)
--1}, that indicates that reading or writing would block.  In that case
-to preserve the illusion of a blocking read or write operation, Guile's
-C port run-time will @code{poll} on the file descriptor returned by
-either the port's @code{read_wait_fd} or @code{write_wait_fd} function.
-Set using
-
-@deftypefun void scm_set_port_read_wait_fd (scm_t_port_type *type, int (*wait_fd) (SCM port))
-@deftypefunx void scm_set_port_write_wait_fd (scm_t_port_type *type, int (*wait_fd) (SCM port))
-@end deftypefun
-
-Only a port type which implements the @code{read_wait_fd} or
-@code{write_wait_fd} port methods can usefully return @code{(size_t) -1}
-from a read or write function.  @xref{Non-Blocking I/O}, for more on
-non-blocking I/O in Guile.
-
-@item print
-Called when @code{write} is called on the port, to print a port
-description.  For example, for a file port it may produce something
-like: @code{#<input: /etc/passwd 3>}.  Set using
-
-@deftypefun void scm_set_port_print (scm_t_port_type *type, int (*print) (SCM port, SCM dest_port, scm_print_state *pstate))
-The first argument @var{port} is the port being printed, the second
-argument @var{dest_port} is where its description should go.
-@end deftypefun
-
-@item close
-Called when the port is closed.  It should free any resources used by
-the port.  Set using
-
-@deftypefun void scm_set_port_close (scm_t_port_type *type, void (*close) (SCM port))
-@end deftypefun
-
-By default, ports that are garbage collected just go away without
-closing.  If your port type needs to release some external resource like
-a file descriptor, or needs to make sure that its internal buffers are
-flushed even if the port is collected while it was open, then mark the
-port type as needing a close on GC.
-
-@deftypefun void scm_set_port_needs_close_on_gc (scm_t_port_type *type, int needs_close_p)
-@end deftypefun
-
-@item seek
-Set the current position of the port.  Guile will flush read and/or
-write buffers before seeking, as appropriate.
-
-@deftypefun void scm_set_port_seek (scm_t_port_type *type, scm_t_off (*seek) (SCM port, scm_t_off offset, int whence))
-@end deftypefun
-
-@item truncate
-Truncate the port data to be specified length.  Guile will flush buffers
-before hand, as appropriate.  Set using
-
-@deftypefun void scm_set_port_truncate (scm_t_port_type *type, void (*truncate) (SCM port, scm_t_off length))
-@end deftypefun
-
-@item random_access_p
-Determine whether this port is a random-access port.
-
-@cindex random access
-Seeking on a random-access port with buffered input, or switching to
-writing after reading, will cause the buffered input to be discarded and
-Guile will seek the port back the buffered number of bytes.  Likewise
-seeking on a random-access port with buffered output, or switching to
-reading after writing, will flush pending bytes with a call to the
-@code{write} procedure.  @xref{Buffering}.
-
-Indicate to Guile that your port needs this behavior by returning a
-nonzero value from your @code{random_access_p} function.  The default
-implementation of this function returns nonzero if the port type
-supplies a seek implementation.
-
-@deftypefun void scm_set_port_random_access_p (scm_t_port_type *type, int (*random_access_p) (SCM port));
-@end deftypefun
-
-@item get_natural_buffer_sizes
-Guile will internally attach buffers to ports.  An input port always has
-a read buffer and an output port always has a write buffer.
-@xref{Buffering}.  A port buffer consists of a bytevector, along with
-some cursors into that bytevector denoting where to get and put data.
-
-Port implementations generally don't have to be concerned with
-buffering: a port type's @code{read} or @code{write} function will
-receive the buffer's bytevector as an argument, along with an offset and
-a length into that bytevector, and should then either fill or empty that
-bytevector.  However in some cases, port implementations may be able to
-provide an appropriate default buffer size to Guile.
-
-@deftypefun void scm_set_port_get_natural_buffer_sizes @
-  (scm_t_port_type *type, void (*get_natural_buffer_sizes) (SCM, size_t *read_buf_size, size_t *write_buf_size))
-Fill in @var{read_buf_size} and @var{write_buf_size} with an appropriate buffer size for this port, if one is known.
-@end deftypefun
-
-File ports implement a @code{get_natural_buffer_sizes} to let the
-operating system inform Guile about the appropriate buffer sizes for the
-particular file opened by the port.
-@end table
-
-Note that calls to all of these methods can proceed in parallel and
-concurrently and from any thread up until the point that the port is
-closed.  The call to @code{close} will happen when no other method is
-running, and no method will be called after the @code{close} method is
-called.  If your port implementation needs mutual exclusion to prevent
-concurrency, it is responsible for locking appropriately.
-
 @node Non-Blocking I/O
 @subsection Non-Blocking I/O
 
@@ -1914,7 +1989,8 @@ read or write from this file and the read or write returns a result
 indicating that more data can only be had by doing a blocking read or
 write, Guile will block by polling on the socket's @code{read-wait-fd}
 or @code{write-wait-fd}, to preserve the illusion of a blocking read or
-write.  @xref{I/O Extensions} for more on those internal interfaces.
+write.  @xref{Low-Level Custom Ports} for more on those internal
+interfaces.
 
 So far we have just reproduced the status quo: the file descriptor is
 non-blocking, but the operations on the port do block.  To go farther,

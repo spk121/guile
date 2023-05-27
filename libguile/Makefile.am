@@ -1,6 +1,6 @@
 ## Process this file with Automake to create Makefile.in
 ##
-##   Copyright (C) 1998-2004, 2006-2014, 2016-2022
+##   Copyright (C) 1998-2004, 2006-2014, 2016-2023
 ##     Free Software Foundation, Inc.
 ##
 ##   This file is part of GUILE.
@@ -139,6 +139,7 @@ libguile_@GUILE_EFFECTIVE_VERSION@_la_SOURCES =				\
 	chooks.c				\
 	control.c				\
 	continuations.c				\
+	custom-ports.c				\
 	debug.c					\
 	deprecated.c				\
 	deprecation.c				\
@@ -259,6 +260,7 @@ DOT_X_FILES =					\
 	chars.x					\
 	control.x				\
 	continuations.x				\
+	custom-ports.x				\
 	debug.x					\
 	deprecated.x				\
 	deprecation.x				\
@@ -366,6 +368,7 @@ DOT_DOC_FILES = 				\
 	chars.doc				\
 	control.doc				\
 	continuations.doc			\
+	custom-ports.doc			\
 	debug.doc				\
 	deprecated.doc				\
 	deprecation.doc				\
@@ -530,7 +533,8 @@ uninstall-hook:
 ## compile, since they are #included.  So instead we list them here.
 ## Perhaps we can deal with them normally once the merge seems to be
 ## working.
-noinst_HEADERS = elf.h						\
+noinst_HEADERS = custom-ports.h					\
+                 elf.h						\
                  integers.h					\
                  intrinsics.h					\
                  quicksort.i.c                                  \

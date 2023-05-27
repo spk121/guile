@@ -1,4 +1,4 @@
-/* Copyright 1995-2004,2006,2009-2014,2016-2020
+/* Copyright 1995-2004,2006,2009-2014,2016-2021,2023
      Free Software Foundation, Inc.
 
    This file is part of Guile.
@@ -52,6 +52,7 @@
 #include "chars.h"
 #include "continuations.h"
 #include "control.h"
+#include "custom-ports.h"
 #include "debug.h"
 #ifdef GUILE_DEBUG_MALLOC
 #include "debug-malloc.h"
@@ -373,6 +374,7 @@ scm_i_init_guile (void *base)
   scm_bootstrap_programs ();
   scm_bootstrap_vm ();
   scm_register_atomic ();
+  scm_register_custom_ports ();
   scm_register_fdes_finalizers ();
   scm_register_foreign ();
   scm_register_foreign_object ();

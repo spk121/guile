@@ -1,4 +1,4 @@
-##  	Copyright (C) 2009-2022 Free Software Foundation, Inc.
+##  	Copyright (C) 2009-2023 Free Software Foundation, Inc.
 ##
 ##   This file is part of GNU Guile.
 ##
@@ -132,6 +132,7 @@ SOURCES =					\
   ice-9/control.scm				\
   ice-9/copy-tree.scm				\
   ice-9/curried-definitions.scm			\
+  ice-9/custom-ports.scm			\
   ice-9/deprecated.scm				\
   ice-9/documentation.scm			\
   ice-9/eval-string.scm				\
