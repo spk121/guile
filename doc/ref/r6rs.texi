@@ -1,7 +1,7 @@
 @c -*-texinfo-*-
 @c This is part of the GNU Guile Reference Manual.
 @c Copyright (C)  2010, 2011, 2012, 2013,
-@c   2014, 2019, 2021 Free Software Foundation, Inc.
+@c   2014, 2019, 2021, 2023 Free Software Foundation, Inc.
 @c See the file guile.texi for copying conditions.
 
 @node R6RS Support
@@ -1779,6 +1779,12 @@ respectively.  Whether the port supports the @code{port-position} and
 @deffn {Scheme Procedure} make-custom-binary-input-port id read! get-position set-position! close
 @deffnx {Scheme Procedure} make-custom-binary-output-port id write! get-position set-position! close
 @deffnx {Scheme Procedure} make-custom-binary-input/output-port id read! write! get-position set-position! close
+@xref{Custom Ports}.
+@end deffn
+
+@deffn {Scheme Procedure} make-custom-textual-input-port id read! get-position set-position! close
+@deffnx {Scheme Procedure} make-custom-textual-output-port id write! get-position set-position! close
+@deffnx {Scheme Procedure} make-custom-textual-input/output-port id read! write! get-position set-position! close
 @xref{Custom Ports}.
 @end deffn
 

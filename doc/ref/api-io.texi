@@ -45,7 +45,7 @@ example, we might display a string to a file like this:
 
 There are also string ports, for taking input from a string, or
 collecting output to a string; bytevector ports, for doing the same but
-using a bytevector as a source or sink of data; and soft ports, for
+using a bytevector as a source or sink of data; and custom ports, for
 arranging to call Scheme functions to provide input or handle output.
 @xref{Port Types}.
 
@@ -1390,20 +1390,27 @@ away from its default.  @xref{Encoding}.
 @subsubsection Custom Ports
 
 Custom ports allow the user to provide input and handle output via
-user-supplied procedures.  Guile currently only provides custom binary
-ports, not textual ports; for custom textual ports, @xref{Soft Ports}.
-We should add the R6RS custom textual port interfaces though.
-Contributions are appreciated.
+user-supplied procedures.  The most basic of these operates on the level
+of bytes, calling user-supplied functions to supply bytes for input and
+accept bytes for output.  In Guile, textual ports are built on top of
+binary ports, encoding and decoding their codepoint sequences from the
+bytes; the higher-level textual layer for custom ports allows users to
+deal in characters instead of bytes.
+
+Before using these procedures, import the appropriate module:
+
+@example
+(use-modules (ice-9 binary-ports))
+(use-modules (ice-9 textual-ports))
+@end example
 
 @cindex custom binary input ports
 @deffn {Scheme Procedure} make-custom-binary-input-port id read! get-position set-position! close
-Return a new custom binary input port@footnote{This is similar in spirit
-to Guile's @dfn{soft ports} (@pxref{Soft Ports}).} named @var{id} (a
-string) whose input is drained by invoking @var{read!} and passing it a
-bytevector, an index where bytes should be written, and the number of
-bytes to read.  The @code{read!}  procedure must return an integer
-indicating the number of bytes read, or @code{0} to indicate the
-end-of-file.
+Return a new custom binary input port named @var{id} (a string) whose
+input is drained by invoking @var{read!} and passing it a bytevector, an
+index where bytes should be written, and the number of bytes to read.
+The @code{read!}  procedure must return an integer indicating the number
+of bytes read, or @code{0} to indicate the end-of-file.
 
 Optionally, if @var{get-position} is not @code{#f}, it must be a thunk
 that will be called when @code{port-position} is invoked on the custom
@@ -1477,13 +1484,50 @@ random-access, causing the buffer to be flushed between reads and
 writes.
 @end deffn
 
+@cindex custom textual ports
+@cindex custom textual input ports
+@cindex custom textual output ports
+@cindex custom textual input/output ports
+@deffn {Scheme Procedure} make-custom-textual-input-port id read! get-position set-position! close
+@deffnx {Scheme Procedure} make-custom-textual-output-port id write! get-position set-position! close
+@deffnx {Scheme Procedure} make-custom-textual-input/output-port id read! write! get-position set-position! close
+Like their custom binary port counterparts, but for textual ports.
+Concretely this means that instead of being passed a bytevector, the
+@var{read} function is passed a mutable string to fill, and likewise for
+the buffer supplied to @var{write}.  Port positions are still expressed
+in bytes, however.
+
+If string ports were not supplied with Guile, we could implement them
+With custom textual ports:
+@example
+(define (open-string-input-port source)
+  (define position 0)
+  (define length (string-length source))
+
+  (define (read! dst start count)
+    (let ((count (min count (- length position))))
+      (string-copy! dst start source position (+ position count))
+      (set! position (+ position count))
+      count))
+
+  (make-custom-textual-input-port "strport" read! #f #f #f))
+
+(read (open-string-input-port "hello"))
+@end example
+@end deffn
+
 @node Soft Ports
 @subsubsection Soft Ports
 @cindex Soft port
 @cindex Port, soft
 
-A @dfn{soft port} is a port based on a vector of procedures capable of
-accepting or delivering characters.  It allows emulation of I/O ports.
+Soft ports are what Guile had before it had custom binary and textual
+ports.  Probably you want to use one of those instead.  @xref{Custom
+Ports}.
+
+But since you are still here, a @dfn{soft port} is a port based on a
+vector of procedures capable of accepting or delivering characters.  It
+allows emulation of I/O ports.
 
 @deffn {Scheme Procedure} make-soft-port pv modes
 Return a port capable of receiving or delivering characters as
@@ -1531,7 +1575,6 @@ For example:
 (write p p) @result{} #<input-output: soft 8081e20>
 @end lisp
 @end deffn
-
 
 @node Void Ports
 @subsubsection Void Ports

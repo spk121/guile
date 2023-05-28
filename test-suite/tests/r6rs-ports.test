@@ -1,6 +1,6 @@
 ;;;; r6rs-ports.test --- R6RS I/O port tests.   -*- coding: utf-8; -*-
 ;;;;
-;;;; Copyright (C) 2009-2012, 2013-2015, 2018 Free Software Foundation, Inc.
+;;;; Copyright (C) 2009-2012,2013-2015,2018-2021,2023 Free Software Foundation, Inc.
 ;;;; Ludovic Courtès
 ;;;;
 ;;;; This library is free software; you can redistribute it and/or
@@ -1649,6 +1649,123 @@ not `set-port-position!'"
                                       (native-eol-style)
                                       (error-handling-mode replace)))
                (make-transcoder "ascii"))))))
+
+(with-test-prefix "custom textual ports"
+  (let ((log '()))
+    (define (log! tag args)
+      (set! log (acons tag args log)))
+    (define (log-calls tag) (lambda args (log! tag args)))
+    (define (call-with-logged-calls thunk)
+      (log! 'result (list (thunk)))
+      (let ((result (reverse log)))
+        (set! log '())
+        result))
+
+    (define-syntax-rule (pass-if-log-matches id expected expr)
+      (pass-if id
+        (match (call-with-logged-calls (lambda () expr))
+          (expected #t)
+          (unexpected (error "unexpected output" 'expected unexpected)))))
+
+    (define (test-input-port id make-port)
+      (define (call-with-input-string str proc)
+        (define pos 0)
+        (proc
+         (make-port id
+                    (lambda (buf start count)
+                      (let ((count (min count (- (string-length str) pos))))
+                        (log! 'read (list count))
+                        (string-copy! buf start str pos (+ pos count))
+                        (set! pos (+ pos count))
+                        count))
+                    (log-calls 'get-position)
+                    (log-calls 'set-position)
+                    (log-calls 'close))))
+
+      (with-test-prefix id
+        (pass-if-log-matches
+         "make"
+         (('result #t))
+         (input-port? (make-port
+                       "hey"
+                       (log-calls 'read)
+                       (log-calls 'get-position)
+                       (log-calls 'set-position)
+                       (log-calls 'close))))
+
+        (pass-if-log-matches
+         "inputting \"foo\""
+         (('read 3)
+          ('read 0)
+          ('result "foo"))
+         (call-with-input-string "foo" get-string-all))
+
+        (let ((big-str (make-string 2000 #\a)))
+          (pass-if-log-matches
+           "inputting 2000 a's"
+           (('read 1024)
+            ('read 976)
+            ('read 0)
+            ('result (? (lambda (x) (equal? x big-str)))))
+           (call-with-input-string big-str get-string-all)))))
+
+    (define (test-output-port id make-port)
+      (define (call-with-output-string proc)
+        (define out '())
+        (define port
+          (make-port id
+                     (lambda (buf start count)
+                       (log! 'write (list count))
+                       (set! out (cons (substring buf start count) out))
+                       count)
+                     (log-calls 'get-position)
+                     (log-calls 'set-position)
+                     (log-calls 'close)))
+        (proc port)
+        (close-port port)
+        (string-concatenate-reverse out))
+
+      (with-test-prefix id
+        (pass-if-log-matches
+         "make"
+         (('result #t))
+         (output-port? (make-port
+                       "hey"
+                       (log-calls 'write)
+                       (log-calls 'get-position)
+                       (log-calls 'set-position)
+                       (log-calls 'close)))))
+
+      (with-test-prefix id
+        (pass-if-log-matches
+         "output \"foo\""
+         (('write 3)
+          ('close)
+          ('result "foo"))
+         (call-with-output-string
+          (lambda (port) (put-string port "foo"))))
+
+        (let ((big-str (make-string 2000 #\a)))
+          (pass-if-log-matches
+           "writing 2000 a's"
+           (('write 1024)
+            ('write 976)
+            ('close)
+            ('result (? (lambda (x) (equal? x big-str)))))
+           (call-with-output-string
+            (lambda (port) (put-string port big-str)))))))
+
+    (test-input-port "input port" make-custom-textual-input-port)
+    (test-input-port "input+ port"
+                     (lambda (id read get-pos set-pos close)
+                       (make-custom-textual-input/output-port
+                        id read (log-calls 'write) get-pos set-pos close)))
+
+    (test-output-port "output port" make-custom-textual-output-port)
+    (test-output-port "output+ port"
+                      (lambda (id write get-pos set-pos close)
+                        (make-custom-textual-input/output-port
+                         id (log-calls 'read) write get-pos set-pos close)))))
 
 ;;; Local Variables:
 ;;; mode: scheme
