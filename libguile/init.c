@@ -150,7 +150,6 @@
 #include "vectors.h"
 #include "version.h"
 #include "vm.h"
-#include "vports.h"
 #include "weak-set.h"
 #include "weak-table.h"
 #include "weak-vector.h"
@@ -472,7 +471,6 @@ scm_i_init_guile (void *base)
   scm_init_weak_table ();
   scm_init_weak_vectors ();
   scm_init_guardians (); /* requires smob_prehistory */
-  scm_init_vports ();
   scm_init_standard_ports ();  /* Requires fports */
   scm_init_expand ();   /* Requires structs */
   scm_init_memoize ();  /* Requires smob_prehistory */

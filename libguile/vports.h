@@ -1,7 +1,7 @@
 #ifndef SCM_VPORTS_H
 #define SCM_VPORTS_H
 
-/* Copyright 1995-1996,2000,2006,2008,2018
+/* Copyright 1995-1996,2000,2006,2008,2018,2023
      Free Software Foundation, Inc.
 
    This file is part of Guile.
@@ -27,6 +27,5 @@
 
 
 SCM_API SCM scm_make_soft_port (SCM pv, SCM modes);
-SCM_INTERNAL void scm_init_vports (void);
 
 #endif  /* SCM_VPORTS_H */

@@ -347,7 +347,6 @@ DOT_X_FILES =					\
 	vectors.x				\
 	version.x				\
 	vm.x					\
-	vports.x				\
 	weak-set.x				\
 	weak-table.x				\
 	weak-vector.x

@@ -1,6 +1,6 @@
 ;;; -*- mode: scheme; coding: utf-8; -*-
 
-;;;; Copyright (C) 1995-2014, 2016-2022  Free Software Foundation, Inc.
+;;;; Copyright (C) 1995-2014, 2016-2023  Free Software Foundation, Inc.
 ;;;;
 ;;;; This library is free software; you can redistribute it and/or
 ;;;; modify it under the terms of the GNU Lesser General Public
@@ -4697,6 +4697,15 @@ R7RS."
 
 ;; FIXME:
 (module-use! the-scm-module (resolve-interface '(srfi srfi-4)))
+
+
+
+;;; make-soft-port in the default environment.  FIXME: we should
+;;; figure out how to deprecate this.
+;;;
+
+;; FIXME:
+(module-use! the-scm-module (resolve-interface '(ice-9 soft-ports)))
 
 
 
