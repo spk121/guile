@@ -46,8 +46,7 @@ jobs:
         git remote set-url origin "https://$GITHUB_ACTOR:$GITHUB_TOKEN@github.com/$GITHUB_REPOSITORY"
         git remote add upstream "$UPSTREAM_REPO"
         git fetch upstream #$UPSTREAM_BRANCH:$UPSTREAM_BRANCH $UPSTREAM_BRANCH
-	git remote -v
-
+        git remote -v
         git checkout $LOCAL_BRANCH
 
         MERGE_RESULT=$(git merge upstream/$UPSTREAM_BRANCH)
@@ -55,6 +54,7 @@ jobs:
           git commit -m "Merged upstream"  
           git push origin $LOCAL_BRANCH
         fi
-	cd ..
-	rm -rf work
+        cd ..
+        rm -rf work
       shell: bash {0}
+      
