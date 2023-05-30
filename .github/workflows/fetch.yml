@@ -40,7 +40,8 @@ jobs:
         git remote add upstream https://git.savannah.gnu.org/git/guile.git
         git fetch upstream main
         git remote -v
-        git checkout -B main --track origin/main
+        git checkout -B main
+        git config pull.rebase true
         MERGE_RESULT=$(git pull upstream main)
         echo $MERGE_RESULT
         PUSH_RESULT=$(git push origin main)
