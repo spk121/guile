@@ -25,42 +25,26 @@ jobs:
 
     runs-on: ubuntu-latest
 
-    steps:  
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3    
     - name: env
       run: export LANG=C.UTF-8 TERM=dumb VERBOSE=true DEBIAN_FRONTEND=noninteractive TZ=America/Los_Angeles
-    - name: clone local repo
-      run: |
-        git clone "https://github.com/${GITHUB_REPOSITORY}.git" work
-        cd work || { echo "Missing work dir" && exist 2 ; }
-        echo `pwd`
-        git checkout -B $LOCAL_BRANCH
-    - name: setup git config
-      run: |
-        cd work || { echo "Missing work dir" && exist 2 ; }
-        git config user.name "GitHub Actions Bot"
-        git config user.email "<>"
-        #git config user.name "${GITHUB_ACTOR}"
-        #git config user.email "${GITHUB_ACTOR}@users.noreply.github.com"
     - name: Fetch upstream
       run: |
         set -x
-        cd work || { echo "Missing work dir" && exist 2 ; }
-        LOCAL_BRANCH=main
-        echo "LOCAL_BRANCH=$LOCAL_BRANCH"
-        UPSTREAM_REPO=https://git.savannah.gnu.org/git/guile.git
-        UPSTREAM_BRANCH=main
-        echo "UPSTREAM_REPO=$UPSTREAM_REPO"
-        echo "UPSTREAM_BRANCH=$UPSTREAM_BRANCH"
-        #git remote set-url origin "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
-        git remote set-url origin "https://$GITHUB_ACTOR:$GITHUB_TOKEN@github.com/$GITHUB_REPOSITORY"
-        git remote add upstream "$UPSTREAM_REPO"
-        git fetch upstream $UPSTREAM_BRANCH
+        git checkout -B main
+        #git config user.name "GitHub Actions Bot"
+        #git config user.email "<>"
+        git config user.name "${GITHUB_ACTOR}"
+        git config user.email "${GITHUB_ACTOR}@users.noreply.github.com"
+        git remote add upstream https://git.savannah.gnu.org/git/guile.git
+        git fetch upstream main
         git remote -v
 
         MERGE_RESULT=$(git merge)
         echo $MERGE_RESULT
-        git push origin $LOCAL_BRANCH
-        cd ..
-        rm -rf work
+        PUSH_RESULT=$(git push)
+        echo $PUSH_RESULT
       shell: bash {0}
       
