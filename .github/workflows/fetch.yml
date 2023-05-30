@@ -28,29 +28,31 @@ jobs:
     steps:  
     - name: env
       run: export LANG=C.UTF-8 TERM=dumb VERBOSE=true DEBIAN_FRONTEND=noninteractive TZ=America/Los_Angeles
+    - name: clone local repo
+      run: |
+        LOCAL_BRANCH=main
+        echo "LOCAL_BRANCH=$LOCAL_BRANCH"
+        git clone "https://github.com/${GITHUB_REPOSITORY}.git" work
+        cd work || { echo "Missing work dir" && exist 2 ; }
+        git checkout -B $LOCAL_BRANCH
     - name: setup git config
       run: |
         git config user.name "GitHub Actions Bot"
-        git config user.email "<>"      
+        git config user.email "<>"
+        #git config user.name "${GITHUB_ACTOR}"
+        #git config user.email "${GITHUB_ACTOR}@users.noreply.github.com"
     - name: Fetch upstream
       run: |
         set -x
         UPSTREAM_REPO=https://git.savannah.gnu.org/git/guile.git
         UPSTREAM_BRANCH=main
-        LOCAL_BRANCH=main
         echo "UPSTREAM_REPO=$UPSTREAM_REPO"
         echo "UPSTREAM_BRANCH=$UPSTREAM_BRANCH"
-        echo "LOCAL_BRANCH=$LOCAL_BRANCH"
-        git clone "https://github.com/${GITHUB_REPOSITORY}.git" work
-        cd work || { echo "Missing work dir" && exist 2 ; }
-        #git config user.name "${GITHUB_ACTOR}"
-        #git config user.email "${GITHUB_ACTOR}@users.noreply.github.com"
         #git remote set-url origin "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
         git remote set-url origin "https://$GITHUB_ACTOR:$GITHUB_TOKEN@github.com/$GITHUB_REPOSITORY"
         git remote add upstream "$UPSTREAM_REPO"
         git fetch upstream $UPSTREAM_BRANCH
         git remote -v
-        git checkout -B $LOCAL_BRANCH --track upstream/$UPSTREAM_BRANCH
 
         MERGE_RESULT=$(git merge)
         echo $MERGE_RESULT
