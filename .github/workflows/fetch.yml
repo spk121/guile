@@ -33,7 +33,6 @@ jobs:
     - name: Fetch upstream
       run: |
         set -x
-        git checkout -B main
         #git config user.name "GitHub Actions Bot"
         #git config user.email "<>"
         git config user.name "${GITHUB_ACTOR}"
@@ -41,7 +40,7 @@ jobs:
         git remote add upstream https://git.savannah.gnu.org/git/guile.git
         git fetch upstream main
         git remote -v
-
+        git checkout -B main --track upstream/main
         MERGE_RESULT=$(git merge)
         echo $MERGE_RESULT
         PUSH_RESULT=$(git push)
