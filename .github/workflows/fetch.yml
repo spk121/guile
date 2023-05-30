@@ -30,13 +30,13 @@ jobs:
       run: export LANG=C.UTF-8 TERM=dumb VERBOSE=true DEBIAN_FRONTEND=noninteractive TZ=America/Los_Angeles
     - name: clone local repo
       run: |
-        LOCAL_BRANCH=main
-        echo "LOCAL_BRANCH=$LOCAL_BRANCH"
         git clone "https://github.com/${GITHUB_REPOSITORY}.git" work
         cd work || { echo "Missing work dir" && exist 2 ; }
+        echo `pwd`
         git checkout -B $LOCAL_BRANCH
     - name: setup git config
       run: |
+        cd work || { echo "Missing work dir" && exist 2 ; }
         git config user.name "GitHub Actions Bot"
         git config user.email "<>"
         #git config user.name "${GITHUB_ACTOR}"
@@ -44,6 +44,9 @@ jobs:
     - name: Fetch upstream
       run: |
         set -x
+        cd work || { echo "Missing work dir" && exist 2 ; }
+        LOCAL_BRANCH=main
+        echo "LOCAL_BRANCH=$LOCAL_BRANCH"
         UPSTREAM_REPO=https://git.savannah.gnu.org/git/guile.git
         UPSTREAM_BRANCH=main
         echo "UPSTREAM_REPO=$UPSTREAM_REPO"
