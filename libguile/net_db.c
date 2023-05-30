@@ -330,7 +330,7 @@ SCM_DEFINE (scm_getserv, "getserv", 0, 2, 0,
 	    "Look up a network service by name or by service number, and return a\n"
 	    "network service object.  The @var{protocol} argument specifies the name\n"
 	    "of the desired protocol; if the protocol found in the network service\n"
-	    "database does not match this name, a system error is signalled.\n\n"
+	    "database does not match this name, a system error is signaled.\n\n"
 	    "The @code{getserv} procedure will take either a service name or number\n"
 	    "as its first argument; if given no arguments, it behaves like\n"
 	    "@code{getservent} (see below).")

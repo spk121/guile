@@ -361,7 +361,7 @@ lists are @code{circular-list?}.
 @deffn {Scheme Procedure} null-list? lst
 Return @code{#t} if @var{lst} is the empty list @code{()}, @code{#f}
 otherwise.  If something else than a proper or circular list is passed
-as @var{lst}, an error is signalled.  This procedure is recommended
+as @var{lst}, an error is signaled.  This procedure is recommended
 for checking for the end of a list in contexts where dotted lists are
 not allowed.
 @end deffn
@@ -2297,7 +2297,7 @@ a new owner for @var{mutex} different than the current thread.
 Unlock @var{mutex}, optionally specifying a condition variable
 @var{condition-variable} on which to wait, either indefinitely or,
 optionally, until the time object @var{timeout} has passed, to be
-signalled.
+signaled.
 @end defun
 
 
@@ -3638,7 +3638,7 @@ characters for traditional @code{getopt} short options and strings for
 @var{required-arg?} and @var{optional-arg?} are mutually exclusive;
 one or both must be @code{#f}.  If @var{required-arg?}, the option
 must be followed by an argument on the command line, such as
-@samp{--opt=value} for long options, or an error will be signalled.
+@samp{--opt=value} for long options, or an error will be signaled.
 If @var{optional-arg?}, an argument will be taken if available.
 
 @var{processor} is a procedure that takes at least 3 arguments, called
@@ -3789,7 +3789,7 @@ The port remains open, and further attempts to read it (by
 end-of-file object.  If an end of file is encountered after the
 beginning of an object's external representation, but the external
 representation is incomplete and therefore not parsable, an error is
-signalled.
+signaled.
 
 The @var{port} argument may be omitted, in which case it defaults to the
 value returned by @code{(current-input-port)}.  It is an error to read
@@ -3935,7 +3935,7 @@ stream, its promise will be forced.
 
 @deffn {Scheme Procedure} stream-car stream
 Returns the object stored in the @code{stream-car} of @var{stream}.  An
-error is signalled if the argument is not a @code{stream-pair}.  This
+error is signaled if the argument is not a @code{stream-pair}.  This
 causes the @var{object-expr} passed to @code{stream-cons} to be
 evaluated if it had not yet been; the value is cached in case it is
 needed again.
@@ -3943,7 +3943,7 @@ needed again.
 
 @deffn {Scheme Procedure} stream-cdr stream
 Returns the stream stored in the @code{stream-cdr} of @var{stream}.  An
-error is signalled if the argument is not a @code{stream-pair}.
+error is signaled if the argument is not a @code{stream-pair}.
 @end deffn
 
 @deffn {Scheme Syntax} stream-lambda formals body @dots{}

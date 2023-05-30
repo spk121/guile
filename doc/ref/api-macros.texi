@@ -149,7 +149,7 @@ patterns, and as many templates as there are patterns.
 When the syntax expander sees the invocation of a @code{syntax-rules} macro, it
 matches the expression against the patterns, in order, and rewrites the
 expression using the template from the first matching pattern. If no pattern
-matches, a syntax error is signalled.
+matches, a syntax error is signaled.
 
 @subsubsection Patterns
 

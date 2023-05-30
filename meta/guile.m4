@@ -49,7 +49,7 @@
 # By default, this macro will search for the latest stable version of
 # Guile (e.g. 3.0), falling back to the previous stable version
 # (e.g. 2.2) if it is available.  If no guile-@var{VERSION}.pc file is
-# found, an error is signalled.  The found version is stored in
+# found, an error is signaled.  The found version is stored in
 # @var{GUILE_EFFECTIVE_VERSION}.
 #
 # If @code{GUILE_PROGS} was already invoked, this macro ensures that the

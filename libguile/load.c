@@ -1163,7 +1163,7 @@ SCM_DEFINE (scm_primitive_load_path, "primitive-load-path", 0, 0, 1,
             "depending on the optional second argument,\n"
             "@var{exception_on_not_found}.  If it is @code{#f}, @code{#f}\n"
             "will be returned.  If it is a procedure, it will be called\n"
-            "with no arguments.  Otherwise an error is signalled.")
+            "with no arguments.  Otherwise an error is signaled.")
 #define FUNC_NAME s_scm_primitive_load_path
 {
   SCM filename, exception_on_not_found;

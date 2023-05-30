@@ -550,7 +550,7 @@ matches the number of actual arguments against the formals in the
 various clauses, in order. The first matching clause is selected, the
 corresponding values from the actual parameter list are bound to the
 variable names in the clauses and the body of the clause is evaluated.
-If no clause matches, an error is signalled.
+If no clause matches, an error is signaled.
 
 The syntax of the @code{case-lambda} form is defined in the following
 EBNF grammar. @dfn{Formals} means a formal argument list just like

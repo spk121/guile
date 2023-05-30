@@ -172,7 +172,7 @@ switches specific to Guile you may find useful in some circumstances.
   Build a Guile executable and library that supports multi-threading.
 
   The default is to enable threading support when your operating
-  system offsers 'POSIX threads'.  When you do not want threading, use
+  system offers 'POSIX threads'.  When you do not want threading, use
   `--without-threads'.
 
 --enable-deprecated=LEVEL

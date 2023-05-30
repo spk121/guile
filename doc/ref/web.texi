@@ -1310,7 +1310,7 @@ Return the given request header, or @var{default} if none was present.
 A helper routine to determine the absolute URI of a request, using the
 @code{host} header and the default scheme, host and port.  If there is
 no default scheme and the URI is not itself absolute, an error is
-signalled.
+signaled.
 @end deffn
 
 @node Responses

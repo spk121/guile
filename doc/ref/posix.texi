@@ -2242,7 +2242,7 @@ Install or report the signal handler for a specified signal.
 of variables such as @code{SIGINT}.
 
 If @var{handler} is omitted, @code{sigaction} returns a pair: the
-@acronym{CAR} is the current signal hander, which will be either an
+@acronym{CAR} is the current signal handler, which will be either an
 integer with the value @code{SIG_DFL} (default action) or
 @code{SIG_IGN} (ignore), or the Scheme procedure which handles the
 signal, or @code{#f} if a non-Scheme procedure handles the signal.
@@ -2262,9 +2262,9 @@ call to @code{sigaction} is used.
 following (where provided by the system), or @code{0} for none.
 
 @defvar SA_NOCLDSTOP
-By default, @code{SIGCHLD} is signalled when a child process stops
+By default, @code{SIGCHLD} is signaled when a child process stops
 (ie.@: receives @code{SIGSTOP}), and when a child process terminates.
-With the @code{SA_NOCLDSTOP} flag, @code{SIGCHLD} is only signalled
+With the @code{SA_NOCLDSTOP} flag, @code{SIGCHLD} is only signaled
 for termination, not stopping.
 
 @code{SA_NOCLDSTOP} has no effect on signals other than
@@ -2354,7 +2354,7 @@ Get or set the periods programmed in certain system timers.
 These timers have two settings.  The first setting, the interval, is the
 value at which the timer will be reset when the current timer expires.
 The second is the current value of the timer, indicating when the next
-expiry will be signalled.
+expiry will be signaled.
 
 @var{which_timer} is one of the following values:
 
@@ -3123,7 +3123,7 @@ The following procedures are used to search the service database:
 Look up a network service by name or by service number, and return a
 network service object.  The @var{protocol} argument specifies the name
 of the desired protocol; if the protocol found in the network service
-database does not match this name, a system error is signalled.
+database does not match this name, a system error is signaled.
 
 The @code{getserv} procedure will take either a service name or number
 as its first argument; if given no arguments, it behaves like

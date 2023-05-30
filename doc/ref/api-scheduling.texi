@@ -329,7 +329,7 @@ wait using the following procedures:
 
 @deftypefn {C Function} int scm_c_prepare_to_wait_on_fd (int fd)
 Inform Guile that the current thread is about to sleep, and that if an
-asynchronous interrupt is signalled on this thread, Guile should wake up
+asynchronous interrupt is signaled on this thread, Guile should wake up
 the thread by writing a zero byte to @var{fd}.  Returns zero if the
 prepare succeeded, or nonzero if the thread already has a pending async
 and that it should avoid waiting.
@@ -337,7 +337,7 @@ and that it should avoid waiting.
 
 @deftypefn {C Function} int scm_c_prepare_to_wait_on_cond (scm_i_pthread_mutex_t *mutex, scm_i_pthread_cond_t *cond)
 Inform Guile that the current thread is about to sleep, and that if an
-asynchronous interrupt is signalled on this thread, Guile should wake up
+asynchronous interrupt is signaled on this thread, Guile should wake up
 the thread by acquiring @var{mutex} and signalling @var{cond}.  The
 caller must already hold @var{mutex} and only drop it as part of the
 @code{pthread_cond_wait} call.  Returns zero if the prepare succeeded,
@@ -574,7 +574,7 @@ waiting should be aborted.  It can be either an integer as returned
 by @code{current-time} or a pair as returned by @code{gettimeofday}.
 When the waiting is aborted, @code{#f} is returned.
 
-For standard mutexes (@code{make-mutex}), an error is signalled if the
+For standard mutexes (@code{make-mutex}), an error is signaled if the
 thread has itself already locked @var{mutex}.
 
 For a recursive mutex (@code{make-recursive-mutex}), if the thread has
@@ -601,7 +601,7 @@ timeout.
 
 @deffn {Scheme Procedure} unlock-mutex mutex
 @deffnx {C Function} scm_unlock_mutex (mutex)
-Unlock @var{mutex}.  An error is signalled if @var{mutex} is not locked.
+Unlock @var{mutex}.  An error is signaled if @var{mutex} is not locked.
 
 ``Standard'' and ``recursive'' mutexes can only be unlocked by the
 thread that locked them; Guile detects this situation and signals an
@@ -642,14 +642,14 @@ return @code{#f}.
 
 @deffn {Scheme Procedure} wait-condition-variable condvar mutex [time]
 @deffnx {C Function} scm_wait_condition_variable (condvar, mutex, time)
-Wait until @var{condvar} has been signalled.  While waiting,
+Wait until @var{condvar} has been signaled.  While waiting,
 @var{mutex} is atomically unlocked (as with @code{unlock-mutex}) and
 is locked again when this function returns.  When @var{time} is given,
 it specifies a point in time where the waiting should be aborted.  It
 can be either a integer as returned by @code{current-time} or a pair
 as returned by @code{gettimeofday}.  When the waiting is aborted,
 @code{#f} is returned.  When the condition variable has in fact been
-signalled, @code{#t} is returned.  The mutex is re-locked in any case
+signaled, @code{#t} is returned.  The mutex is re-locked in any case
 before @code{wait-condition-variable} returns.
 
 When an async is activated for a thread that is blocked in a call to

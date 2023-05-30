@@ -40,7 +40,7 @@ mark_box (SCM b)
 }
 
 
-/* Print a textual represenation of the smob to a given port.  */
+/* Print a textual representation of the smob to a given port.  */
 static int
 print_box (SCM b, SCM port, scm_print_state *pstate)
 {
@@ -55,7 +55,7 @@ print_box (SCM b, SCM port, scm_print_state *pstate)
 }
 
 
-/* This defines the primitve `make-box', which returns a new smob of
+/* This defines the primitive `make-box', which returns a new smob of
    type `box', initialized to `#f'.  */
 static SCM
 #define FUNC_NAME "make-box"

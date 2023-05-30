@@ -14,7 +14,7 @@ installed and available with the standard installation prefix
 
 ** simple-hello.scm
 
-  The simplest "Hello World!" program for Guile. Run it like this:
+  The simplest "Hello World!" program for Guile.  Run it like this:
 
   $ guile -s simple-hello.scm
 

@@ -974,7 +974,7 @@ of modifying the path both at compile-time and at run-time.
 Search @code{%load-path} for the file named @var{filename} and
 load it into the top-level environment.  If @var{filename} is a
 relative pathname and is not found in the list of search paths,
-an error is signalled.  Preferentially loads a compiled version of the
+an error is signaled.  Preferentially loads a compiled version of the
 file, if it is available and up-to-date.
 
 If @var{filename} is a relative pathname and is not found in the list of
@@ -983,7 +983,7 @@ second argument, @var{exception-on-not-found}.  If it is @code{#f},
 @code{#f} will be returned.  If it is a procedure, it will be called
 with no arguments.  (This allows a distinction to be made between
 exceptions raised by loading a file, and exceptions related to the
-loader itself.)  Otherwise an error is signalled.
+loader itself.)  Otherwise an error is signaled.
 
 For compatibility with Guile 1.8 and earlier, the C function takes only
 one argument, which can be either a string (the file name) or an

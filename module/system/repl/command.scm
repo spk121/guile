@@ -166,7 +166,7 @@
 (define (meta-command repl)
   (let ((command (read-command repl)))
     (cond
-     ((eq? command *unspecified*)) ; read error, already signalled; pass.
+     ((eq? command *unspecified*)) ; read error, already signaled; pass.
      ((not (symbol? command))
       (format #t "Meta-command not a symbol: ~s~%" command))
      ((lookup-command command)

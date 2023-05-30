@@ -5,7 +5,7 @@
 ;;; This is the famous Hello-World-program, written for Guile.  It is a
 ;;; little bit enhanced in that it understands the command line options
 ;;; `--help' (-h) and `--version' (-v), which print a short usage
-;;; decription or version information, respectively.
+;;; description or version information, respectively.
 
 ;;; Author: Martin Grabmueller
 ;;; Date: 2001-05-29

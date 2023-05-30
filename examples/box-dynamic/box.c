@@ -40,7 +40,7 @@ mark_box (SCM b)
 }
 
 
-/* Print a textual represenation of the smob to a given port.  */
+/* Print a textual representation of the smob to a given port.  */
 static int
 print_box (SCM b, SCM port, scm_print_state *pstate)
 {

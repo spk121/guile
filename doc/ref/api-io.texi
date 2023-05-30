@@ -710,7 +710,7 @@ something that the user needs to explicitly be aware of.)  The data is
 written to the store later -- when the buffer fills up due to another
 write, or when @code{force-output} is called, or when @code{close-port}
 is called, or when the program exits, or even when the garbage collector
-runs.  The salient point is, @emph{the errors are signalled then too}.
+runs.  The salient point is, @emph{the errors are signaled then too}.
 Buffered writes defer error detection (and defer the side effects to the
 mutable store), perhaps indefinitely if the port type does not need to
 be closed at GC.

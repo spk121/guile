@@ -30,7 +30,7 @@ call.  There is no provision for resetting the counter.
 @deffn {Scheme Procedure} symbol-set! o s v
 @deffnx {C Function} scm_symbol_set_x (o, s, v)
 Find the symbol in @var{obarray} whose name is @var{string}, and rebind
-it to @var{value}.  An error is signalled if @var{string} is not present
+it to @var{value}.  An error is signaled if @var{string} is not present
 in @var{obarray}.
 @end deffn
 
@@ -49,7 +49,7 @@ value.
 Look up in @var{obarray} the symbol whose name is @var{string}, and
 return the value to which it is bound.  If @var{obarray} is @code{#f},
 use the global symbol table.  If @var{string} is not interned in
-@var{obarray}, an error is signalled.
+@var{obarray}, an error is signaled.
 @end deffn
 
 @deffn {Scheme Procedure} unintern-symbol o s
@@ -88,7 +88,7 @@ table; instead, simply return @code{#f}.
 Read a form from @var{port} (standard input by default), and evaluate it
 (memoizing it in the process) in the top-level environment.  If no data
 is left to be read from @var{port}, an @code{end-of-file} error is
-signalled.
+signaled.
 @end deffn
 
 @deffn {Scheme Procedure} sloppy-member x lst

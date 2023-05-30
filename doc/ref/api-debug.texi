@@ -359,7 +359,7 @@ library, or from Guile itself.
 A common requirement is to be able to show as much useful context as
 possible when a Scheme program hits an error.  The most immediate
 information about an error is the kind of error that it is -- such as
-``division by zero'' -- and any parameters that the code which signalled
+``division by zero'' -- and any parameters that the code which signaled
 the error chose explicitly to provide.  This information originates with
 the @code{error} or @code{raise-exception} call (or their C code
 equivalents, if the error is detected by C code) that signals the error,

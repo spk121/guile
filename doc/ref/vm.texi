@@ -956,7 +956,7 @@ of the values in the frame are returned to the prompt handler.  This
 corresponds to a tail application of @code{abort-to-prompt}.
 
 If no prompt can be found in the dynamic environment with the given tag,
-an error is signalled.  Otherwise all arguments are passed to the
+an error is signaled.  Otherwise all arguments are passed to the
 prompt's handler, along with the captured continuation, if necessary.
 
 If the prompt's handler can be proven to not reference the captured

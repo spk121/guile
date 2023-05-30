@@ -1170,7 +1170,7 @@ SCM_DEFINE (scm_unlock_mutex, "unlock-mutex", 1, 0, 0, (SCM mutex),
             "Unlocks @var{mutex}.  The calling thread must already hold\n"
             "the lock on @var{mutex}, unless the mutex was created with\n"
             "the @code{allow-external-unlock} option; otherwise an error\n"
-            "will be signalled.")
+            "will be signaled.")
 #define FUNC_NAME s_scm_unlock_mutex
 {
   struct scm_mutex *m;
@@ -1392,14 +1392,14 @@ timed_wait (enum scm_mutex_kind kind, struct scm_mutex *m, struct scm_cond *c,
 
 SCM_DEFINE (scm_timed_wait_condition_variable, "wait-condition-variable", 2, 1, 0,
 	    (SCM cond, SCM mutex, SCM timeout),
-"Wait until condition variable @var{cv} has been signalled.  While waiting, "
+"Wait until condition variable @var{cv} has been signaled.  While waiting, "
 "mutex @var{mx} is atomically unlocked (as with @code{unlock-mutex}) and "
 "is locked again when this function returns.  When @var{t} is given, "
 "it specifies a point in time where the waiting should be aborted.  It "
 "can be either a integer as returned by @code{current-time} or a pair "
 "as returned by @code{gettimeofday}.  When the waiting is aborted the "
 "mutex is locked and @code{#f} is returned.  When the condition "
-"variable is in fact signalled, the mutex is also locked and @code{#t} "
+"variable is in fact signaled, the mutex is also locked and @code{#t} "
 "is returned. ")
 #define FUNC_NAME s_scm_timed_wait_condition_variable
 {

@@ -757,7 +757,7 @@ expand_lambda_star_case (SCM clause, SCM alternate, SCM env)
      Also note that the specific environment during expansion of init
      expressions here needs to coincide with the environment when psyntax
      expands. A lot of effort for something that is only used in the bootstrap
-     expandr, you say? Yes. Yes it is.
+     expander, you say? Yes. Yes it is.
   */
 
   vars = SCM_EOL;
@@ -928,7 +928,7 @@ check_bindings (const SCM bindings, const SCM expr)
 
 /* The bindings, which must have the format ((v1 i1) (v2 i2) ... (vn in)), are
  * transformed to the lists (vn .. v2 v1) and (i1 i2 ... in). If a duplicate
- * variable name is detected, an error is signalled. */
+ * variable name is detected, an error is signaled. */
 static void
 transform_bindings (const SCM bindings, const SCM expr,
                     SCM *const names, SCM *const vars, SCM *const initptr)

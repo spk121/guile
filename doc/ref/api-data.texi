@@ -481,7 +481,7 @@ number.
 @deftypefn {C Function} void scm_to_mpz (SCM val, mpz_t rop)
 Assign @var{val} to the multiple precision integer @var{rop}.
 @var{val} must be an exact integer, otherwise an error will be
-signalled.  @var{rop} must have been initialized with @code{mpz_init}
+signaled.  @var{rop} must have been initialized with @code{mpz_init}
 before this function is called.  When @var{rop} is no longer needed
 the occupied space must be freed with @code{mpz_clear}.
 @xref{Initializing Integers,,, gmp, GNU MP Manual}, for details.
@@ -877,7 +877,7 @@ the number is inexact.
 
 If the exactness indicator is omitted, the number is exact unless it
 contains a radix point.  Since Guile can not represent exact complex
-numbers, an error is signalled when asking for them.
+numbers, an error is signaled when asking for them.
 
 @lisp
 (exact? 1.2)
@@ -2551,7 +2551,7 @@ Return a character set containing all characters whose
 character codes lie in the half-open range
 [@var{lower},@var{upper}).
 
-If @var{error} is a true value, an error is signalled if the
+If @var{error} is a true value, an error is signaled if the
 specified range contains characters which are not contained in
 the implemented character range.  If @var{error} is @code{#f},
 these characters are silently left out of the resulting
@@ -2567,7 +2567,7 @@ Return a character set containing all characters whose
 character codes lie in the half-open range
 [@var{lower},@var{upper}).
 
-If @var{error} is a true value, an error is signalled if the
+If @var{error} is a true value, an error is signaled if the
 specified range contains characters which are not contained in
 the implemented character range.  If @var{error} is @code{#f},
 these characters are silently left out of the resulting
@@ -4386,7 +4386,7 @@ encoding of the current locale.  The C string must be freed with
 @xref{Dynamic Wind}.
 
 For @code{scm_to_locale_string}, the returned string is
-null-terminated and an error is signalled when @var{str} contains
+null-terminated and an error is signaled when @var{str} contains
 @code{#\nul} characters.
 
 For @code{scm_to_locale_stringn} and @var{lenp} not @code{NULL},
@@ -8031,7 +8031,7 @@ must be protected so that the pointer remains valid.  Such a protected
 array is said to be @dfn{reserved}.  A reserved array can be read but
 modifications to it that would cause the pointer to its elements to
 become invalid are prevented.  When you attempt such a modification, an
-error is signalled.
+error is signaled.
 
 (This is similar to locking the array while it is in use, but without
 the danger of a deadlock.  In a multi-threaded program, you will need
@@ -8155,7 +8155,7 @@ for (i = 0; i < RANK; i++)
 Compute the position corresponding to @var{indices}, a list of
 indices.  The position is computed as described above for
 @code{scm_array_handle_dims}.  The number of the indices and their
-range is checked and an appropriate error is signalled for invalid
+range is checked and an appropriate error is signaled for invalid
 indices.
 @end deftypefn
 
@@ -8169,7 +8169,7 @@ range checking is done on @var{pos}.
 Set the element at position @var{pos} in the storage block of the array
 represented by @var{handle} to @var{val}.  Any kind of array is
 acceptable.  No range checking is done on @var{pos}.  An error is
-signalled when the array can not store @var{val}.
+signaled when the array can not store @var{val}.
 @end deftypefn
 
 @deftypefn {C Function} {const SCM *} scm_array_handle_elements (scm_t_array_handle *handle)

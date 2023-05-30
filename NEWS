@@ -89,7 +89,7 @@ The procedures `openat', `open-fdes-at', `statat', `chownat',
 added.  They resolve file names relative to a directory passed as a file
 port.  The procedures `chdir' `readlink' and `utime' have been extended
 to support file ports.  The related flags `AT_REMOVEDIR' and
-`AT_EACCESS' have been added. See `File System' in the manual
+`AT_EACCESS' have been added.  See `File System' in the manual
 
 ** Abstract Unix-domain sockets are supported
 
@@ -206,7 +206,7 @@ or not.
 
 ** Avoid the need for a custom GMP allocator
 
-In Guile 3.0.6, we fixed a longstanding bug in Guile's use of the
+In Guile 3.0.6, we fixed a long-standing bug in Guile's use of the
 library that Guile uses to implement bignums (large integers), GMP
 (https://gmplib.org).  See the Guile 3.0.6 release notes.  However this
 left us with a suboptimal Guile, in which each large integer had to have
@@ -233,7 +233,7 @@ The functions `u8vector-copy' `s8vector-copy' `u16vector-copy'
 `s16vector-copy!'  `u32vector-copy!'  `s32vector-copy!'
 `u64vector-copy!'  `s64vector-copy!'  `f32vector-copy!'
 `f64vector-copy!'  `c32vector-copy!'  `c64vector-copy!' have been
-added. See SRFI-4 - Guile extensions" in the manual.
+added.  See SRFI-4 - Guile extensions" in the manual.
 
 ** New function srfi-4-vector-type-size in (srfi srfi-4 gnu)
 
@@ -241,12 +241,12 @@ See SRFI-4 - Guile extensions" in the manual.
 
 ** `bytevector-fill!' supports partial fill through optional arguments
 
-This is an extension to the r6rs procedure. See "Manipulating
+This is an extension to the r6rs procedure.  See "Manipulating
 Bytevectors" in the manual.
 
 ** `vector-copy!' and `vector-copy' from (rnrs base) included in core
 
-Compared to the previous versions, these accept range arguments. See
+Compared to the previous versions, these accept range arguments.  See
 "Accessing and Modifying Vector Contents" in the manual.
 
 ** New function bitvector-copy
@@ -308,7 +308,7 @@ from source via a `make -C prebuilt clean`.
 
 Passing arrays that are not vectors (arrays for which `(vector? array)'
 returns false) to functions `vector-move-left!', `vector-move-right!',
-`vector->list', and `vector-copy' is deprecated. Use `array-copy!',
+`vector->list', and `vector-copy' is deprecated.  Use `array-copy!',
 `array-copy', and `array->list' for such arguments.
 
 ** `scm_from_contiguous_typed_array' is deprecated
@@ -783,7 +783,7 @@ written in C.
 
 The compiler now properly reduces expressions such as (equal? c #\x) to
 (eq? c #\x).  This was not the case in 3.0.2, which could lead to slower
-code, especially in 'match' expressions with many clauses with with
+code, especially in 'match' expressions with many clauses with
 character literals.
 
 ** JIT bugs on ARMv7 have been fixed
@@ -856,7 +856,7 @@ Changes in 3.0.2 (since 3.0.1)
 
 ** New (srfi srfi-171) module
 
-This module implements "tranducers" as specified in
+This module implements "transducers" as specified in
 <https://srfi.schemers.org/srfi-171/srfi-171.html>.
 Thanks to Linus Björnstam for this new API!
 
@@ -1093,9 +1093,9 @@ In light of these considerations, Guile has now changed to make
 exception handling and defined a hierarchy of R6RS-style exception types
 in its core.  SRFI-34/35, R6RS, and the exception-handling components of
 SRFI-18 (threads) have been re-implemented in terms of this core
-functionality.  There is also a a compatibility layer that makes it so
+functionality.  There is also a compatibility layer that makes it so
 that exceptions originating in `throw' can be handled by
-`with-exception-hander', and vice-versa for `raise-exception' and
+`with-exception-handler', and vice-versa for `raise-exception' and
 `catch'.
 
 Generally speaking, users will see no difference.  The one significant
@@ -1104,7 +1104,7 @@ through their `with-exception-handler'/`guard' forms, because whereas
 before they would only see exceptions thrown by SRFI-34, now they will
 see exceptions thrown by R6RS, R7RS, or indeed `throw'.
 
-Guile's situation is transitional.  Most exceptions are still signalled
+Guile's situation is transitional.  Most exceptions are still signaled
 via `throw'.  These will probably migrate over time to
 `raise-exception', while preserving compatibility of course.
 
@@ -1249,7 +1249,7 @@ This is now an error.  Instead, use array-fill!.
 ** `iota' in core and SRFI-1 `iota' are the same
 
 Previously, `iota' in core would not accept start and step arguments and
-would return an empty list for negative count. Now there is only one
+would return an empty list for negative count.  Now there is only one
 `iota' function with the extended semantics of SRFI-1.  Note that as an
 incompatible change, core `iota' no longer accepts a negative count.
 
@@ -1295,7 +1295,7 @@ without runtime warnings.  See "Deprecation" in the manual.
 
 In particular, the function `scm_generalized_vector_get_handle' which
 was deprecated in 2.0.9 but remained in 2.2, has now finally been
-removed. As a replacement, use `scm_array_get_handle' to get a handle
+removed.  As a replacement, use `scm_array_get_handle' to get a handle
 and `scm_array_handle_rank' to check the rank.
 
 ** Remove "self" field from vtables and "redefined" field from classes
@@ -2222,7 +2222,7 @@ See "Atomics" in the manual.
 ** Thread-local fluids
 
 Guile now has support for fluids whose values are not captured by
-`current-dynamic-state' and not inheritied by child threads, and thus
+`current-dynamic-state' and not inherited by child threads, and thus
 are local to the kernel thread they run on.  See "Thread-Local
 Variables" in the manual, for more.
 
@@ -2376,7 +2376,7 @@ manage an implementation-side buffer are no longer needed.
 *** Change prototype of `scm_make_port_type'
 
 The `read' (renamed from `fill_input') and `write' functions now operate
-on bytevectors.  Also the `mode_bits' argument now inplicitly includes
+on bytevectors.  Also the `mode_bits' argument now implicitly includes
 SCM_OPN, so you don't need to include these.
 
 *** Change prototype of port `close' function
@@ -2468,7 +2468,7 @@ deprecated; use `scm_unlock_mutex' instead.
 ** Removed `unchecked-unlock' mutex flag
 
 This flag was introduced for internal use by SRFI-18; use SRFI-18
-mutexes if you need this behaviour.
+mutexes if you need this behavior.
 
 ** SRFI-18 mutexes no longer recursive
 
@@ -2644,7 +2644,7 @@ In particular, the following functions, which were deprecated in 2.0.10
 but not specifically mentioned earlier in this file, have been removed:
 
 *** `uniform-vector-read!' and `uniform-vector-write' have been
-    removed. Use `get-bytevector-n!' and `put-bytevector' from (rnrs io
+    removed.  Use `get-bytevector-n!' and `put-bytevector' from (rnrs io
     ports) instead.
 
 ** Remove miscellaneous unused interfaces
@@ -2661,7 +2661,7 @@ was made private (use `SCM_TICK' instead).
 
 As the compiler and virtual machine were re-written, there are many
 changes in the back-end of Guile to interfaces that were introduced in
-Guile 2.0.  These changes are only only of interest if you wrote a
+Guile 2.0.  These changes are only of interest if you wrote a
 language on Guile 2.0 or a tool using Guile 2.0 internals.  If this is
 the case, drop by the IRC channel to discuss the changes.
 
@@ -3531,7 +3531,7 @@ support (libguile).
 *** Don't use the identifier 'noreturn'.
     (http://bugs.gnu.org/15798)
 *** Rewrite SCM_I_INUM to avoid unspecified behavior when not using GNU C.
-*** Improve fallback implemention of SCM_SRS to avoid unspecified behavior.
+*** Improve fallback implementation of SCM_SRS to avoid unspecified behavior.
 *** SRFI-60: Reimplement 'rotate-bit-field' on inums to be more portable.
 *** Improve compliance with C standards regarding signed integer shifts.
 *** Avoid signed overflow in random.c.
@@ -3769,7 +3769,7 @@ object.
 
 ** New procedures for converting strings to and from bytevectors
 
-See "Representing Strings as Bytes" for documention on the new `(ice-9
+See "Representing Strings as Bytes" for documentation on the new `(ice-9
 iconv)' module and its `bytevector->string' and `string->bytevector'
 procedures.
 
@@ -4286,7 +4286,7 @@ manual for replacements.
 
 * Bug fixes
 
-** Fix use of unitialized stat buffer in search-path of absolute paths.
+** Fix use of uninitialized stat buffer in search-path of absolute paths.
 ** Avoid calling `freelocale' with a NULL argument.
 ** Work around erroneous tr_TR locale in Darwin 8 in tests.
 ** Fix `getaddrinfo' test for Darwin 8.
@@ -4887,7 +4887,7 @@ Byte Access" in the manual, for more.
 
 ** R6RS fixnum arithmetic optimizations
     
-R6RS fixnum operations are are still slower than generic arithmetic,
+R6RS fixnum operations are still slower than generic arithmetic,
 however.
 
 ** New procedure: `define-inlinable'
@@ -5025,13 +5025,13 @@ Compared to Andrew K. Wright's `match', the new `match' lacks
 ** Imported statprof, SSAX, and texinfo modules from Guile-Lib
     
 The statprof statistical profiler, the SSAX XML toolkit, and the texinfo
-toolkit from Guile-Lib have been imported into Guile proper. See
+toolkit from Guile-Lib have been imported into Guile proper.  See
 "Standard Library" in the manual for more details.
 
 ** Integration of lalr-scm, a parser generator
 
 Guile has included Dominique Boucher's fine `lalr-scm' parser generator
-as `(system base lalr)'. See "LALR(1) Parsing" in the manual, for more
+as `(system base lalr)'.  See "LALR(1) Parsing" in the manual, for more
 information.
 
 * Changes to the stand-alone interpreter
@@ -5044,15 +5044,15 @@ Compiled code loads much faster than Scheme source code, and runs around
 ** Evaluating Scheme code does not use the C stack.
 
 Besides when compiling Guile itself, Guile no longer uses a recursive C
-function as an evaluator. This obviates the need to check the C stack
-pointer for overflow. Continuations still capture the C stack, however.
+function as an evaluator.  This obviates the need to check the C stack
+pointer for overflow.  Continuations still capture the C stack, however.
 
 ** New environment variables: GUILE_LOAD_COMPILED_PATH,
    GUILE_SYSTEM_LOAD_COMPILED_PATH
 
 GUILE_LOAD_COMPILED_PATH is for compiled files what GUILE_LOAD_PATH is
-for source files. It is a different path, however, because compiled
-files are architecture-specific. GUILE_SYSTEM_LOAD_COMPILED_PATH is like
+for source files.  It is a different path, however, because compiled
+files are architecture-specific.  GUILE_SYSTEM_LOAD_COMPILED_PATH is like
 GUILE_SYSTEM_PATH.
 
 ** New read-eval-print loop (REPL) implementation
@@ -5063,7 +5063,7 @@ Running Guile with no arguments drops the user into the new REPL.  See
 ** Remove old Emacs interface
 
 Guile had an unused `--emacs' command line argument that was supposed to
-help when running Guile inside Emacs. This option has been removed, and
+help when running Guile inside Emacs.  This option has been removed, and
 the helper functions `named-module-use!' and `load-emacs-interface' have
 been deprecated.
     
@@ -5103,24 +5103,24 @@ See "String Syntax" in the manual, for more information.
     
 The `,profile FORM' REPL meta-command can now be used to statistically
 profile execution of a form, to see which functions are taking the most
-time. See `,help profile' for more information.
+time.  See `,help profile' for more information.
 
 Similarly, `,trace FORM' traces all function applications that occur
-during the execution of `FORM'. See `,help trace' for more information.
+during the execution of `FORM'.  See `,help trace' for more information.
 
 ** Recursive debugging REPL on error
 
 When Guile sees an error at the REPL, instead of saving the stack, Guile
 will directly enter a recursive REPL in the dynamic context of the
-error. See "Error Handling" in the manual, for more information.
+error.  See "Error Handling" in the manual, for more information.
 
 A recursive REPL is the same as any other REPL, except that it
 has been augmented with debugging information, so that one can inspect
-the context of the error. The debugger has been integrated with the REPL
+the context of the error.  The debugger has been integrated with the REPL
 via a set of debugging meta-commands.
 
 For example, one may access a backtrace with `,backtrace' (or
-`,bt'). See "Interactive Debugging" in the manual, for more
+`,bt').  See "Interactive Debugging" in the manual, for more
 information.
 
 ** New `guile-tools' commands: `compile', `disassemble'
@@ -5142,16 +5142,16 @@ mouse.
 ** Load path change: search in version-specific paths before site paths
     
 When looking for a module, Guile now searches first in Guile's
-version-specific path (the library path), *then* in the site dir. This
+version-specific path (the library path), *then* in the site dir.  This
 allows Guile's copy of SSAX to override any Guile-Lib copy the user has
-installed. Also it should cut the number of `stat' system calls by half,
+installed.  Also it should cut the number of `stat' system calls by half,
 in the common case.
 
 ** Value history in the REPL on by default
 
 By default, the REPL will save computed values in variables like `$1',
-`$2', and the like. There are programmatic and interactive interfaces to
-control this. See "Value History" in the manual, for more information.
+`$2', and the like.  There are programmatic and interactive interfaces to
+control this.  See "Value History" in the manual, for more information.
 
 ** Readline tab completion for arguments
 
@@ -5174,14 +5174,14 @@ warranty disclaimer on startup, along with pointers to more information.
 
 The `library' and `import' forms from the latest Scheme report have been
 added to Guile, in such a way that R6RS libraries share a namespace with
-Guile modules. R6RS modules may import Guile modules, and are available
-for Guile modules to import via use-modules and all the rest. See "R6RS
+Guile modules.  R6RS modules may import Guile modules, and are available
+for Guile modules to import via use-modules and all the rest.  See "R6RS
 Libraries" in the manual for more information.
 
 ** Implementations of R6RS libraries
 
 Guile now has implementations for all of the libraries defined in the
-R6RS. Thanks to Julian Graham for this excellent hack. See "R6RS
+R6RS.  Thanks to Julian Graham for this excellent hack.  See "R6RS
 Standard Libraries" in the manual for a full list of libraries.
 
 ** Partial R6RS compatibility
@@ -5189,9 +5189,9 @@ Standard Libraries" in the manual for a full list of libraries.
 Guile now has enough support for R6RS to run a reasonably large subset
 of R6RS programs.
 
-Guile is not fully R6RS compatible. Many incompatibilities are simply
+Guile is not fully R6RS compatible.  Many incompatibilities are simply
 bugs, though some parts of Guile will remain R6RS-incompatible for the
-foreseeable future. See "R6RS Incompatibilities" in the manual, for more
+foreseeable future.  See "R6RS Incompatibilities" in the manual, for more
 information.
 
 Please contact bug-guile@gnu.org if you have found an issue not
@@ -5199,9 +5199,9 @@ mentioned in that compatibility list.
     
 ** New implementation of `primitive-eval'
 
-Guile's `primitive-eval' is now implemented in Scheme. Actually there is
+Guile's `primitive-eval' is now implemented in Scheme.  Actually there is
 still a C evaluator, used when building a fresh Guile to interpret the
-compiler, so we can compile eval.scm. Thereafter all calls to
+compiler, so we can compile eval.scm.  Thereafter all calls to
 primitive-eval are implemented by VM-compiled code.
 
 This allows all of Guile's procedures, be they interpreted or compiled,
@@ -5212,13 +5212,13 @@ code, and simplifying debugging.
 As part of this change, the evaluator no longer mutates the internal
 representation of the code being evaluated in a thread-unsafe manner.
 
-There are two negative aspects of this change, however. First, Guile
-takes a lot longer to compile now. Also, there is less debugging
-information available for debugging interpreted code. We hope to improve
+There are two negative aspects of this change, however.  First, Guile
+takes a lot longer to compile now.  Also, there is less debugging
+information available for debugging interpreted code.  We hope to improve
 both of these situations.
 
 There are many changes to the internal C evalator interface, but all
-public interfaces should be the same. See the ChangeLog for details. If
+public interfaces should be the same.  See the ChangeLog for details.  If
 we have inadvertantly changed an interface that you were using, please
 contact bug-guile@gnu.org.
 
@@ -5230,20 +5230,20 @@ not apply to the compiler.
 ** No more `local-eval'
 
 `local-eval' used to exist so that one could evaluate code in the
-lexical context of a function. Since there is no way to get the lexical
+lexical context of a function.  Since there is no way to get the lexical
 environment any more, as that concept has no meaning for the compiler,
 and a different meaning for the interpreter, we have removed the
 function.
 
 If you think you need `local-eval', you should probably implement your
-own metacircular evaluator. It will probably be as fast as Guile's
+own metacircular evaluator.  It will probably be as fast as Guile's
 anyway.
 
 ** Scheme source files will now be compiled automatically.
 
 If a compiled .go file corresponding to a .scm file is not found or is
 not fresh, the .scm file will be compiled on the fly, and the resulting
-.go file stored away. An advisory note will be printed on the console.
+.go file stored away.  An advisory note will be printed on the console.
 
 Note that this mechanism depends on the timestamp of the .go file being
 newer than that of the .scm file; if the .scm or .go files are moved
@@ -5251,7 +5251,7 @@ after installation, care should be taken to preserve their original
 timestamps.
 
 Auto-compiled files will be stored in the $XDG_CACHE_HOME/guile/ccache
-directory, where $XDG_CACHE_HOME defaults to ~/.cache. This directory
+directory, where $XDG_CACHE_HOME defaults to ~/.cache.  This directory
 will be created if needed.
 
 To inhibit automatic compilation, set the GUILE_AUTO_COMPILE environment
@@ -5296,45 +5296,45 @@ See "Higher-Order Functions" in the manual, for more information.
    `remove-name-help-handler!', `procedure-arguments'
 
 The value and name help handlers provide some minimal extensibility to
-the help interface. Guile-lib's `(texinfo reflection)' uses them, for
-example, to make stexinfo help documentation available. See those
+the help interface.  Guile-lib's `(texinfo reflection)' uses them, for
+example, to make stexinfo help documentation available.  See those
 procedures' docstrings for more information.
 
 `procedure-arguments' describes the arguments that a procedure can take,
-combining arity and formals. For example:
+combining arity and formals.  For example:
 
   (procedure-arguments resolve-interface)
   => ((required . (name)) (rest . args))
 
-Additionally, `module-commentary' is now publically exported from
+Additionally, `module-commentary' is now publicly exported from
 `(ice-9 session).
 
 ** Removed: `procedure->memoizing-macro', `procedure->syntax'
 
 These procedures created primitive fexprs for the old evaluator, and are
-no longer supported. If you feel that you need these functions, you
+no longer supported.  If you feel that you need these functions, you
 probably need to write your own metacircular evaluator (which will
 probably be as fast as Guile's, anyway).
 
 ** New language: ECMAScript
 
 Guile now ships with one other high-level language supported,
-ECMAScript. The goal is to support all of version 3.1 of the standard,
-but not all of the libraries are there yet. This support is not yet
+ECMAScript.  The goal is to support all of version 3.1 of the standard,
+but not all of the libraries are there yet.  This support is not yet
 documented; ask on the mailing list if you are interested.
 
 ** New language: Brainfuck
 
-Brainfuck is a toy language that closely models Turing machines. Guile's
+Brainfuck is a toy language that closely models Turing machines.  Guile's
 brainfuck compiler is meant to be an example of implementing other
-languages. See the manual for details, or
+languages.  See the manual for details, or
 http://en.wikipedia.org/wiki/Brainfuck for more information about the
 Brainfuck language itself.
 
 ** New language: Elisp
 
-Guile now has an experimental Emacs Lisp compiler and runtime. You can
-now switch to Elisp at the repl: `,language elisp'. All kudos to Daniel
+Guile now has an experimental Emacs Lisp compiler and runtime.  You can
+now switch to Elisp at the repl: `,language elisp'.  All kudos to Daniel
 Kraft and Brian Templeton, and all bugs to bug-guile@gnu.org.
 
 ** Better documentation infrastructure for macros
@@ -5349,7 +5349,7 @@ documentation.
 
 Building on its support for docstrings, Guile now supports multiple
 docstrings, adding them to the tail of a compiled procedure's
-properties. For example:
+properties.  For example:
 
   (define (foo)
     "one"
@@ -5399,7 +5399,7 @@ and "Creating Guile Modules" in the manual for more information.
     
 Wherever Guile accepts a symbol as an argument to specify a binding to
 export, it now also accepts a pair of symbols, indicating that a binding
-should be renamed on export. See "Creating Guile Modules" in the manual
+should be renamed on export.  See "Creating Guile Modules" in the manual
 for more information.
 
 ** New procedure: `module-export-all!'
@@ -5414,7 +5414,7 @@ more information.
 
 ** `eval-case' has been deprecated, and replaced by `eval-when'.
 
-The semantics of `eval-when' are easier to understand. See "Eval When"
+The semantics of `eval-when' are easier to understand.  See "Eval When"
 in the manual, for more information.
 
 ** Guile is now more strict about prohibiting definitions in expression
@@ -5436,13 +5436,13 @@ have any questions.
 ** Support for `letrec*'
 
 Guile now supports `letrec*', a recursive lexical binding operator in
-which the identifiers are bound in order. See "Local Bindings" in the
+which the identifiers are bound in order.  See "Local Bindings" in the
 manual, for more details.
 
 ** Internal definitions now expand to `letrec*'
 
 Following the R6RS, internal definitions now expand to letrec* instead
-of letrec. The following program is invalid for R5RS, but valid for
+of letrec.  The following program is invalid for R5RS, but valid for
 R6RS:
 
     (define (foo)
@@ -5461,20 +5461,20 @@ in earlier Guile dialects.
 ** Macro expansion produces structures instead of s-expressions
 
 In the olden days, macroexpanding an s-expression would yield another
-s-expression. Though the lexical variables were renamed, expansions of
+s-expression.  Though the lexical variables were renamed, expansions of
 core forms like `if' and `begin' were still non-hygienic, as they relied
 on the toplevel definitions of `if' et al being the conventional ones.
 
-The solution is to expand to structures instead of s-expressions. There
+The solution is to expand to structures instead of s-expressions.  There
 is an `if' structure, a `begin' structure, a `toplevel-ref' structure,
-etc. The expander already did this for compilation, producing Tree-IL
+etc.  The expander already did this for compilation, producing Tree-IL
 directly; it has been changed now to do so when expanding for the
 evaluator as well.
 
 ** Defmacros must now produce valid Scheme expressions.
 
 It used to be that defmacros could unquote in Scheme values, as a way of
-supporting partial evaluation, and avoiding some hygiene issues. For
+supporting partial evaluation, and avoiding some hygiene issues.  For
 example:
 
   (define (helper x) ...)
@@ -5503,20 +5503,20 @@ The following Scheme is not strictly legal:
     (define (baz) ...)
     (baz))
 
-However its intent is fairly clear. Guile interprets "bar" to be the
+However its intent is fairly clear.  Guile interprets "bar" to be the
 docstring of `foo', and the definition of `baz' is still in definition
 context.
 
 ** Support for settable identifier syntax
 
 Following the R6RS, "variable transformers" are settable
-identifier-syntax. See "Identifier macros" in the manual, for more
+identifier-syntax.  See "Identifier macros" in the manual, for more
 information.
     
 ** syntax-case treats `_' as a placeholder
     
 Following R6RS, a `_' in a syntax-rules or syntax-case pattern matches
-anything, and binds no pattern variables. Unlike the R6RS, Guile also
+anything, and binds no pattern variables.  Unlike the R6RS, Guile also
 permits `_' to be in the literals list for a pattern.
 
 ** Macros need to be defined before their first use.
@@ -5529,7 +5529,7 @@ It used to be that with lazy memoization, this might work:
   (foo 1) => 1
 
 But now, the body of `foo' is interpreted to mean a call to the toplevel
-`ref' function, instead of a macro expansion. The solution is to define
+`ref' function, instead of a macro expansion.  The solution is to define
 macros before code that uses them.
 
 ** Functions needed by macros at expand-time need to be present at
@@ -5542,7 +5542,7 @@ For example, this code will work at the REPL:
   (double-literal 2) => 4
 
 But it will not work when a file is compiled, because the definition of
-`double-helper' is not present at expand-time. The solution is to wrap
+`double-helper' is not present at expand-time.  The solution is to wrap
 the definition of `double-helper' in `eval-when':
 
   (eval-when (load compile eval)
@@ -5556,7 +5556,7 @@ See the documentation for eval-when for more information.
 
 Given the need to maintain referential transparency, both lexically and
 modular, the result of expanding Scheme expressions is no longer itself
-an s-expression. If you want a human-readable approximation of the
+an s-expression.  If you want a human-readable approximation of the
 result of `macroexpand', call `tree-il->scheme' from `(language
 tree-il)'.
 
@@ -5568,13 +5568,13 @@ PLT Scheme does prove that it is possible.
 ** New reader macros: #' #` #, #,@
 
 These macros translate, respectively, to `syntax', `quasisyntax',
-`unsyntax', and `unsyntax-splicing'. See the R6RS for more information.
+`unsyntax', and `unsyntax-splicing'.  See the R6RS for more information.
 These reader macros may be overridden by `read-hash-extend'.
 
 ** Incompatible change to #'
 
 Guile did have a #' hash-extension, by default, which just returned the
-subsequent datum: #'foo => foo. In the unlikely event that anyone
+subsequent datum: #'foo => foo.  In the unlikely event that anyone
 actually used this, this behavior may be reinstated via the
 `read-hash-extend' mechanism.
 
@@ -5590,7 +5590,7 @@ information.
 
 ** Prompts: Delimited, composable continuations
 
-Guile now has prompts as part of its primitive language. See "Prompts"
+Guile now has prompts as part of its primitive language.  See "Prompts"
 in the manual, for more information.
 
 Expressions entered in at the REPL, or from the command line, are
@@ -5601,12 +5601,12 @@ surrounded by a prompt with the default prompt tag.
 
 It used to be the case that a captured stack could be narrowed to select
 calls only up to or from a certain procedure, even if that procedure
-already tail-called another procedure. This was because the debug
+already tail-called another procedure.  This was because the debug
 information from the original procedure was kept on the stack.
 
 Now with the new compiler, the stack only contains active frames from
-the current continuation. A narrow to a procedure that is not in the
-stack will result in an empty stack. To fix this, narrow to a procedure
+the current continuation.  A narrow to a procedure that is not in the
+stack will result in an empty stack.  To fix this, narrow to a procedure
 that is active in the current continuation, or narrow to a specific
 number of stack frames.
 
@@ -5614,8 +5614,8 @@ number of stack frames.
    active in the current continuation
 
 Similarly to the previous issue, backtraces in compiled code may be
-different from backtraces in interpreted code. There are no semantic
-differences, however. Please mail bug-guile@gnu.org if you see any
+different from backtraces in interpreted code.  There are no semantic
+differences, however.  Please mail bug-guile@gnu.org if you see any
 deficiencies with Guile's backtraces.
 
 ** `positions' reader option enabled by default
@@ -5641,20 +5641,20 @@ Before, `(define ((f a) b) (* a b))' would translate to
   (define f (lambda (a) (lambda (b) (* a b))))
 
 Now a syntax error is signaled, as this syntax is not supported by
-default. Use the `(ice-9 curried-definitions)' module to get back the
+default.  Use the `(ice-9 curried-definitions)' module to get back the
 old behavior.
 
 ** New procedure, `define!'
 
 `define!' is a procedure that takes two arguments, a symbol and a value,
-and binds the value to the symbol in the current module. It's useful to
+and binds the value to the symbol in the current module.  It's useful to
 programmatically make definitions in the current module, and is slightly
 less verbose than `module-define!'.
 
 ** All modules have names now
 
-Before, you could have anonymous modules: modules without names. Now,
-because of hygiene and macros, all modules have names. If a module was
+Before, you could have anonymous modules: modules without names.  Now,
+because of hygiene and macros, all modules have names.  If a module was
 created without a name, the first time `module-name' is called on it, a
 fresh name will be lazily generated for it.
 
@@ -5665,19 +5665,19 @@ that it was built on a single hierarchical namespace of values -- that
 if there was a module named `(foo bar)', then in the module named
 `(foo)' there was a binding from `bar' to the `(foo bar)' module.
 
-This was a neat trick, but presented a number of problems. One problem
+This was a neat trick, but presented a number of problems.  One problem
 was that the bindings in a module were not apparent from the module
 itself; perhaps the `(foo)' module had a private binding for `bar', and
-then an external contributor defined `(foo bar)'. In the end there can
+then an external contributor defined `(foo bar)'.  In the end there can
 be only one binding, so one of the two will see the wrong thing, and
 produce an obtuse error of unclear provenance.
 
 Also, the public interface of a module was also bound in the value
-namespace, as `%module-public-interface'. This was a hack from the early
+namespace, as `%module-public-interface'.  This was a hack from the early
 days of Guile's modules.
 
 Both of these warts have been fixed by the addition of fields in the
-`module' data type. Access to modules and their interfaces from the
+`module' data type.  Access to modules and their interfaces from the
 value namespace has been deprecated, and all accessors use the new
 record accessors appropriately.
 
@@ -5687,7 +5687,7 @@ and a deprecation warning is raised as appropriate.
 
 Finally, to support lazy loading of modules as one used to be able to do
 with module binder procedures, Guile now has submodule binders, called
-if a given submodule is not found. See boot-9.scm for more information.
+if a given submodule is not found.  See boot-9.scm for more information.
     
 ** New procedures: module-ref-submodule, module-define-submodule,
    nested-ref-module, nested-define-module!, local-ref-module,
@@ -5699,9 +5699,9 @@ namespaces instead of values.
 ** The (app modules) module tree is officially deprecated
 
 It used to be that one could access a module named `(foo bar)' via
-`(nested-ref the-root-module '(app modules foo bar))'. The `(app
+`(nested-ref the-root-module '(app modules foo bar))'.  The `(app
 modules)' bit was a never-used and never-documented abstraction, and has
-been deprecated. See the following mail for a full discussion:
+been deprecated.  See the following mail for a full discussion:
 
     http://lists.gnu.org/archive/html/guile-devel/2010-04/msg00168.html
 
@@ -5709,19 +5709,19 @@ The `%app' binding is also deprecated.
 
 ** `module-filename' field and accessor
 
-Modules now record the file in which they are defined. This field may be
+Modules now record the file in which they are defined.  This field may be
 accessed with the new `module-filename' procedure.
 
 ** Modules load within a known environment
 
 It takes a few procedure calls to define a module, and those procedure
-calls need to be in scope. Now we ensure that the current module when
+calls need to be in scope.  Now we ensure that the current module when
 loading a module is one that has the needed bindings, instead of relying
 on chance.
 
 ** `load' is a macro (!) that resolves paths relative to source file dir
     
-The familiar Schem `load' procedure is now a macro that captures the
+The familiar Scheme `load' procedure is now a macro that captures the
 name of the source file being expanded, and dispatches to the new
 `load-in-vicinity'.  Referencing `load' by bare name returns a closure
 that embeds the current source file name.
@@ -5732,7 +5732,7 @@ the location of the file that calls `load'.
 ** Many syntax errors have different texts now
 
 Syntax errors still throw to the `syntax-error' key, but the arguments
-are often different now. Perhaps in the future, Guile will switch to
+are often different now.  Perhaps in the future, Guile will switch to
 using standard SRFI-35 conditions.
 
 ** Returning multiple values to compiled code will silently truncate the
@@ -5743,7 +5743,7 @@ For example, the interpreter would raise an error evaluating the form,
 being two compound "values" objects, to which `+' does not apply.
 
 The compiler, on the other hand, receives multiple values on the stack,
-not as a compound object. Given that it must check the number of values
+not as a compound object.  Given that it must check the number of values
 anyway, if too many values are provided for a continuation, it chooses
 to truncate those values, effectively evaluating `(+ 1 3)' instead.
 
@@ -5759,13 +5759,13 @@ This change may manifest itself in the following situation:
   (let ((val (foo))) (do-something) val)
 
 In the interpreter, if `foo' returns multiple values, multiple values
-are produced from the `let' expression. In the compiler, those values
-are truncated to the first value, and that first value is returned. In
+are produced from the `let' expression.  In the compiler, those values
+are truncated to the first value, and that first value is returned.  In
 the compiler, if `foo' returns no values, an error will be raised, while
 the interpreter would proceed.
 
-Both of these behaviors are allowed by R5RS and R6RS. The compiler's
-behavior is more correct, however. If you wish to preserve a potentially
+Both of these behaviors are allowed by R5RS and R6RS.  The compiler's
+behavior is more correct, however.  If you wish to preserve a potentially
 multiply-valued return, you will need to set up a multiple-value
 continuation, using `call-with-values'.
 
@@ -5774,7 +5774,7 @@ continuation, using `call-with-values'.
 The practical ramification of this is that the `defmacro?' predicate has
 been removed, along with `defmacro-transformer', `macro-table',
 `xformer-table', `assert-defmacro?!', `set-defmacro-transformer!' and
-`defmacro:transformer'. This is because defmacros are simply macros. If
+`defmacro:transformer'.  This is because defmacros are simply macros.  If
 any of these procedures provided useful facilities to you, we encourage
 you to contact the Guile developers.
 
@@ -5782,46 +5782,46 @@ you to contact the Guile developers.
 
 The macro documentation was finally fleshed out with some documentation
 on `syntax-rules' and `syntax-case' macros, and other parts of the macro
-expansion process. See "Macros" in the manual, for details.
+expansion process.  See "Macros" in the manual, for details.
 
 ** psyntax is now the default expander
 
 Scheme code is now expanded by default by the psyntax hygienic macro
-expander. Expansion is performed completely before compilation or
+expander.  Expansion is performed completely before compilation or
 interpretation.
 
-Notably, syntax errors will be signalled before interpretation begins.
+Notably, syntax errors will be signaled before interpretation begins.
 In the past, many syntax errors were only detected at runtime if the
 code in question was memoized.
 
 As part of its expansion, psyntax renames all lexically-bound
-identifiers. Original identifier names are preserved and given to the
+identifiers.  Original identifier names are preserved and given to the
 compiler, but the interpreter will see the renamed variables, e.g.,
 `x432' instead of `x'.
 
 Note that the psyntax that Guile uses is a fork, as Guile already had
 modules before incompatible modules were added to psyntax -- about 10
-years ago! Thus there are surely a number of bugs that have been fixed
-in psyntax since then. If you find one, please notify bug-guile@gnu.org.
+years ago!  Thus there are surely a number of bugs that have been fixed
+in psyntax since then.  If you find one, please notify bug-guile@gnu.org.
 
 ** syntax-rules and syntax-case are available by default.
 
 There is no longer any need to import the `(ice-9 syncase)' module
-(which is now deprecated). The expander may be invoked directly via
+(which is now deprecated).  The expander may be invoked directly via
 `macroexpand', though it is normally searched for via the current module
 transformer.
 
 Also, the helper routines for syntax-case are available in the default
 environment as well: `syntax->datum', `datum->syntax',
 `bound-identifier=?', `free-identifier=?', `generate-temporaries',
-`identifier?', and `syntax-violation'. See the R6RS for documentation.
+`identifier?', and `syntax-violation'.  See the R6RS for documentation.
 
 ** Tail patterns in syntax-case
 
 Guile has pulled in some more recent changes from the psyntax portable
-syntax expander, to implement support for "tail patterns". Such patterns
-are supported by syntax-rules and syntax-case. This allows a syntax-case
-match clause to have ellipses, then a pattern at the end. For example:
+syntax expander, to implement support for "tail patterns".  Such patterns
+are supported by syntax-rules and syntax-case.  This allows a syntax-case
+match clause to have ellipses, then a pattern at the end.  For example:
 
   (define-syntax case
     (syntax-rules (else)
@@ -5829,14 +5829,14 @@ match clause to have ellipses, then a pattern at the end. For example:
        [...])))
 
 Note how there is MATCH-CLAUSE, which is ellipsized, then there is a
-tail pattern for the else clause. Thanks to Andreas Rottmann for the
+tail pattern for the else clause.  Thanks to Andreas Rottmann for the
 patch, and Kent Dybvig for the code.
 
 ** Lexical bindings introduced by hygienic macros may not be referenced
    by nonhygienic macros.
 
 If a lexical binding is introduced by a hygienic macro, it may not be
-referenced by a nonhygienic macro. For example, this works:
+referenced by a nonhygienic macro.  For example, this works:
 
   (let ()
     (define-macro (bind-x val body)
@@ -5855,16 +5855,16 @@ But this does not:
       x)
     (bind-x 10 (ref x)))
 
-It is not normal to run into this situation with existing code. However,
+It is not normal to run into this situation with existing code.  However,
 if you have defmacros that expand to hygienic macros, it is possible to
-run into situations like this. For example, if you have a defmacro that
+run into situations like this.  For example, if you have a defmacro that
 generates a `while' expression, the `break' bound by the `while' may not
-be visible within other parts of your defmacro. The solution is to port
+be visible within other parts of your defmacro.  The solution is to port
 from defmacros to syntax-rules or syntax-case.
 
 ** Macros may no longer be referenced as first-class values.
 
-In the past, you could evaluate e.g. `if', and get its macro value. Now,
+In the past, you could evaluate e.g. `if', and get its macro value.  Now,
 expanding this form raises a syntax error.
 
 Macros still /exist/ as first-class values, but they must be
@@ -5875,18 +5875,18 @@ Macros still /exist/ as first-class values, but they must be
 
 `object-documentation' from `(ice-9 documentation)' may be used to
 retrieve the docstring, once you have a macro value -- but see the above
-note about first-class macros. Docstrings are associated with the syntax
+note about first-class macros.  Docstrings are associated with the syntax
 transformer procedures.
 
 ** `case-lambda' is now available in the default environment.
 
 The binding in the default environment is equivalent to the one from the
-`(srfi srfi-16)' module. Use the srfi-16 module explicitly if you wish
+`(srfi srfi-16)' module.  Use the srfi-16 module explicitly if you wish
 to maintain compatibility with Guile 1.8 and earlier.
 
 ** Procedures may now have more than one arity.
 
-This can be the case, for example, in case-lambda procedures. The
+This can be the case, for example, in case-lambda procedures.  The
 arities of compiled procedures may be accessed via procedures from the
 `(system vm program)' module; see "Compiled Procedures", "Optional
 Arguments", and "Case-lambda" in the manual. 
@@ -5901,7 +5901,7 @@ accessor.
 ** `lambda*' and `define*' are now available in the default environment
 
 As with `case-lambda', `(ice-9 optargs)' continues to be supported, for
-compatibility purposes. No semantic change has been made (we hope).
+compatibility purposes.  No semantic change has been made (we hope).
 Optional and keyword arguments now dispatch via special VM operations,
 without the need to cons rest arguments, making them very fast.
 
@@ -5914,11 +5914,11 @@ but only if one does not exist already.
 
 `(ice-9 pretty-print)' now exports `truncated-print', a printer that
 will ensure that the output stays within a certain width, truncating the
-output in what is hopefully an intelligent manner. See the manual for
+output in what is hopefully an intelligent manner.  See the manual for
 more details.
 
 There is a new `format' specifier, `~@y', for doing a truncated
-print (as opposed to `~y', which does a pretty-print). See the `format'
+print (as opposed to `~y', which does a pretty-print).  See the `format'
 documentation for more details.
 
 ** Better pretty-printing
@@ -5936,21 +5936,21 @@ some cases.  This still works, but has been formally deprecated.
     
 ** SRFI-4 vectors reimplemented in terms of R6RS bytevectors
 
-Guile now implements SRFI-4 vectors using bytevectors. Often when you
+Guile now implements SRFI-4 vectors using bytevectors.  Often when you
 have a numeric vector, you end up wanting to write its bytes somewhere,
 or have access to the underlying bytes, or read in bytes from somewhere
-else. Bytevectors are very good at this sort of thing. But the SRFI-4
+else.  Bytevectors are very good at this sort of thing.  But the SRFI-4
 APIs are nicer to use when doing number-crunching, because they are
 addressed by element and not by byte.
 
 So as a compromise, Guile allows all bytevector functions to operate on
-numeric vectors. They address the underlying bytes in the native
+numeric vectors.  They address the underlying bytes in the native
 endianness, as one would expect.
 
 Following the same reasoning, that it's just bytes underneath, Guile
 also allows uniform vectors of a given type to be accessed as if they
-were of any type. One can fill a u32vector, and access its elements with
-u8vector-ref. One can use f64vector-ref on bytevectors. It's all the
+were of any type.  One can fill a u32vector, and access its elements with
+u8vector-ref.  One can use f64vector-ref on bytevectors.  It's all the
 same to Guile.
 
 In this way, uniform numeric vectors may be written to and read from
@@ -5964,7 +5964,7 @@ See "SRFI-4" in the manual, for more information.
 ** Nonstandard SRFI-4 procedures now available from `(srfi srfi-4 gnu)'
 
 Guile's `(srfi srfi-4)' now only exports those srfi-4 procedures that
-are part of the standard. Complex uniform vectors and the
+are part of the standard.  Complex uniform vectors and the
 `any->FOOvector' family are now available only from `(srfi srfi-4 gnu)'.
 
 Guile's default environment imports `(srfi srfi-4)', and probably should
@@ -5975,12 +5975,12 @@ See "SRFI-4 Extensions" in the manual, for more information.
 ** New syntax: include-from-path.
 
 `include-from-path' is like `include', except it looks for its file in
-the load path. It can be used to compile other files into a file.
+the load path.  It can be used to compile other files into a file.
 
 ** New syntax: quasisyntax.
 
-`quasisyntax' is to `syntax' as `quasiquote' is to `quote'. See the R6RS
-documentation for more information. Thanks to Andre van Tonder for the
+`quasisyntax' is to `syntax' as `quasiquote' is to `quote'.  See the R6RS
+documentation for more information.  Thanks to Andre van Tonder for the
 implementation.
 
 ** `*unspecified*' is identifier syntax
@@ -6183,14 +6183,14 @@ which yielded 5.0.
 ** Unicode characters
 
 Unicode characters may be entered in octal format via e.g. `#\454', or
-created via (integer->char 300). A hex external representation will
+created via (integer->char 300).  A hex external representation will
 probably be introduced at some point.
 
 ** Unicode strings
 
 Internally, strings are now represented either in the `latin-1'
 encoding, one byte per character, or in UTF-32, with four bytes per
-character. Strings manage their own allocation, switching if needed.
+character.  Strings manage their own allocation, switching if needed.
 
 Extended characters may be written in a literal string using the
 hexadecimal escapes `\xXX', `\uXXXX', or `\UXXXXXX', for 8-bit, 16-bit,
@@ -6204,10 +6204,10 @@ One may now use U+03BB (GREEK SMALL LETTER LAMBDA) as an identifier.
 ** Support for non-ASCII source code files
 
 The default reader now handles source code files for some of the
-non-ASCII character encodings, such as UTF-8. A non-ASCII source file
-should have an encoding declaration near the top of the file. Also,
+non-ASCII character encodings, such as UTF-8.  A non-ASCII source file
+should have an encoding declaration near the top of the file.  Also,
 there is a new function, `file-encoding', that scans a port for a coding
-declaration. See the section of the manual entitled, "Character Encoding
+declaration.  See the section of the manual entitled, "Character Encoding
 of Source Files".
 
 The pre-1.9.3 reader handled 8-bit clean but otherwise unspecified source
@@ -6228,7 +6228,7 @@ installs the current locale.  [FIXME xref?]
 ** Support for locale transcoding when reading from and writing to ports
 
 Ports now have an associated character encoding, and port read and write
-operations do conversion to and from locales automatically. Ports also
+operations do conversion to and from locales automatically.  Ports also
 have an associated strategy for how to deal with locale conversion
 failures.
 
@@ -6241,9 +6241,9 @@ and `port-conversion-strategy'.
 ** Unicode support for SRFI-14 character sets
 
 The default character sets are no longer locale dependent and contain
-characters from the whole Unicode range. There is a new predefined
+characters from the whole Unicode range.  There is a new predefined
 character set, `char-set:designated', which contains all assigned
-Unicode characters. There is a new debugging function, `%char-set-dump'.
+Unicode characters.  There is a new debugging function, `%char-set-dump'.
 
 ** Character functions operate on Unicode characters
 
@@ -6266,10 +6266,10 @@ and was unmaintained.
 
 ** Compile-time warnings
 
-Guile can warn about potentially unbound free variables. Pass the
+Guile can warn about potentially unbound free variables.  Pass the
 -Wunbound-variable on the `guile-tools compile' command line, or add
 `#:warnings '(unbound-variable)' to your `compile' or `compile-file'
-invocation. Warnings are also enabled by default for expressions entered
+invocation.  Warnings are also enabled by default for expressions entered
 at the REPL.
 
 Guile can also warn when you pass the wrong number of arguments to a
@@ -6297,7 +6297,7 @@ See `cancel-thread', `set-thread-cleanup!', and `thread-cleanup'.
 
 It used to be that a new thread entering Guile would do so in the
 `(guile)' module, unless this was the first time Guile was initialized,
-in which case it was `(guile-user)'. This has been fixed to have all
+in which case it was `(guile-user)'.  This has been fixed to have all
 new threads unknown to Guile default to `(guile-user)'.
 
 ** New helpers: `print-exception', `set-exception-printer!'
@@ -6312,7 +6312,7 @@ printed appropriately.
 
 As an implementation detail, GOOPS dispatch is no longer implemented by
 special evaluator bytecodes, but rather directly via a Scheme function
-associated with an applicable struct. There is some VM support for the
+associated with an applicable struct.  There is some VM support for the
 underlying primitives, like `class-of'.
 
 This change will in the future allow users to customize generic function
@@ -6326,36 +6326,36 @@ To do so, make a struct whose vtable is `<applicable-struct-vtable>'.
 That struct will be the vtable of your applicable structs; instances of
 that new struct are assumed to have the procedure in their first slot.
 `<applicable-struct-vtable>' is like Common Lisp's
-`funcallable-standard-class'. Likewise there is
+`funcallable-standard-class'.  Likewise there is
 `<applicable-struct-with-setter-vtable>', which looks for the setter in
-the second slot. This needs to be better documented.
+the second slot.  This needs to be better documented.
 
 ** GOOPS cleanups.
 
 GOOPS had a number of concepts that were relevant to the days of Tcl,
-but not any more: operators and entities, mainly. These objects were
-never documented, and it is unlikely that they were ever used. Operators
-were a kind of generic specific to the Tcl support. Entities were
+but not any more: operators and entities, mainly.  These objects were
+never documented, and it is unlikely that they were ever used.  Operators
+were a kind of generic specific to the Tcl support.  Entities were
 replaced by applicable structs, mentioned above.
 
 ** New struct slot allocation: "hidden"
 
 A hidden slot is readable and writable, but will not be initialized by a
-call to make-struct. For example in your layout you would say "ph"
-instead of "pw". Hidden slots are useful for adding new slots to a
+call to make-struct.  For example in your layout you would say "ph"
+instead of "pw".  Hidden slots are useful for adding new slots to a
 vtable without breaking existing invocations to make-struct.
 
 ** eqv? not a generic
 
 One used to be able to extend `eqv?' as a primitive-generic, but no
-more. Because `eqv?' is in the expansion of `case' (via `memv'), which
+more.  Because `eqv?' is in the expansion of `case' (via `memv'), which
 should be able to compile to static dispatch tables, it doesn't make
 sense to allow extensions that would subvert this optimization.
 
 ** `inet-ntop' and `inet-pton' are always available.
 
 Guile now use a portable implementation of `inet_pton'/`inet_ntop', so
-there is no more need to use `inet-aton'/`inet-ntoa'. The latter
+there is no more need to use `inet-aton'/`inet-ntoa'.  The latter
 functions are deprecated.
 
 ** `getopt-long' parsing errors throw to `quit', not `misc-error'
@@ -6377,13 +6377,13 @@ may be written out, read back in later, and revivified using
 ** Fix random number generator on 64-bit platforms
     
 There was a nasty bug on 64-bit platforms in which asking for a random
-integer with a range between 2**32 and 2**64 caused a segfault. After
+integer with a range between 2**32 and 2**64 caused a segfault.  After
 many embarrassing iterations, this was fixed.
 
 ** Fast bit operations.
 
 The bit-twiddling operations `ash', `logand', `logior', and `logxor' now
-have dedicated bytecodes. Guile is not just for symbolic computation,
+have dedicated bytecodes.  Guile is not just for symbolic computation,
 it's for number crunching too.
 
 ** Faster SRFI-9 record access
@@ -6395,13 +6395,13 @@ inline to special VM opcodes, while still allowing for the general case
 
 ** R6RS block comment support
 
-Guile now supports R6RS nested block comments. The start of a comment is
+Guile now supports R6RS nested block comments.  The start of a comment is
 marked with `#|', and the end with `|#'.
 
 ** `guile-2' cond-expand feature
 
 To test if your code is running under Guile 2.0 (or its alpha releases),
-test for the `guile-2' cond-expand feature. Like this:
+test for the `guile-2' cond-expand feature.  Like this:
 
      (cond-expand (guile-2 (eval-when (compile)
                              ;; This must be evaluated at compile time.
@@ -6418,10 +6418,10 @@ These are analogous to %load-path and %load-extensions.
 ** New fluid: `%file-port-name-canonicalization'
     
 This fluid parameterizes the file names that are associated with file
-ports. If %file-port-name-canonicalization is 'absolute, then file names
+ports.  If %file-port-name-canonicalization is 'absolute, then file names
 are canonicalized to be absolute paths. If it is 'relative, then the
 name is canonicalized, but any prefix corresponding to a member of
-`%load-path' is stripped off. Otherwise the names are passed through
+`%load-path' is stripped off.  Otherwise the names are passed through
 unchanged.
 
 In addition, the `compile-file' and `compile-and-load' procedures bind
@@ -6444,7 +6444,7 @@ Previously it only accepted internal structures from the evaluator.
 
 `module-bound?' was returning true if a module did have a local
 variable, but one that was unbound, but another imported module bound
-the variable. This was an error, and was fixed.
+the variable.  This was an error, and was fixed.
 
 ** `(ice-9 syncase)' has been deprecated.
 
@@ -6486,7 +6486,7 @@ a deprecation warning.
 ** `set-batch-mode?!' replaced by `ensure-batch-mode!'
 
 "Batch mode" is a flag used to tell a program that it is not running
-interactively. One usually turns it on after a fork. It may not be
+interactively.  One usually turns it on after a fork.  It may not be
 turned off. `ensure-batch-mode!' deprecates the old `set-batch-mode?!',
 because it is a better interface, as it can only turn on batch mode, not
 turn it off.
@@ -6495,7 +6495,7 @@ turn it off.
 
 It used to be that the way to debug programs in Guile was to capture the
 stack at the time of error, drop back to the REPL, then debug that
-stack. But this approach didn't compose, was tricky to get right in the
+stack.  But this approach didn't compose, was tricky to get right in the
 presence of threads, and was not very powerful.
 
 So `save-stack', `stack-saved?', and `the-last-stack' have been moved to
@@ -6504,21 +6504,21 @@ So `save-stack', `stack-saved?', and `the-last-stack' have been moved to
 ** `top-repl' has its own module
     
 The `top-repl' binding, called with Guile is run interactively, is now
-is its own module, `(ice-9 top-repl)'. A deprecated forwarding shim was
+is its own module, `(ice-9 top-repl)'.  A deprecated forwarding shim was
 left in the default environment.
 
 ** `display-error' takes a frame
 
 The `display-error' / `scm_display_error' helper now takes a frame as an
-argument instead of a stack. Stacks are still supported in deprecated
-builds. Additionally, `display-error' will again source location
+argument instead of a stack.  Stacks are still supported in deprecated
+builds.  Additionally, `display-error' will again source location
 information for the error.
 
 ** No more `(ice-9 debug)'
     
 This module had some debugging helpers that are no longer applicable to
-the current debugging model. Importing this module will produce a
-deprecation warning. Users should contact bug-guile for support.
+the current debugging model.  Importing this module will produce a
+deprecation warning.  Users should contact bug-guile for support.
 
 ** Remove obsolete debug-options
 
@@ -6560,8 +6560,8 @@ should use Guile with Emacs.
 ** Deprecated: `lazy-catch'
 
 `lazy-catch' was a form that captured the stack at the point of a
-`throw', but the dynamic state at the point of the `catch'. It was a bit
-crazy. Please change to use `catch', possibly with a throw-handler, or
+`throw', but the dynamic state at the point of the `catch'.  It was a bit
+crazy.  Please change to use `catch', possibly with a throw-handler, or
 `with-throw-handler'.
 
 ** Deprecated: primitive properties
@@ -6631,7 +6631,7 @@ encoding.
 
 `SCM_T_UINTPTR_MAX', `SCM_T_INTPTR_MIN', `SCM_T_INTPTR_MAX',
 `SIZEOF_SCM_T_BITS', `scm_t_intptr' and `scm_t_uintptr' are now
-available to C. Have fun!
+available to C.  Have fun!
 
 ** The GH interface (deprecated in version 1.6, 2001) was removed.
 
@@ -6645,52 +6645,52 @@ indicating length of the `scm_t_option' array.
 
 ** Procedures-with-setters are now implemented using applicable structs
 
-From a user's perspective this doesn't mean very much. But if, for some
+From a user's perspective this doesn't mean very much.  But if, for some
 odd reason, you used the SCM_PROCEDURE_WITH_SETTER_P, SCM_PROCEDURE, or
-SCM_SETTER macros, know that they're deprecated now. Also, scm_tc7_pws
+SCM_SETTER macros, know that they're deprecated now.  Also, scm_tc7_pws
 is gone.
 
 ** Remove old evaluator closures
 
 There used to be ranges of typecodes allocated to interpreted data
 structures, but that it no longer the case, given that interpreted
-procedure are now just regular VM closures. As a result, there is a
-newly free tc3, and a number of removed macros. See the ChangeLog for
+procedure are now just regular VM closures.  As a result, there is a
+newly free tc3, and a number of removed macros.  See the ChangeLog for
 details.
 
 ** Primitive procedures are now VM trampoline procedures
 
 It used to be that there were something like 12 different typecodes
 allocated to primitive procedures, each with its own calling convention.
-Now there is only one, the gsubr. This may affect user code if you were
-defining a procedure using scm_c_make_subr rather scm_c_make_gsubr. The
-solution is to switch to use scm_c_make_gsubr. This solution works well
+Now there is only one, the gsubr.  This may affect user code if you were
+defining a procedure using scm_c_make_subr rather scm_c_make_gsubr.  The
+solution is to switch to use scm_c_make_gsubr.  This solution works well
 both with the old 1.8 and with the current 1.9 branch.
 
 Guile's old evaluator used to have special cases for applying "gsubrs",
 primitive procedures with specified numbers of required, optional, and
-rest arguments. Now, however, Guile represents gsubrs as normal VM
+rest arguments.  Now, however, Guile represents gsubrs as normal VM
 procedures, with appropriate bytecode to parse out the correct number of
 arguments, including optional and rest arguments, and then with a
 special bytecode to apply the gsubr.
 
 This allows primitive procedures to appear on the VM stack, allowing
-them to be accurately counted in profiles. Also they now have more
+them to be accurately counted in profiles.  Also they now have more
 debugging information attached to them -- their number of arguments, for
-example. In addition, the VM can completely inline the application
+example.  In addition, the VM can completely inline the application
 mechanics, allowing for faster primitive calls.
 
-However there are some changes on the C level. There is no more
+However there are some changes on the C level.  There is no more
 `scm_tc7_gsubr' or `scm_tcs_subrs' typecode for primitive procedures, as
-they are just VM procedures. Likewise the macros `SCM_GSUBR_TYPE',
+they are just VM procedures.  Likewise the macros `SCM_GSUBR_TYPE',
 `SCM_GSUBR_MAKTYPE', `SCM_GSUBR_REQ', `SCM_GSUBR_OPT', and
 `SCM_GSUBR_REST' are gone, as are `SCM_SUBR_META_INFO', `SCM_SUBR_PROPS'
 `SCM_SET_SUBR_GENERIC_LOC', and `SCM_SUBR_ARITY_TO_TYPE'.
 
 Perhaps more significantly, `scm_c_make_subr',
 `scm_c_make_subr_with_generic', `scm_c_define_subr', and
-`scm_c_define_subr_with_generic'. They all operated on subr typecodes,
-and there are no more subr typecodes. Use the scm_c_make_gsubr family
+`scm_c_define_subr_with_generic'.  They all operated on subr typecodes,
+and there are no more subr typecodes.  Use the scm_c_make_gsubr family
 instead.
 
 Normal users of gsubrs should not be affected, though, as the
@@ -6708,7 +6708,7 @@ Removed the deprecated array functions `scm_i_arrayp',
 ** Remove unused snarf macros
     
 `SCM_DEFINE1', `SCM_PRIMITIVE_GENERIC_1', `SCM_PROC1, and `SCM_GPROC1'
-are no more. Use SCM_DEFINE or SCM_PRIMITIVE_GENERIC instead.
+are no more.  Use SCM_DEFINE or SCM_PRIMITIVE_GENERIC instead.
 
 ** New functions: `scm_call_n', `scm_c_run_hookn'
     
@@ -6722,25 +6722,25 @@ they have statically allocated tc7 typecodes.
 
 ** Preparations for changing SMOB representation
 
-If things go right, we'll be changing the SMOB representation soon. To
+If things go right, we'll be changing the SMOB representation soon.  To
 that end, we did a lot of cleanups to calls to e.g. SCM_CELL_WORD_2(x) when
 the code meant SCM_SMOB_DATA_2(x); user code will need similar changes
-in the future. Code accessing SMOBs using SCM_CELL macros was never
-correct, but until now things still worked. Users should be aware of
+in the future.  Code accessing SMOBs using SCM_CELL macros was never
+correct, but until now things still worked.  Users should be aware of
 such changes.
 
 ** Changed invocation mechanics of applicable SMOBs
 
 Guile's old evaluator used to have special cases for applying SMOB
-objects. Now, with the VM, when Guile sees a SMOB, it looks up a VM
+objects.  Now, with the VM, when Guile sees a SMOB, it looks up a VM
 trampoline procedure for it, and use the normal mechanics to apply the
-trampoline. This simplifies procedure application in the normal,
+trampoline.  This simplifies procedure application in the normal,
 non-SMOB case.
 
 The upshot is that the mechanics used to apply a SMOB are different from
-1.8. Descriptors no longer have `apply_0', `apply_1', `apply_2', and
+1.8.  Descriptors no longer have `apply_0', `apply_1', `apply_2', and
 `apply_3' functions, and the macros SCM_SMOB_APPLY_0 and friends are now
-deprecated. Just use the scm_call_0 family of procedures.
+deprecated.  Just use the scm_call_0 family of procedures.
 
 ** Removed support shlibs for SRFIs 1, 4, 13, 14, and 60
 
@@ -6766,7 +6766,7 @@ full module lookup.
 ** Inline vector allocation
 
 Instead of having vectors point out into the heap for their data, their
-data is now allocated inline to the vector object itself. The same is
+data is now allocated inline to the vector object itself.  The same is
 true for bytevectors, by default, though there is an indirection
 available which should allow for making a bytevector from an existing
 memory region.
@@ -6774,37 +6774,37 @@ memory region.
 ** New struct constructors that don't involve making lists
 
 `scm_c_make_struct' and `scm_c_make_structv' are new varargs and array
-constructors, respectively, for structs. You might find them useful.
+constructors, respectively, for structs.  You might find them useful.
 
 ** Stack refactor
 
-In Guile 1.8, there were debugging frames on the C stack. Now there is
+In Guile 1.8, there were debugging frames on the C stack.  Now there is
 no more need to explicitly mark the stack in this way, because Guile has
 a VM stack that it knows how to walk, which simplifies the C API
-considerably. See the ChangeLog for details; the relevant interface is
-in libguile/stacks.h. The Scheme API has not been changed significantly.
+considerably.  See the ChangeLog for details; the relevant interface is
+in libguile/stacks.h.  The Scheme API has not been changed significantly.
 
 ** Removal of Guile's primitive object system.
 
 There were a number of pieces in `objects.[ch]' that tried to be a
 minimal object system, but were never documented, and were quickly
-obseleted by GOOPS' merge into Guile proper. So `scm_make_class_object',
+obseleted by GOOPS' merge into Guile proper.  So `scm_make_class_object',
 `scm_make_subclass_object', `scm_metaclass_standard', and like symbols
-from objects.h are no more. In the very unlikely case in which these
+from objects.h are no more.  In the very unlikely case in which these
 were useful to you, we urge you to contact guile-devel.
 
 ** No future.
 
 Actually the future is still in the state that it was, is, and ever
 shall be, Amen, except that `futures.c' and `futures.h' are no longer a
-part of it. These files were experimental, never compiled, and would be
-better implemented in Scheme anyway. In the future, that is.
+part of it.  These files were experimental, never compiled, and would be
+better implemented in Scheme anyway.  In the future, that is.
 
 ** Deprecate trampolines
 
 There used to be C functions `scm_trampoline_0', `scm_trampoline_1', and
-so on. The point was to do some precomputation on the type of the
-procedure, then return a specialized "call" procedure. However this
+so on.  The point was to do some precomputation on the type of the
+procedure, then return a specialized "call" procedure.  However this
 optimization wasn't actually an optimization, so it is now deprecated.
 Just use `scm_call_0', etc instead.
 
@@ -6816,18 +6816,18 @@ This function is unused in Guile, but was part of its API.
 
 The bit representation of `nil' has been tweaked so that it is now very
 efficient to check e.g. if a value is equal to Scheme's end-of-list or
-Lisp's nil. Additionally there are a heap of new, specific predicates
+Lisp's nil.  Additionally there are a heap of new, specific predicates
 like scm_is_null_or_nil.
 
 ** Better integration of Lisp `nil'.
 
 `scm_is_boolean', `scm_is_false', and `scm_is_null' all return true now
-for Lisp's `nil'. This shouldn't affect any Scheme code at this point,
+for Lisp's `nil'.  This shouldn't affect any Scheme code at this point,
 but when we start to integrate more with Emacs, it is possible that we
 break code that assumes that, for example, `(not x)' implies that `x' is
-`eq?' to `#f'. This is not a common assumption. Refactoring affected
+`eq?' to `#f'.  This is not a common assumption.  Refactoring affected
 code to rely on properties instead of identities will improve code
-correctness. See "Nil" in the manual, for more details.
+correctness.  See "Nil" in the manual, for more details.
 
 ** Support for static allocation of strings, symbols, and subrs.
 
@@ -6863,7 +6863,7 @@ part of Guile).
 ** AM_SILENT_RULES
 
 Guile's build is visually quieter, due to the use of Automake 1.11's
-AM_SILENT_RULES. Build as `make V=1' to see all of the output.
+AM_SILENT_RULES.  Build as `make V=1' to see all of the output.
     
 ** GOOPS documentation folded into Guile reference manual
 
@@ -6885,7 +6885,7 @@ macros should now require `guile-2.0' instead of `guile-1.8'.
 ** New installation directory: $(pkglibdir)/1.9/ccache
 
 If $(libdir) is /usr/lib, for example, Guile will install its .go files
-to /usr/lib/guile/1.9/ccache. These files are architecture-specific.
+to /usr/lib/guile/1.9/ccache.  These files are architecture-specific.
 
 ** Parallel installability fixes
 
@@ -6894,7 +6894,7 @@ directory, and includes the effective version (e.g. 2.0) in the library
 name (e.g. libguile-2.0.so).
 
 This change should be transparent to users, who should detect Guile via
-the guile.m4 macro, or the guile-2.0.pc pkg-config file. It will allow
+the guile.m4 macro, or the guile-2.0.pc pkg-config file.  It will allow
 parallel installs for multiple versions of Guile development
 environments.
 
@@ -6902,16 +6902,16 @@ environments.
 
 Before, Guile only searched the system library paths for extensions
 (e.g. /usr/lib), which meant that the names of Guile extensions had to
-be globally unique. Installing them to a Guile-specific extensions
-directory is cleaner. Use `pkg-config --variable=extensiondir
+be globally unique.  Installing them to a Guile-specific extensions
+directory is cleaner.  Use `pkg-config --variable=extensiondir
 guile-2.0' to get the location of the extensions directory.
 
 ** User Scheme code may be placed in a version-specific path
 
 Before, there was only one way to install user Scheme code to a
 version-specific Guile directory: install to Guile's own path,
-e.g. /usr/share/guile/2.0. The site directory,
-e.g. /usr/share/guile/site, was unversioned. This has been changed to
+e.g. /usr/share/guile/2.0.  The site directory,
+e.g. /usr/share/guile/site, was unversioned.  This has been changed to
 add a version-specific site directory, e.g. /usr/share/guile/site/2.0,
 searched before the global site directory.
 
@@ -6921,7 +6921,7 @@ See http://www.hpl.hp.com/personal/Hans_Boehm/gc/, for more information.
 
 ** New dependency: GNU libunistring
 
-See http://www.gnu.org/software/libunistring/, for more information. Our
+See http://www.gnu.org/software/libunistring/, for more information.  Our
 Unicode support uses routines from libunistring.
 
 ** New dependency: libffi
@@ -6978,7 +6978,7 @@ Changes in 1.8.6 (since 1.8.5)
 ** Single stepping through code from Emacs
 
 When you use GDS to evaluate Scheme code from Emacs, you can now use
-`C-u' to indicate that you want to single step through that code. See
+`C-u' to indicate that you want to single step through that code.  See
 `Evaluating Scheme Code' in the manual for more details.
 
 ** New "guile(1)" man page!
@@ -7191,7 +7191,7 @@ per Section 5.2.1.
 the core bindings got priority, preventing SRFI replacements or
 extensions.)
 ** `regexp-exec' doesn't abort() on #\nul in the input or bad flags arg
-** `kill' on mingw throws an error for a PID other than oneself
+** `kill' on MinGW throws an error for a PID other than oneself
 ** Procedure names are attached to procedure-with-setters
 ** Array read syntax works with negative lower bound
 ** `array-in-bounds?' fix if an array has different lower bounds on each index
@@ -7747,7 +7747,7 @@ There is new syntax for numbers: "+inf.0" (infinity), "-inf.0"
 
 Dividing by an inexact zero returns +inf.0 or -inf.0, depending on the
 sign of the dividend.  The infinities are integers, and they answer #t
-for both 'even?' and 'odd?'. The +nan.0 value is not an integer and is
+for both 'even?' and 'odd?'.  The +nan.0 value is not an integer and is
 not '=' to itself, but '+nan.0' is 'eqv?' to itself.
 
 For example
@@ -8136,7 +8136,7 @@ Also, there is SCM_SMOB_FLAGS and SCM_SET_SMOB_FLAGS that should be
 used to get and set the 16 exra bits in the zeroth word of a smob.
 
 And finally, there is SCM_SMOB_OBJECT and SCM_SMOB_SET_OBJECT for
-accesing the first immediate word of a smob as a SCM value, and there
+accessing the first immediate word of a smob as a SCM value, and there
 is SCM_SMOB_OBJECT_LOC for getting a pointer to the first immediate
 smob word.  Like wise for SCM_SMOB_OBJECT_2, etc.
 
@@ -8286,15 +8286,15 @@ function in the init section.
 ** Garbage collector rewrite.
 
 The garbage collector is cleaned up a lot, and now uses lazy
-sweeping. This is reflected in the output of (gc-stats); since cells
+sweeping.  This is reflected in the output of (gc-stats); since cells
 are being freed when they are allocated, the cells-allocated field
 stays roughly constant.
 
-For malloc related triggers, the behavior is changed. It uses the same
+For malloc related triggers, the behavior is changed.  It uses the same
 heuristic as the cell-triggered collections.  It may be tuned with the
 environment variables GUILE_MIN_YIELD_MALLOC.  This is the percentage
-for minimum yield of malloc related triggers. The default is 40.
-GUILE_INIT_MALLOC_LIMIT sets the initial trigger for doing a GC. The
+for minimum yield of malloc related triggers.  The default is 40.
+GUILE_INIT_MALLOC_LIMIT sets the initial trigger for doing a GC.  The
 default is 200 kb.
 
 Debugging operations for the freelist have been deprecated, along with
@@ -9357,9 +9357,9 @@ This function provides a fast C level alternative for scm_memq for the case
 that the list parameter is known to be a proper list.  The function is a
 replacement for scm_sloppy_memq, but is stricter in its requirements on its
 list input parameter, since for anything else but a proper list the function's
-behaviour is undefined - it may even crash or loop endlessly.  Further, for
+behavior is undefined - it may even crash or loop endlessly.  Further, for
 the case that the object is not found in the list, scm_c_memq returns #f which
-is similar to scm_memq, but different from scm_sloppy_memq's behaviour.
+is similar to scm_memq, but different from scm_sloppy_memq's behavior.
 
 ** New functions: scm_remember_upto_here_1, scm_remember_upto_here_2,
 scm_remember_upto_here
@@ -9808,7 +9808,7 @@ the pthreads to allocate the stack.
 ** Positions of erring expression in scripts
 
 With version 1.3.4, the location of the erring expression in Guile
-scipts is no longer automatically reported.  (This should have been
+scripts is no longer automatically reported.  (This should have been
 documented before the 1.3.4 release.)
 
 You can get this information by enabling recording of positions of
@@ -9927,7 +9927,7 @@ I/O, and in scm_equalp.
 
 ** close-input-port and close-output-port are now R5RS
 
-These procedures have been turned into primitives and have R5RS behaviour.
+These procedures have been turned into primitives and have R5RS behavior.
 
 ** New procedure: simple-format PORT MESSAGE ARG1 ...
 
@@ -10014,7 +10014,7 @@ Compose/decompose an SCM value.
 
 The SCM type is now treated as an abstract data type and may be defined as a
 long, a void* or as a struct, depending on the architecture and compile time
-options. This makes it easier to find several types of bugs, for example when
+options.  This makes it easier to find several types of bugs, for example when
 SCM values are treated as integers without conversion.  Values of the SCM type
 should be treated as "atomic" values.  These macros are used when
 composing/decomposing an SCM value, either because you want to access
@@ -10130,7 +10130,7 @@ Use scm_mutex_init and scm_cond_init instead.
 ** New function: int scm_cond_timedwait (scm_cond_t *COND, scm_mutex_t *MUTEX, const struct timespec *ABSTIME)
      `scm_cond_timedwait' atomically unlocks MUTEX and waits on
      COND, as `scm_cond_wait' does, but it also bounds the duration
-     of the wait. If COND has not been signaled before time ABSTIME,
+     of the wait.  If COND has not been signaled before time ABSTIME,
      the mutex MUTEX is re-acquired and `scm_cond_timedwait'
      returns the error code `ETIMEDOUT'.
 
@@ -10140,19 +10140,19 @@ Use scm_mutex_init and scm_cond_init instead.
 
 ** New function: scm_cond_broadcast (scm_cond_t *COND)
      `scm_cond_broadcast' restarts all the threads that are waiting
-     on the condition variable COND. Nothing happens if no threads are
+     on the condition variable COND.  Nothing happens if no threads are
      waiting on COND.
 
 ** New function: scm_key_create (scm_key_t *KEY, void (*destr_function) (void *))
-     `scm_key_create' allocates a new TSD key. The key is stored in
-     the location pointed to by KEY. There is no limit on the number
-     of keys allocated at a given time. The value initially associated
+     `scm_key_create' allocates a new TSD key.  The key is stored in
+     the location pointed to by KEY.  There is no limit on the number
+     of keys allocated at a given time.  The value initially associated
      with the returned key is `NULL' in all currently executing threads.
 
      The DESTR_FUNCTION argument, if not `NULL', specifies a destructor
-     function associated with the key. When a thread terminates,
+     function associated with the key.  When a thread terminates,
      DESTR_FUNCTION is called on the value associated with the key in
-     that thread. The DESTR_FUNCTION is not called if a key is deleted
+     that thread.  The DESTR_FUNCTION is not called if a key is deleted
      with `scm_key_delete' or a value is changed with
      `scm_setspecific'.  The order in which destructor functions are
      called at thread termination time is unspecified.
@@ -10168,7 +10168,7 @@ Use scm_mutex_init and scm_cond_init instead.
      KEY in the calling thread.
 
 ** New function: scm_key_delete (scm_key_t KEY)
-     `scm_key_delete' deallocates a TSD key. It does not check
+     `scm_key_delete' deallocates a TSD key.  It does not check
      whether non-`NULL' values are associated with that key in the
      currently executing threads, nor call the destructor function
      associated with the key.
@@ -10576,7 +10576,7 @@ a variable GENERIC which can be used by the dispatch macros below.
   New macro: SCM_WTA_DISPATCH_2 (GENERIC, ARG1, ARG2, POS, SUBR)
 
 These correspond to the scm_wta function call, and have the same
-behaviour until the user has called the GOOPS primitive
+behavior until the user has called the GOOPS primitive
 `enable-primitive-generic!'.  After that, these macros will apply the
 generic function GENERIC to the argument(s) instead of calling
 scm_wta.
@@ -10636,7 +10636,7 @@ This is the typical way of creating a hook from C code.
 Currently, the variable is created in the "current" module.
 This might change when we get the new module system.
 
-[The behaviour is identical to scm_make_named_hook.]
+[The behavior is identical to scm_make_named_hook.]
 
 
 
@@ -10700,7 +10700,7 @@ in backtraces.
 their equivalent letrec.  Previously, internal defines would
 incrementally add to the innermost environment, without checking
 whether the restrictions specified in RnRS were met.  This lead to the
-correct behaviour when these restriction actually were met, but didn't
+correct behavior when these restriction actually were met, but didn't
 catch all illegal uses.  Such an illegal use could lead to crashes of
 the Guile interpreter or other unwanted results.  An example of
 incorrect internal defines that made Guile behave erratically:
@@ -10716,7 +10716,7 @@ incorrect internal defines that made Guile behave erratically:
   => 2
 
 The problem with this example is that the definition of `c' uses the
-value of `b' directly.  This confuses the meoization machine of Guile
+value of `b' directly.  This confuses the memoization machine of Guile
 so that the second call of `b' (this time in a larger environment that
 also contains bindings for `c' and `d') refers to the binding of `c'
 instead of `a'.  You could also make Guile crash with a variation on
@@ -10804,7 +10804,7 @@ when the hook was created.
 
 *** The expect-strings macro now matches `$' in a regular expression
     only at a line-break or end-of-file by default.  Previously it would
-    match the end of the string accumulated so far. The old behaviour
+    match the end of the string accumulated so far.  The old behavior
     can be obtained by setting the variable `expect-strings-exec-flags'
     to 0.
 
@@ -10842,9 +10842,9 @@ borrowed from SLIB, with minor adaptations for Guile.
      is `#f', a formatted string is returned as the result of the call.
      NEW: If DESTINATION is a string, DESTINATION is regarded as the
      format string; FORMAT-STRING is then the first argument and the
-     output is returned as a string. If DESTINATION is a number, the
+     output is returned as a string.  If DESTINATION is a number, the
      output is to the current error port if available by the
-     implementation. Otherwise DESTINATION must be an output port and
+     implementation.  Otherwise DESTINATION must be an output port and
      `#t' is returned.
 
      FORMAT-STRING must be a string.  In case of a formatting error
@@ -10867,7 +10867,7 @@ description of the format string syntax.  For a demonstration of the
 implemented directives see `formatst.scm'.
 
    This implementation supports directive parameters and modifiers (`:'
-and `@' characters). Multiple parameters must be separated by a comma
+and `@' characters).  Multiple parameters must be separated by a comma
 (`,').  Parameters can be numerical parameters (positive or negative),
 character parameters (prefixed by a quote character (`''), variable
 parameters (`v'), number of rest arguments parameter (`#'), empty and
@@ -11172,8 +11172,8 @@ represent control directive parameter descriptions.
           print N `#\tab' characters.
 
 `~NC'
-     Takes N as an integer representation for a character. No arguments
-     are consumed. N is converted to a character by `integer->char'.  N
+     Takes N as an integer representation for a character.  No arguments
+     are consumed.  N is converted to a character by `integer->char'.  N
      must be a positive decimal number.
 
 `~:S'
@@ -11199,7 +11199,7 @@ represent control directive parameter descriptions.
 *** Configuration Variables
 
    The format module exports some configuration variables to suit the
-systems and users needs. There should be no modification necessary for
+systems and users needs.  There should be no modification necessary for
 the configuration that comes with Guile.  Format detects automatically
 if the running scheme system implements floating point numbers and
 complex numbers.
@@ -11245,7 +11245,7 @@ Elk 1.5/2.0:
 Scheme->C 01nov91:
      Downward compatible except for an optional destination parameter:
      S2C accepts a format call without a destination which returns a
-     formatted string. This is equivalent to a #f destination in S2C.
+     formatted string.  This is equivalent to a #f destination in S2C.
      (S2C implements `~a', `~s', `~c', `~%', and `~~' (no directive
      parameters or modifiers)).
 
@@ -11289,7 +11289,7 @@ Copy the substring of STRING1 from START (inclusive) to END
 (exclusive) to STRING2 at START.  STRING1 and STRING2 may be the same
 string, and the source and destination areas may overlap; in all
 cases, the function behaves as if all the characters were copied
-simultanously.
+simultaneously.
 
 *** Extended functions: substring-move-left! substring-move-right!
 
@@ -11444,9 +11444,9 @@ and examples for `lambda*':
  lambda* args . body
    lambda extended for optional and keyword arguments
 
- lambda* creates a procedure that takes optional arguments. These
+ lambda* creates a procedure that takes optional arguments.  These
  are specified by putting them inside brackets at the end of the
- paramater list, but before any dotted rest argument. For example,
+ parameter list, but before any dotted rest argument.  For example,
    (lambda* (a b #&optional c d . e) '())
  creates a procedure with fixed arguments a and b, optional arguments c
  and d, and rest argument e. If the optional arguments are omitted
@@ -11491,7 +11491,7 @@ and examples for `lambda*':
 Further documentation may be found in the optargs.scm file itself.
 
 The optional argument module also exports the macros `let-optional',
-`let-optional*', `let-keywords', `let-keywords*' and `bound?'. These
+`let-optional*', `let-keywords', `let-keywords*' and `bound?'.  These
 are not documented here because they may be removed in the future, but
 full documentation is still available in optargs.scm.
 
@@ -11713,7 +11713,7 @@ forms instead of the result of the last body form.  In contrast to
 
 ** New functions: read-history FILENAME, write-history FILENAME
 Read/write command line history from/to file.  Returns #t on success
-and #f if an error occured.
+and #f if an error occurred.
 
 ** `ls' and `lls' in module (ice-9 ls) now handle no arguments.
 
@@ -11737,7 +11737,7 @@ modules.
 ** gh_scm2doubles
 
 Now takes a second argument which is the result array.  If this
-pointer is NULL, a new array is malloced (the old behaviour).
+pointer is NULL, a new array is malloced (the old behavior).
 
 ** gh_chars2byvect, gh_shorts2svect, gh_floats2fvect, gh_scm2chars,
    gh_scm2shorts, gh_scm2longs, gh_scm2floats
@@ -11776,12 +11776,12 @@ will be freed by the default free function.
 
 *** Function: void scm_set_smob_mark (long tc, SCM (*mark) (SCM))
 This function sets the smob marking procedure for the smob type
-specified by the tag TC. TC is the tag returned by
+specified by the tag TC.  TC is the tag returned by
 `scm_make_smob_type'.
 
 *** Function: void scm_set_smob_free (long tc, SCM (*mark) (SCM))
 This function sets the smob freeing procedure for the smob type
-specified by the tag TC. TC is the tag returned by
+specified by the tag TC.  TC is the tag returned by
 `scm_make_smob_type'.
 
 *** Function: void scm_set_smob_print (tc, print)
@@ -11792,12 +11792,12 @@ specified by the tag TC. TC is the tag returned by
 							  scm_print_state *))
 
 This function sets the smob printing procedure for the smob type
-specified by the tag TC. TC is the tag returned by
+specified by the tag TC.  TC is the tag returned by
 `scm_make_smob_type'.
 
 *** Function: void scm_set_smob_equalp (long tc, SCM (*equalp) (SCM, SCM))
 This function sets the smob equality-testing predicate for the
-smob type specified by the tag TC. TC is the tag returned by
+smob type specified by the tag TC.  TC is the tag returned by
 `scm_make_smob_type'.
 
 *** Macro: void SCM_NEWSMOB (SCM var, long tc, void *data)
@@ -11824,7 +11824,7 @@ It is replaced by:
                                     void (*write_flush) (SCM port));
 
 Similarly to the new smob interface, there is a set of function
-setters by which the user can customize the behaviour of his port
+setters by which the user can customize the behavior of his port
 type.  See ports.h (scm_set_port_XXX).
 
 ** scm_strport_to_string: New function: creates a new string from
@@ -12084,7 +12084,7 @@ call ADD-HISTORY to make previous input available to the user.
 ** The behavior of the read-line function has changed.
 
 This function now uses standard C library functions to read the line,
-for speed.  This means that it doesn not respect the value of
+for speed.  This means that it does not respect the value of
 scm-line-incrementors; it assumes that lines are delimited with
 #\newline.
 
@@ -12258,7 +12258,7 @@ That is, a structure that -- in the process of being printed -- prints
 itself does not lead to infinite recursion.
 
 ** There is now some basic support for fluids.  Please read
-"libguile/fluid.h" to find out more. It is accessible from Scheme with
+"libguile/fluid.h" to find out more.  It is accessible from Scheme with
 the following functions and macros:
 
 Function: make-fluid
@@ -13148,7 +13148,7 @@ signum is the signal number, which can be specified using the value
 of SIGINT etc.
 
 If action is omitted, sigaction returns a pair: the CAR is the current
-signal hander, which will be either an integer with the value SIG_DFL
+signal handler, which will be either an integer with the value SIG_DFL
 (default action) or SIG_IGN (ignore), or the Scheme procedure which
 handles the signal, or #f if a non-Scheme procedure handles the
 signal.  The CDR contains the current sigaction flags for the handler.
@@ -13389,7 +13389,7 @@ traced.
 
 The `untrace' function accepts any number of procedures as arguments,
 and tells the Guile interpreter not to trace them any more.  When
-invoked with no arguments, `untrace' untraces all curretly traced
+invoked with no arguments, `untrace' untraces all currently traced
 procedures.
 
 The tracing in Guile has an advantage over most other systems: we
@@ -13819,7 +13819,7 @@ HANDLER is a pointer to a C function to deal with a throw to TAG,
 should one occur.  We call it like this:
    HANDLER (HANDLER_DATA, THROWN_TAG, THROW_ARGS)
 where
-   HANDLER_DATA is the HANDLER_DATA argument we recevied; it's the
+   HANDLER_DATA is the HANDLER_DATA argument we received; it's the
       same idea as BODY_DATA above.
    THROWN_TAG is the tag that the user threw to; usually this is
       TAG, but it could be something else if TAG was #t (i.e., a

@@ -324,7 +324,7 @@
                                 (mutex-unlock! m2)))))
           (thread-start! t)
           (mutex-unlock! m1 c)
-          ;; At this point the thread signalled that it has both m1 and
+          ;; At this point the thread signaled that it has both m1 and
           ;; m2, and it will go to try to lock m2 again.  We wait for it
           ;; to block trying to acquire m2 by sleeping a little bit and
           ;; then unblock it by unlocking m2 from here.
@@ -333,7 +333,7 @@
           (thread-join! t)
           (eq? (mutex-state m2) 'not-abandoned))))
 
-    (pass-if "mutex unlock is true when condition is signalled"
+    (pass-if "mutex unlock is true when condition is signaled"
       (let* ((m (make-mutex 'mutex-unlock-3))
              (c (make-condition-variable 'mutex-unlock-3))
              (t (make-thread (lambda () 

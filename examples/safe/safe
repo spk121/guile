@@ -63,7 +63,7 @@
 	    (lambda ()
 	      ;; Evaluate the expression in the safe environment.
 	      (eval expr safe-module)
-	      ;; ... and read the next expression if no error occured.
+	      ;; ... and read the next expression if no error occurred.
 	      (lp (read port)))
 
 	    ;; Handle exceptions.  This procedure will be called when an

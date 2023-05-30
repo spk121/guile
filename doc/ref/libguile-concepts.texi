@@ -601,7 +601,7 @@ executed.  Locking a mutex while in that section ensures that no other
 thread will start executing it, blocking asyncs ensures that no
 asynchronous code enters the section again from the current thread, and
 the error checking of Guile mutexes guarantees that an error is
-signalled when the current thread accidentally reenters the critical
+signaled when the current thread accidentally reenters the critical
 section via recursive function calls.
 
 Guile provides two mechanisms to support critical sections as outlined

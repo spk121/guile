@@ -633,7 +633,7 @@ provided as convenient abbreviations.
 
 @cindex @w{error}
 When speaking of an error situation, this report uses the phrase ``an
-error is signalled'' to indicate that implementations must detect and
+error is signaled'' to indicate that implementations must detect and
 report the error.  If such wording does not appear in the discussion of
 an error, then implementations are not required to detect or report the
 error, though they are encouraged to do so.  An error situation that
@@ -6804,7 +6804,7 @@ the file should already exist; for
 the effect is unspecified if the file
 already exists. These procedures call @var{proc} with one argument: the
 port obtained by opening the named file for input or output.  If the
-file cannot be opened, an error is signalled.  If @var{proc} returns,
+file cannot be opened, an error is signaled.  If @var{proc} returns,
 then the port is closed automatically and the value(s) yielded by the
 @var{proc} is(are) returned.  If @var{proc} does not return, then 
 the port will not be closed automatically unless it is possible to
@@ -6905,7 +6905,7 @@ instead of ``the value returned by @var{current-input-port}''.  (Same for
  
 Takes a string naming an existing file and returns an input port capable of
 delivering characters from the file.  If the file cannot be opened, an error is
-signalled.
+signaled.
 
 @end deffn
 
@@ -6915,7 +6915,7 @@ signalled.
 
 Takes a string naming an output file to be created and returns an output
 port capable of writing characters to a new file by that name.  If the file
-cannot be opened, an error is signalled.  If a file with the given name
+cannot be opened, an error is signaled.  If a file with the given name
 already exists, the effect is unspecified.
 
 @end deffn
@@ -6985,7 +6985,7 @@ object is returned.
 to read will also return an end of file object.  If an end of file is
 encountered after the beginning of an object's external representation,
 but the external representation is incomplete and therefore not parsable,
-an error is signalled.
+an error is signaled.
 
 The @var{port} argument may be omitted, in which case it defaults to the
 value returned by @samp{current-input-port}.  It is an error to read from

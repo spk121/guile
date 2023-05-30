@@ -272,7 +272,7 @@
 (define (with-optimization level thunk) 
   (thunk))
 
-; Calls thunk1, and if thunk1 causes an error to be signalled, calls thunk2.
+; Calls thunk1, and if thunk1 causes an error to be signaled, calls thunk2.
 
 (define (call-with-error-control thunk1 thunk2) 
   (let ((eh (error-handler)))

@@ -272,7 +272,7 @@
 (define (with-optimization level thunk) 
   (thunk))
 
-; Calls thunk1, and if thunk1 causes an error to be signalled, calls thunk2.
+; Calls thunk1, and if thunk1 causes an error to be signaled, calls thunk2.
 
 (define (call-with-error-control thunk1 thunk2) 
   (let ((eh (error-handler)))
@@ -21993,14 +21993,14 @@
 ;
 ; RS1 has an object.  If the tag of RS1 is not 'tag1', or if the tag is 
 ; 'tag1' but the header byte of the object header is not 'tag2', then an
-; exception with code 'excode' is signalled.  The exception call is set
+; exception with code 'excode' is signaled.  The exception call is set
 ; up to return to the first instruction of the emitted code.
 ;
 ; If RS1 is not RESULT then it is moved to RESULT before the exception 
-; is signalled.
+; is signaled.
 ;
 ; If RS2/IMM is not #f, then it is a register or immediate that is moved
-; to ARGREG2 before the exception is signalled; it is an immediate iff 
+; to ARGREG2 before the exception is signaled; it is an immediate iff
 ; imm? = #t.  
 ;
 ; RS1 must be a hardware register.

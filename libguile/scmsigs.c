@@ -285,7 +285,7 @@ SCM_DEFINE (scm_sigaction_for_thread, "sigaction", 1, 3, 0,
 	    "of variables such as @code{SIGINT}.\n\n"
 	    "If @var{handler} is omitted, @code{sigaction} returns a pair: the\n"
 	    "CAR is the current\n"
-	    "signal hander, which will be either an integer with the value @code{SIG_DFL}\n"
+	    "signal handler, which will be either an integer with the value @code{SIG_DFL}\n"
 	    "(default action) or @code{SIG_IGN} (ignore), or the Scheme procedure which\n"
 	    "handles the signal, or @code{#f} if a non-Scheme procedure handles the\n"
 	    "signal.  The CDR contains the current @code{sigaction} flags for the handler.\n\n"
