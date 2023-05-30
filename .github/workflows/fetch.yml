@@ -49,10 +49,8 @@ jobs:
         git checkout -B $LOCAL_BRANCH --track upstream/$UPSTREAM_BRANCH
 
         MERGE_RESULT=$(git merge)
-        if [[ $MERGE_RESULT != *"Already up to date."* ]]; then
-          # git commit -m "Merged upstream"  
-          git push origin $LOCAL_BRANCH
-        fi
+        echo $MERGE_RESULT
+        git push origin $LOCAL_BRANCH
         cd ..
         rm -rf work
       shell: bash {0}
