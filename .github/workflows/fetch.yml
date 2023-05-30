@@ -44,7 +44,7 @@ jobs:
         git config pull.rebase true
         MERGE_RESULT=$(git reset --hard upstream/main)
         echo $MERGE_RESULT
-        PUSH_RESULT=$(git push origin main)
+        PUSH_RESULT=$(git push --force origin main)
         echo $PUSH_RESULT
       shell: bash {0}
       
