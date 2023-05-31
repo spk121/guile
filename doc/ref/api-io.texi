@@ -1060,7 +1060,7 @@ initialized with the @var{port} argument.
 * Bytevector Ports:: Ports on a bytevector.
 * String Ports:: Ports on a Scheme string.
 * Custom Ports:: Ports whose implementation you control.
-* Soft Ports:: An older version of custom ports.
+* Soft Ports:: A Guile-specific version of custom ports.
 * Void Ports:: Ports on nothing at all.
 * Low-Level Custom Ports:: Implementing new kinds of port.
 * Low-Level Custom Ports in C:: A C counterpart to make-custom-port.
@@ -1522,14 +1522,75 @@ With custom textual ports:
 @cindex Port, soft
 
 Soft ports are what Guile had before it had custom binary and textual
-ports.  Probably you want to use one of those instead.  @xref{Custom
+ports, and allow for customizable textual input and output.
+
+We recommend soft ports over R6RS custom textual ports because they are
+easier to use while also being more expressive.  R6RS custom textual
+ports operate under the principle that a port has a mutable string
+buffer, and this is reflected in the @code{read} and @code{write}
+procedures which take a buffer, offset, and length.  However in Guile as
+all ports have a byte buffer rather than some having a string buffer,
+the R6RS interface imposes overhead and complexity.
+
+Additionally, and unlike the R6RS interfaces, @code{make-soft-port} from
+the @code{(ice-9 soft-ports)} module accepts keyword arguments, allowing
+for its functionality to be extended over time.
+
+If you find yourself needing more power, notably the ability to seek,
+probably you want to use low-level custom ports.  @xref{Low-Level Custom
 Ports}.
 
-But since you are still here, a @dfn{soft port} is a port based on a
-vector of procedures capable of accepting or delivering characters.  It
-allows emulation of I/O ports.
+@example
+(use-modules (ice-9 soft-ports))
+@end example
 
-@deffn {Scheme Procedure} make-soft-port pv modes
+@deffn {Scheme Procedure} make-soft-port @
+       [#:id] [#:read-string] [#:write-string] [#:input-waiting?] @
+       [#:close] [#:close-on-gc?]
+Return a new port.  If the @var{read-string} keyword argument is
+present, the port will be an input port.  If @var{write-string} is
+present, the port will be an output port.  If both are supplied, the
+port will be open for input and output.
+
+When the port's internal buffers are empty, @var{read-string} will be
+called with no arguments, and should return a string, or @code{#f} to
+indicate end-of-stream.  Similarly when a port flushes its write buffer,
+the characters in that buffer will be passed to the @var{write-string}
+procedure as its single argument.  @var{write-string} returns
+unspecified values.
+
+If supplied, @var{input-waiting?} should return @code{#t} if the soft
+port has input which would be returned directly by @var{read-string}.
+
+If supplied, @var{close} will be called when the port is closed, with no
+arguments.  If @var{close-on-gc?} is @code{#t}, @var{close} will
+additionally be called when the port becomes unreachable, after flushing
+any pending write buffers.
+@end deffn
+
+With soft ports, the @code{open-string-input-port} example from the
+previous section is more simple:
+
+@example
+(define (open-string-input-port source)
+  (define already-read? #f)
+
+  (define (read-string)
+    (cond
+     (already-read? "")
+     (else
+      (set! already-read? #t)
+      source)))
+
+  (make-soft-port #:id "strport" #:read-string read-string))
+@end example
+
+Note that there was an earlier form of @code{make-soft-port} which was
+exposed in Guile's default environment, and which is still there.  Its
+interface is more clumsy and its users historically expect unbuffered
+input.  This interface will be deprecated, but we document it here.
+
+@deffn {Scheme Procedure} deprecated-make-soft-port pv modes
 Return a port capable of receiving or delivering characters as
 specified by the @var{modes} string (@pxref{File Ports,
 open-file}).  @var{pv} must be a vector of length 5 or 6.  Its
@@ -1563,7 +1624,7 @@ For example:
 
 @lisp
 (define stdout (current-output-port))
-(define p (make-soft-port
+(define p (deprecated-make-soft-port
            (vector
             (lambda (c) (write c stdout))
             (lambda (s) (display s stdout))

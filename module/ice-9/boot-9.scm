@@ -4700,12 +4700,14 @@ R7RS."
 
 
 
-;;; make-soft-port in the default environment.  FIXME: we should
-;;; figure out how to deprecate this.
+;;; make-soft-port in the default environment.  FIXME: Deprecate, make
+;;; callers import (ice-9 soft-port).
 ;;;
 
-;; FIXME:
-(module-use! the-scm-module (resolve-interface '(ice-9 soft-ports)))
+(define (make-soft-port pv modes)
+  ((module-ref (resolve-interface '(ice-9 soft-ports))
+               'deprecated-make-soft-port)
+   pv modes))
 
 
 
