@@ -38,7 +38,11 @@ test_hashing ()
 
   // Value determined by calling wide_string_hash on {0x3A0, 0x3B5,
   // 0x3C1, 0x3AF} via a temporary test program.
+#if SCM_SIZEOF_UNSIGNED_LONG == 8
   const unsigned long expect = 4029223418961680680;
+#elif SCM_SIZEOF_UNSIGNED_LONG == 4
+  const unsigned long expect = 938126682;
+#endif
   const unsigned long actual = scm_to_ulong (scm_symbol_hash (sym));
 
   if (actual != expect)
