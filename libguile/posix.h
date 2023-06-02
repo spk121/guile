@@ -92,6 +92,7 @@ SCM_API SCM scm_gethostname (void);
 SCM_API SCM scm_getaffinity (SCM pid);
 SCM_API SCM scm_setaffinity (SCM pid, SCM cpu_set);
 SCM_INTERNAL void scm_init_posix (void);
+SCM_API void scm_init_popen (void);
 
 SCM_INTERNAL scm_i_pthread_mutex_t scm_i_locale_mutex;
 
