@@ -40,7 +40,9 @@
 #include "strings.h"
 #include "symbols.h"
 #include "syscalls.h"
+#include "threads.h"
 #include "values.h"
+#include "variable.h"
 #include "vectors.h"
 #include "version.h"
 
@@ -771,11 +773,32 @@ initialize_bytevector_output_ports (void)
 
 /* Custom ports.  */
 
+static SCM make_custom_binary_input_port_var;
+static SCM make_custom_binary_output_port_var;
+static SCM make_custom_binary_input_output_port_var;
+
+static scm_i_pthread_once_t make_custom_binary_port_vars =
+  SCM_I_PTHREAD_ONCE_INIT;
+
+static void
+init_make_custom_binary_port_vars (void)
+{
+  SCM mod = scm_c_resolve_module ("ice-9 binary-ports");
+  SCM iface = scm_module_public_interface (mod);
+  make_custom_binary_input_port_var =
+    scm_c_module_lookup (iface, "make-custom-binary-input-port");
+  make_custom_binary_output_port_var =
+    scm_c_module_lookup (iface, "make-custom-binary-output-port");
+  make_custom_binary_input_output_port_var =
+    scm_c_module_lookup (iface, "make-custom-binary-input/output-port");
+}
+
 SCM scm_make_custom_binary_input_port (SCM id, SCM read_proc,
                                        SCM get_position_proc,
                                        SCM set_position_proc, SCM close_proc) {
-  return scm_call_5 (scm_c_public_ref ("ice-9 binary-ports",
-                                       "make-custom-binary-input-port"),
+  scm_i_pthread_once (&make_custom_binary_port_vars,
+                      init_make_custom_binary_port_vars);
+  return scm_call_5 (scm_variable_ref (make_custom_binary_input_port_var),
                      id, read_proc, get_position_proc, set_position_proc,
                      close_proc);
 }
@@ -783,8 +806,9 @@ SCM scm_make_custom_binary_input_port (SCM id, SCM read_proc,
 SCM scm_make_custom_binary_output_port (SCM id, SCM write_proc,
                                        SCM get_position_proc,
                                        SCM set_position_proc, SCM close_proc) {
-  return scm_call_5 (scm_c_public_ref ("ice-9 binary-ports",
-                                       "make-custom-binary-output-port"),
+  scm_i_pthread_once (&make_custom_binary_port_vars,
+                      init_make_custom_binary_port_vars);
+  return scm_call_5 (scm_variable_ref (make_custom_binary_output_port_var),
                      id, write_proc, get_position_proc, set_position_proc,
                      close_proc);
 }
@@ -794,8 +818,9 @@ SCM scm_make_custom_binary_input_output_port (SCM id, SCM read_proc,
                                               SCM get_position_proc,
                                               SCM set_position_proc,
                                               SCM close_proc) {
-  return scm_call_6 (scm_c_public_ref ("ice-9 binary-ports",
-                                       "make-custom-binary-input/output-port"),
+  scm_i_pthread_once (&make_custom_binary_port_vars,
+                      init_make_custom_binary_port_vars);
+  return scm_call_6 (scm_variable_ref (make_custom_binary_input_output_port_var),
                      id, read_proc, write_proc, get_position_proc,
                      set_position_proc, close_proc);
 }
