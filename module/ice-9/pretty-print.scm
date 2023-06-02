@@ -36,7 +36,9 @@
   (define (write-string str)
     (set! length (+ length (string-length str)))
     (set! strs (cons str strs))
-    (when (< (- max-column initial-column) length)
+    (when (or (< (- max-column initial-column) length)
+              (and (not allow-newline?)
+                   (not (zero? (port-line port)))))
       (abort-to-prompt tag)))
   (define port
     (make-soft-port #:id "truncating-output-port"
