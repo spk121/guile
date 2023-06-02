@@ -25,8 +25,14 @@
 
 SCM init2_count;
 
-void libtest_extensions_init2 (void);
-void libtest_extensions_init (void);
+#if _WIN32 || __CYGWIN__
+#define API __declspec(dllexport)
+#else
+#define API
+#endif
+
+API void libtest_extensions_init2 (void);
+API void libtest_extensions_init (void);
 
 void
 libtest_extensions_init2 (void)
