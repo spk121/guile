@@ -26,6 +26,8 @@
   #:use-module (ice-9 match)
   #:use-module (srfi srfi-9)
   #:use-module (system foreign)
+  #:use-module ((ice-9 ftw) #:select (scandir))
+  #:use-module ((srfi srfi-1) #:select (find))
   #:export (guile-extensions-path
             ltdl-library-path
             guile-system-extensions-path
@@ -64,24 +66,96 @@
      (or (string-contains head ext)
          (has-extension? head exts)))))
 
-(define (file-exists-with-extension head exts)
-  (if (has-extension? head exts)
+(define (is-integer-string? str)
+  (and
+   (not (string-null? str))
+   (let ((n (string-length str)))
+     (let lp ((i 0))
+       (let ((c (string-ref str i)))
+         (if (or (char<? c #\0) (char>? c #\9))
+             #f
+             (if (= i (1- n))
+                 #t
+                 (lp (1+ i)))))))))
+
+(define (dll-name-match? src tgt)
+  (let ((srclen (string-length src))
+        (tgtlen (string-length tgt)))
+    (cond
+     ((or (< srclen tgtlen)
+          (< tgtlen 5)
+          (string-ci<> src ".dll" (- srclen 4))
+          (string-ci<> tgt ".dll" (- tgtlen 4))
+          (string-ci<> src tgt 0 (- tgtlen 4) 0 (- tgtlen 4)))
+      #f)
+     (else
+      (let ((mid (substring src (- tgtlen 4) (- srclen 4))))
+        (cond
+         ((or (string-null? mid)
+              (and (char=? (string-ref mid 0) #\-)
+                   (is-integer-string? (string-drop mid 1))))
+          #t)
+         (else
+          #f)))))))
+
+(define (find-best-dll-from-matches dllname lst)
+  ;; A DLL name without a version suffix is preferred,
+  ;; like libfoo.dll. But if we must have a version
+  ;; suffix as in libfoo-5.dll, we want the largest one.
+  (define (ver>? a b)
+    (cond
+     ((> (string-length a) (string-length b))
+      #t)
+     ((< (string-length a) (string-length b))
+      #f)
+     (else
+      (string-ci>? a b))))
+
+  (cond
+   ((null? lst)
+    #f)
+   ((= (length lst) 1)
+    (car lst))
+   (else
+    (or
+     (find (lambda (entry) (string-ci= entry dllname)) lst)
+     ;; The longest string that is alphabetically last
+     ;; is numerically the highest.
+     (car (sort lst ver>?))))))
+
+(define (dll-exists-with-version head)
+  ;; Searches for a DLL given a filepath, allowing
+  ;; for DLLs with version suffixes.
+  (let* ((fname (if (has-extension? head '(".dll"))
+                    head
+                    (string-append head ".dll")))
+         (dir (dirname fname))
+         (base (basename fname)))
+    (let ((matches (scandir dir (lambda (f) (dll-name-match? f base)))))
+      (if (or (not matches) (null? matches))
+          #f
+          (in-vicinity dir (find-best-dll-from-matches fname matches))))))
+
+(define (file-exists-with-extension head extensions versioned-dlls?)
+  (if (has-extension? head extensions)
       (and (file-exists? head) head)
-      (let lp ((exts exts))
+      (let lp ((exts extensions))
         (match exts
-          (() #f)
+          (() (if (and versioned-dlls? (member ".dll" extensions))
+                  (dll-exists-with-version head)
+                  #f))
           ((ext . exts)
            (let ((head (string-append head ext)))
              (if (file-exists? head)
                  head
                  (lp exts))))))))
 
-(define (file-exists-in-path-with-extension basename path exts)
+(define (file-exists-in-path-with-extension basename path exts versioned-dlls?)
   (match path
     (() #f)
     ((dir . path)
-     (or (file-exists-with-extension (in-vicinity dir basename) exts)
-         (file-exists-in-path-with-extension basename path exts)))))
+     (or (file-exists-with-extension (in-vicinity dir basename) exts versioned-dlls?)
+         (file-exists-in-path-with-extension basename path exts versioned-dlls?)))))
 
 (define path-separator
   (case (system-file-name-convention)
@@ -107,8 +181,16 @@
 (define guile-system-extensions-path
   (make-parameter
    (or (parse-path "GUILE_SYSTEM_EXTENSIONS_PATH")
-       (list (assq-ref %guile-build-info 'libdir)
+       (list (if (or (string-contains %host-type "cygwin")
+                     (string-contains %host-type "mingw")
+                     (string-contains %host-type "msys"))
+                 (assq-ref %guile-build-info 'bindir)
+                 (assq-ref %guile-build-info 'libdir))
              (assq-ref %guile-build-info 'extensiondir)))))
+
+(define system-dll-path
+  (make-parameter
+   (or (parse-path "PATH") '())))
 
 ;; There are a few messy situations here related to libtool.
 ;;
@@ -145,6 +227,7 @@
      (cons* dir (in-vicinity dir ".libs")
             (augment-ltdl-library-path path)))))
 
+
 (define (default-search-path search-ltdl-library-path?)
   (append
    (guile-extensions-path)
@@ -178,7 +261,8 @@ name."
                                (search-path (default-search-path
                                               search-ltdl-library-path?))
                                (search-system-paths? #t)
-                               (lazy? #t) (global? #f) (rename-on-cygwin? #t))
+                               (lazy? #t) (global? #f) (rename-on-cygwin? #t)
+                               (allow-dll-version-suffix? #t))
   (define (error-not-found)
     (scm-error 'misc-error "load-foreign-library"
                "file: ~S, message: ~S"
@@ -187,7 +271,13 @@ name."
   (define flags
     (logior (if lazy? RTLD_LAZY RTLD_NOW)
             (if global? RTLD_GLOBAL RTLD_LOCAL)))
-  (define (dlopen* name) (dlopen name flags))
+  (define (dlopen* name)
+    (dlopen name flags))
+  (define (file-exists-with-ext filename extensions)
+    (file-exists-with-extension filename extensions allow-dll-version-suffix?))
+  (define (file-exists-in-path-with-ext filename search-path extensions)
+    (file-exists-in-path-with-extension
+     filename search-path extensions allow-dll-version-suffix?))
   (if (and rename-on-cygwin? (string-contains %host-type "cygwin"))
       (set! filename (lib->cyg filename)))
   (make-foreign-library
@@ -199,17 +289,26 @@ name."
     ((or (absolute-file-name? filename)
          (string-any file-name-separator? filename))
      (cond
-      ((or (file-exists-with-extension filename extensions)
+      ((or (file-exists-with-ext filename extensions)
            (and search-ltdl-library-path?
-                (file-exists-with-extension
+                (file-exists-with-ext
                  (in-vicinity (in-vicinity (dirname filename) ".libs")
                               (basename filename))
                  extensions)))
        => dlopen*)
       (else
        (error-not-found))))
-    ((file-exists-in-path-with-extension filename search-path extensions)
+    ((file-exists-in-path-with-ext filename search-path extensions)
      => dlopen*)
+    ((and search-system-paths?
+          (or (string-contains %host-type "cygwin")
+              (string-contains %host-type "mingw")
+              (string-contains %host-type "msys")))
+     (let ((fullname (file-exists-in-path-with-ext filename (system-dll-path) '(".dll"))))
+       (if fullname
+           (dlopen* fullname)
+           (error-not-found))))
+
     (search-system-paths?
      (if (or (null? extensions) (has-extension? filename extensions))
          (dlopen* filename)
