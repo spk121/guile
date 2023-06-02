@@ -288,11 +288,8 @@
     (pr obj pp-expr))
 
   (put-string port per-line-prefix)
-  (if width
-      (begin
-        (pp obj)
-        (newline))
-      (wr obj port))
+  (pp obj)
+  (newline)
   ;; Return `unspecified'
   (if #f #f))
 
