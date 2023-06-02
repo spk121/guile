@@ -459,3 +459,34 @@
 
   (pass-if "name in windows path doesn't contain 'lib'"
     (string=? (lib->cyg "c:\\lib\\foobar.dll") "c:\\lib\\foobar.dll")))
+
+
+(with-test-prefix "dll-name-match?"
+  (let ((dll-name-match? (@@ (system foreign-library) dll-name-match?)))
+    (pass-if "libfoo.dll == libfoo.dll"
+      (dll-name-match? "libfoo.dll" "libfoo.dll"))
+    (pass-if "libfoo-1.dll == libfoo.dll"
+      (dll-name-match? "libfoo-1.dll" "libfoo.dll"))
+    (pass-if "libfoo-10.dll == libfoo.dll"
+      (dll-name-match? "libfoo-10.dll" "libfoo.dll"))
+    (pass-if "libfoo-.dll != libfoo.dll"
+      (not (dll-name-match? "libfoo-.dll" "libfoo.dll")))
+    (pass-if "libfoo-a.dll != libfoo.dll"
+      (not (dll-name-match? "libfoo-a.dll" "libfoo.dll")))
+    (pass-if "libfoo-1a.dll != libfoo.dll"
+      (not (dll-name-match? "libfoo-a.dll" "libfoo.dll")))))
+
+(with-test-prefix "find-best-dll-from-matches"
+  (let ((find-best? (@@ (system foreign-library) find-best-dll-from-matches)))
+    (pass-if-equal "prefer unversioned name"
+        "libfoo.dll"
+      (find-best? "libfoo.dll" '("libfoo.dll" "libfoo-1.dll")))
+    (pass-if-equal "allow versioned name"
+        "libfoo-1.dll"
+      (find-best? "libfoo.dll" '("libfoo-1.dll")))
+    (pass-if-equal "larger is better"
+        "libfoo-2.dll"
+      (find-best? "libfoo.dll" '("libfoo-1.dll" "libfoo-2.dll")))
+    (pass-if-equal "multiple digits ok"
+        "libfoo-123.dll"
+      (find-best? "libfoo.dll" '("libfoo-1.dll" "libfoo-123.dll")))))
