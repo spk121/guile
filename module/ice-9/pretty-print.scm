@@ -385,30 +385,26 @@ sub-expression, via the @var{breadth-first?} keyword argument."
             (lp (cdr x) (- width 1 (string-length str))))))))
 
     (define (truncate-string str width)
-      ;; width is < (string-length str)
-      (let lp ((fixes '(("#<" . ">")
-                        ("#(" . ")")
-                        ("(" . ")")
-                        ("\"" . "\""))))
-        (cond
-         ((null? fixes)
-          "#")
-         ((and (string-prefix? (caar fixes) str)
-               (string-suffix? (cdar fixes) str)
-               (>= (string-length str)
-                   width
-                   (+ (string-length (caar fixes))
-                      (string-length (cdar fixes))
-                      ellipsis-width)))
-          (format #f "~a~a~a~a"
-                  (caar fixes)
-                  (substring str (string-length (caar fixes))
-                             (- width (string-length (cdar fixes))
-                                ellipsis-width))
-                  ellipsis
-                  (cdar fixes)))
-         (else
-          (lp (cdr fixes))))))
+      (unless (< width (string-length str))
+        (error "precondition failed"))
+      (or (or-map (match-lambda
+                    ((prefix . suffix)
+                     (and (string-prefix? prefix str)
+                          (<= (+ (string-length prefix)
+                                 (string-length suffix)
+                                 ellipsis-width)
+                              width)
+                          (format #f "~a~a~a"
+                                  (substring str 0
+                                             (- width (string-length suffix)
+                                                ellipsis-width))
+                                  ellipsis
+                                  suffix))))
+                  '(("#<" . ">")
+                    ("#(" . ")")
+                    ("(" . ")")
+                    ("\"" . "\"")))
+          "#"))
 
     (define* (print x width #:key inner?)
       (cond
@@ -448,9 +444,9 @@ sub-expression, via the @var{breadth-first?} keyword argument."
          ;; the truncated bitvector would print as #1b(...), so we print by hand.
          ((>= width (+ 2 ellipsis-width))
           (format #t "#*")
-          (array-for-each (lambda (xi) (format #t (if xi "1" "0")))
+          (array-for-each (lambda (xi) (display (if xi "1" "0")))
                           (make-shared-array x list (- width 2 ellipsis-width)))
-          (format #t ellipsis))
+          (display ellipsis))
          (else
           (display "#"))))
        ((and (array? x) (not (string? x)))
@@ -483,12 +479,15 @@ sub-expression, via the @var{breadth-first?} keyword argument."
          (else
           (display "#"))))
        (else
-        (let* ((str (with-output-to-string
-                      (lambda () (if display? (display x) (write x)))))
-               (len (string-length str)))
-          (display (if (<= (string-length str) width)
-                       str
-                       (truncate-string str width)))))))
+        (call-with-truncating-output-string
+         (lambda (port)
+           (if display? (display x port) (write x port)))
+         (lambda (full-str)
+           (display full-str))
+         (lambda (partial-str)
+           (display (truncate-string partial-str width)))
+         #:max-column width
+         #:allow-newline? #f))))
 
     (with-output-to-port port
       (lambda ()
