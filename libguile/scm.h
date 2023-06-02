@@ -1,7 +1,7 @@
 #ifndef SCM_SCM_H
 #define SCM_SCM_H
 
-/* Copyright 1995-2004,2006-2015,2017-2019
+/* Copyright 1995-2004,2006-2015,2017-2019,2023
      Free Software Foundation, Inc.
 
    This file is part of Guile.
@@ -718,11 +718,11 @@ enum scm_tc8_tags
 
 /* SCM_API is a macro prepended to all function and data definitions
    which should be exported from libguile. */
-#if defined BUILDING_LIBGUILE && defined HAVE_VISIBILITY
+#if BUILDING_LIBGUILE && HAVE_VISIBILITY
 # define SCM_API extern __attribute__((__visibility__("default")))
-#elif defined BUILDING_LIBGUILE && defined _MSC_VER
+#elif BUILDING_LIBGUILE && (defined _WIN32 || defined __CYGWIN__)
 # define SCM_API __declspec(dllexport) extern
-#elif defined _MSC_VER
+#elif defined _WIN32 || defined __CYGWIN__
 # define SCM_API __declspec(dllimport) extern
 #else
 # define SCM_API extern
