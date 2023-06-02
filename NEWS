@@ -21,6 +21,21 @@ definitely unused---this is notably the case for modules that are only
 used at macro-expansion time, such as (srfi srfi-26).  In those cases,
 the compiler reports it as "possibly unused".
 
+** improve 'load-foreign-library' handling of DLLs
+
+The non-libltdl load-foreign-library introduced in 3.0.6 does not handle
+some common cases with libtool-generated DLLs.  It has been updated
+to search for DLLs that have a version number appended to the name
+by libtool, such as libfoo-1.dll.
+
+Also, it has been updated to do library renaming for MSYS.  On Cygwin,
+when the #:rename-on-cygwin? option is #t, it already had the capability
+to search for "libfoo" as "cygfoo.dll".  It has been updated to add the
+capability to search for "libfoo" as "msys-foo.dll" on MSYS.
+
+The load-foreign-library option #:rename-on-cygwin? has been changed to
+#:host-type-rename?, and handles both Cygwin and MSYS.
+
 * Bug fixes
 
 ** (ice-9 suspendable-ports) incorrect UTF-8 decoding
