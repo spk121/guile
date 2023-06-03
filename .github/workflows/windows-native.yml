@@ -60,7 +60,7 @@ jobs:
         run: ./configure ${{matrix.threads}} ${{matrix.jit}} ${{matrix.gmp}} --prefix=`pwd`/dist
         shell: msys2 {0}
       - name: Show config.log
-        if: failure()
+        if: ${{ failure() }}
 	run: cat config.log
       - name: make
         run: make
