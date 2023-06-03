@@ -29,6 +29,7 @@
 #include <unicase.h>
 #include <unistr.h>
 
+#include "async.h"
 #include "boolean.h"
 #include "chars.h"
 #include "dynwind.h"
