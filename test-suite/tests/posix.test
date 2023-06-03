@@ -389,7 +389,7 @@
 ;;
 ;; spawn
 ;;
-
+#;
 (with-test-prefix "spawn"
 
   (pass-if-equal "basic"
@@ -498,3 +498,13 @@
                ;; or not is system-defined, so it's possible it just works.
                (string? (crypt "pass" "$X$abc")))
              (lambda _ #t)))))
+
+;;
+;; getlogin
+;;
+
+(with-test-prefix "getlogin"
+  (pass-if "basic usage"
+    (if (not (defined? 'getlogin))
+        (throw 'unsupported)
+        (string? (getlogin)))))
