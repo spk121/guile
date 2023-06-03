@@ -2,8 +2,8 @@ name: Windows MinGW
 
 on:
   # 12:20 PDT
-  schedule:
-    - cron: "20 19 * * *"
+  # schedule:
+  #   - cron: "20 19 * * *"
   # Allow manual triggering
   workflow_dispatch:
 
@@ -21,12 +21,15 @@ jobs:
     runs-on: windows-latest
     name: Build ${{matrix.sys}}
 
-    defaults:
-      run:
-        shell: msys2 -o igncr {0}
-
     steps:
-      - uses: msys2/setup-msys2@v2
+      - name: Configure git
+        run: git config --global core.eol lf
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 2
+      - name: Install Msys2
+        uses: msys2/setup-msys2@v2
         with:
           msystem: ${{matrix.sys}}
           install: >-
@@ -39,22 +42,23 @@ jobs:
             mingw-w64-${{matrix.env}}-gc
             mingw-w64-${{matrix.env}}-libtool
             mingw-w64-${{matrix.env}}-libunistring
-      - name: Set git CRLF behavior to Linux
-        run: git config --global core.eol lf
-      - uses: actions/checkout@v3
-        with:
-          fetch-depth: 2
       - name: Bootstrap Guile
         run: |
           export LANG=C.UTF-8 TERM=dumb VERBOSE=true TZ=America/Los_Angeles
           mkdir `pwd`/dist
           ./autogen.sh
+        shell: msys2 -o igncr {0}
       - name: Configure
         run: ./configure CFLAGS="-g -O2 -Wall" ${{matrix.threads}} ${{matrix.jit}} ${{matrix.gmp}} --prefix=`pwd`/dist
+        shell: msys2 -o igncr {0}
       - name: Make
-        run: make V=1
+        run: make -j V=1
+        shell: msys2 -o igncr {0}
       - name: Run tests
-        run: make check V=1
+        run: |
+          # git config --global --add safe.directory /cygdrive/d/a/guile/guile
+          make check V=1
+        shell: msys2 -o igncr {0}
       - name: Archive test logs
         if: ${{ success() || failure() }}
         uses: actions/upload-artifact@v3
@@ -64,6 +68,7 @@ jobs:
 
       - name: Install to folder
         run: make install V=1
+        shell: msys2 -o igncr {0}
       - name: Archive installed files
         uses: actions/upload-artifact@v3
         with:
@@ -74,6 +79,7 @@ jobs:
         run: |
           make dist
           gunzip *.tar.gz
+        shell: msyw2 -o igncr {0}
       - name: Archive source tarball
         uses: actions/upload-artifact@v3
         with:
