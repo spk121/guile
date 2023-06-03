@@ -64,7 +64,6 @@
     string))
 
 
-
 (with-test-prefix "%default-port-conversion-strategy"
 
   (pass-if "initial value"
@@ -1099,7 +1098,7 @@
       (close-port out-port))
 
     (list (open-input-file port-loop-temp)
-          (open-input-pipe (string-append "cat " port-loop-temp))
+          (false-if-exception (open-input-pipe (string-append "cat " port-loop-temp)))
           (call-with-input-string text (lambda (x) x))
           ;; We don't test soft ports at the moment.
           ))
@@ -1138,7 +1137,7 @@
              (pass-if "column is correct at EOF"
                       (= (port-column port) final-column))))
          ports port-list-names)
-        (for-each close-port ports)
+        (for-each (lambda (p) (false-if-exception (close-port p))) ports)
         (delete-file port-loop-temp))))
 
   (with-test-prefix "newline"
@@ -2038,3 +2037,4 @@
 ;;; eval: (put 'test-decoding-error 'scheme-indent-function 3)
 ;;; eval: (put 'with-load-path 'scheme-indent-function 1)
 ;;; End:
+
