@@ -2474,13 +2474,17 @@ module@footnote{This module is only available on systems where the
 Execute a command in a subprocess, with a pipe to it or from it, or
 with pipes in both directions.
 
-@code{open-pipe} runs the shell @var{command} using @samp{/bin/sh -c}.
+@code{open-pipe} runs the shell @var{command} using the shell.
+By default, it uses @samp{/bin/sh -c}.
 @code{open-pipe*} executes @var{prog} directly, with the optional
 @var{args} arguments (all strings).
 
 @var{mode} should be one of the following values.  @code{OPEN_READ} is
 an input pipe, ie.@: to read from the subprocess.  @code{OPEN_WRITE}
 is an output pipe, ie.@: to write to it.
+
+The default shell command that @code{open-pipe} uses can be
+modified with @code{pipe-shell-command-transformer}.
 
 @defvar OPEN_READ
 @defvarx OPEN_WRITE
@@ -2503,6 +2507,23 @@ both parent and child are writing, and waiting until the write completes
 before doing any reading.  Each direction has @code{PIPE_BUF} bytes of
 buffering (@pxref{Buffering}), which will be enough for small writes,
 but not for say putting a big file through a filter.
+@end deffn
+
+@deffn {Scheme Procedure} pipe-shell-command-transformer
+When executed with no arguments, this returns the procedure that
+@code{open-pipe} uses to convert its command string argument into the
+program arguments to be executed. By default, it is a function that
+takes a string and returns a list that begins with @code{"/bin/sh"
+"-c"}.
+
+This procedure-with-modifier can be @code{set!}.  For example, to change
+the pipe shell from @code{sh} to @code{bash}, one can do the following:
+
+@lisp
+(set! (pipe-shell-command-transformer)
+  (lambda (cmd)
+    (list "/bin/bash" "-c" cmd)))
+@end lisp
 @end deffn
 
 @deffn {Scheme Procedure} open-input-pipe command
