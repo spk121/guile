@@ -35,9 +35,10 @@
   (data-file-name "filesys-test-dir2.tmp"))
 
 (define (%delete-file file)
-  (when (file-exists? file)
-    ;; MinGW require write permission to delete a files
-    (unless (access? file W_OK)
+  ;; lstat finds files and links. stat finds just files.
+  (when (false-if-exception (lstat file))
+    ;; MinGW requires write permission to delete a file.
+    (when (and (stat file #f) (not (access? file W_OK)))
       (chmod file (logior (stat:mode (stat file)) #o200)))
     (delete-file file)))
 
