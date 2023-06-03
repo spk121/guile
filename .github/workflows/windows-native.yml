@@ -57,8 +57,11 @@ jobs:
         run: ./autogen.sh
         shell: msys2 {0}
       - name: configure
-        run: ./configure CC=cl LD=link CFLAGS="-g -O2 -Wall" ${{matrix.threads}} ${{matrix.jit}} ${{matrix.gmp}} --prefix=`pwd`/dist
+        run: ./configure ${{matrix.threads}} ${{matrix.jit}} ${{matrix.gmp}} --prefix=`pwd`/dist
         shell: msys2 {0}
+      - name: Show config.log
+        if: failure()
+	run: cat config.log
       - name: make
         run: make
         shell: msys2 {0}
