@@ -50,7 +50,7 @@ jobs:
         shell: msys2 {0}
       - name: configure
         run: >-
-        ./configure CC="`pwd`/build-aux/compile cl"
+          ./configure CC="`pwd`/build-aux/compile cl"
           LD="link"
           AR="`pwd`/build-aux/ar-lib lib"
           STRIP=":"
