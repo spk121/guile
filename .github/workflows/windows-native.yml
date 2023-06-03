@@ -45,19 +45,17 @@ jobs:
       - name: make dist directory
         run: mkdir `pwd`/dist
         shell: msys2 {0}
-      - name: check tools version
-        run: |
-          export CC="`pwd`/build-aux/compile cl"
-          export LD="`pwd`/build-aux/compile link"
-          echo "CC=$CC"
-          echo "LD=$LD"
-          echo "MAKE=$MAKE"
-        shell: msys2 {0}
       - name: bootstrap with autogen.sh
         run: ./autogen.sh
         shell: msys2 {0}
       - name: configure
-        run: ./configure ${{matrix.threads}} ${{matrix.jit}} ${{matrix.gmp}} --prefix=`pwd`/dist
+        run: >-
+        ./configure CC="`pwd`/build-aux/compile cl"
+          LD="link"
+          AR="`pwd`/build-aux/ar-lib lib"
+          STRIP=":"
+          CFLAGS=""
+          ${{matrix.threads}} ${{matrix.jit}} ${{matrix.gmp}} --prefix=`pwd`/dist
         shell: msys2 {0}
       - name: Show config.log
         if: ${{ failure() }}
