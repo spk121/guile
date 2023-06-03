@@ -10,7 +10,7 @@ on:
 jobs:
   build:
     strategy:
-      fail-fast: false
+      fail-fast: true
       matrix:
         include:
           - { sys: MINGW64, env: x86_64, threads: --without-threads, jit: --enable-jit=no, gmp: --enable-mini-gmp }
@@ -52,7 +52,7 @@ jobs:
         run: ./configure CFLAGS="-g -O2 -Wall" ${{matrix.threads}} ${{matrix.jit}} ${{matrix.gmp}} --prefix=`pwd`/dist
         shell: msys2 -o igncr {0}
       - name: Make
-        run: make -j V=1
+        run: make V=1
         shell: msys2 -o igncr {0}
       - name: Run tests
         run: |
