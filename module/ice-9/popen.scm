@@ -1,30 +1,32 @@
 ;; popen emulation, for non-stdio based ports.
 
-;;;; Copyright (C) 1998-2001, 2003, 2006, 2010-2013, 2019
+;;;; Copyright (C) 1998-2001, 2003, 2006, 2010-2013, 2019, 2023
 ;;;;   Free Software Foundation, Inc.
-;;;; 
+;;;;
 ;;;; This library is free software; you can redistribute it and/or
 ;;;; modify it under the terms of the GNU Lesser General Public
 ;;;; License as published by the Free Software Foundation; either
 ;;;; version 3 of the License, or (at your option) any later version.
-;;;; 
+;;;;
 ;;;; This library is distributed in the hope that it will be useful,
 ;;;; but WITHOUT ANY WARRANTY; without even the implied warranty of
 ;;;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
 ;;;; Lesser General Public License for more details.
-;;;; 
+;;;;
 ;;;; You should have received a copy of the GNU Lesser General Public
 ;;;; License along with this library; if not, write to the Free Software
 ;;;; Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
-;;;; 
+;;;;
 
 (define-module (ice-9 popen)
   #:use-module (ice-9 binary-ports)
   #:use-module (ice-9 threads)
+  #:use-module (ice-9 receive)
   #:use-module (srfi srfi-1)
   #:use-module (srfi srfi-9)
   #:export (port/pid-table open-pipe* open-pipe close-pipe open-input-pipe
-            open-output-pipe open-input-output-pipe pipeline))
+            open-output-pipe open-input-output-pipe pipeline
+            pipe-shell-command-transformer))
 
 (eval-when (expand load eval)
   (load-extension (string-append "libguile-" (effective-version))
@@ -73,6 +75,15 @@
   (set-port-encoding! write-port "ISO-8859-1")
 
   rw-port)
+
+;; A procedurde that changes the command received by open-pipe into the
+;; shell command to be run by open-pipe*.
+(define (%command-transformer cmd)
+  `("/bin/sh" "-c" ,cmd))
+(define pipe-shell-command-transformer
+  (make-procedure-with-setter
+   (lambda () %command-transformer)
+   (lambda (p) (set! %command-transformer p))))
 
 ;; a guardian to ensure the cleanup is done correctly when
 ;; an open pipe is gc'd or a close-port is used.
@@ -156,7 +167,7 @@ A port to the process (based on pipes) is created and returned.
 @var{mode} specifies whether an input, an output or an input-output
 port to the process is created: it should be the value of
 @code{OPEN_READ}, @code{OPEN_WRITE} or @code{OPEN_BOTH}."
-  (open-pipe* mode "/bin/sh" "-c" command))
+  (apply open-pipe* mode (%command-transformer command)))
 
 (define (fetch-pipe-info port)
   (%port-property port 'popen-pipe-info))
