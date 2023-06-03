@@ -150,13 +150,24 @@ port to the process is created: it should be the value of
 
         port))))
 
+(define (find-shell)
+  (cond
+   ((file-exists? "/bin/sh")
+    "/bin/sh")
+   ((string-contains %host-type "mingw")
+    (or (getenv "ComSpec")
+        "C:\\Windows\\system32\\cmd.exe"))
+   (else
+    ;; else what?
+    "/bin/sh")))
+
 (define (open-pipe command mode)
   "Executes the shell command @var{command} (a string) in a subprocess.
 A port to the process (based on pipes) is created and returned.
 @var{mode} specifies whether an input, an output or an input-output
 port to the process is created: it should be the value of
 @code{OPEN_READ}, @code{OPEN_WRITE} or @code{OPEN_BOTH}."
-  (open-pipe* mode "/bin/sh" "-c" command))
+  (open-pipe* mode (find-shell) "-c" command))
 
 (define (fetch-pipe-info port)
   (%port-property port 'popen-pipe-info))
