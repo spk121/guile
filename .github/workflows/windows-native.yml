@@ -47,8 +47,8 @@ jobs:
         shell: msys2 {0}
       - name: check tools version
         run: |
-          CC=cl
-          LD=link
+          env CC="`pwd`/build-aux/compile cl"
+          env LD="`pwd`/build-aux/compile link"
           echo "CC=$CC"
           echo "LD=$LD"
           echo "MAKE=$MAKE"
