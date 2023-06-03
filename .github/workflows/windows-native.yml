@@ -34,6 +34,7 @@ jobs:
             mingw-w64-${{matrix.env}}-gc
             mingw-w64-${{matrix.env}}-libtool
             mingw-w64-${{matrix.env}}-libunistring
+          path-type: inherit
       - name: Set git CRLF behavior to Linux
         run: git config --global core.autocrlf input
       - uses: actions/checkout@v3
