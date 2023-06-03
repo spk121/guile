@@ -10,7 +10,7 @@ on:
 jobs:
   build:
     strategy:
-      fail-fast: true
+      fail-fast: false
       matrix:
         include:
           - { sys: MINGW64, env: x86_64, threads: --without-threads, jit: --enable-jit=no, gmp: --enable-mini-gmp }
