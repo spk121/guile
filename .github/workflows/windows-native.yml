@@ -61,7 +61,7 @@ jobs:
         shell: msys2 {0}
       - name: Show config.log
         if: ${{ failure() }}
-	run: cat config.log
+        run: cat config.log
       - name: make
         run: make
         shell: msys2 {0}
