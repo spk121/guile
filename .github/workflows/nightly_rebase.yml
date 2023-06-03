@@ -1,0 +1,52 @@
+
+name: Nightly Rebase
+
+on:
+  # 12:10 PDT
+
+  # Allow manual triggering
+  workflow_dispatch:
+
+# Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+# Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
+# Allow cancellation of in-progress runs.
+concurrency:
+  group: "nightly"
+  cancel-in-progress: true
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+    - name: env
+      run: export LANG=C.UTF-8 TERM=dumb VERBOSE=true DEBIAN_FRONTEND=noninteractive TZ=America/Los_Angeles
+    - name: Hard reset main branch to upstream
+      run: |
+        set -x
+        #git config user.name "GitHub Actions Bot"
+        #git config user.email "<>"
+        git config user.name "${GITHUB_ACTOR}"
+        git config user.email "${GITHUB_ACTOR}@users.noreply.github.com"
+        git remote add upstream https://git.savannah.gnu.org/git/guile.git
+        git fetch upstream main
+        git remote -v
+        git checkout -B main
+        git config pull.rebase true
+        git reset --hard upstream/main || exit 1
+        git push --force origin main || exit 1
+      shell: bash {0}
+    - name: Rebase main-patches branch
+      run: |
+        git checkout main-patches
+        if ! (git rebase main) then
+          git rebase --abort
+          exit 1
+        fi

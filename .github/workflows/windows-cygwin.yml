@@ -1,0 +1,73 @@
+name: Windows Cygwin
+
+on:
+  # 13:20 PDT
+  schedule:
+    - cron: "20 20 * * *"
+  # Allow manual triggering
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    name: Build
+
+    steps:
+    - run: git config --global core.autocrlf input
+    - uses: actions/checkout@v3
+      with:
+        fetch-depth: 2
+    - name: Install cygwin
+      uses: cygwin/cygwin-install-action@master
+      with:
+        packages: >-
+          autoconf automake make libtool flex gperf
+          gcc-core
+          lzip xz
+          gettext-devel libffi-devel libgc-devel
+          libgmp-devel libreadline-devel libunistring-devel
+          libiconv-devel
+    - name: Bootstrap
+      run: |
+          export LANG=C.UTF-8 TERM=dumb VERBOSE=true TZ=America/Los_Angeles
+          mkdir `pwd`/dist
+          ./autogen.sh
+      shell: C:\cygwin\bin\bash.exe -o igncr '{0}'
+    - name: Configure
+      run: ./configure CFLAGS="-g -O2 -Wall" --enable-jit=no --disable-lto --prefix=`pwd`/dist
+      shell: C:\cygwin\bin\bash.exe -o igncr '{0}'
+    - name: Make
+      run: make -j V=1
+      shell: C:\cygwin\bin\bash.exe -o igncr '{0}'
+
+    - name: Run tests
+      run: |
+        git config --global --add safe.directory /cygdrive/d/a/guile/guile
+        make check V=1
+      shell: C:\cygwin\bin\bash.exe -o igncr '{0}'
+    - name: Archive test logs
+      if: ${{ success() || failure() }}
+      uses: actions/upload-artifact@v3
+      with:
+        name: Test logs
+        path: check-guile.log
+
+    - name: Install to folder
+      run: make install V=1
+      shell: C:\cygwin\bin\bash.exe -o igncr '{0}'
+    - name: Archive installed files
+      uses: actions/upload-artifact@v3
+      with:
+        name: Installed files
+        path: dist
+
+    - name: Make source tarball
+      run: |
+        make dist
+        gunzip *.tar.gz
+      shell: C:\cygwin\bin\bash.exe -o igncr '{0}'
+    - name: Archive source tarball
+      uses: actions/upload-artifact@v3
+      with:
+        name: Source tarball
+        path: guile*tar

@@ -1,0 +1,81 @@
+name: Windows MinGW
+
+on:
+  # 12:20 PDT
+  schedule:
+    - cron: "20 19 * * *"
+  # Allow manual triggering
+  workflow_dispatch:
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { sys: MINGW64, env: x86_64, threads: --without-threads, jit: --enable-jit=no, gmp: --enable-mini-gmp }
+          - { sys: MINGW32, env: i686, threads: --without-threads, jit: --enable-jit=no, gmp: --enable-mini-gmp }
+          - { sys: UCRT64,  env: ucrt-x86_64, threads: --without-threads, jit: --enable-jit=no, gmp: --enable-mini-gmp }
+          - { sys: CLANG64, env: clang-x86_64, threads: --without-threads, jit: --enable-jit=no, gmp: --enable-mini-gmp }
+
+    runs-on: windows-latest
+    name: Build ${{matrix.sys}}
+
+    defaults:
+      run:
+        shell: msys2 {0}
+
+    steps:
+      - uses: msys2/setup-msys2@v2
+        with:
+          msystem: ${{matrix.sys}}
+          install: >-
+            base-devel
+            git
+            gperf
+            autotools
+            lzip
+            mingw-w64-${{matrix.env}}-toolchain
+            mingw-w64-${{matrix.env}}-gc
+            mingw-w64-${{matrix.env}}-libtool
+            mingw-w64-${{matrix.env}}-libunistring
+      - name: Set git CRLF behavior to Linux
+        run: git config --global core.autocrlf input
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 2
+      - name: Bootstrap Guile
+        run: |
+          export LANG=C.UTF-8 TERM=dumb VERBOSE=true TZ=America/Los_Angeles
+          mkdir `pwd`/dist
+          ./autogen.sh
+      - name: Configure
+        run: ./configure CFLAGS="-g -O2 -Wall" ${{matrix.threads}} ${{matrix.jit}} ${{matrix.gmp}} --prefix=`pwd`/dist
+      - name: Make
+        run: make V=1
+      - name: Run tests
+        run: make check V=1
+      - name: Archive test logs
+        if: ${{ success() || failure() }}
+        uses: actions/upload-artifact@v3
+        with:
+          name: Test logs ${{ matrix.sys }}
+          path: check-guile.log
+
+      - name: Install to folder
+        run: make install V=1
+      - name: Archive installed files
+        uses: actions/upload-artifact@v3
+        with:
+          name: Installed files ${{ matrix.sys }}
+          path: dist
+
+      - name: Make source tarball
+        run: |
+          make dist
+          gunzip *.tar.gz
+      - name: Archive source tarball
+        uses: actions/upload-artifact@v3
+        with:
+          name: Source ${{ matrix.sys }}
+          path: guile*tar
