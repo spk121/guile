@@ -263,6 +263,7 @@ AC_DEFUN([gl_EARLY],
   # Code from module sys_times:
   # Code from module sys_types:
   # Code from module sys_uio:
+  # Code from module sys_wait:
   # Code from module tempname:
   # Code from module time:
   # Code from module time_r:
@@ -279,6 +280,7 @@ AC_DEFUN([gl_EARLY],
   # Code from module vc-list-files:
   # Code from module verify:
   # Code from module vsnprintf:
+  # Code from module waitpid:
   # Code from module warnings:
   # Code from module wchar:
   # Code from module wcrtomb:
@@ -817,6 +819,9 @@ AC_DEFUN([gl_INIT],
   gl_SYS_UIO_H
   gl_SYS_UIO_H_REQUIRE_DEFAULTS
   AC_PROG_MKDIR_P
+  gl_SYS_WAIT_H
+  gl_SYS_WAIT_H_REQUIRE_DEFAULTS
+  AC_PROG_MKDIR_P
   gl_TIME_H
   gl_TIME_H_REQUIRE_DEFAULTS
   AC_PROG_MKDIR_P
@@ -836,6 +841,9 @@ AC_DEFUN([gl_INIT],
   AC_C_VARARRAYS
   gl_FUNC_VSNPRINTF
   gl_STDIO_MODULE_INDICATOR([vsnprintf])
+  gl_FUNC_WAITPID
+  gl_CONDITIONAL([GL_COND_OBJ_WAITPID], [test $HAVE_WAITPID = 0])
+  gl_SYS_WAIT_MODULE_INDICATOR([waitpid])
   gl_WCHAR_H
   gl_WCHAR_H_REQUIRE_DEFAULTS
   AC_PROG_MKDIR_P
@@ -2312,6 +2320,7 @@ AC_DEFUN([gl_FILE_LIST], [
   lib/sys_times.in.h
   lib/sys_types.in.h
   lib/sys_uio.in.h
+  lib/sys_wait.in.h
   lib/tempname.c
   lib/tempname.h
   lib/time-internal.h
@@ -2330,6 +2339,7 @@ AC_DEFUN([gl_FILE_LIST], [
   lib/verify.h
   lib/vsnprintf.c
   lib/w32sock.h
+  lib/waitpid.c
   lib/warn-on-use.h
   lib/wchar.in.h
   lib/wcrtomb.c
@@ -2520,6 +2530,7 @@ AC_DEFUN([gl_FILE_LIST], [
   m4/sys_times_h.m4
   m4/sys_types_h.m4
   m4/sys_uio_h.m4
+  m4/sys_wait_h.m4
   m4/tempname.m4
   m4/threadlib.m4
   m4/time_h.m4
@@ -2535,6 +2546,7 @@ AC_DEFUN([gl_FILE_LIST], [
   m4/vasnprintf.m4
   m4/visibility.m4
   m4/vsnprintf.m4
+  m4/waitpid.m4
   m4/warn-on-use.m4
   m4/warnings.m4
   m4/wchar_h.m4

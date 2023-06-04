@@ -143,6 +143,7 @@
 #  unistd \
 #  verify \
 #  vsnprintf \
+#  waitpid \
 #  warnings \
 #  wchar
 
@@ -3473,6 +3474,32 @@ EXTRA_DIST += sys_uio.in.h
 
 ## end   gnulib module sys_uio
 
+## begin gnulib module sys_wait
+
+BUILT_SOURCES += sys/wait.h
+
+# We need the following in order to create <sys/wait.h> when the system
+# has one that is incomplete.
+sys/wait.h: sys_wait.in.h $(top_builddir)/config.status $(CXXDEFS_H) $(WARN_ON_USE_H)
+	$(AM_V_GEN)$(MKDIR_P) '%reldir%/sys'
+	$(AM_V_at)$(SED_HEADER_STDOUT) \
+	      -e 's|@''GUARD_PREFIX''@|GL|g' \
+	      -e 's|@''INCLUDE_NEXT''@|$(INCLUDE_NEXT)|g' \
+	      -e 's|@''PRAGMA_SYSTEM_HEADER''@|@PRAGMA_SYSTEM_HEADER@|g' \
+	      -e 's|@''PRAGMA_COLUMNS''@|@PRAGMA_COLUMNS@|g' \
+	      -e 's|@''NEXT_SYS_WAIT_H''@|$(NEXT_SYS_WAIT_H)|g' \
+	      -e 's/@''GNULIB_WAITPID''@/$(GL_GNULIB_WAITPID)/g' \
+	      -e '/definitions of _GL_FUNCDECL_RPL/r $(CXXDEFS_H)' \
+	      -e '/definition of _GL_WARN_ON_USE/r $(WARN_ON_USE_H)' \
+	      $(srcdir)/sys_wait.in.h > $@-t
+	$(AM_V_at)mv $@-t $@
+MOSTLYCLEANFILES += sys/wait.h sys/wait.h-t
+MOSTLYCLEANDIRS += sys
+
+EXTRA_DIST += sys_wait.in.h
+
+## end   gnulib module sys_wait
+
 ## begin gnulib module tempname
 
 if gl_GNULIB_ENABLED_tempname
@@ -3856,6 +3883,14 @@ EXTRA_DIST += vsnprintf.c
 EXTRA_libgnu_la_SOURCES += vsnprintf.c
 
 ## end   gnulib module vsnprintf
+
+## begin gnulib module waitpid
+
+if GL_COND_OBJ_WAITPID
+libgnu_la_SOURCES += waitpid.c
+endif
+
+## end   gnulib module waitpid
 
 ## begin gnulib module wchar
 

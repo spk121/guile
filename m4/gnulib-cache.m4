@@ -148,6 +148,7 @@
 #  unistd \
 #  verify \
 #  vsnprintf \
+#  waitpid \
 #  warnings \
 #  wchar
 
@@ -255,6 +256,7 @@ gl_MODULES([
   unistd
   verify
   vsnprintf
+  waitpid
   warnings
   wchar
 ])
