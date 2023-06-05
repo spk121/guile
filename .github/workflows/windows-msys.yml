@@ -1,4 +1,4 @@
-name: Windows MinGW
+name: Windows MSys
 
 on:
   # 12:20 PDT
@@ -13,10 +13,7 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - { sys: MINGW64, env: x86_64, threads: --without-threads, jit: --enable-jit=no, gmp: --enable-mini-gmp }
-          - { sys: MINGW32, env: i686, threads: --without-threads, jit: --enable-jit=no, gmp: --enable-mini-gmp }
-          - { sys: UCRT64,  env: ucrt-x86_64, threads: --without-threads, jit: --enable-jit=no, gmp: --enable-mini-gmp }
-          - { sys: CLANG64, env: clang-x86_64, threads: --without-threads, jit: --enable-jit=no, gmp: --enable-mini-gmp }
+          - { sys: MSYS, threads: --without-threads, jit: --enable-jit=no, gmp: --enable-mini-gmp }
 
     runs-on: windows-latest
     name: Build ${{matrix.sys}}
@@ -38,10 +35,10 @@ jobs:
             gperf
             autotools
             lzip
-            mingw-w64-${{matrix.env}}-toolchain
-            mingw-w64-${{matrix.env}}-gc
-            mingw-w64-${{matrix.env}}-libtool
-            mingw-w64-${{matrix.env}}-libunistring
+	    toolchain
+	    gc
+	    libtool
+	    libunistring
       - name: Bootstrap Guile
         run: |
           export LANG=C.UTF-8 TERM=dumb VERBOSE=true TZ=America/Los_Angeles

@@ -34,6 +34,7 @@ jobs:
             mingw-w64-${{matrix.env}}-gc
             mingw-w64-${{matrix.env}}-libtool
             mingw-w64-${{matrix.env}}-libunistring
+	  path-type: inherit
       - name: Set git CRLF behavior to Linux
         run: git config --global core.autocrlf input
       - uses: actions/checkout@v3
@@ -57,7 +58,14 @@ jobs:
         run: ./autogen.sh
         shell: msys2 {0}
       - name: configure
-        run: ./configure CC=cl LD=link CFLAGS="-g -O2 -Wall" ${{matrix.threads}} ${{matrix.jit}} ${{matrix.gmp}} --prefix=`pwd`/dist
+        run: >-
+        ./configure CC="`pwd`/build-aux/compile cl"
+          LD="link"
+          AR="`pwd`/build-aux/ar-lib lib"
+          STRIP=":"
+          CFLAGS=""
+          ${{matrix.threads}} ${{matrix.jit}} ${{matrix.gmp}} --disable-lto --prefix=`pwd`/dist
+        shell: msys2 {0}
         shell: msys2 {0}
       - name: make
         run: make
