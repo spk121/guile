@@ -711,7 +711,6 @@ SCM_DEFINE (scm_kill, "kill", 2, 0, 0,
 #undef FUNC_NAME
 #endif
 
-#ifdef HAVE_WAITPID
 SCM_DEFINE (scm_waitpid, "waitpid", 1, 1, 0,
             (SCM pid, SCM options),
 	    "This procedure collects status information from a child process which\n"
@@ -766,7 +765,6 @@ SCM_DEFINE (scm_waitpid, "waitpid", 1, 1, 0,
   return scm_cons (scm_from_int (i), scm_from_int (status));
 }
 #undef FUNC_NAME
-#endif /* HAVE_WAITPID */
 
 #ifdef WIFEXITED
 SCM_DEFINE (scm_status_exit_val, "status:exit-val", 1, 0, 0, 
@@ -1517,7 +1515,6 @@ SCM_DEFINE (scm_spawn_process, "spawn", 2, 0, 1,
 }
 #undef FUNC_NAME
 
-#ifdef HAVE_FORK
 static int
 piped_process (pid_t *pid, SCM prog, SCM args, SCM from, SCM to)
 #define FUNC_NAME "piped-process"
@@ -1573,6 +1570,7 @@ piped_process (pid_t *pid, SCM prog, SCM args, SCM from, SCM to)
       }
   }
 
+  printf("BLAMMO before do_spawn in/out/err %d %d %d\n", in, out, err);
   *pid = do_spawn (exec_file, exec_argv, exec_env, in, out, err, 1);
   int errno_save = (*pid < 0) ? errno : 0;
 
@@ -1596,8 +1594,12 @@ piped_process (pid_t *pid, SCM prog, SCM args, SCM from, SCM to)
       default:    /* ENOENT, etc. */
         /* Report the error on the console (before switching to
            'posix_spawn', the child process would do exactly that.)  */
-        dprintf (err, "In execvp of %s: %s\n", exec_file,
+        {
+          char errbuf[200];
+          snprintf (errbuf, sizeof(errbuf), "In execvp of %s: %s\n", exec_file,
                  strerror (errno_save));
+          write (err, errbuf, strlen(errbuf));
+        }
       }
 
   free (exec_file);
@@ -1605,9 +1607,7 @@ piped_process (pid_t *pid, SCM prog, SCM args, SCM from, SCM to)
   return errno_save;
 }
 #undef FUNC_NAME
-#endif
 
-#if HAVE_FORK
 static SCM
 scm_piped_process (SCM prog, SCM args, SCM from, SCM to)
 #define FUNC_NAME "piped-process"
@@ -1615,6 +1615,7 @@ scm_piped_process (SCM prog, SCM args, SCM from, SCM to)
   pid_t pid;
 
   (void) piped_process (&pid, prog, args, from, to);
+#if HAVE_FORK
   if (pid == -1)
     {
       /* Create a dummy process that exits with value 127 to mimic the
@@ -1626,23 +1627,12 @@ scm_piped_process (SCM prog, SCM args, SCM from, SCM to)
       if (pid == 0)
         _exit (127);
     }
+#endif
 
   return scm_from_int (pid);
 }
 #undef FUNC_NAME
 
-#else
-static SCM
-scm_piped_process (SCM prog, SCM args, SCM from, SCM to)
-#define FUNC_NAME "piped-process"
-{
-  SCM_MISC_ERROR ("unimplemented", SCM_EOL);
-  return SCM_UNSPECIFIED;
-}
-#undef FUNC_NAME
-#endif
-
-#ifdef HAVE_FORK
 static void
 restore_sigaction (SCM pair)
 {
@@ -1724,7 +1714,6 @@ SCM_DEFINE (scm_system_star, "system*", 0, 0, 1,
   return scm_from_int (status);
 }
 #undef FUNC_NAME
-#endif /* HAVE_FORK */
 
 #ifdef HAVE_UNAME
 SCM_DEFINE (scm_uname, "uname", 0, 0, 0,
@@ -2692,8 +2681,8 @@ scm_init_posix ()
 
 #ifdef HAVE_FORK
   scm_add_feature ("fork");
-  scm_add_feature ("popen");
 #endif /* HAVE_FORK */
+  scm_add_feature ("popen");
   scm_c_register_extension ("libguile-" SCM_EFFECTIVE_VERSION,
                             "scm_init_popen",
 			    (scm_t_extension_init_func) scm_init_popen,
