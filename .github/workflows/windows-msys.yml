@@ -30,15 +30,21 @@ jobs:
         with:
           msystem: ${{matrix.sys}}
           install: >-
-            base-devel
-            git
-            gperf
             autotools
+            gcc
+            gettext-devel
+            gmp-devel
+            libcrypt-devel
+            libffi-devel
+            libgc-devel
+            libiconv-devel
+            libintl
+            libreadline-devel
+            libunistring-devel
+            pkgconf
+            gperf
             lzip
-            toolchain
-            gc
-            libtool
-            libunistring
+            xz
       - name: Bootstrap Guile
         run: |
           export LANG=C.UTF-8 TERM=dumb VERBOSE=true TZ=America/Los_Angeles
