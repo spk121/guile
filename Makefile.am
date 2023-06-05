@@ -38,7 +38,6 @@ SUBDIRS =					\
 	examples				\
 	test-suite				\
 	benchmark-suite				\
-	gc-benchmarks				\
 	am					\
 	doc
 
@@ -140,5 +139,7 @@ $(top_srcdir)/.version:
 	echo $(VERSION) > $@-t && mv $@-t $@
 gen-tarball-version:
 	echo $(VERSION) > $(distdir)/.tarball-version
+
+include gc-benchmarks/local.mk
 
 # Makefile.am ends here
