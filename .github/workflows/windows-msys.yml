@@ -52,37 +52,15 @@ jobs:
         id: cache-autotools-restore
         with:
           path: |
-            build-aux
-            po
-            m4
+            build-aux/**
+            po/**
+            m4/**
             INSTALL
             configure
             config.status
             libguile/gen-scmconfig.h
-            Makefile
-            am/Makefile
-            lib/Makefile
-            benchmark-suite/Makefile
-            gc-benchmarks/Makefile
-            doc/Makefile
-            doc/r5rs/Makefile
-            doc/ref/Makefile
-            emacs/Makefile
-            examples/Makefile
-            libguile/Makefile
+            **/Makefile
             libguile/version.h
-            guile-readline/Makefile
-            test-suite/Makefile
-            test-suite/standalone/Makefile
-            meta/Makefile
-            module/Makefile
-            stage0/Makefile
-            stage1/Makefile
-            stage2/Makefile
-            prebuilt/Makefile
-            prebuilt/x86_64-unknown-linux-gnu/Makefile
-            prebuilt/i686-pc-linux-gnu/Makefile
-            prebuilt/mips-unknown-linux-gnu/Makefile
             check-guile
             benchmark-guile
             meta/guile
@@ -120,37 +98,15 @@ jobs:
         if: always()
         with:
           path: |
-            build-aux
-            po
-            m4
+            build-aux/**
+            po/**
+            m4/**
             INSTALL
             configure
             config.status
             libguile/gen-scmconfig.h
-            Makefile
-            am/Makefile
-            lib/Makefile
-            benchmark-suite/Makefile
-            gc-benchmarks/Makefile
-            doc/Makefile
-            doc/r5rs/Makefile
-            doc/ref/Makefile
-            emacs/Makefile
-            examples/Makefile
-            libguile/Makefile
+            **/Makefile
             libguile/version.h
-            guile-readline/Makefile
-            test-suite/Makefile
-            test-suite/standalone/Makefile
-            meta/Makefile
-            module/Makefile
-            stage0/Makefile
-            stage1/Makefile
-            stage2/Makefile
-            prebuilt/Makefile
-            prebuilt/x86_64-unknown-linux-gnu/Makefile
-            prebuilt/i686-pc-linux-gnu/Makefile
-            prebuilt/mips-unknown-linux-gnu/Makefile
             check-guile
             benchmark-guile
             meta/guile
