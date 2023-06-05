@@ -252,6 +252,9 @@ exec 2>~a; read REPLY"
 
 (pass-if-equal "open-process"
     '("HELLO WORLD" 0)
+  (when mingw?
+    ;; Hangs on MinGW. Presume failure.
+    (throw 'fail))
   (receive (from to pid)
       ((@@ (ice-9 popen) open-process) OPEN_BOTH
        "tr" "[:lower:]" "[:upper:]")

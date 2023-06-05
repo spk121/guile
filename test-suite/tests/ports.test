@@ -686,6 +686,9 @@
 
 ;;; Run a command, send some output to it, and see if it worked.
 (pass-if "pipe: write"
+  (when (string-contains %host-type "-mingw32")
+    ;; MinGW hangs here. Just fail.
+    (throw 'fail))
   (let* ((filename (test-file))
          (pipe (open-pipe (string-append "grep Mommy > " filename) "w")))
     (display "Now Jimmy lives on a mushroom cloud\n" pipe)
