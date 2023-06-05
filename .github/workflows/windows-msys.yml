@@ -32,6 +32,7 @@ jobs:
           install: >-
             autotools
             gcc
+            flex
             gettext-devel
             gmp-devel
             libcrypt-devel
