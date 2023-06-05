@@ -1473,7 +1473,6 @@ AC_CONFIG_FILES([
   doc/Makefile
   doc/r5rs/Makefile
   doc/ref/Makefile
-  emacs/Makefile
   examples/Makefile
   libguile/Makefile
   libguile/version.h

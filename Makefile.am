@@ -36,7 +36,6 @@ SUBDIRS =					\
 	stage2					\
 	guile-readline				\
 	examples				\
-	emacs					\
 	test-suite				\
 	benchmark-suite				\
 	gc-benchmarks				\
