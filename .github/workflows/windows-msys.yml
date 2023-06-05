@@ -87,7 +87,7 @@ jobs:
             test-suite/standalone/test-fast-slot-ref
             config.h
             libtool          
-          key: ${{ runner.os }}-autotools-${{matrix.sys}}-${{ hashfiles(['configure.ac','Makefile.am']) }}
+          key: ${{ runner.os }}-autotools-${{matrix.sys}}-${{ hashfiles('configure.ac','Makefile.am') }}
       - name: Bootstrap Guile
         if: ${{ steps.cache-autotools-restore.outputs.cache-hit != 'true' }}
         run: |
