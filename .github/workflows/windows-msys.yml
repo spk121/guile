@@ -93,6 +93,7 @@ jobs:
             libguile/guile-snarf-docs
             test-suite/standalone/test-use-srfi
             test-suite/standalone/test-fast-slot-ref
+            config.h.in
             config.h
             libtool          
           key: ${{ runner.os }}-autotools-${{matrix.sys}}-${{ hashfiles('configure.ac','Makefile.am') }}
@@ -160,6 +161,7 @@ jobs:
             test-suite/standalone/test-use-srfi
             test-suite/standalone/test-fast-slot-ref
             config.h
+            config.h.in
             libtool          
           key: ${{ steps.cache-autotools-restore.outputs.cache-primary-key }}
       - name: Make
