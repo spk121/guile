@@ -9,7 +9,7 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - { sys: UCRT64,  env: ucrt-x86_64, threads: --without-threads, jit: --enable-jit=no, gmp: --enable-mini-gmp }
+          - { sys: UCRT64, env: ucrt-x86_64, threads: --without-threads, jit: --enable-jit=no, gmp: --enable-mini-gmp }
 
     runs-on: windows-latest
     name: Build Native with ${{matrix.sys}} ${{matrix.env}}
@@ -21,7 +21,8 @@ jobs:
     steps:
       - name: Set up msvc
         uses: ilammy/msvc-dev-cmd@v1
-      - uses: msys2/setup-msys2@v2
+      - name: Set up MSys2
+        uses: msys2/setup-msys2@v2
         with:
           msystem: ${{matrix.sys}}
           install: >-
@@ -34,7 +35,7 @@ jobs:
             mingw-w64-${{matrix.env}}-gc
             mingw-w64-${{matrix.env}}-libtool
             mingw-w64-${{matrix.env}}-libunistring
-	  path-type: inherit
+          path-type: inherit
       - name: Set git CRLF behavior to Linux
         run: git config --global core.autocrlf input
       - uses: actions/checkout@v3
