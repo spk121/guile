@@ -96,7 +96,7 @@ jobs:
             config.h.in
             config.h
             libtool          
-          key: ${{ runner.os }}-autotools-${{matrix.sys}}-${{ hashfiles('configure.ac','Makefile.am') }}
+          key: guile-autotools-${{ runner.os }}-${{matrix.sys}}-${{ hashfiles('configure.ac','Makefile.am') }}
       - name: Bootstrap Guile
         if: ${{ steps.cache-autotools-restore.outputs.cache-hit != 'true' }}
         run: |
