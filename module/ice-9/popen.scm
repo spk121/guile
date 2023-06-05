@@ -1,30 +1,32 @@
 ;; popen emulation, for non-stdio based ports.
 
-;;;; Copyright (C) 1998-2001, 2003, 2006, 2010-2013, 2019
+;;;; Copyright (C) 1998-2001, 2003, 2006, 2010-2013, 2019, 2023
 ;;;;   Free Software Foundation, Inc.
-;;;; 
+;;;;
 ;;;; This library is free software; you can redistribute it and/or
 ;;;; modify it under the terms of the GNU Lesser General Public
 ;;;; License as published by the Free Software Foundation; either
 ;;;; version 3 of the License, or (at your option) any later version.
-;;;; 
+;;;;
 ;;;; This library is distributed in the hope that it will be useful,
 ;;;; but WITHOUT ANY WARRANTY; without even the implied warranty of
 ;;;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
 ;;;; Lesser General Public License for more details.
-;;;; 
+;;;;
 ;;;; You should have received a copy of the GNU Lesser General Public
 ;;;; License along with this library; if not, write to the Free Software
 ;;;; Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
-;;;; 
+;;;;
 
 (define-module (ice-9 popen)
   #:use-module (ice-9 binary-ports)
   #:use-module (ice-9 threads)
+  #:use-module (ice-9 receive)
   #:use-module (srfi srfi-1)
   #:use-module (srfi srfi-9)
   #:export (port/pid-table open-pipe* open-pipe close-pipe open-input-pipe
-            open-output-pipe open-input-output-pipe pipeline))
+            open-output-pipe open-input-output-pipe pipeline
+            shell-runner))
 
 (eval-when (expand load eval)
   (load-extension (string-append "libguile-" (effective-version))
@@ -74,6 +76,16 @@
 
   rw-port)
 
+;; A procedure that transforms the command passed to open-pipe into the
+;; shell command to be run by open-pipe*.
+(define (shell-runner-default . args)
+  (append '("sh" "-c") args))
+(define %shell-runner shell-runner-default)
+(define shell-runner
+  (make-procedure-with-setter
+   (lambda () %shell-runner)
+   (lambda (p) (set! %shell-runner p))))
+
 ;; a guardian to ensure the cleanup is done correctly when
 ;; an open pipe is gc'd or a close-port is used.
 (define pipe-guardian (make-guardian))
@@ -117,6 +129,9 @@ or @code{OPEN_BOTH}."
                              (fdes-pair to))))
     ;; The original 'open-process' procedure would return unbuffered
     ;; ports; do the same here.
+    (pk 'open-process-after-piped-process 'pid pid 'from from 'to to)
+    (and from (unbuffered (cdr from)))
+    (and to (unbuffered (car to)))
     (values (and from (unbuffered (car from)))
             (and to (unbuffered (cdr to)))
             pid)))
@@ -150,24 +165,13 @@ port to the process is created: it should be the value of
 
         port))))
 
-(define (find-shell)
-  (cond
-   ((file-exists? "/bin/sh")
-    "/bin/sh")
-   ((string-contains %host-type "mingw")
-    (or (getenv "ComSpec")
-        "C:\\Windows\\system32\\cmd.exe"))
-   (else
-    ;; else what?
-    "/bin/sh")))
-
 (define (open-pipe command mode)
   "Executes the shell command @var{command} (a string) in a subprocess.
 A port to the process (based on pipes) is created and returned.
 @var{mode} specifies whether an input, an output or an input-output
 port to the process is created: it should be the value of
 @code{OPEN_READ}, @code{OPEN_WRITE} or @code{OPEN_BOTH}."
-  (open-pipe* mode (find-shell) "-c" command))
+  (apply open-pipe* mode (%shell-runner command)))
 
 (define (fetch-pipe-info port)
   (%port-property port 'popen-pipe-info))
