@@ -83,8 +83,8 @@ EXTRA_DIST = LICENSE HACKING GUILE-VERSION			\
 	     libguile/texi-fragments-to-docstrings		\
 	     gdbinit						\
 	     guix.scm						\
-	     build-aux/guix/guile-package.scm			\
-	     build-aux/manifest.scm
+	     .guix/modules/guile-package.scm			\
+	     .guix/manifest.scm
 
 TESTS = check-guile
 TESTS_ENVIRONMENT = @LOCALCHARSET_TESTS_ENVIRONMENT@

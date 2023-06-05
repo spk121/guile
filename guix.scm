@@ -1,1 +1,1 @@
-build-aux/guix/guile-package.scm
+.guix/modules/guile-package.scm

@@ -2,4 +2,4 @@
 
 (channel
   (version 0)
-  (directory "build-aux/guix"))
+  (directory ".guix/modules"))
