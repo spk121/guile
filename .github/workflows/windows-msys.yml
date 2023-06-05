@@ -46,6 +46,7 @@ jobs:
             gperf
             lzip
             xz
+            texinfo
       - name: Bootstrap Guile
         run: |
           export LANG=C.UTF-8 TERM=dumb VERBOSE=true TZ=America/Los_Angeles
