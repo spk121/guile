@@ -110,8 +110,8 @@ jobs:
           ${{matrix.threads}}
           ${{matrix.jit}}
           ${{matrix.gmp}}
-          --disable-lto                   # possibly broken on 64-bit windows
-          --disable-dependency-tracking   # not needed for one-time builds
+          --disable-lto
+          --disable-dependency-tracking
           --prefix=`pwd`/dist
         shell: msys2 -o igncr {0}
       - name: Save bootstrap cache
