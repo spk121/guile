@@ -129,7 +129,6 @@ or @code{OPEN_BOTH}."
                              (fdes-pair to))))
     ;; The original 'open-process' procedure would return unbuffered
     ;; ports; do the same here.
-    (pk 'open-process-after-piped-process 'pid pid 'from from 'to to)
     (and from (unbuffered (cdr from)))
     (and to (unbuffered (car to)))
     (values (and from (unbuffered (car from)))

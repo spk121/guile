@@ -1570,7 +1570,6 @@ piped_process (pid_t *pid, SCM prog, SCM args, SCM from, SCM to)
       }
   }
 
-  printf("BLAMMO before do_spawn in/out/err %d %d %d\n", in, out, err);
   *pid = do_spawn (exec_file, exec_argv, exec_env, in, out, err, 1);
   int errno_save = (*pid < 0) ? errno : 0;
 
