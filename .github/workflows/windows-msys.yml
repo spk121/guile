@@ -48,8 +48,8 @@ jobs:
             xz
             texinfo
       - name: Restore bootstrap cache
-        id: cache-autotools-restore
         uses: actions/cache/restore@v3
+        id: cache-autotools-restore
         with:
           path: |
             build-aux
@@ -115,8 +115,9 @@ jobs:
           --prefix=`pwd`/dist
         shell: msys2 -o igncr {0}
       - name: Save bootstrap cache
-        id: cache-autotools-save
         uses: actions/cache/save@v3
+        id: cache-autotools-save
+        if: always()
         with:
           path: |
             build-aux
@@ -160,8 +161,8 @@ jobs:
             libguile/guile-snarf-docs
             test-suite/standalone/test-use-srfi
             test-suite/standalone/test-fast-slot-ref
-            config.h
             config.h.in
+            config.h
             libtool          
           key: ${{ steps.cache-autotools-restore.outputs.cache-primary-key }}
       - name: Make
