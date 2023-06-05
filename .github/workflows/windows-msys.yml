@@ -2,8 +2,8 @@ name: Windows MSys
 
 on:
   # 12:20 PDT
-  # schedule:
-  #   - cron: "20 19 * * *"
+  schedule:
+    - cron: "16 6 * * *"
   # Allow manual triggering
   workflow_dispatch:
 
