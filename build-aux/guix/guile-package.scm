@@ -39,15 +39,28 @@
   #:use-module (guix git-download)
   #:use-module (guix build-system gnu)
   #:use-module ((guix licenses) #:prefix license:)
-  #:use-module (gnu packages)
-  #:use-module (gnu packages pkg-config))
+  #:use-module (gnu packages autotools)
+  #:use-module (gnu packages bash)
+  #:use-module (gnu packages bdw-gc)
+  #:use-module (gnu packages compression)
+  #:use-module (gnu packages flex)
+  #:use-module (gnu packages gdb)
+  #:use-module (gnu packages gettext)
+  #:use-module (gnu packages gperf)
+  #:use-module (gnu packages libffi)
+  #:use-module (gnu packages libunistring)
+  #:use-module (gnu packages linux)
+  #:use-module (gnu packages pkg-config)
+  #:use-module (gnu packages readline)
+  #:use-module (gnu packages tex)
+  #:use-module (gnu packages texinfo)
+  #:use-module (gnu packages version-control))
 
 (define-public guile
   (let ((vcs-file? (or (git-predicate
                         (string-append (current-source-directory)
                                        "/../.."))
-                       (const #t)))
-        (S specification->package))
+                       (const #t))))
     (package
       (name "guile")
       (version "3.0.99-git")
@@ -92,23 +105,23 @@
                           (or bash "/bin/sh")))))))))
 
       (native-inputs
-       (append (map S '("autoconf"
-                        "automake"
-                        "libtool"
-                        "gettext"
-                        "flex"
-                        "texinfo"
-                        "texlive-base"            ;for "make pdf"
-                        "texlive-epsf"
-                        "gperf"
-                        "git"
-                        "gdb"
-                        "strace"
-                        "readline"
-                        "lzip"))
+       (append (list autoconf
+                     automake
+                     libtool
+                     gnu-gettext
+                     flex
+                     texinfo
+                     texlive-base                 ;for "make pdf"
+                     texlive-epsf
+                     gperf
+                     git
+                     gdb
+                     strace
+                     readline
+                     lzip
 
-               ;; Ensure we get a cross-pkg-config when needed.
-               (list pkg-config)
+                     ;; Ensure we get a cross-pkg-config when needed.
+                     pkg-config)
 
                ;; When cross-compiling, a native version of Guile itself
                ;; is needed.
@@ -116,16 +129,16 @@
                    (list this-package)
                    '())))
       (inputs
-       (append (list (S "libffi"))
+       (append (list libffi)
 
                ;; We need Bash when cross-compiling because some of the
                ;; scripts in bin/ refer to it.  Use 'bash-minimal' because
                ;; we don't need an interactive Bash with Readline and all.
                (if (target-mingw?)
-                   (list (S "libiconv"))
-                   (list (S "bash-minimal")))))
+                   (list libiconv)
+                   (list bash-minimal))))
       (propagated-inputs
-       (map S '("libunistring" "libgc")))
+       (list libunistring libgc))
 
       (outputs '("out" "debug"))
 
