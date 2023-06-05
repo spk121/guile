@@ -1466,7 +1466,6 @@ AC_CONFIG_FILES([libguile/gen-scmconfig.h])
 
 AC_CONFIG_FILES([
   Makefile
-  am/Makefile
   lib/Makefile
   benchmark-suite/Makefile
   doc/Makefile

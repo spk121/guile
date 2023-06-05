@@ -38,7 +38,6 @@ SUBDIRS =					\
 	examples				\
 	test-suite				\
 	benchmark-suite				\
-	am					\
 	doc
 
 DIST_SUBDIRS = $(SUBDIRS) prebuilt
@@ -70,6 +69,9 @@ libguile/guile-procedures.txt: libguile/guile-procedures.texi
 	@mv $@.tmp $@
 
 EXTRA_DIST = LICENSE HACKING GUILE-VERSION			\
+	     am/maintainer-dirs					\
+	     am/guilec						\
+	     am/ChangeLog-2008					\
 	     m4/ChangeLog-2008					\
 	     m4/gnulib-cache.m4					\
 	     ChangeLog-2008					\
