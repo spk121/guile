@@ -20,11 +20,17 @@
 (define-module (test-suite test-ice-9-popen)
   #:use-module (test-suite lib)
   #:use-module (ice-9 receive)
-  #:use-module (ice-9 rdelim))
+  #:use-module (ice-9 rdelim)
+  #:use-module (ice-9 popen))
 
 
 (define mingw?
   (string-contains %host-type "-mingw32"))
+(when mingw?
+  (set! (shell-runner)
+        (lambda args
+          (append '("sh.exe" "-c")
+                  args))))
 
 ;; read from PORT until eof is reached, return what's read as a string
 (define (read-string-to-eof port)
@@ -38,22 +44,16 @@
 (define (with-epipe thunk)
   (dynamic-wind
       (lambda ()
-	(sigaction SIGPIPE SIG_IGN))
+        (when (defined? 'SIGPIPE)
+	  (sigaction SIGPIPE SIG_IGN)))
       thunk
       restore-signals))
-
-(define-syntax-rule (if-supported body ...)
-  (begin body ...))
-
-(if-supported
- (use-modules (ice-9 popen))
-
 
  ;;
  ;; open-input-pipe
  ;;
 
- (with-test-prefix "open-input-pipe"
+(with-test-prefix "open-input-pipe"
 
    (pass-if-exception "no args" exception:wrong-num-args
      (open-input-pipe))
@@ -176,6 +176,8 @@ exec 2>~a; read REPLY"
    ;; the child process; we rely on the child getting SIGPIPE, to
    ;; terminate it (and avoid leaving a zombie).
    (pass-if "no duplicate"
+     (unless (defined? 'SIGPIPE)
+       (throw 'unsupported))
      (let* ((c2p (pipe))
             (port (with-error-to-port (cdr c2p)
                     (lambda ()
@@ -202,7 +204,7 @@ exec 2>~a; read REPLY"
             result))))))
 
 
- (with-test-prefix "open-pipe*"
+(with-test-prefix "open-pipe*"
 
    (pass-if-equal "OPEN_BOTH"
        '(0 (good!))
@@ -241,7 +243,7 @@ exec 2>~a; read REPLY"
    (pass-if "exit 1"
      (let ((st (close-pipe (open-output-pipe "exit 1"))))
        (and (status:exit-val st)
-            (= 1 (status:exit-val st)))))))
+            (= 1 (status:exit-val st))))))
 
 
 ;;
@@ -257,11 +259,17 @@ exec 2>~a; read REPLY"
     (list (read-string from)
           (status:exit-val (cdr (waitpid pid))))))
 
-(pass-if-equal "piped-process"
+(pass-if-equal "piped-process: script"
     42
+  (when mingw?
+    ;; On Windows, the default shell doesn't inspect hash-bang lines in
+    ;; scripts to determine if they should be passed to POSIX shell.
+    (throw 'unsupported))
   (status:exit-val
    (cdr (waitpid ((@@ (ice-9 popen) piped-process)
                   "./meta/guile" '("-c" "(exit 42)"))))))
+
+
 
 (pass-if-equal "piped-process: with output"
     '("foo bar\n" 0)
