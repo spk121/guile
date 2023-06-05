@@ -30,15 +30,23 @@ jobs:
         with:
           msystem: ${{matrix.sys}}
           install: >-
-            base-devel
-            git
-            gperf
             autotools
+            gcc
+            flex
+            gettext-devel
+            gmp-devel
+            libcrypt-devel
+            libffi-devel
+            libgc-devel
+            libiconv-devel
+            libintl
+            libreadline-devel
+            libunistring-devel
+            pkgconf
+            gperf
             lzip
-            toolchain
-            gc
-            libtool
-            libunistring
+            xz
+            texinfo
       - name: Restore bootstrap cache
         id: cache-autotools-restore
         uses: actions/cache/restore@v3
