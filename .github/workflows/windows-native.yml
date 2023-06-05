@@ -60,12 +60,12 @@ jobs:
         shell: msys2 {0}
       - name: configure
         run: >-
-          ./configure CC="`pwd`/build-aux/compile cl"
-           LD="link"
-           AR="`pwd`/build-aux/ar-lib lib"
-           STRIP=":"
-           CFLAGS=""
-           ${{matrix.threads}} ${{matrix.jit}} ${{matrix.gmp}} --disable-lto --prefix=`pwd`/dist
+         ./configure CC="`pwd`/build-aux/compile cl"
+         LD="link"
+         AR="`pwd`/build-aux/ar-lib lib"
+         STRIP=":"
+         CFLAGS=""
+         ${{matrix.threads}} ${{matrix.jit}} ${{matrix.gmp}} --disable-lto --prefix=`pwd`/dist
         shell: msys2 {0}
       - name: make
         run: make
