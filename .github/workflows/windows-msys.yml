@@ -39,17 +39,126 @@ jobs:
             gc
             libtool
             libunistring
+      - name: Restore bootstrap cache
+        id: cache-autotools-restore
+        uses: actions/cache/restore@v3
+        with:
+          path: |
+            build-aux
+            po
+            m4
+            INSTALL
+            configure
+            config.status
+            libguile/gen-scmconfig.h
+            Makefile
+            am/Makefile
+            lib/Makefile
+            benchmark-suite/Makefile
+            gc-benchmarks/Makefile
+            doc/Makefile
+            doc/r5rs/Makefile
+            doc/ref/Makefile
+            emacs/Makefile
+            examples/Makefile
+            libguile/Makefile
+            libguile/version.h
+            guile-readline/Makefile
+            test-suite/Makefile
+            test-suite/standalone/Makefile
+            meta/Makefile
+            module/Makefile
+            stage0/Makefile
+            stage1/Makefile
+            stage2/Makefile
+            prebuilt/Makefile
+            prebuilt/x86_64-unknown-linux-gnu/Makefile
+            prebuilt/i686-pc-linux-gnu/Makefile
+            prebuilt/mips-unknown-linux-gnu/Makefile
+            check-guile
+            benchmark-guile
+            meta/guile
+            meta/build-env
+            meta/uninstalled-env
+            meta/gdb-uninstalled-guile
+            libguile/guile-snarf
+            libguile/guile-snarf-docs
+            test-suite/standalone/test-use-srfi
+            test-suite/standalone/test-fast-slot-ref
+            config.h
+            libtool          
+          key: ${{ runner.os }}-autotools-${{matrix.sys}}-${{ hashfiles(['configure.ac','Makefile.am']) }}
       - name: Bootstrap Guile
+        if: ${{ steps.cache-autotools-restore.outputs.cache-hit != 'true' }}
         run: |
-          export LANG=C.UTF-8 TERM=dumb VERBOSE=true TZ=America/Los_Angeles
-          mkdir `pwd`/dist
           ./autogen.sh
         shell: msys2 -o igncr {0}
       - name: Configure
-        run: ./configure CFLAGS="-g -O2 -Wall" ${{matrix.threads}} ${{matrix.jit}} ${{matrix.gmp}} --disable-lto --prefix=`pwd`/dist
+        if: ${{ steps.cache-autotools-restore.outputs.cache-hit != 'true' }}
+        run: >-
+          ./configure
+          CFLAGS="-g -O2 -Wall"
+          ${{matrix.threads}}
+          ${{matrix.jit}}
+          ${{matrix.gmp}}
+          --disable-lto                   # possibly broken on 64-bit windows
+          --disable-dependency-tracking   # not needed for one-time builds
+          --prefix=`pwd`/dist
         shell: msys2 -o igncr {0}
+      - name: Save bootstrap cache
+        id: cache-autotools-save
+        uses: actions/cache/save@v3
+        with:
+          path: |
+            build-aux
+            po
+            m4
+            INSTALL
+            configure
+            config.status
+            libguile/gen-scmconfig.h
+            Makefile
+            am/Makefile
+            lib/Makefile
+            benchmark-suite/Makefile
+            gc-benchmarks/Makefile
+            doc/Makefile
+            doc/r5rs/Makefile
+            doc/ref/Makefile
+            emacs/Makefile
+            examples/Makefile
+            libguile/Makefile
+            libguile/version.h
+            guile-readline/Makefile
+            test-suite/Makefile
+            test-suite/standalone/Makefile
+            meta/Makefile
+            module/Makefile
+            stage0/Makefile
+            stage1/Makefile
+            stage2/Makefile
+            prebuilt/Makefile
+            prebuilt/x86_64-unknown-linux-gnu/Makefile
+            prebuilt/i686-pc-linux-gnu/Makefile
+            prebuilt/mips-unknown-linux-gnu/Makefile
+            check-guile
+            benchmark-guile
+            meta/guile
+            meta/build-env
+            meta/uninstalled-env
+            meta/gdb-uninstalled-guile
+            libguile/guile-snarf
+            libguile/guile-snarf-docs
+            test-suite/standalone/test-use-srfi
+            test-suite/standalone/test-fast-slot-ref
+            config.h
+            libtool          
+          key: ${{ steps.cache-autotools-restore.outputs.cache-primary-key }}
       - name: Make
-        run: make V=1
+        run: |
+          export LANG=C.UTF-8 TERM=dumb VERBOSE=true TZ=America/Los_Angeles
+          mkdir `pwd`/dist
+          make V=1
         shell: msys2 -o igncr {0}
       - name: Run tests
         run: |
