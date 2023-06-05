@@ -35,10 +35,10 @@ jobs:
             gperf
             autotools
             lzip
-	    toolchain
-	    gc
-	    libtool
-	    libunistring
+            toolchain
+            gc
+            libtool
+            libunistring
       - name: Bootstrap Guile
         run: |
           export LANG=C.UTF-8 TERM=dumb VERBOSE=true TZ=America/Los_Angeles
