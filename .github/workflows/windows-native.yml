@@ -64,7 +64,9 @@ jobs:
          AR="`pwd`/build-aux/ar-lib lib"
          STRIP=":"
          CFLAGS=""
-         ${{matrix.threads}} ${{matrix.jit}} ${{matrix.gmp}} --disable-lto --prefix=`pwd`/dist
+         ${{matrix.threads}} ${{matrix.jit}} ${{matrix.gmp}} --disable-lto 
+         --with-libunistring-prefix=/ucrt64
+         --prefix=`pwd`/dist
         shell: msys2 -o igncr {0}
       - name: dump config.log
         if: failure()
