@@ -49,11 +49,8 @@ jobs:
         shell: msys2 {0}
       - name: check tools version
         run: |
-          CC=cl
-          LD=link
-          echo "CC=$CC"
-          echo "LD=$LD"
-          echo "MAKE=$MAKE"
+          export PATH="$PATH;/ucrt64/bin"
+          echo "PATH=$PATH"
         shell: msys2 {0}
       - name: bootstrap with autogen.sh
         run: ./autogen.sh
