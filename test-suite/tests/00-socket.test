@@ -133,6 +133,7 @@
 	  (let ((sa (make-socket-address AF_UNIX "/tmp/unix-socket")))
 	    (and (= (sockaddr:fam sa) AF_UNIX)
 	         (string=? (sockaddr:path sa) "/tmp/unix-socket"))))
+
         (pass-if "AF_UNIX abstract"
           (let ((sa (make-socket-address AF_UNIX "\x00/tmp/abstract-socket")))
 	    (and (= (sockaddr:fam sa) AF_UNIX)
@@ -336,6 +337,10 @@
         (set! path (string-append "\x00" path))
 
 	(pass-if "bind abstract"
+          (when (or (string-contains %host-type "cygwin")
+                    (string-contains %host-type "msys"))
+            ;; See https://cygwin.com/pipermail/cygwin/2023-June/253785.html
+            (throw 'unsupported))
 	  (catch 'system-error
 	    (lambda ()
 	      (bind server-socket AF_UNIX path)
