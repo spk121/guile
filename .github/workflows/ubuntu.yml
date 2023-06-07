@@ -1,4 +1,4 @@
-name: Ubuntu 20.04 and 22.04
+name: Ubuntu 22.04
 
 on:
   # 13:20 PDT
@@ -8,17 +8,13 @@ on:
   workflow_dispatch:
 
 jobs:
-  build:
-    name: Build
-    strategy:
-      matrix:
-        os: [ubuntu-22.04, ubuntu-20.04]
-
-    runs-on: ${{ matrix.os }}
-
+  prepare:
+    name: Prepare
+    runs-on: ubuntu-22.04
     steps:
-    - uses: actions/checkout@v3
-    - name: env
+    - name: checkout git
+      uses: actions/checkout@v3
+    - name: set envion
       run: export LANG=C.UTF-8 TERM=dumb VERBOSE=true DEBIAN_FRONTEND=noninteractive TZ=America/Los_Angeles
     - name: install packages
       run: sudo apt-get install -y texlive autoconf libtool gettext autopoint gperf pkg-config lzip libgc-dev libgmp-dev libltdl-dev libncurses5-dev libreadline6-dev libunistring-dev
@@ -26,35 +22,46 @@ jobs:
       run: mkdir `pwd`/dist
     - name: bootstrap with autogen.sh
       run: ./autogen.sh
+      
+  build:
+    name: Build 
+    runs-on: ubuntu-22.04
+    steps:
     - name: configure
       run: ./configure CFLAGS="-g -O2 -Wall" --prefix=`pwd`/dist
-    - name: make
+    - name: make V=1
       run: make
-    - name: make check
+  
+  check:
+    name: Test
+    runs-on: ubuntu-22.04
+    steps:
+    - name: make check V=1
       run: |
         make check
-        if [ -f check-guile.log ]; then
-          cat check-guile.log
-        fi
-      shell: bash {0}
-    - name: make install
-      run: make install
-    - name: make dist
-      run: make dist
-    - name: Archive production artifacts
-      uses: actions/upload-artifact@v3
-      with:
-        name: dist
-        path: dist
-    - name: Uncompress tarballs
-      run: gunzip *.tar.gz
-    - name: Archive tarball
-      uses: actions/upload-artifact@v3
-      with:
-        name: tarball
-        path: guile*tar
     - name: Archive test logs
       uses: actions/upload-artifact@v3
       with:
-        name: logs
+        name: test log
         path: check-guile.log
+        
+  deploy:
+    name: Deploy
+    runs-on: ubuntu-22.04
+    steps:
+    - name: make binary package
+      run: make install
+    - name: Archive binary package
+      uses: actions/upload-artifact@v3
+      with:
+        name: binary package
+        path: dist
+    - name: make source package
+      run: |
+        make dist-gzip
+        gunzip *.tar.gz
+    - name: archive source package
+      uses: actions/upload-artifact@v3
+      with:
+        name: source archive
+        path: guile*tar
