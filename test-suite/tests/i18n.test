@@ -7,12 +7,12 @@
 ;;;; modify it under the terms of the GNU Lesser General Public
 ;;;; License as published by the Free Software Foundation; either
 ;;;; version 3 of the License, or (at your option) any later version.
-;;;; 
+;;;;
 ;;;; This library is distributed in the hope that it will be useful,
 ;;;; but WITHOUT ANY WARRANTY; without even the implied warranty of
 ;;;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
 ;;;; Lesser General Public License for more details.
-;;;; 
+;;;;
 ;;;; You should have received a copy of the GNU Lesser General Public
 ;;;; License along with this library; if not, write to the Free Software
 ;;;; Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
@@ -199,19 +199,19 @@
 (with-test-prefix "text collation (French)"
 
   (pass-if "string-locale<?"
-    (under-french-locale-or-unresolved
+    (under-french-utf8-locale-or-unresolved
       (lambda ()
-        (string-locale<? "été" "hiver" %french-locale))))
+        (string-locale<? "été" "hiver" %french-utf8-locale))))
 
   (pass-if "char-locale<?"
-    (under-french-locale-or-unresolved
+    (under-french-utf8-locale-or-unresolved
       (lambda ()
-        (char-locale<? #\é #\h %french-locale))))
+        (char-locale<? #\é #\h %french-utf8-locale))))
 
   (pass-if "string-locale-ci=?"
-    (under-french-locale-or-unresolved
+    (under-french-utf8-locale-or-unresolved
       (lambda ()
-        (string-locale-ci=? "ÉTÉ" "été" %french-locale))))
+        (string-locale-ci=? "ÉTÉ" "été" %french-utf8-locale))))
 
   (pass-if "string-locale-ci=? (2 args, wide strings)"
     (under-french-utf8-locale-or-unresolved
@@ -248,10 +248,10 @@
         (string-locale-ci=? "œuf" "ŒUF" %french-utf8-locale))))
 
   (pass-if "string-locale-ci<>?"
-    (under-french-locale-or-unresolved
+    (under-french-utf8-locale-or-unresolved
       (lambda ()
-        (and (string-locale-ci<? "été" "Hiver" %french-locale)
-             (string-locale-ci>? "HiVeR" "été" %french-locale)))))
+        (and (string-locale-ci<? "été" "Hiver" %french-utf8-locale)
+             (string-locale-ci>? "HiVeR" "été" %french-utf8-locale)))))
 
   (pass-if "string-locale-ci<>? (wide strings)"
     (under-french-utf8-locale-or-unresolved
@@ -268,10 +268,10 @@
              (string-locale-ci<? "Odyssée" "œdème" %french-utf8-locale)))))
 
   (pass-if "char-locale-ci<>?"
-     (under-french-locale-or-unresolved
+     (under-french-utf8-locale-or-unresolved
        (lambda ()
-         (and (char-locale-ci<? #\é #\H %french-locale)
-              (char-locale-ci>? #\h #\É %french-locale)))))
+         (and (char-locale-ci<? #\é #\H %french-utf8-locale)
+              (char-locale-ci>? #\h #\É %french-utf8-locale)))))
 
   (pass-if "char-locale-ci<>? (wide)"
      (under-french-utf8-locale-or-unresolved
@@ -327,11 +327,11 @@
 
   (pass-if "char-locale-titlecase"
     (and (eqv? #\T (char-locale-titlecase #\t))
-	 (eqv? #\T (char-locale-titlecase #\t (make-locale LC_ALL "C")))))
+         (eqv? #\T (char-locale-titlecase #\t (make-locale LC_ALL "C")))))
 
   (pass-if "char-locale-titlecase Dž"
     (and (eqv? #\762 (char-locale-titlecase #\763))
-	 (eqv? #\762 (char-locale-titlecase #\763 (make-locale LC_ALL "C")))))
+         (eqv? #\762 (char-locale-titlecase #\763 (make-locale LC_ALL "C")))))
 
   (pass-if "char-locale-upcase Turkish"
     (under-turkish-utf8-locale-or-unresolved
@@ -356,8 +356,8 @@
 
   (pass-if "string-locale-titlecase"
     (and (string=? "Hello, World" (string-locale-titlecase "hello, world"))
-	 (string=? "Hello, World" (string-locale-titlecase 
-				   "hello, world" (make-locale LC_ALL "C")))))
+         (string=? "Hello, World" (string-locale-titlecase
+                                   "hello, world" (make-locale LC_ALL "C")))))
 
   (pass-if "large strings"
     ;; In Guile <= 2.2.4, these would overflow the C stack and crash.
@@ -432,11 +432,11 @@
              (equal? char-count 7)))))
 
   (pass-if "locale-string->inexact (French)"
-    (under-french-locale-or-unresolved
+    (under-french-utf8-locale-or-unresolved
      (lambda ()
        (call-with-values
            (lambda ()
-             (locale-string->inexact "123,456" %french-locale))
+             (locale-string->inexact "123,456" %french-utf8-locale))
          (lambda (result char-count)
            (and (equal? result 123.456)
                 (equal? char-count 7))))))))
@@ -478,20 +478,20 @@
                  (map 1+ (iota 7)))))
 
   (pass-if "locale-day (French)"
-    (under-french-locale-or-unresolved
+    (under-french-utf8-locale-or-unresolved
      (lambda ()
-       (let ((result (locale-day 3 %french-locale)))
+       (let ((result (locale-day 3 %french-utf8-locale)))
          (and (string? result)
               (string-ci=? result "mardi"))))))
 
   (pass-if "locale-day (French, using `%global-locale')"
     ;; Make sure `%global-locale' captures the current locale settings as
     ;; installed using `setlocale'.
-    (under-french-locale-or-unresolved
+    (under-french-utf8-locale-or-unresolved
      (lambda ()
        (dynamic-wind
            (lambda ()
-             (setlocale LC_TIME %french-locale-name))
+             (setlocale LC_TIME %french-utf8-locale-name))
            (lambda ()
              (let* ((fr (make-locale (list LC_MONETARY) "C" %global-locale))
                     (result (locale-day 3 fr)))
@@ -505,11 +505,11 @@
     ;; Make sure the default locale does not capture the current locale
     ;; settings as installed using `setlocale'.  The default locale should be
     ;; "C".
-    (under-french-locale-or-unresolved
+    (under-french-utf8-locale-or-unresolved
      (lambda ()
        (dynamic-wind
            (lambda ()
-             (setlocale LC_ALL %french-locale-name))
+             (setlocale LC_ALL %french-utf8-locale-name))
            (lambda ()
              (let* ((locale (make-locale (list LC_MONETARY) "C"))
                     (result (locale-day 3 locale)))
@@ -544,13 +544,13 @@
     (null? (locale-digit-grouping)))
 
   (pass-if "locale-digit-grouping (French)"
-    (under-french-locale-or-unresolved
+    (under-french-utf8-locale-or-unresolved
      (lambda ()
        ;; All systems that have a GROUPING nl_item should know
        ;; that French numbers are grouped in 3 digit chunks.
        ;; Those systems that have no GROUPING nl_item may use
        ;; the hard-coded default of no grouping.
-       (let ((result (locale-digit-grouping %french-locale)))
+       (let ((result (locale-digit-grouping %french-utf8-locale)))
          (cond
           ((null? result)
            (throw 'unresolved))
@@ -602,13 +602,14 @@
   ;; This is meant to deal with French locales: glibc 2.27+ uses
   ;; NO-BREAK SPACE to separate 3-digit groups, whereas earlier versions
   ;; used SPACE.
-  (or (string=? expected result)
-      (string=? (string-map (lambda (chr)
+  (define (convert-space str)
+               (string-map (lambda (chr)
                               (case chr
-                                ((#\space) #\240)
-                                (else      chr))) ;NO-BREAK SPACE
-                            expected)
-                result)))
+                                ((#\xa0) #\space)
+                                (else      chr)))
+                                str))
+  (string=? (convert-space expected) (convert-space result)))
+
 
 (with-test-prefix "number->locale-string"
 
@@ -649,30 +650,30 @@
   (with-test-prefix "French"
 
     (pass-if "integer"
-      (under-french-locale-or-unresolved
+      (under-french-utf8-locale-or-unresolved
        (lambda ()
-         (let ((fr (make-locale LC_ALL %french-locale-name)))
+         (let ((fr (make-locale LC_ALL %french-utf8-locale-name)))
            (french-number-string=? "123 456"
                                    (number->locale-string 123456 #t fr))))))
 
     (pass-if "negative integer"
-      (under-french-locale-or-unresolved
+      (under-french-utf8-locale-or-unresolved
        (lambda ()
-         (let ((fr (make-locale LC_ALL %french-locale-name)))
+         (let ((fr (make-locale LC_ALL %french-utf8-locale-name)))
            (french-number-string=? "-1 234 567"
                                    (number->locale-string -1234567 #t fr))))))
 
     (pass-if "fraction"
-      (under-french-locale-or-unresolved
+      (under-french-utf8-locale-or-unresolved
        (lambda ()
-         (let ((fr (make-locale LC_ALL %french-locale-name)))
+         (let ((fr (make-locale LC_ALL %french-utf8-locale-name)))
            (french-number-string=? "1 234,567"
                                    (number->locale-string 1234.567 #t fr))))))
 
     (pass-if "fraction, 1 digit"
-      (under-french-locale-or-unresolved
+      (under-french-utf8-locale-or-unresolved
        (lambda ()
-         (let ((fr (make-locale LC_ALL %french-locale-name)))
+         (let ((fr (make-locale LC_ALL %french-utf8-locale-name)))
            (french-number-string=? "1 234,6"
                                    (number->locale-string 1234.567 1 fr))))))))
 
@@ -685,13 +686,13 @@
   (with-test-prefix "French"
 
     (pass-if "12345.678"
-      (under-french-locale-or-unresolved
+      (under-french-utf8-locale-or-unresolved
        (lambda ()
-         (if (null? (locale-digit-grouping %french-locale))
+         (if (null? (locale-digit-grouping %french-utf8-locale))
              (throw 'unresolved)
              (french-number-string=? "12 345,678"
                                      (format #f "~:h" 12345.678
-                                             %french-locale)))))))
+                                             %french-utf8-locale)))))))
 
   (with-test-prefix "English"
 
@@ -706,25 +707,74 @@
 
 (with-test-prefix "monetary-amount->locale-string"
 
-  (with-test-prefix "French"
+  (with-test-prefix "French UTF-8"
+
+    (pass-if "integer"
+      (under-french-utf8-locale-or-unresolved
+       (lambda ()
+         (let* ((fr  (make-locale LC_ALL %french-utf8-locale-name))
+                (str (string-trim-both (monetary-amount->locale-string 123456 #f fr))))
+           ;; Check for
+           ;; - U+20 SPACE
+           ;; - U+00A0 NO-BREAK SPACE
+           (or (string=? "123 456,00 +€" str)
+               (string=? "123\xA0456,00 +€" str))))))
+
+    (pass-if "fraction"
+      (under-french-utf8-locale-or-unresolved
+       (lambda ()
+         (let* ((fr  (make-locale LC_ALL %french-utf8-locale-name))
+                (str (monetary-amount->locale-string 1234.567 #t fr)))
+           ;; Check for
+           ;; - U+20 SPACE
+           ;; - U+00A0 NO-BREAK SPACE
+           (or (string=? "1 234,57 EUR " str)
+               (string=? "1\xA0234,57 EUR " str))))))
+
+    (pass-if-equal "positive inexact zero"
+        "0,00 +€"
+      (under-french-utf8-locale-or-unresolved
+       (lambda ()
+         (let ((fr (make-locale LC_ALL %french-utf8-locale-name)))
+           (string-trim-both (monetary-amount->locale-string 0. #f fr))))))
+
+    (pass-if-equal "one cent"
+        "0,01 EUR "
+      (under-french-utf8-locale-or-unresolved
+       (lambda ()
+         (let ((fr (make-locale LC_ALL %french-utf8-locale-name)))
+           (monetary-amount->locale-string .01 #t fr)))))
+
+    (pass-if-equal "very little money"
+        "0,00 EUR "
+      (under-french-utf8-locale-or-unresolved
+       (lambda ()
+         (let ((fr (make-locale LC_ALL %french-utf8-locale-name)))
+           (monetary-amount->locale-string .00003 #t fr))))))
+
+    (with-test-prefix "French 8-bit"
 
     (pass-if "integer"
       (under-french-locale-or-unresolved
        (lambda ()
          (let* ((fr  (make-locale LC_ALL %french-locale-name))
                 (str (string-trim-both (monetary-amount->locale-string 123456 #f fr))))
-           ;; Check for both NO-BREAK SPACE and SPACE.
+           ;; Check for
+           ;; - U+20 SPACE
+           ;; - U+00A0 NO-BREAK SPACE
            (or (string=? "123 456,00 +EUR" str)
-               (string=? "123 456,00 +EUR" str))))))
+               (string=? "123\xA0456,00 +EUR" str))))))
 
     (pass-if "fraction"
       (under-french-locale-or-unresolved
        (lambda ()
          (let* ((fr  (make-locale LC_ALL %french-locale-name))
                 (str (monetary-amount->locale-string 1234.567 #t fr)))
-           ;; Check for both NO-BREAK SPACE and SPACE.
+           ;; Check for
+           ;; - U+20 SPACE
+           ;; - U+00A0 NO-BREAK SPACE
            (or (string=? "1 234,57 EUR " str)
-               (string=? "1 234,57 EUR " str))))))
+               (string=? "1\xA0234,57 EUR " str))))))
 
     (pass-if-equal "positive inexact zero"
         "0,00 +EUR"
