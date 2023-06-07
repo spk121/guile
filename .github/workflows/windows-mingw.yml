@@ -1,4 +1,4 @@
-name: Windows MinGW
+name: Windows MinGW UCRT64
 
 on:
   # 12:20 PDT
@@ -9,18 +9,10 @@ on:
 
 jobs:
   build:
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - { sys: MINGW64, env: x86_64, threads: --without-threads, jit: --enable-jit=no, gmp: --enable-mini-gmp }
-          - { sys: MINGW32, env: i686, threads: --without-threads, jit: --enable-jit=no, gmp: --enable-mini-gmp }
-          - { sys: UCRT64,  env: ucrt-x86_64, threads: --without-threads, jit: --enable-jit=no, gmp: --enable-mini-gmp }
-          - { sys: CLANG64, env: clang-x86_64, threads: --without-threads, jit: --enable-jit=no, gmp: --enable-mini-gmp }
-
     runs-on: windows-latest
-    name: Build ${{matrix.sys}}
-
+    defaults:
+      run:
+        shell: msys2 -o igncr {0}
     steps:
       - name: Configure git
         run: git config --global core.autocrlf input
@@ -31,57 +23,51 @@ jobs:
       - name: Install Msys2
         uses: msys2/setup-msys2@v2
         with:
-          msystem: ${{matrix.sys}}
+          msystem: UCRT64
           install: >-
             base-devel
             git
             gperf
             autotools
             lzip
-            mingw-w64-${{matrix.env}}-toolchain
-            mingw-w64-${{matrix.env}}-gc
-            mingw-w64-${{matrix.env}}-libtool
-            mingw-w64-${{matrix.env}}-libunistring
+            mingw-w64-ucrt-x86_64-toolchain
+            mingw-w64-ucrt-x86_64-gc
+            mingw-w64-ucrt-x86_64-libtool
+            mingw-w64-ucrt-x86_64-libunistring
       - name: Bootstrap Guile
         run: |
           export LANG=C.UTF-8 TERM=dumb VERBOSE=true TZ=America/Los_Angeles
           mkdir `pwd`/dist
           ./autogen.sh
-        shell: msys2 -o igncr {0}
       - name: Configure
-        run: ./configure CFLAGS="-g -O2 -Wall" ${{matrix.threads}} ${{matrix.jit}} ${{matrix.gmp}} --disable-lto --prefix=`pwd`/dist
-        shell: msys2 -o igncr {0}
+        run: ./configure CFLAGS="-g -O2 -Wall" --enable-jit=no --enable-mini-gmp --disable-lto --prefix=`pwd`/dist
       - name: Make
         run: make V=1
-        shell: msys2 -o igncr {0}
+      - name: Make Binary Package
+        run: make install V=1
+      - name: Archive installed files
+        uses: actions/upload-artifact@v3
+        with:
+          name: Binary archive
+          path: dist
+          
       - name: Run tests
         run: |
           # git config --global --add safe.directory /cygdrive/d/a/guile/guile
           make check V=1
-        shell: msys2 -o igncr {0}
       - name: Archive test logs
         if: ${{ success() || failure() }}
         uses: actions/upload-artifact@v3
         with:
-          name: Test logs ${{ matrix.sys }}
+          name: Test logs
           path: check-guile.log
-
-      - name: Install to folder
-        run: make install V=1
-        shell: msys2 -o igncr {0}
-      - name: Archive installed files
-        uses: actions/upload-artifact@v3
-        with:
-          name: Installed files ${{ matrix.sys }}
-          path: dist
 
       - name: Make source tarball
         run: |
-          make dist
+          make dist-gzip
           gunzip *.tar.gz
-        shell: msys2 -o igncr {0}
       - name: Archive source tarball
         uses: actions/upload-artifact@v3
         with:
-          name: Source ${{ matrix.sys }}
+          name: Source archive
           path: guile*tar
