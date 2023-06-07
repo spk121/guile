@@ -181,8 +181,7 @@
           (string-contains %host-type "freebsd9")
           (string-contains %host-type "solaris2.10")
           (string-contains %host-type "darwin8")
-          (string-contains %host-type "mingw32")
-          (string-contains %host-type "cygwin"))
+          (string-contains %host-type "mingw32"))
       (throw 'unresolved)
       (under-locale-or-unresolved %turkish-utf8-locale thunk)))
 
