@@ -1586,8 +1586,7 @@ exception that is an instance of @var{rtd}."
         val))
 
     (define %exception-handler (steal-binding! '%exception-handler))
-    (define %active-exception-handlers
-      (steal-binding! '%active-exception-handlers))
+    (define %exception-epoch (steal-binding! '%exception-epoch))
     (define %init-exceptions! (steal-binding! '%init-exceptions!))
 
     (%init-exceptions! &compound-exception
@@ -1639,13 +1638,6 @@ If @var{continuable?} is true, the handler is invoked in tail position
 relative to the @code{raise-exception} call.  Otherwise if the handler
 returns, a non-continuable exception of type @code{&non-continuable} is
 raised in the same dynamic environment as the handler."
-      (define (capture-current-exception-handlers)
-        ;; FIXME: This is quadratic.
-        (let lp ((depth 0))
-          (let ((h (fluid-ref* %exception-handler depth)))
-            (if h
-                (cons h (lp (1+ depth)))
-                (list fallback-exception-handler)))))
       (define (exception-has-type? exn type)
         (cond
          ((eq? type #t)
@@ -1656,35 +1648,45 @@ raised in the same dynamic environment as the handler."
           (and (exception? exn)
                ((exception-predicate type) exn)))
          (else #f)))
-      (let lp ((handlers (or (fluid-ref %active-exception-handlers)
-                             (capture-current-exception-handlers))))
-        (let ((handler (car handlers))
-              (handlers (cdr handlers)))
-          ;; There are two types of exception handlers: unwinding handlers
-          ;; and pre-unwind handlers.  Although you can implement unwinding
-          ;; handlers with pre-unwind handlers, it's better to separate them
-          ;; because it allows for emergency situations like "stack
-          ;; overflow" or "out of memory" to unwind the stack before calling
-          ;; a handler.
-          (cond
-           ((pair? handler)
-            (let ((prompt-tag (car handler))
-                  (type (cdr handler)))
-              (cond
-               ((exception-has-type? exn type)
-                (abort-to-prompt prompt-tag exn)
-                (error "unreachable"))
-               (else
-                (lp handlers)))))
-           (else
-            (with-fluids ((%active-exception-handlers handlers))
-              (cond
-               (continuable?
-                (handler exn))
-               (else
-                (handler exn)
-                (raise-exception
-                 ((record-constructor &non-continuable)))))))))))
+      (let ((current-epoch (fluid-ref %exception-epoch)))
+        (let lp ((depth 0))
+          ;; FIXME: fluid-ref* takes time proportional to depth, which
+          ;; makes this loop quadratic.
+          (let ((val (fluid-ref* %exception-handler depth)))
+            ;; There are two types of exception handlers: unwinding handlers
+            ;; and pre-unwind handlers.  Although you can implement unwinding
+            ;; handlers with pre-unwind handlers, it's better to separate them
+            ;; because it allows for emergency situations like "stack
+            ;; overflow" or "out of memory" to unwind the stack before calling
+            ;; a handler.
+            (cond
+             ((not val)
+              ;; No exception handlers bound; use fallback.
+              (fallback-exception-handler exn))
+             ((fluid? (car val))
+              (let ((epoch (car val))
+                    (handler (cdr val)))
+                (cond
+                 ((< (fluid-ref epoch) current-epoch)
+                  (with-fluids ((epoch current-epoch))
+                    (cond
+                     (continuable?
+                      (handler exn))
+                     (else
+                      (handler exn)
+                      (raise-exception
+                       ((record-constructor &non-continuable)))))))
+                 (else
+                  (lp (1+ depth))))))
+             (else
+              (let ((prompt-tag (car val))
+                    (type (cdr val)))
+                (cond
+                 ((exception-has-type? exn type)
+                  (abort-to-prompt prompt-tag exn)
+                  (error "unreachable"))
+                 (else
+                  (lp (1+ depth)))))))))))
 
     (define* (with-exception-handler handler thunk #:key (unwind? #f)
                                      (unwind-for-type #t))
@@ -1748,8 +1750,9 @@ exceptions with the given @code{exception-kind} will be handled."
            (lambda (k exn)
              (handler exn)))))
        (else
-        (with-fluids ((%exception-handler handler))
-          (thunk)))))
+        (let ((epoch (make-fluid 0)))
+          (with-fluids ((%exception-handler (cons epoch handler)))
+            (thunk))))))
 
     (define (throw key . args)
       "Invoke the catch form matching @var{key}, passing @var{args} to the
@@ -1771,11 +1774,30 @@ for key @var{k}, then invoke @var{thunk}."
                    "Wrong type argument in position ~a: ~a"
                    (list 1 k) (list k)))
       (define running? (make-fluid))
+      ;; Throw handlers have two semantic oddities.
+      ;;
+      ;; One is that throw handlers are not re-entrant: if one is
+      ;; already active in the current continuation, it won't handle
+      ;; exceptions thrown within that continuation.  It's a restrictive
+      ;; choice, but it does ensure progress.  We ensure this property
+      ;; by having a running? fluid associated with each
+      ;; with-throw-handler.
+      ;;
+      ;; The other oddity is that any exception thrown within a throw
+      ;; handler starts the whole raise-exception dispatch procedure
+      ;; again from the top.  This can have its uses if you want to have
+      ;; handlers for multiple specific keys active at the same time,
+      ;; without specifying an order between them.  But, it's weird.  We
+      ;; ensure this property by having a %exception-epoch fluid and
+      ;; also associating an epoch with each pre-unwind handler; a
+      ;; handler is active if its epoch is less than the current
+      ;; %exception-epoch.  We increment the epoch with the extent of
+      ;; the throw handler.
       (with-exception-handler
        (lambda (exn)
          (when (and (or (eq? k #t) (eq? k (exception-kind exn)))
                     (not (fluid-ref running?)))
-           (with-fluids ((%active-exception-handlers #f)
+           (with-fluids ((%exception-epoch (1+ (fluid-ref %exception-epoch)))
                          (running? #t))
              (apply pre-unwind-handler (exception-kind exn)
                     (exception-args exn))))

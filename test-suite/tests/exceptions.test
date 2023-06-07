@@ -17,6 +17,7 @@
 
 
 (define-module (test-suite exceptions)
+  #:use-module (ice-9 control)
   #:use-module (test-suite lib))
 
 (define-syntax-parameter push
@@ -392,3 +393,14 @@
       (let* ((thunk1 (catch* 'foo (lambda () (throw 'bar))))
              (thunk2 (catch* 'bar (lambda () (thunk1)))))
         (thunk2))))
+
+(with-test-prefix "throwing within exception handlers"
+  (pass-if "https://github.com/wingo/fibers/issues/76"
+    (let/ec return
+      (with-exception-handler
+          (lambda (e)
+            (catch #t
+              (lambda () (error "bar"))
+              (lambda args #f))
+            (return #t))
+        (lambda () (error "foo"))))))

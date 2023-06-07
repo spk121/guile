@@ -1,4 +1,4 @@
-/* Copyright 1995-1998,2000-2001,2003-2004,2006,2008,2009-2014,2017-2019
+/* Copyright 1995-1998,2000-2001,2003-2004,2006,2008,2009-2014,2017-2019,2023
      Free Software Foundation, Inc.
 
    This file is part of Guile.
@@ -109,7 +109,7 @@ call_exception_handler (SCM clo, SCM exn)
 SCM_KEYWORD (kw_unwind_p, "unwind?");
 SCM_KEYWORD (kw_unwind_for_type, "unwind-for-type");
 static SCM exception_handler_fluid;
-static SCM active_exception_handlers_fluid;
+static SCM exception_epoch_fluid;
 static SCM with_exception_handler_var;
 static SCM raise_exception_var;
 
@@ -257,7 +257,8 @@ exception_has_type (SCM exn, SCM type)
 void
 scm_dynwind_throw_handler (void)
 {
-  scm_dynwind_fluid (active_exception_handlers_fluid, SCM_BOOL_F);
+  SCM depth = scm_oneplus (scm_fluid_ref (exception_epoch_fluid));
+  scm_dynwind_fluid (exception_epoch_fluid, depth);
 }
 
 
@@ -499,11 +500,11 @@ scm_init_exceptions ()
   scm_set_smob_apply (tc16_exception_handler, call_exception_handler, 1, 0, 0);
 
   exception_handler_fluid = scm_make_thread_local_fluid (SCM_BOOL_F);
-  active_exception_handlers_fluid = scm_make_thread_local_fluid (SCM_BOOL_F);
+  exception_epoch_fluid = scm_make_fluid_with_default (SCM_INUM1);
   /* These binding are later removed when the Scheme definitions of
      raise and with-exception-handler are created in boot-9.scm.  */
   scm_c_define ("%exception-handler", exception_handler_fluid);
-  scm_c_define ("%active-exception-handlers", active_exception_handlers_fluid);
+  scm_c_define ("%exception-epoch", exception_epoch_fluid);
 
   with_exception_handler_var =
     scm_c_define ("with-exception-handler", SCM_BOOL_F);
