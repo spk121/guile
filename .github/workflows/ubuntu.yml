@@ -1,64 +1,56 @@
-name: Ubuntu 22.04
+name: Ubuntu CI
 
 on:
-  # 13:20 PDT
-  schedule:
-    - cron: "20 20 * * *"
+  push:
+    branches: [ $default-branch ]
+  pull_request:
+    branches: [ $default-branch ]
   # Allow manual triggering
   workflow_dispatch:
 
 jobs:
-  prepare:
-    name: Prepare
-    runs-on: ubuntu-22.04
+  build:
+    runs-on: ubuntu-latest
     steps:
-    - name: checkout git
-      uses: actions/checkout@v3
-    - name: set envion
+    - uses: actions/checkout@v3
+    - name: set environ
       run: export LANG=C.UTF-8 TERM=dumb VERBOSE=true DEBIAN_FRONTEND=noninteractive TZ=America/Los_Angeles
     - name: install packages
       run: sudo apt-get install -y texlive autoconf libtool gettext autopoint gperf pkg-config lzip libgc-dev libgmp-dev libltdl-dev libncurses5-dev libreadline6-dev libunistring-dev
-    - name: make dist directory
-      run: mkdir `pwd`/dist
     - name: bootstrap with autogen.sh
       run: ./autogen.sh
-      
-  build:
-    name: Build 
-    runs-on: ubuntu-22.04
-    steps:
+
     - name: configure
-      run: ./configure CFLAGS="-g -O2 -Wall" --prefix=`pwd`/dist
-    - name: make V=1
-      run: make
-  
-  check:
-    name: Test
-    runs-on: ubuntu-22.04
-    steps:
-    - name: make check V=1
       run: |
-        make check
-    - name: Archive test logs
+        mkdir app
+        ./configure CFLAGS="-g -O2 -Wall" --prefix=`pwd`/app
+    - name: Archive config log
       uses: actions/upload-artifact@v3
       with:
-        name: test log
-        path: check-guile.log
-        
-  deploy:
-    name: Deploy
-    runs-on: ubuntu-22.04
-    steps:
+        name: config log
+        path: |
+          config.log
+          config.h
+    - name: make
+      run: make V=1
     - name: make binary package
       run: make install
     - name: Archive binary package
       uses: actions/upload-artifact@v3
       with:
         name: binary package
-        path: dist
-    - name: make source package
+        path: app
+
+    - name: make check
+      run: make check V=1
+    - name: Archive test logs
+      uses: actions/upload-artifact@v3
+      with:
+        name: test log
+        path: check-guile.log
+    - name: make distcheck
       run: |
-        make dist-gzip
+        make distcheck
         gunzip *.tar.gz
     - name: archive source package
       uses: actions/upload-artifact@v3
