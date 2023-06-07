@@ -14,12 +14,6 @@ jobs:
       run:
         shell: msys2 -o igncr {0}
     steps:
-      - name: Configure git
-        run: git config --global core.autocrlf input
-      - name: Checkout
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 2
       - name: Install Msys2
         uses: msys2/setup-msys2@v2
         with:
@@ -34,6 +28,12 @@ jobs:
             mingw-w64-ucrt-x86_64-gc
             mingw-w64-ucrt-x86_64-libtool
             mingw-w64-ucrt-x86_64-libunistring
+      - name: Configure git
+        run: git config --global core.autocrlf input
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 2
       - name: Bootstrap Guile
         run: |
           export LANG=C.UTF-8 TERM=dumb VERBOSE=true TZ=America/Los_Angeles
