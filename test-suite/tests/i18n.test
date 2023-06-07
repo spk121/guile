@@ -86,35 +86,40 @@
            (not (string-locale<? large large))))))
 
 
-(define mingw?
+;; | Type   | 8-bit default | 8-bit specific     | UTF-8      |
+;; +--------+---------------+--------------------+------------+
+;; | POSIX  | fr_FR         | fr_fr.iso88591     | fr_FR.utf8 |
+;; | Old MS | France_French | France_French.1252 | N/A        |
+;; | BCP 47 | fr-FR         | fr-FR.1252         | fr-FR.utf8 |
+;; +--------+---------------+--------------------+------------+
+;; Old MS is MinGW using deprecated MSVCRT C library.
+;; MinGW with UCRT C library prefers BCP 47 and can fall back to Old MS.
+(define old-ms?
   (string-contains %host-type "-mingw32"))
 
 (define %french-locale-name
-  (if mingw?
-      "fra_FRA.850"
-      "fr_FR.iso88591"))         ;"iso88591" is the "normalized codeset"
-
-;; What we really want for the following locales is that they be Unicode
-;; capable, not necessarily UTF-8, which Windows does not provide.
+  (if old-ms?
+      "French_France"  ; Usually CP1252
+      "fr_FR"))        ; Probably Latin-1
 
 (define %french-utf8-locale-name
-  (if mingw?
-      "fra_FRA.1252"
-      "fr_FR.utf8"))                 ;"utf8" is the "normalized codeset"
+  (if old-ms?
+      #f
+      "fr_FR.utf8"))
 
 (define %turkish-utf8-locale-name
-  (if mingw?
-      "tur_TRK.1254"
+  (if old-ms?
+      #f
       "tr_TR.utf8"))
 
 (define %german-utf8-locale-name
-  (if mingw?
-      "deu_DEU.1252"
+  (if old-ms?
+      #f
       "de_DE.utf8"))
 
 (define %greek-utf8-locale-name
-  (if mingw?
-      "grc_ELL.1253"
+  (if old-ms?
+      #f
       "el_GR.utf8"))
 
 (define %american-english-locale-name
