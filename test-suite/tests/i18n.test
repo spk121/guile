@@ -601,11 +601,12 @@
   ;; Return true if RESULT is equal to EXPECTED, modulo white space.
   ;; This is meant to deal with French locales: glibc 2.27+ uses
   ;; NO-BREAK SPACE to separate 3-digit groups, whereas earlier versions
-  ;; used SPACE.
+  ;; used SPACE and some Windows locales use NARROW NO-BREAK SPACE.
   (define (convert-space str)
                (string-map (lambda (chr)
                               (case chr
-                                ((#\xa0) #\space)
+                                ((#\xa0)   #\space)
+                                ((#\x202f) #\space)
                                 (else      chr)))
                                 str))
   (string=? (convert-space expected) (convert-space result)))
@@ -717,8 +718,10 @@
            ;; Check for
            ;; - U+20 SPACE
            ;; - U+00A0 NO-BREAK SPACE
+           ;; - U+202F NARROW NO BREAK SPACE
            (or (string=? "123 456,00 +€" str)
-               (string=? "123\xA0456,00 +€" str))))))
+               (string=? "123\xA0456,00 +€" str)
+               (string=? "123\u202F456,00 +€" str))))))
 
     (pass-if "fraction"
       (under-french-utf8-locale-or-unresolved
@@ -728,8 +731,10 @@
            ;; Check for
            ;; - U+20 SPACE
            ;; - U+00A0 NO-BREAK SPACE
+           ;; - U+202F NARROW NO BREAK SPACE
            (or (string=? "1 234,57 EUR " str)
-               (string=? "1\xA0234,57 EUR " str))))))
+               (string=? "1\xA0234,57 EUR " str)
+               (string=? "1\u202F234,57 EUR " str))))))
 
     (pass-if-equal "positive inexact zero"
         "0,00 +€"
@@ -760,9 +765,11 @@
          (let* ((fr  (make-locale LC_ALL %french-locale-name))
                 (str (string-trim-both (monetary-amount->locale-string 123456 #f fr))))
            ;; Check for
+           ;; - no space
            ;; - U+20 SPACE
            ;; - U+00A0 NO-BREAK SPACE
-           (or (string=? "123 456,00 +EUR" str)
+           (or (string=? "123456,00 +EUR" str)
+               (string=? "123 456,00 +EUR" str)
                (string=? "123\xA0456,00 +EUR" str))))))
 
     (pass-if "fraction"
@@ -771,9 +778,11 @@
          (let* ((fr  (make-locale LC_ALL %french-locale-name))
                 (str (monetary-amount->locale-string 1234.567 #t fr)))
            ;; Check for
+           ;; - no space
            ;; - U+20 SPACE
            ;; - U+00A0 NO-BREAK SPACE
-           (or (string=? "1 234,57 EUR " str)
+           (or (string=? "1234,57 EUR " str)
+               (string=? "1 234,57 EUR " str)
                (string=? "1\xA0234,57 EUR " str))))))
 
     (pass-if-equal "positive inexact zero"
