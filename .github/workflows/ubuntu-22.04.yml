@@ -1,0 +1,67 @@
+name: Ubuntu 22.04
+
+on:
+  # Allow manual triggering
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-22.04
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: 1
+    - name: Install packages
+      run: >-
+        sudo apt-get install -y
+        texlive
+        autoconf
+        libtool
+        gettext
+        autopoint
+        gperf
+        pkg-config
+        lzip
+        libgc-dev
+        libgmp-dev
+        libltdl-dev
+        libncurses5-dev
+        libreadline6-dev
+        libunistring-dev
+    - name: Configure
+      run: |
+        export LANG=C.UTF-8 TERM=dumb VERBOSE=true DEBIAN_FRONTEND=noninteractive TZ=America/Los_Angeles
+        mkdir `pwd`/app
+        ./autogen.sh
+        ./configure CFLAGS="-g -O2 -Wall" --prefix=`pwd`/app
+    - name: Build
+      run: |
+        make V=1
+        make install V=1
+    - name: Archive App
+      uses: actions/upload-artifact@v3
+      with:
+        name: App
+        path: app
+
+    - name: Run Unit Tests
+      run: make check V=1
+    - name: Archive Test Logs
+      if: success() || failure ()
+      uses: actions/upload-artifact@v3
+      with:
+        name: Test Logs
+        path: check-guile.log
+    - name: Run Dist Check
+      run: make distcheck
+
+    - name: Make Source Package
+      run: |
+        gunzip *.tar.gz
+    - name: Archive Source Package
+      uses: actions/upload-artifact@v3
+      with:
+        name: Source Package
+        path: guile*tar
