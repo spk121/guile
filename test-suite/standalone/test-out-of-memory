@@ -29,6 +29,10 @@ exec guile -q -s "$0" "$@"
   ;; test-stack-overflow.
   (exit 77)) ; unresolved
 
+(when (string-contains-ci (vector-ref (uname) 0) "MSYS_NT")
+  ;; MSYS is similar to Cygwin.
+  (exit 77)) ; unresolved
+
 (catch #t
   ;; Silence GC warnings.
   (lambda ()
