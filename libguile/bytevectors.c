@@ -357,6 +357,9 @@ SCM_DEFINE (scm_bytevector_slice, "bytevector-slice", 2, 1, 0,
   else
     c_size = scm_to_size_t (size);
 
+  if (c_offset == 0 && c_size == SCM_BYTEVECTOR_LENGTH (bv))
+    return bv;
+
   if (INT_ADD_OVERFLOW (c_offset, c_size)
       || (c_offset + c_size > SCM_BYTEVECTOR_LENGTH (bv)))
     scm_out_of_range (FUNC_NAME, offset);
