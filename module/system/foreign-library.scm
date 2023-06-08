@@ -32,7 +32,7 @@
             ltdl-library-path
             guile-system-extensions-path
 
-            lib->cyg
+            lib->cyg lib->msys
             load-foreign-library
             foreign-library?
             foreign-library-pointer
@@ -263,13 +263,32 @@ name."
          (else
           name)))))
 
+(define (lib->msys name)
+  "Convert a standard shared library name to a MSYS shared library
+name."
+  (if (not name)
+      #f
+      (let ((start (1+ (or (string-index-right
+                            name
+                            (lambda (c) (or (char=? #\\ c) (char=? #\/ c))))
+                           -1))))
+        (cond
+         ((>= (+ 3 start) (string-length name))
+          name)
+         ((string= name "lib" start (+ start 3))
+          (string-append (substring name 0 start)
+                         "msys-"
+                         (substring name (+ start 3))))
+         (else
+          name)))))
+
 (define* (load-foreign-library #:optional filename #:key
                                (extensions system-library-extensions)
                                (search-ltdl-library-path? #t)
                                (search-path (default-search-path
                                               search-ltdl-library-path?))
                                (search-system-paths? #t)
-                               (lazy? #t) (global? #f) (rename-on-cygwin? #t)
+                               (lazy? #t) (global? #f) (host-type-rename? #t)
                                (allow-dll-version-suffix? #t))
   (define (error-not-found)
     (scm-error 'misc-error "load-foreign-library"
@@ -286,8 +305,11 @@ name."
   (define (file-exists-in-path-with-ext filename search-path extensions)
     (file-exists-in-path-with-extension
      filename search-path extensions allow-dll-version-suffix?))
-  (if (and rename-on-cygwin? (string-contains %host-type "cygwin"))
+  (when host-type-rename?
+    (when (string-contains %host-type "cygwin")
       (set! filename (lib->cyg filename)))
+    (when (string-contains %host-type "msys")
+      (set! filename (lib->msys filename))))
   (make-foreign-library
    filename
    (cond
