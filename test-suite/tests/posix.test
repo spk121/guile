@@ -442,12 +442,22 @@
         (close-port (car input+output))
         (waitpid pid)
 
-        ;; On GNU/Hurd, the exec server prepends 'LD_ORIGIN_PATH' for
-        ;; every program: <https://bugs.gnu.org/62501>.  Strip it.
-        (if (and (string=? "GNU" (utsname:sysname (uname)))
+        (let ((sysname (utsname:sysname (uname))))
+          (cond
+           ;; On GNU/Hurd, the exec server prepends 'LD_ORIGIN_PATH' for
+           ;; every program: <https://bugs.gnu.org/62501>.  Strip it.
+           ((and (string=? "GNU" sysname)
                  (string-prefix? "LD_ORIGIN_PATH=" str))
-            (string-drop str (+ 1 (string-index str #\newline)))
-            str))))
+            (string-drop str (+ 1 (string-index str #\newline))))
+           ;; On MSYS and Cygwin, exec appends environment variables
+           ;; required for handling fake unix paths: MSYSTEM,
+           ;; SYSTEMROOT, WINDIR.  Could be more precise here and strip
+           ;; out just those variables.
+           ((or (string=? "MSYS" (string-take sysname (min 4 (string-length sysname))))
+                (string=? "CYGWIN" (string-take sysname (min 6 (string-length sysname)))))
+            (string-take str (1+ (string-index str #\newline))))
+           (else
+            str))))))
 
   (pass-if-equal "ls /proc/self/fd"
       "0\n1\n2\n3\n"                     ;fourth FD is for /proc/self/fd
@@ -464,12 +474,19 @@
 
   (pass-if-equal "file not found"
       ENOENT
-    (catch 'system-error
-      (lambda ()
-        (spawn "this-does-not-exist" '("nope")
-               #:search-path? #f))
-      (lambda args
-        (system-error-errno args)))))
+    (begin
+      (when (or (string-contains %host-type "cygwin")
+                (string-contains %host-type "msys"))
+        ;; It appears that Cygwin, rather than throwing ENOENT, will
+        ;; return a PID of a forked process and then immediately
+        ;; _Exit() that process.
+        (throw 'unresolved))
+      (catch 'system-error
+        (lambda ()
+          (spawn "this-does-not-exist" '("nope")
+                 #:search-path? #f))
+        (lambda args
+          (system-error-errno args))))))
 
 ;;
 ;; crypt
