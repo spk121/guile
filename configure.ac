@@ -76,11 +76,24 @@ else
   AC_MSG_RESULT([no])
 fi
 
+if test -z "$LTO_CFLAGS";
+then
+  enable_lto_default=no;
+else
+  enable_lto_default=yes;
+fi
+
+case $host in
+  *-*-cygwin* | *-*-msys* | *-*-mingw*)
+    enable_lto_default=no;
+  ;;
+esac
+
 AC_ARG_ENABLE(lto,
   [AS_HELP_STRING([--enable-lto]
                   [enable link-time optimization for libguile])],
   [],
-  [if test -z "$LTO_CFLAGS"; then enable_lto=no; else enable_lto=yes; fi])
+  [enable_lto=$enable_lto_default])
 case "$enable_lto" in
   yes | y)
     if test -z "$LTO_CFLAGS"; then
