@@ -244,6 +244,7 @@
               ;; When run as root, this test would fail because root can
               ;; list the contents of #o000 directories.
               mingw?
+              (string-contains %host-type "cygwin")
               ;; MinGW uses ACLs for directory control, which
               ;; chmod doesn't emulate.
               )
