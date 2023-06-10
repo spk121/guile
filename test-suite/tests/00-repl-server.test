@@ -31,6 +31,11 @@ socket connected to that server."
   (unless (and (provided? 'threads) (provided? 'fork) (defined? 'mkdtemp))
     (throw 'unsupported))
 
+  ;; On MSYS, deleting the sockaddr file prematurely, like this test does, closes
+  ;; the socket.
+  (when (string-contains %host-type "msys")
+    (throw 'unsupported))
+
   (let* ((tmpdir (mkdtemp "/tmp/repl-server-test-XXXXXX"))
          (sockaddr (make-socket-address AF_UNIX (string-append tmpdir "/repl-server")))
          (client-socket (socket AF_UNIX SOCK_STREAM 0)))
