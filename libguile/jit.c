@@ -53,6 +53,16 @@
 
 #include "jit.h"
 
+#ifdef __GNUC__
+#undef calloc
+#define calloc __builtin_calloc
+#undef malloc
+#define malloc __builtin_malloc
+#undef realloc
+#define realloc __builtin_realloc
+#undef free
+#define free __builtin_free
+#endif
 
 
 
