@@ -1,6 +1,12 @@
-[![Ubuntu 20.04](https://github.com/spk121/guile/actions/workflows/ubuntu-20.04.yml/badge.svg)](https://github.com/spk121/guile/actions/workflows/ubuntu-20.04.yml)
+[![Ubuntu](https://github.com/spk121/guile/actions/workflows/ubuntu.yml/badge.svg)](https://github.com/spk121/guile/actions/workflows/ubuntu.yml)
 
-[![Ubuntu 22.04](https://github.com/spk121/guile/actions/workflows/ubuntu-22.04.yml/badge.svg)](https://github.com/spk121/guile/actions/workflows/ubuntu-22.04.yml)
+[![Cygwin](https://github.com/spk121/guile/actions/workflows/cygwin.yml/badge.svg)](https://github.com/spk121/guile/actions/workflows/cygwin.yml)
+
+[![MSYS](https://github.com/spk121/guile/actions/workflows/msys.yml/badge.svg)](https://github.com/spk121/guile/actions/workflows/msys.yml)
+
+[![Ubuntu Distcheck](https://github.com/spk121/guile/actions/workflows/ubuntu-distcheck.yml/badge.svg)](https://github.com/spk121/guile/actions/workflows/ubuntu-distcheck.yml)
+
+[![Cygwin Distcheck](https://github.com/spk121/guile/actions/workflows/cygwin-distcheck.yml/badge.svg)](https://github.com/spk121/guile/actions/workflows/cygwin-distcheck.yml)
 
 This is version 3.0 of Guile, Project GNU's extension language library.
 Guile is an implementation of the Scheme programming language, packaged

@@ -1,4 +1,4 @@
-name: Ubuntu 22.04
+name: Ubuntu
 
 on:
   # Allow manual triggering
@@ -7,16 +7,18 @@ on:
 jobs:
   build:
     name: Build
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     steps:
     - name: Checkout
       uses: actions/checkout@v3
       with:
-        fetch-depth: 1
+        fetch-depth: 0
     - name: Install packages
       run: >-
         sudo apt-get install -y
         texlive
+        texlive-plain-generic
+        texinfo
         autoconf
         libtool
         gettext
@@ -38,14 +40,7 @@ jobs:
         ./configure CFLAGS="-g -O2 -Wall" --prefix=`pwd`/app
     - name: Build
       run: |
-        make V=1
-        make install V=1
-    - name: Archive App
-      uses: actions/upload-artifact@v3
-      with:
-        name: App
-        path: app
-
+        make -j4 V=1
     - name: Run Unit Tests
       run: make check V=1
     - name: Archive Test Logs
@@ -53,15 +48,5 @@ jobs:
       uses: actions/upload-artifact@v3
       with:
         name: Test Logs
-        path: check-guile.log
-    - name: Run Dist Check
-      run: make distcheck
-
-    - name: Make Source Package
-      run: |
-        gunzip *.tar.gz
-    - name: Archive Source Package
-      uses: actions/upload-artifact@v3
-      with:
-        name: Source Package
-        path: guile*tar
+        path: ./*.log
+   
