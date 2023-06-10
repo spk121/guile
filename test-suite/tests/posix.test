@@ -449,6 +449,7 @@
            ((and (string=? "GNU" sysname)
                  (string-prefix? "LD_ORIGIN_PATH=" str))
             (string-drop str (+ 1 (string-index str #\newline))))
+
            ;; On MSYS and Cygwin, exec appends environment variables
            ;; required for handling fake unix paths: MSYSTEM,
            ;; SYSTEMROOT, WINDIR.  Could be more precise here and strip
