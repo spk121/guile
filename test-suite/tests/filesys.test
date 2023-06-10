@@ -370,6 +370,10 @@
       #o300
     (unless (defined? 'chmodat)
       (throw 'unsupported))
+    (when (or (string-contains %host-type "cygwin")
+              (string-contains %host-type "msys"))
+      ;; May create different permissions, depending on filesystem.
+      (throw 'unsupported))
     (call-with-port
      (open (dirname (test-file)) O_RDONLY)
      (lambda (port)
@@ -382,6 +386,10 @@
       #o300
     (unless (and (defined? 'chmodat)
                  (defined? 'AT_SYMLINK_NOFOLLOW))
+      (throw 'unsupported))
+    (when (or (string-contains %host-type "cygwin")
+              (string-contains %host-type "msys"))
+      ;; May create different permissions, depending on filesystem.
       (throw 'unsupported))
     (call-with-port
      (open (dirname (test-file)) O_RDONLY)
@@ -577,6 +585,10 @@
 
   (pass-if-equal "explicit perms" (logand #o111 (lognot (umask)))
     (skip-if-unsupported)
+    (when (or (string-contains %host-type "cygwin")
+              (string-contains %host-type "msys"))
+      ;; May create different permissions, depending on filesystem.
+      (throw 'unsupported))
     (call-with-port
      (open "." O_RDONLY)
      (lambda (port)
@@ -586,8 +598,9 @@
 
   (pass-if-equal "create, implicit perms" (logand #o777 (lognot (umask)))
     (skip-if-unsupported)
-    (when (string-contains %host-type "cygwin")
-      ;; May create wrong group permissions, depending on filesystem.
+    (when (or (string-contains %host-type "cygwin")
+              (string-contains %host-type "msys"))
+      ;; May create different permissions, depending on filesystem.
       (throw 'unsupported))
     (call-with-port
      (open "." O_RDONLY)
@@ -793,8 +806,9 @@
 
   (pass-if-equal "O_CREAT/O_WRONLY" (list #t (logand (lognot (umask)) #o666) "w")
     (skip-if-unsupported)
-    (when (string-contains %host-type "cygwin")
-      ;; May create wrong group permissions, depending on filesystem.
+    (when (or (string-contains %host-type "cygwin")
+              (string-contains %host-type "msys"))
+      ;; May create different permissions, depending on filesystem.
       (throw 'unsupported))
     (call-with-relatively-opened-file
      (list (dirname (test-file)) O_RDONLY)
@@ -810,6 +824,10 @@
   (pass-if-equal "O_CREAT/O_WRONLY, non-default mode"
       (list #t (logand (lognot (umask)) #o700) "w")
     (skip-if-unsupported)
+    (when (or (string-contains %host-type "cygwin")
+              (string-contains %host-type "msys"))
+      ;; May create different permissions, depending on filesystem.
+      (throw 'unsupported))
     (call-with-relatively-opened-file
      (list (dirname (test-file)) O_RDONLY)
      (list (basename (test-file)) (logior O_WRONLY O_CREAT) #o700)

@@ -245,8 +245,8 @@
               ;; list the contents of #o000 directories.
               mingw?
               (string-contains %host-type "cygwin")
-              ;; MinGW uses ACLs for directory control, which
-              ;; chmod doesn't emulate.
+              (string-contains %host-type "msys")
+              ;; May create different permissions depending on filesyste.
               )
           (throw 'unresolved)
           (with-file-tree %top-builddir '(directory "test-EACCES" #o000
