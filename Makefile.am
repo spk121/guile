@@ -35,7 +35,6 @@ SUBDIRS =					\
 	stage1					\
 	stage2					\
 	guile-readline				\
-	examples				\
 	test-suite				\
 	benchmark-suite				\
 	doc

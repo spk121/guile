@@ -1490,7 +1490,6 @@ AC_CONFIG_FILES([
   doc/Makefile
   doc/r5rs/Makefile
   doc/ref/Makefile
-  examples/Makefile
   libguile/Makefile
   libguile/version.h
   guile-readline/Makefile
