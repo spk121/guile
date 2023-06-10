@@ -192,6 +192,9 @@
   (pass-if-equal "symbolic links are dereferenced" '(regular 5)
     ;; Not all systems support symlinks.
     (skip-unless-defined 'statat 'symlink)
+    ;; MSYS has nonfunctional symlinks
+    (when (string-contains %host-type "msys")
+      (throw 'unsupported))
     (unless (maybe-create-symlink)
       (throw 'unresolved))
     (call-with-port
@@ -204,6 +207,10 @@
       `(symlink ,(string-length "test-file"))
     ;; Not all systems support symlinks.
     (skip-unless-defined 'statat 'symlink)
+    ;; MSYS has nonfunctional symlinks
+    (when (string-contains %host-type "msys")
+      (throw 'unsupported))
+
     (unless (maybe-create-symlink)
       (throw 'unresolved))
     (call-with-port
@@ -450,8 +457,10 @@
   (call-with-output-file (test-file)
     (lambda (port)
       (display "hello" port)))
-  (if (not (false-if-exception
-	    (begin (symlink (test-file) (test-symlink)) #t)))
+  (if (or (string-contains %host-type "msys") ; nonfunctional symlinks
+          (not (false-if-exception
+	        (begin (symlink (test-file) (test-symlink)) #t))))
+
       (display "cannot create symlink, some readlink tests skipped\n")
       (let ()
         (pass-if-equal "file name of symlink" (test-file)
@@ -509,6 +518,10 @@
   (pass-if-equal "create" (test-file)
     (unless (defined? 'symlinkat)
       (throw 'unsupported))
+    ;; MSYS has nonfunctional symlinks
+    (when (string-contains %host-type "msys")
+      (throw 'unsupported))
+
     (call-with-port
      (open "." O_RDONLY)
      (lambda (port)
@@ -519,16 +532,28 @@
   (pass-if-exception "not a port" exception:wrong-type-arg
     (unless (defined? 'symlinkat)
       (throw 'unsupported))
+    ;; MSYS has nonfunctional symlinks
+    (when (string-contains %host-type "msys")
+      (throw 'unsupported))
+
     (symlinkat "bogus" (test-file) (test-symlink)))
 
   (pass-if-exception "not a file port" exception:wrong-type-arg
     (unless (defined? 'symlinkat)
       (throw 'unsupported))
+    ;; MSYS has nonfunctional symlinks
+    (when (string-contains %host-type "msys")
+      (throw 'unsupported))
+
     (symlinkat (open-input-string "") (test-file) (test-symlink)))
 
   (pass-if-exception "closed port" exception:wrong-type-arg
     (unless (defined? 'symlinkat)
       (throw 'unsupported))
+    ;; MSYS has nonfunctional symlinks
+    (when (string-contains %host-type "msys")
+      (throw 'unsupported))
+
     (symlinkat (call-with-port (open "." O_RDONLY) identity)
                (test-file) (test-symlink))))
 
