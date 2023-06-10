@@ -1,0 +1,38 @@
+name: Cygwin Distcheck
+
+on:
+  # Allow manual triggering
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build
+    runs-on: windows-latest
+    steps:
+    - name: Set git to Linux line endings
+      run: git config --global core.autocrlf input
+    - name: Checkout
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+    - name: Install cygwin
+      uses: cygwin/cygwin-install-action@master
+      with:
+        packages: >-
+          autoconf automake make libtool flex gperf
+          gcc-core
+          lzip xz
+          gettext-devel libffi-devel libgc-devel
+          libgmp-devel libreadline-devel libunistring-devel
+          libiconv-devel
+          texinfo texinfo-tex texlive
+    - name: Configure
+      run: |
+          export LANG=C.UTF-8 TERM=dumb VERBOSE=true TZ=America/Los_Angeles
+          mkdir `pwd`/app
+          ./autogen.sh
+          ./configure CFLAGS="-g -O2 -Wall" --prefix=`pwd`/app
+      shell: C:\cygwin\bin\bash.exe -o igncr '{0}'
+    - name: Run Dist Check
+      run: make -j4 distcheck V=1
+      shell: C:\cygwin\bin\bash.exe -o igncr '{0}'
