@@ -604,7 +604,11 @@ scm_i_vm_prepare_stack (struct scm_vm *vp)
      Guile.  */
   if (page_size == 0)
     {
+#ifndef _WIN32
       page_size = getpagesize ();
+#else
+      page_size = 4 * 1024;
+#endif
       /* page_size should be a power of two.  */
       if (page_size & (page_size - 1))
         abort ();
