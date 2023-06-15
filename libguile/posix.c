@@ -1717,7 +1717,14 @@ SCM_DEFINE (scm_system_star, "system*", 0, 0, 1,
   return scm_from_int (status);
 }
 #undef FUNC_NAME
-#endif /* HAVE_FORK */
+#else /* HAVE_FORK */
+static SCM
+scm_piped_process (SCM prog, SCM args, SCM from, SCM to)
+{
+  scm_misc_error ("piped-process", "not implemented", SCM_EOL);
+  return SCM_UNSPECIFIED;
+}
+#endif
 
 #ifdef HAVE_UNAME
 SCM_DEFINE (scm_uname, "uname", 0, 0, 0,
@@ -2563,13 +2570,12 @@ SCM_DEFINE (scm_gethostname, "gethostname", 0, 0, 0,
 #endif /* HAVE_GETHOSTNAME */
 
 
-#ifdef HAVE_FORK
 static void
 scm_init_popen (void)
 {
   scm_c_define_gsubr ("piped-process", 2, 2, 0, scm_piped_process);
 }
-#endif /* HAVE_FORK */
+
 
 void
 scm_init_posix ()
@@ -2688,9 +2694,9 @@ scm_init_posix ()
 #ifdef HAVE_FORK
   scm_add_feature ("fork");
   scm_add_feature ("popen");
+#endif /* HAVE_FORK */
   scm_c_register_extension ("libguile-" SCM_EFFECTIVE_VERSION,
                             "scm_init_popen",
 			    (scm_t_extension_init_func) scm_init_popen,
 			    NULL);
-#endif /* HAVE_FORK */
 }
