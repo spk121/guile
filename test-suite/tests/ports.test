@@ -679,6 +679,7 @@
 
 ;;; Run a command, and read its output.
 (pass-if "pipe: read"
+  (unless (defined? 'piped-process) (throw 'unsupported))
   (let* ((pipe (open-pipe "echo 'Howdy there, partner!'" "r"))
          (in-string (read-all pipe)))
     (close-pipe pipe)
@@ -687,6 +688,7 @@
 
 ;;; Run a command, send some output to it, and see if it worked.
 (pass-if "pipe: write"
+  (unless (defined? 'piped-process) (throw 'unsupported))
   (let* ((filename (test-file))
          (pipe (open-pipe (string-append "grep Mommy > " filename) "w")))
     (display "Now Jimmy lives on a mushroom cloud\n" pipe)
@@ -1098,13 +1100,22 @@
       (display text out-port)
       (close-port out-port))
 
-    (list (open-input-file port-loop-temp)
-          (open-input-pipe (string-append "cat " port-loop-temp))
-          (call-with-input-string text (lambda (x) x))
-          ;; We don't test soft ports at the moment.
-          ))
+    (apply list
+           (open-input-file port-loop-temp)
+           (call-with-input-string text (lambda (x) x))
+           ;; We don't test soft ports at the moment.
+           (if (defined? 'piped-process)
+               (list (open-input-pipe (string-append "cat " port-loop-temp)))
+               '())))
 
-  (define port-list-names '("file" "pipe" "string"))
+  (define port-list-names
+    (apply list
+           "file"
+           "string"
+           ;; "soft"
+           (if (defined? 'piped-process)
+               '("pipe")
+               '())))
 
   ;; Test the line counter.
   (define (test-line-counter text second-line final-column)
