@@ -348,12 +348,14 @@
   (pass-if "http://bugs.gnu.org/13166"
     ;; With Guile up to 2.0.7 included, the child process launched by
     ;; `system*' would remain alive after an `execvp' failure.
+    (unless (defined? 'system*) (throw 'unsupported))
     (let ((me (getpid)))
       (and (not (zero? (system* "something-that-does-not-exist")))
            (= me (getpid)))))
 
   (pass-if-equal "exit code for nonexistent file"
       127                                         ;aka. EX_NOTFOUND
+    (unless (defined? 'system*) (throw 'unsupported))
     (status:exit-val (system* "something-that-does-not-exist")))
 
   (pass-if-equal "https://bugs.gnu.org/55596"
@@ -361,11 +363,13 @@
     ;; The parameterization below used to cause 'start_child' to close
     ;; fd 2 in the child process, which in turn would cause it to
     ;; segfault, leading to a wrong exit code.
+    (unless (defined? 'system*) (throw 'unsupported))
     (parameterize ((current-output-port (current-error-port)))
       (status:exit-val (system* "something-that-does-not-exist"))))
 
   (pass-if-equal "https://bugs.gnu.org/52835"
       "bong\n"
+    (unless (defined? 'system*) (throw 'unsupported))
     (let ((file (tmpnam)))
       ;; Redirect stdout and stderr to FILE.
       (define status
@@ -382,6 +386,7 @@
 
   (pass-if-equal "https://bugs.gnu.org/63024"
       0
+    (unless (defined? 'system*) (throw 'unsupported))
     (if (file-exists? "/proc/self/fd/0")          ;on GNU/Linux?
         (parameterize ((current-output-port (%make-void-port "w0")))
           (system* "guile" "-c"
