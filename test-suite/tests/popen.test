@@ -71,7 +71,7 @@
    ;; On MinGW, sh is not necessarily in /bin.
    (set! (pipe-shell-command-transformer)
          (lambda (cmd)
-           `("sh" "-c" cmd))))
+           `("sh" "-c" ,cmd))))
 
  ;;
  ;; open-input-pipe
