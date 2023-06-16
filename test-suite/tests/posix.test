@@ -194,7 +194,7 @@
 
   (pass-if-equal "AT_SYMLINK_NOFOLLOW"
       '(1 1)
-    (if (defined? 'AT_SYMLINK_NOFOLLOW)
+    (if (and (defined? 'symlink) (defined? 'AT_SYMLINK_NOFOLLOW))
         (let ((file "posix.test-utime"))
           (dynamic-wind
             (lambda ()
