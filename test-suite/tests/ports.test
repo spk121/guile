@@ -1961,7 +1961,10 @@
         (set! %load-path old)))))
 
 (define %temporary-directory
-  (string-append (or (getenv "TMPDIR") "/tmp") "/guile-ports-test."
+  (string-append (or (getenv "TMPDIR")
+                     (getenv "TMP")
+                     "/tmp")
+                 "/guile-ports-test."
                  (number->string (getpid))))
 
 (with-test-prefix "%file-port-name-canonicalization"
