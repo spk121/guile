@@ -200,6 +200,10 @@ exec 2>~a; read REPLY"
    ;; the child process; we rely on the child getting SIGPIPE, to
    ;; terminate it (and avoid leaving a zombie).
    (pass-if "no duplicate"
+     (unless (defined? 'SIGPIPE)
+       ;; MinGW has no SIGPIPE, so closing the pipe doesn't
+       ;; terminate the process.
+       (throw 'unsupported))
      (let* ((c2p (pipe))
             (port (with-error-to-port (cdr c2p)
                     (lambda ()
@@ -274,6 +278,10 @@ exec 2>~a; read REPLY"
 
 (pass-if-equal "open-process"
     '("HELLO WORLD" 0)
+  (unless (defined? 'SIGPIPE)
+    ;; MinGW has no SIGPIPE, so 'tr' doesn't exit when input is
+    ;; exhausted.
+    (throw 'unsupported))
   (receive (from to pid)
       ((@@ (ice-9 popen) open-process) OPEN_BOTH
        "tr" "[:lower:]" "[:upper:]")
