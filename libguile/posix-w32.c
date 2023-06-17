@@ -23,6 +23,7 @@
 
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
+#include <versionhelpers.h>
 #include <c-strcase.h>
 #include <process.h>
 #include <stdio.h>
@@ -44,122 +45,100 @@
 int
 uname (struct utsname *uts)
 {
-  enum { WinNT, Win95, Win98, WinUnknown };
-  OSVERSIONINFO osver;
   SYSTEM_INFO sysinfo;
-  DWORD sLength;
-  DWORD os = WinUnknown;
 
   memset (uts, 0, sizeof (*uts));
 
-  osver.dwOSVersionInfoSize = sizeof (osver);
-  GetVersionEx (&osver);
   GetSystemInfo (&sysinfo);
 
-  switch (osver.dwPlatformId)
+  /* Getting the version number of Windows is deprecated, because each
+   * application can ask to manifest a different supported version of
+   * Windows.  The version numbers are approximate and come from
+   * https://learn.microsoft.com/en-us/windows/win32/sysinfo/operating-system-version. */
+#ifdef __MINGW64__
+  const char *root = "MINGw64_NT";
+#elseif defined __MINGW32__
+  const char *root = "MINGW32_NT";
+#elseif defined  __MSYS__
+  const char *root = "MSYS_NT";
+#elseif defined __CYGWIN__
+  const char *root = "CYGWIN_NT";
+#else
+  const char *root = NULL;
+#endif
+  if (IsWindows10OrGreater ())
     {
-    case VER_PLATFORM_WIN32_NT: /* NT, Windows 2000 or Windows XP */
-      if (osver.dwMajorVersion == 4)
-        strcpy (uts->sysname, "Windows NT4x"); /* NT4x */
-      else if (osver.dwMajorVersion <= 3)
-        strcpy (uts->sysname, "Windows NT3x"); /* NT3x */
-      else if (osver.dwMajorVersion == 5 && osver.dwMinorVersion < 1)
-        strcpy (uts->sysname, "Windows 2000"); /* 2k */
-      else if (osver.dwMajorVersion < 6)
-        strcpy (uts->sysname, "Windows XP");   /* XP */
-      else if (osver.dwMajorVersion == 6)
-        {
-          if (osver.dwMinorVersion < 1)
-            strcpy (uts->sysname, "Windows Vista");   /* Vista */
-          else if (osver.dwMinorVersion < 2)
-            strcpy (uts->sysname, "Windows 7"); /* Windows 7 */
-          else if (osver.dwMinorVersion < 3)
-            strcpy (uts->sysname, "Windows 8"); /* Windows 8 */
-          else if (osver.dwMinorVersion < 4)
-            strcpy (uts->sysname, "Windows 8.1"); /* Windows 8.1 */
-        }
-      else if (osver.dwMajorVersion >= 10)
-        strcpy (uts->sysname, "Windows 10 or later"); /* Windows 10 and later */
-      os = WinNT;
-      break;
-
-    case VER_PLATFORM_WIN32_WINDOWS: /* Win95, Win98 or WinME */
-      if ((osver.dwMajorVersion > 4) ||
-          ((osver.dwMajorVersion == 4) && (osver.dwMinorVersion > 0)))
-        {
-          if (osver.dwMinorVersion >= 90)
-            strcpy (uts->sysname, "Windows ME"); /* ME */
-          else
-            strcpy (uts->sysname, "Windows 98"); /* 98 */
-          os = Win98;
-        }
+      if (root)
+        sprintf (uts->sysname, "%s-10.0", root);
       else
-        {
-          strcpy (uts->sysname, "Windows 95"); /* 95 */
-          os = Win95;
-        }
-      break;
-
-    case VER_PLATFORM_WIN32s: /* Windows 3.x */
-      strcpy (uts->sysname, "Windows");
-      break;
+        strcpy (uts->sysname, "Windows 10");
+      strcpy (uts->version, "10.0");
     }
-
-  sprintf (uts->version, "%ld.%02ld",
-           osver.dwMajorVersion, osver.dwMinorVersion);
-
-  if (osver.szCSDVersion[0] != '\0' &&
-      (strlen (osver.szCSDVersion) + strlen (uts->version) + 1) <
-      sizeof (uts->version))
+  else if (IsWindows8Point1OrGreater ())
     {
-      strcat (uts->version, " ");
-      strcat (uts->version, osver.szCSDVersion);
+      if (root)
+        sprintf (uts->sysname, "%s-6.3", root);
+      else
+        strcpy (uts->sysname, "Windows 8.1");
+      strcpy (uts->version, "6.3");
+    }
+  else if (IsWindows8OrGreater ())
+    {
+      if (root)
+        sprintf (uts->sysname, "%s-6.2", root);
+      else
+        strcpy (uts->sysname, "Windows 8");
+      strcpy (uts->version, "6.2");
+    }
+  else if (IsWindows7SP1OrGreater ())
+    {
+      if (root)
+        sprintf (uts->sysname, "%s-6.1", root);
+      else
+        strcpy (uts->sysname, "Windows 7SP1");
+      strcpy (uts->version, "6.1");
+    }
+  else if (IsWindows7OrGreater ())
+    {
+      if (root)
+        sprintf (uts->sysname, "%s-6.1", root);
+      else
+        strcpy (uts->sysname, "Windows 7");
+      strcpy (uts->version, "6.1");
+    }
+  else if (IsWindowsVistaOrGreater ())
+    {
+      if (root)
+        sprintf (uts->sysname, "%s-6.0", root);
+      else
+        strcpy (uts->sysname, "Windows Vista");
+      strcpy (uts->version, "6.0");
+    }
+  else
+    {
+      if (root)
+        sprintf (uts->sysname, "%s-5.0", root);
+      else
+        strcpy (uts->sysname, "Windows");
+      strcpy (uts->version, "5.0");
     }
 
-  sprintf (uts->release, "build %ld", osver.dwBuildNumber & 0xFFFF);
+  /* There is no non-deprecated way to get the build number. */
+  strcpy (uts->release, "unknown");
 
   switch (sysinfo.wProcessorArchitecture)
     {
-    case PROCESSOR_ARCHITECTURE_PPC:
-      strcpy (uts->machine, "ppc");
+    case PROCESSOR_ARCHITECTURE_ARM:
+      strcpy (uts->machine,"ARM");
       break;
-    case PROCESSOR_ARCHITECTURE_ALPHA:
-      strcpy (uts->machine, "alpha");
-      break;
-    case PROCESSOR_ARCHITECTURE_MIPS:
-      strcpy (uts->machine, "mips");
+    case PROCESSOR_ARCHITECTURE_ARM64:
+      strcpy (uts->machine, "ARM64");
       break;
     case PROCESSOR_ARCHITECTURE_IA64:
       strcpy (uts->machine, "ia64");
       break;
     case PROCESSOR_ARCHITECTURE_INTEL:
-      /*
-       * dwProcessorType is only valid in Win95 and Win98 and WinME
-       * wProcessorLevel is only valid in WinNT
-       */
-      switch (os)
-        {
-        case Win95:
-        case Win98:
-          switch (sysinfo.dwProcessorType)
-            {
-            case PROCESSOR_INTEL_386:
-            case PROCESSOR_INTEL_486:
-            case PROCESSOR_INTEL_PENTIUM:
-              sprintf (uts->machine, "i%ld", sysinfo.dwProcessorType);
-              break;
-            default:
-              strcpy (uts->machine, "i386");
-              break;
-          }
-          break;
-        case WinNT:
-          sprintf (uts->machine, "i%d86", sysinfo.wProcessorLevel);
-          break;
-        default:
-          strcpy (uts->machine, "unknown");
-          break;
-        }
+      strcpy (uts->machine, "x64");
       break;
     case PROCESSOR_ARCHITECTURE_AMD64:
       strcpy (uts->machine, "x86_64");
@@ -169,7 +148,7 @@ uname (struct utsname *uts)
       break;
   }
 
-  sLength = sizeof (uts->nodename) - 1;
+  unsigned long sLength = sizeof (uts->nodename) - 1;
   GetComputerName (uts->nodename, &sLength);
   return 0;
 }
