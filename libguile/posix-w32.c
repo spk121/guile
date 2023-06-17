@@ -56,7 +56,7 @@ uname (struct utsname *uts)
    * Windows.  The version numbers are approximate and come from
    * https://learn.microsoft.com/en-us/windows/win32/sysinfo/operating-system-version. */
 #ifdef __MINGW64__
-  const char *root = "MINGw64_NT";
+  const char *root = "MINGW64_NT";
 #elseif defined __MINGW32__
   const char *root = "MINGW32_NT";
 #elseif defined  __MSYS__
@@ -138,7 +138,7 @@ uname (struct utsname *uts)
       strcpy (uts->machine, "ia64");
       break;
     case PROCESSOR_ARCHITECTURE_INTEL:
-      strcpy (uts->machine, "x64");
+      strcpy (uts->machine, "x86");
       break;
     case PROCESSOR_ARCHITECTURE_AMD64:
       strcpy (uts->machine, "x86_64");
