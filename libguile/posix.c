@@ -1526,7 +1526,6 @@ SCM_DEFINE (scm_spawn_process, "spawn", 2, 0, 1,
 }
 #undef FUNC_NAME
 
-#ifdef HAVE_FORK
 static int
 piped_process (pid_t *pid, SCM prog, SCM args, SCM from, SCM to)
 #define FUNC_NAME "piped-process"
@@ -1629,11 +1628,13 @@ scm_piped_process (SCM prog, SCM args, SCM from, SCM to)
       /* Create a dummy process that exits with value 127 to mimic the
          previous fork + exec implementation.  TODO: This is a
          compatibility shim to remove in the next stable series.  */
+#ifdef HAVE_FORK
       pid = fork ();
       if (pid == -1)
         SCM_SYSERROR;
       if (pid == 0)
         _exit (127);
+#endif /* HAVE_FORK */
     }
 
   return scm_from_int (pid);
@@ -1721,14 +1722,6 @@ SCM_DEFINE (scm_system_star, "system*", 0, 0, 1,
   return scm_from_int (status);
 }
 #undef FUNC_NAME
-#else /* HAVE_FORK */
-static SCM
-scm_piped_process (SCM prog, SCM args, SCM from, SCM to)
-{
-  scm_misc_error ("piped-process", "not implemented", SCM_EOL);
-  return SCM_UNSPECIFIED;
-}
-#endif
 
 #ifdef HAVE_UNAME
 SCM_DEFINE (scm_uname, "uname", 0, 0, 0,
@@ -2697,8 +2690,8 @@ scm_init_posix ()
 
 #ifdef HAVE_FORK
   scm_add_feature ("fork");
-  scm_add_feature ("popen");
 #endif /* HAVE_FORK */
+  scm_add_feature ("popen");
   scm_c_register_extension ("libguile-" SCM_EFFECTIVE_VERSION,
                             "scm_init_popen",
 			    (scm_t_extension_init_func) scm_init_popen,
