@@ -1535,6 +1535,7 @@ piped_process (pid_t *pid, SCM prog, SCM args, SCM from, SCM to)
   int c2p[2]; /* Child to parent.  */
   int p2c[2]; /* Parent to child.  */
   int in = -1, out = -1, err = -1;
+  char errbuf[200];
   char *exec_file;
   char **exec_argv;
   char **exec_env = environ;
@@ -1605,8 +1606,20 @@ piped_process (pid_t *pid, SCM prog, SCM args, SCM from, SCM to)
       default:    /* ENOENT, etc. */
         /* Report the error on the console (before switching to
            'posix_spawn', the child process would do exactly that.)  */
-        dprintf (err, "In execvp of %s: %s\n", exec_file,
-                 strerror (errno_save));
+        snprintf (errbuf, sizeof (errbuf), "In execvp of %s: %s\n", exec_file,
+                  strerror (errno_save));
+        int n, i = 0;
+        int len = strlen (errbuf);
+        do
+          {
+            n = write (err, errbuf + i, len);
+            if (n <= 0)
+              break;
+            len -= n;
+            i += n;
+          }
+        while (len > 0);
+
       }
 
   free (exec_file);
