@@ -24,6 +24,7 @@
 #include <libguile.h>
 
 #include <stdio.h>
+#include <stdint.h>
 
 static void
 test_hashing ()
@@ -45,7 +46,9 @@ test_hashing ()
 #else
 #error "unsigned long not 4 or 8 bytes (need additonal test data)"
 #endif
-
+#if SCM_SIZEOF_UNSIGNED_LONG ! SCM_SIZEOF_UINTPTR_T
+#error "unsigned long and uintptr_t have different sizes"
+#endif
   const unsigned long actual = scm_to_ulong (scm_symbol_hash (sym));
   if (actual != expect)
     {
