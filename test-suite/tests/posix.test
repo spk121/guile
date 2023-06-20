@@ -525,12 +525,19 @@
 
   (pass-if-equal "file not found"
       ENOENT
-    (catch 'system-error
-      (lambda ()
-        (spawn "this-does-not-exist" '("nope")
-               #:search-path? #f))
-      (lambda args
-        (system-error-errno args)))))
+    (begin
+      (when (or (string-contains %host-type "cygwin")
+                (string-contains %host-type "msys"))
+        ;; It appears that Cygwin, rather than throwing ENOENT, will
+        ;; return a PID of a forked process and then immediately
+        ;; _Exit() that process.
+        (throw 'unresolved))
+      (catch 'system-error
+        (lambda ()
+          (spawn "this-does-not-exist" '("nope")
+                 #:search-path? #f))
+        (lambda args
+          (system-error-errno args))))))
 
 ;;
 ;; crypt
