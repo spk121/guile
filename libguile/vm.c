@@ -72,6 +72,10 @@
 #include "version.h"
 #include "vm-builtins.h"
 
+#ifdef __MINGW32__
+#include "posix-w32.h"
+#endif
+
 #include "vm.h"
 
 #include <gc/gc_mark.h>
@@ -604,7 +608,11 @@ scm_i_vm_prepare_stack (struct scm_vm *vp)
      Guile.  */
   if (page_size == 0)
     {
+#ifndef __MINGW32__
       page_size = getpagesize ();
+#else
+      page_size = getpagesize_w32 ();
+#endif
       /* page_size should be a power of two.  */
       if (page_size & (page_size - 1))
         abort ();
