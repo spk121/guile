@@ -34,6 +34,13 @@
 (define (test-directory2)
   (data-file-name "filesys-test-dir2.tmp"))
 
+(define (%delete-file file)
+  ;; lstat finds files and links. stat finds just files.
+  (when (false-if-exception (lstat file))
+    ;; MinGW requires write permission to delete a file.
+    (when (and (stat file #f) (not (access? file W_OK)))
+      (chmod file (logior (stat:mode (stat file)) #o200)))
+    (delete-file file)))
 
 ;;;
 ;;; copy-file
@@ -69,7 +76,7 @@
   (call-with-output-file (test-file)
     (lambda (port)
       (display "hello" port)))
-  (false-if-exception (delete-file (test-symlink)))
+  (%delete-file (test-symlink))
   (if (not (false-if-exception
 	    (begin (symlink (test-file) (test-symlink)) #t)))
       (display "cannot create symlink, lstat test skipped\n")
@@ -152,8 +159,7 @@
       (for-each
        (lambda (filename)
          (define full-name (in-vicinity (test-directory) filename))
-         (when (file-exists? full-name)
-           (delete-file full-name)))
+         (%delete-file full-name))
        '("test-file" "test-symlink"))
       (rmdir (test-directory))))
   (define (skip-unless-defined . things)
@@ -320,9 +326,8 @@
   (pass-if-equal "//" "/" (basename "//"))
   (pass-if-equal "a/b/c" "c" (basename "a/b/c")))
 
-(delete-file (test-file))
-(when (file-exists? (test-symlink))
-  (delete-file (test-symlink)))
+(%delete-file (test-file))
+(%delete-file (test-symlink))
 
 
 (with-test-prefix "mkdtemp"
@@ -514,8 +519,8 @@
       (close-port port)
       (readlink port)))
 
-  (false-if-exception (delete-file (test-symlink)))
-  (false-if-exception (delete-file (test-file))))
+  (%delete-file (test-symlink))
+  (%delete-file (test-file)))
 
 (with-test-prefix "symlinkat"
   (pass-if-equal "create" (test-file)
@@ -530,7 +535,7 @@
      (lambda (port)
        (symlinkat port (test-file) (test-symlink))
        (readlink (test-symlink)))))
-  (false-if-exception (delete-file (test-symlink)))
+  (%delete-file (test-symlink))
 
   (pass-if-exception "not a port" exception:wrong-type-arg
     (unless (defined? 'symlinkat)
@@ -611,8 +616,8 @@
     (list (file-exists? "filesys-test-a.tmp")
           (call-with-input-file "filesys-test-b.tmp" get-string-all)))
 
-  (false-if-exception (delete-file "filesys-test-a.tmp"))
-  (false-if-exception (delete-file "filesys-test-b.tmp"))
+  (%delete-file "filesys-test-a.tmp")
+  (%delete-file "filesys-test-b.tmp")
 
   (pass-if-equal "two ports" '(#f "hello")
     (skip-if-unsupported)
@@ -631,8 +636,8 @@
       (list (file-exists? (in-vicinity (test-directory) "a"))
             (call-with-input-file (in-vicinity (test-directory2) "b")
               get-string-all))))
-  (false-if-exception (delete-file (in-vicinity (test-directory) "a")))
-  (false-if-exception (delete-file (in-vicinity (test-directory2) "b")))
+  (%delete-file (in-vicinity (test-directory) "a"))
+  (%delete-file (in-vicinity (test-directory2) "b"))
   (false-if-exception (rmdir (test-directory)))
   (false-if-exception (rmdir (test-directory2)))
 
@@ -649,9 +654,9 @@
       ;; Verify it exists under the new name, and not under the old name.
       (list (file-exists? (in-vicinity (test-directory) "a"))
             (call-with-input-file (test-file) get-string-all))))
-  (false-if-exception (delete-file (in-vicinity (test-directory) "a")))
+  (%delete-file (in-vicinity (test-directory) "a"))
   (false-if-exception (rmdir (test-directory)))
-  (false-if-exception (delete-file (test-file)))
+  (%delete-file (test-file))
 
   (pass-if-equal "current working directory and port" '(#f "hello")
     (skip-if-unsupported)
@@ -668,8 +673,8 @@
             (call-with-input-file (in-vicinity (test-directory) "b")
               get-string-all))))
 
-  (false-if-exception (delete-file (in-vicinity (test-directory) "b")))
-  (false-if-exception (delete-file (test-file)))
+  (%delete-file (in-vicinity (test-directory) "b"))
+  (%delete-file (test-file))
   (false-if-exception (rmdir (test-directory)))
 
   (pass-if-exception "not a file port (1)" exception:wrong-type-arg
@@ -708,8 +713,7 @@
   (define (create-test-directory)
     (mkdir (test-directory)))
   (define (delete-test-file)
-    (when (file-exists? (test-file))
-      (delete-file (test-file))))
+    (%delete-file (test-file)))
   (define (delete-test-directory)
     (when (file-exists? (test-directory))
       (rmdir (test-directory))))
@@ -788,11 +792,14 @@
      (list (basename file) O_RDONLY)
      (lambda (port) (port-revealed port))))
 
-  (when (file-exists? (test-file))
-    (delete-file (test-file)))
+  (%delete-file (test-file))
 
   (pass-if-equal "O_CREAT/O_WRONLY" (list #t (logand (lognot (umask)) #o666) "w")
     (skip-if-unsupported)
+    (when (or (string-contains %host-type "cygwin")
+              (string-contains %host-type "msys"))
+      ;; May create different permissions, depending on filesystem.
+      (throw 'unsupported))
     (call-with-relatively-opened-file
      (list (dirname (test-file)) O_RDONLY)
      (list (basename (test-file)) (logior O_WRONLY O_CREAT))
@@ -801,12 +808,15 @@
              (stat:perms (stat (test-file)))
              (port-mode port)))))
 
-  (when (file-exists? (test-file))
-    (delete-file (test-file)))
+  (%delete-file (test-file))
 
   (pass-if-equal "O_CREAT/O_WRONLY, non-default mode"
       (list #t (logand (lognot (umask)) #o700) "w")
     (skip-if-unsupported)
+    (when (or (string-contains %host-type "cygwin")
+              (string-contains %host-type "msys"))
+      ;; May create different permissions, depending on filesystem.
+      (throw 'unsupported))
     (call-with-relatively-opened-file
      (list (dirname (test-file)) O_RDONLY)
      (list (basename (test-file)) (logior O_WRONLY O_CREAT) #o700)
@@ -827,5 +837,4 @@
     (skip-if-unsupported)
     (openat "not a port" "." O_RDONLY))
 
-  (when (file-exists? (test-file))
-    (delete-file (test-file))))
+  (%delete-file (test-file)))
