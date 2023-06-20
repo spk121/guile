@@ -1,0 +1,60 @@
+name: FreeBSD VM
+
+on:
+  # Allow manual triggering
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build
+    runs-on: macos-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+    - name: Install packages in FreeBSD
+      uses: vmactions/freebsd-vm@v0
+      with:
+        prepare: >-
+          pkg install -y
+          texlive-base
+          texinfo
+          autoconf
+          automake
+          llvm
+          libtool
+          gettext
+          gperf
+          pkgconf
+          lzip
+          boehm-gc
+          boehm-gc-threaded
+          gettext-runtime
+          gettext-tools
+          gmake
+          gmp
+          indexinfo
+          libffi
+          libiconv
+          libltdl
+          libtextstyle
+          libunistring
+          pkgconf
+        run: |
+          export LANG=C.UTF-8 TERM=dumb VERBOSE=true TZ=America/Los_Angeles
+          pwd
+          ls -lR
+          mkdir `pwd`/app
+          ./autogen.sh
+          ./configure CFLAGS="-g -O2 -Wall" --prefix=`pwd`/app
+          make -j4 V=1
+          make check V=1
+    - name: Archive Test Logs
+      if: success() || failure ()
+      uses: actions/upload-artifact@v3
+      with:
+        name: Test Logs
+        path: ./*.log
+   
+    
