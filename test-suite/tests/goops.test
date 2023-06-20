@@ -121,10 +121,14 @@
 		(let rec ((class <top>))
 		  (hash-create-handle! table class #f)
 		  (for-each rec (class-direct-subclasses class)))
-		(hash-fold (lambda (class ignore classes)
-			     (cons class classes))
-			   '()
-			   table))))
+		(sort
+                 (hash-fold (lambda (class ignore classes)
+			      (cons class classes))
+			    '()
+			    table)
+                 (lambda (a b)
+                   (string<? (symbol->string (class-name a))
+                             (symbol->string (class-name b))))))))
   )
 
 (with-test-prefix "classes for built-in types"
