@@ -1955,31 +1955,6 @@ SCM_DEFINE (scm_bytevector_ieee_double_native_set_x,
 
 /* Operations on strings.  */
 
-
-/* Produce a function that returns the length of a UTF-encoded string.  */
-#define UTF_STRLEN_FUNCTION(_utf_width)					\
-static inline size_t							\
-utf ## _utf_width ## _strlen (const uint ## _utf_width ## _t *str)	\
-{									\
-  size_t len = 0;							\
-  const uint ## _utf_width ## _t *ptr;					\
-  for (ptr = str;							\
-       *ptr != 0;							\
-       ptr++)								\
-    {									\
-      len++;								\
-    }									\
-									\
-  return (len * ((_utf_width) / 8));					\
-}
-
-UTF_STRLEN_FUNCTION (8)
-
-
-/* Return the length (in bytes) of STR, a UTF-(UTF_WIDTH) encoded string.  */
-#define UTF_STRLEN(_utf_width, _str)		\
-  utf ## _utf_width ## _strlen (_str)
-
 /* Return the "portable" name of the UTF encoding of size UTF_WIDTH and
    ENDIANNESS (Gnulib's `iconv_open' module guarantees the portability of the
    encoding name).  */
