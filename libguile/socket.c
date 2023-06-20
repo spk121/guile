@@ -454,6 +454,7 @@ typedef union
 #endif
   size_t size;
   int    integer;
+  struct timeval timeval;
 } scm_t_getsockopt_result;
 
 SCM_DEFINE (scm_getsockopt, "getsockopt", 3, 0, 0,
