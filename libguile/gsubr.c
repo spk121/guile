@@ -467,38 +467,70 @@ scm_subr_name (SCM subr)
 SCM
 scm_apply_subr (union scm_vm_stack_element *sp, uint32_t idx, ptrdiff_t nslots)
 {
-  SCM (*subr)() = subrs[idx];
-
 #define ARG(i) (sp[i].as_scm)
   switch (nslots - 1)
     {
     case 0:
-      return subr ();
+      {
+        SCM (*subr0)() = subrs[idx];
+        return subr0 ();
+      }
     case 1:
-      return subr (ARG (0));
+      {
+        SCM (*subr1)(SCM) = subrs[idx];
+        return subr1 (ARG (0));
+      }
     case 2:
-      return subr (ARG (1), ARG (0));
+      {
+        SCM (*subr2)(SCM, SCM) = subrs[idx];
+        return subr2 (ARG (1), ARG (0));
+      }
     case 3:
-      return subr (ARG (2), ARG (1), ARG (0));
+      {
+        SCM (*subr3)(SCM, SCM, SCM) = subrs[idx];
+        return subr3 (ARG (2), ARG (1), ARG (0));
+      }
     case 4:
-      return subr (ARG (3), ARG (2), ARG (1), ARG (0));
+      {
+        SCM (*subr4)(SCM, SCM, SCM, SCM) = subrs[idx];
+        return subr4 (ARG (3), ARG (2), ARG (1), ARG (0));
+      }
     case 5:
-      return subr (ARG (4), ARG (3), ARG (2), ARG (1), ARG (0));
+      {
+        SCM (*subr5)(SCM, SCM, SCM, SCM, SCM) = subrs[idx];
+        return subr5 (ARG (4), ARG (3), ARG (2), ARG (1), ARG (0));
+      }
     case 6:
-      return subr (ARG (5), ARG (4), ARG (3), ARG (2), ARG (1),
-                   ARG (0));
+      {
+        SCM (*subr6)(SCM, SCM, SCM, SCM, SCM, SCM) = subrs[idx];
+        return subr6 (ARG (5), ARG (4), ARG (3), ARG (2), ARG (1),
+                      ARG (0));
+      }
     case 7:
-      return subr (ARG (6), ARG (5), ARG (4), ARG (3), ARG (2),
-                   ARG (1), ARG (0));
+      {
+        SCM (*subr7)(SCM, SCM, SCM, SCM, SCM, SCM, SCM) = subrs[idx];
+        return subr7 (ARG (6), ARG (5), ARG (4), ARG (3), ARG (2),
+                      ARG (1), ARG (0));
+      }
     case 8:
-      return subr (ARG (7), ARG (6), ARG (5), ARG (4), ARG (3),
-                   ARG (2), ARG (1), ARG (0));
+      {
+        SCM (*subr8)(SCM, SCM, SCM, SCM, SCM, SCM, SCM, SCM) = subrs[idx];
+        return subr8 (ARG (7), ARG (6), ARG (5), ARG (4), ARG (3),
+                      ARG (2), ARG (1), ARG (0));
+      }
     case 9:
-      return subr (ARG (8), ARG (7), ARG (6), ARG (5), ARG (4),
-                   ARG (3), ARG (2), ARG (1), ARG (0));
+      {
+        SCM (*subr9)(SCM, SCM, SCM, SCM, SCM, SCM, SCM, SCM, SCM) = subrs[idx];
+        return subr9 (ARG (8), ARG (7), ARG (6), ARG (5), ARG (4),
+                      ARG (3), ARG (2), ARG (1), ARG (0));
+      }
     case 10:
-      return subr (ARG (9), ARG (8), ARG (7), ARG (6), ARG (5),
-                   ARG (4), ARG (3), ARG (2), ARG (1), ARG (0));
+      {
+        SCM (*subr10)(SCM, SCM, SCM, SCM, SCM, SCM, SCM, SCM, SCM,
+                      SCM) = subrs[idx];
+        return subr10 (ARG (9), ARG (8), ARG (7), ARG (6), ARG (5),
+                       ARG (4), ARG (3), ARG (2), ARG (1), ARG (0));
+      }
     default:
       abort (); /* SCM_GSUBR_MAX */
     }

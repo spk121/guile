@@ -133,29 +133,30 @@ static SCM scm_smob_trampolines[16];
 static SCM
 apply_0 (SCM smob)
 {
-  SCM (*subr)() = SCM_SMOB_DESCRIPTOR (smob).apply;
-  return subr (smob);
+  SCM (*subr0)(SCM _smob) = SCM_SMOB_DESCRIPTOR (smob).apply;
+  return subr0 (smob);
 }
 
 static SCM
 apply_1 (SCM smob, SCM a)
 {
-  SCM (*subr)() = SCM_SMOB_DESCRIPTOR (smob).apply;
-  return subr (smob, a);
+  SCM (*subr1)(SCM _smob, SCM _a) = SCM_SMOB_DESCRIPTOR (smob).apply;
+  return subr1 (smob, a);
 }
 
 static SCM
 apply_2 (SCM smob, SCM a, SCM b)
 {
-  SCM (*subr)() = SCM_SMOB_DESCRIPTOR (smob).apply;
-  return subr (smob, a, b);
+  SCM (*subr2)(SCM _smob, SCM _a, SCM _b) = SCM_SMOB_DESCRIPTOR (smob).apply;
+  return subr2 (smob, a, b);
 }
 
 static SCM
 apply_3 (SCM smob, SCM a, SCM b, SCM c)
 {
-  SCM (*subr)() = SCM_SMOB_DESCRIPTOR (smob).apply;
-  return subr (smob, a, b, c);
+  SCM (*subr3)(SCM _smob, SCM _a, SCM _b, SCM _c)
+    = SCM_SMOB_DESCRIPTOR (smob).apply;
+  return subr3 (smob, a, b, c);
 }
 
 static SCM
