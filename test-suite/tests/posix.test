@@ -397,9 +397,13 @@
                   (lambda ()
                     (system* "sh" "-c" "echo bong >&2"))))))))
 
-      (delete-file file)
-      (and (zero? (status:exit-val status))
-           (get-string-all port))))
+      (if (zero? (status:exit-val status))
+          (let ((out (call-with-input-file file get-string-all)))
+            (delete-file file)
+            out)
+          (begin
+            (false-if-exception (delete-file file))
+            #f))))
 
   (pass-if-equal "https://bugs.gnu.org/63024"
       0
