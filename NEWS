@@ -21,7 +21,7 @@ definitely unused---this is notably the case for modules that are only
 used at macro-expansion time, such as (srfi srfi-26).  In those cases,
 the compiler reports it as "possibly unused".
 
-** improve 'load-foreign-library' handling of DLLs
+** Improve 'load-foreign-library' handling of DLLs
 
 The non-libltdl load-foreign-library introduced in 3.0.6 does not handle
 some common cases with libtool-generated DLLs.  It has been updated
@@ -35,6 +35,14 @@ capability to search for "libfoo" as "msys-foo.dll" on MSYS.
 
 The load-foreign-library option #:rename-on-cygwin? has been changed to
 #:host-type-rename?, and handles both Cygwin and MSYS.
+
+** Make piped-process and system* available on systems without fork
+
+Now that piped-process and system* are implemented in terms of
+`posix_spawn', they can be made available on systems without fork().
+Note that currently Guile does use fork in piped-process to set exit
+codes, so piped-process on systems without fork will have a different
+behaviror with regards to exit codes.
 
 * Bug fixes
 
