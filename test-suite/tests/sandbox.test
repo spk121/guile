@@ -40,13 +40,17 @@
 
 (with-test-prefix "time limit"
   (pass-if "0 busy loop"
+    (unless (defined? 'SIGALRM) (throw 'unsupported))
     (call-with-time-limit 0 busy-loop (lambda () #t)))
   (pass-if "0.001 busy loop"
+    (unless (defined? 'SIGALRM) (throw 'unsupported))
     (call-with-time-limit 0.001 busy-loop (lambda () #t)))
   (pass-if "0 sleep"
+    (unless (defined? 'SIGALRM) (throw 'unsupported))
     (call-with-time-limit 0 (lambda () (usleep-loop #e1e6) #f)
                           (lambda () #t)))
   (pass-if "0.001 sleep"
+    (unless (defined? 'SIGALRM) (throw 'unsupported))
     (call-with-time-limit 0.001 (lambda () (usleep-loop #e1e6) #f)
                           (lambda () #t))))
 
