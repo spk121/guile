@@ -417,8 +417,29 @@
         (close-port (car input+output))
         (list (cdr (waitpid pid)) str))))
 
+  (pass-if-equal "awk with stdin and stdout redirects"
+      "world.\n"
+    (let* ((a+b (pipe))
+           (c+d (pipe))
+           (pid (spawn "awk" '("awk" "{print $2; exit 0;}")
+                       #:input (car a+b)
+                       #:output (cdr c+d))))
+      (close-port (car a+b))
+      (close-port (cdr c+d))
+
+      (display "Hello world.\n" (cdr a+b))
+      (close-port (cdr a+b))
+
+      (let ((str (get-string-all (car c+d))))
+        (close-port (car c+d))
+        (waitpid pid)
+        str)))
+
   (pass-if-equal "wc with stdin and stdout redirects"
       "2\n"
+    (unless (defined? 'SIGPIPE)
+      ;; This test expects a closing pipe to kill the spawned process.
+      (throw 'unsupported))
     (let* ((a+b (pipe))
            (c+d (pipe))
            (pid (spawn "wc" '("wc" "-w")

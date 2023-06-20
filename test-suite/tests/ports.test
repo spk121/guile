@@ -686,9 +686,14 @@
 
 
 ;;; Run a command, send some output to it, and see if it worked.
+
+;; We could have used grep for this test, but on systems without
+;; SIGPIPE, grep never exits.
 (pass-if "pipe: write"
   (let* ((filename (test-file))
-         (pipe (open-pipe (string-append "grep Mommy > " filename) "w")))
+         (awkscript
+          "awk 'BEGIN{i=1} {if (match($0,\"Mommy\")) print $0; if (i==2) exit; i++;}'")
+         (pipe (open-pipe (string-append awkscript " > " filename) "w")))
     (display "Now Jimmy lives on a mushroom cloud\n" pipe)
     (display "Mommy, why does everybody have a bomb?\n" pipe)
     (close-pipe pipe)
