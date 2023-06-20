@@ -1971,16 +1971,23 @@
     ;; of "/dev/null".  See
     ;; <http://lists.gnu.org/archive/html/guile-devel/2012-05/msg00059.html>
     ;; for a discussion.
+    (unless (file-exists? "/dev/null")
+      ;; Filename canonicalization only works on extant files.
+      (throw 'unresolved))
     (with-load-path (cons "" (delete "/" %load-path))
       (with-fluids ((%file-port-name-canonicalization 'relative))
         (port-filename (open-input-file "/dev/null")))))
 
   (pass-if-equal "relative canonicalization with /" "dev/null"
+    (unless (file-exists? "/dev/null")
+      (throw 'unresolved))
     (with-load-path (cons "/" %load-path)
       (with-fluids ((%file-port-name-canonicalization 'relative))
         (port-filename (open-input-file "/dev/null")))))
 
   (pass-if-equal "relative canonicalization with /dev/.." "dev/null"
+    (unless (file-exists? "/dev/null")
+      (throw 'unresolved))
     (with-load-path (cons "/dev/.." %load-path)
       (with-fluids ((%file-port-name-canonicalization 'relative))
         (port-filename (open-input-file "/dev/null")))))
