@@ -47,10 +47,6 @@
 
 
 
-#ifndef floor
-extern double floor();
-#endif
-
 
 /* This hash function is originally from
    http://burtleburtle.net/bob/c/lookup3.c by Bob Jenkins, May 2006,
