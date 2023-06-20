@@ -99,6 +99,7 @@ SOURCES =					\
   language/cps/intset.scm			\
   language/cps/licm.scm				\
   language/cps/loop-instrumentation.scm		\
+  language/cps/lower-primcalls.scm		\
   language/cps/optimize.scm			\
   language/cps/peel-loops.scm			\
   language/cps/prune-top-level-scopes.scm	\
