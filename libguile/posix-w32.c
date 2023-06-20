@@ -289,6 +289,53 @@ dlerror_w32 ()
     snprintf (dlerror_str, DLERROR_LEN, "error %ld: %s", (long) dw, msg_buf);
   return dlerror_str;
 }
+
+int
+console_has_return_keyevent_w32 (int fdes)
+{
+  /* Check for the Windows 11 bug where there's a return character in
+   * the console input queue after draining the input. */
+  HANDLE h;
+  BOOL bRet;
+  DWORD avail;
+  DWORD nbuffer;
+  int n_chars = 0;
+  int n_returns = 0;
+  INPUT_RECORD *irbuffer;
+  int i;
+  DWORD mode;
+
+  h = (HANDLE) _get_osfhandle (fdes);
+  if (GetConsoleMode (h, &mode) == 0)
+    return 0;
+  if (GetNumberOfConsoleInputEvents (h, &nbuffer) == 0)
+    return 0;
+  if (nbuffer == 0)
+    return 0;
+  irbuffer = scm_malloc (sizeof (INPUT_RECORD) * nbuffer);
+  while (1)
+    {
+      bRet = PeekConsoleInput (h, irbuffer, nbuffer, &avail);
+      if (!bRet || avail == 0)
+        break;
+
+      for (i = 0; i < avail; i++)
+        if (irbuffer[i].EventType == KEY_EVENT)
+          {
+            n_chars ++;
+            if (irbuffer[i].Event.KeyEvent.uChar.AsciiChar == 13)
+              n_returns ++;
+          }
+      if (avail < nbuffer)
+        break;
+    }
+
+  free (irbuffer);
+  if (n_chars == 1 && n_returns == 1)
+    return 1;
+  return 0;
+}
+
 int
 getpagesize_w32 (void)
 {

@@ -59,6 +59,9 @@
 #include "pairs.h"
 #include "ports-internal.h"
 #include "posix.h"
+#ifdef __MINGW32__
+# include "posix-w32.h"
+#endif
 #include "read.h"
 #include "strings.h"
 #include "symbols.h"
@@ -483,7 +486,17 @@ fport_input_waiting (SCM port)
   if (poll (&pollfd, 1, 0) < 0)
     scm_syserror ("fport_input_waiting");
 
-  return pollfd.revents & POLLIN ? 1 : 0;
+  if ((pollfd.revents & POLLIN) == 0)
+    return 0;
+
+#ifdef __MINGW32__
+  /* Work around Windows 11 bug where there's always a return character
+   * in the console input queue. */
+  if (console_has_return_keyevent_w32 (fdes))
+    return 0;
+#endif
+
+  return 1;
 }
 
 
