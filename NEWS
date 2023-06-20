@@ -42,7 +42,21 @@ Now that piped-process and system* are implemented in terms of
 `posix_spawn', they can be made available on systems without fork().
 Note that currently Guile does use fork in piped-process to set exit
 codes, so piped-process on systems without fork will have a different
-behaviror with regards to exit codes.
+behavior with regards to exit codes.
+
+** MinGW: remove kill, getaffinity, setaffinity, getpriority, and setpriority
+
+Now that Guile uses a posix_spawn module, these Win32 emulations of
+POSIX functions no longer work.  They relied on Guile keeping an
+internal handle-to-pid table, which is not part of the new posix_spawn
+code.  They are removed on MinGW.
+
+** MinGW: waitpid returns ENOSYS if options are non-zero
+
+When Guile switched to using posix_spawn module, Guile's Win32 emulation
+of waitpid could no longer emulate ENOHANG.  It relied on Guile keeping
+an internal handle-to-pid table.  It now returns ENOSYS on any non-zero
+waitpid option.
 
 * Bug fixes
 
