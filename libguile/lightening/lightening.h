@@ -104,7 +104,7 @@ typedef struct jit_reloc
   uint32_t offset;
 } jit_reloc_t;
 
-#if defined(__GNUC__) && (__GNUC__ >= 4)
+#if defined(__GNUC__) && (__GNUC__ >= 4) && !defined(_WIN32) && !defined(__CYGWIN__)
 #  define JIT_API		extern __attribute__ ((__visibility__("hidden")))
 #else
 #  define JIT_API		extern
