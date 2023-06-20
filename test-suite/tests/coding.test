@@ -22,6 +22,7 @@
 (define (with-temp-file proc)
   (let* ((tmpdir (or (getenv "TMPDIR")
                      (getenv "TEMP")
+                     (getenv "TMP")
                      "/tmp"))
          (name (string-append tmpdir "/coding-test.XXXXXX"))
          (port (mkstemp! name)))
