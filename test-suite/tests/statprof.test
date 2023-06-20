@@ -36,15 +36,17 @@
 ;; on platforms such as GNU/Hurd or Cygwin where `ITIMER_PROF' is is
 ;; currently unimplemented.
 (define-syntax-rule (when-implemented body ...)
-  (catch 'system-error
-    (lambda ()
-      body ...)
-    (lambda args
-      (let ((errno (system-error-errno args)))
-        (false-if-exception (statprof-stop))
-        (if (or (= errno ENOSYS) (= errno EINVAL))
-            (throw 'unresolved)
-            (apply throw args))))))
+  (begin
+    (unless (defined? 'SIGPROF) (throw 'unresolved))
+    (catch 'system-error
+           (lambda ()
+             body ...)
+           (lambda args
+             (let ((errno (system-error-errno args)))
+               (false-if-exception (statprof-stop))
+               (if (or (= errno ENOSYS) (= errno EINVAL))
+                   (throw 'unresolved)
+                   (apply throw args)))))))
 
 (pass-if-equal "return values"
     '(42 77)
