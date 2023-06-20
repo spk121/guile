@@ -24,6 +24,8 @@
 
 /* ASYNC_TICK after finding EINTR in order to handle pending signals, if
    any. See comment in scm_syserror. */
+#include "async.h"
+
 #define SCM_SYSCALL(line)			\
   do						\
     {						\
