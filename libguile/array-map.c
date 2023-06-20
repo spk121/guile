@@ -101,7 +101,8 @@ cindk (SCM ra, ssize_t *ve, int kend)
 int
 scm_ramapc (void *cproc_ptr, SCM data, SCM ra0, SCM lra, const char *what)
 {
-  int (*cproc) () = cproc_ptr;
+  int (*cproc2) (SCM _va0, SCM _lva) = cproc_ptr;
+  int (*cproc3) (SCM _va0, SCM _data, SCM _lva) = cproc_ptr;
   SCM z, va0, lva, *plva;
   int k, kmax, kroll;
   ssize_t *vi, inc;
@@ -197,7 +198,7 @@ scm_ramapc (void *cproc_ptr, SCM data, SCM ra0, SCM lra, const char *what)
           SCM_I_ARRAY_SET_BASE (va0, cindk (ra0, vi, kroll));
           for (z = lva; !scm_is_null (z); z = SCM_CDR (z), y = SCM_CDR (y))
             SCM_I_ARRAY_SET_BASE (SCM_CAR (z), cindk (SCM_CAR (y), vi, kroll));
-          if (! (SCM_UNBNDP (data) ? cproc (va0, lva) : cproc (va0, data, lva)))
+          if (! (SCM_UNBNDP (data) ? cproc2 (va0, lva) : cproc3 (va0, data, lva)))
             return 0;
           --k;
         }

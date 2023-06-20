@@ -506,7 +506,7 @@ SCM_DEFINE (scm_with_fluids, "with-fluids*", 3, 0, 0,
 #undef FUNC_NAME
 
 SCM
-scm_c_with_fluids (SCM fluids, SCM values, SCM (*cproc) (), void *cdata)
+scm_c_with_fluids (SCM fluids, SCM values, SCM (*cproc) (void *_cdata), void *cdata)
 #define FUNC_NAME "scm_c_with_fluids"
 {
   SCM ans;
@@ -544,7 +544,7 @@ scm_with_fluid (SCM fluid, SCM value, SCM thunk)
 }
 
 SCM
-scm_c_with_fluid (SCM fluid, SCM value, SCM (*cproc) (), void *cdata)
+scm_c_with_fluid (SCM fluid, SCM value, SCM (*cproc) (void *_cdata), void *cdata)
 #define FUNC_NAME "scm_c_with_fluid"
 {
   SCM ans;
