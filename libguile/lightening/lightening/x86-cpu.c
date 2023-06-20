@@ -1012,14 +1012,30 @@ mulr(jit_state_t *_jit, int32_t r0, int32_t r1, int32_t r2)
   }
 }
 
+#if defined(__GNUC__) && defined(_WIN32)
+/* ffs may be missing on WIN32 but is always available as GCC
+   builtin. */
+#define USE_BUILTIN_FFS
+#endif
+
+static int
+__ffs(int i)
+{
+#ifdef USE_BUILTIN_FFS
+  return __builtin_ffs(i);
+#else
+  return ffs(i);
+#endif
+}
+
 static int
 ffsw(jit_word_t i)
 {
   if (sizeof(int) == sizeof(i))
-    return ffs(i);
-  int bit = ffs((int)i);
+    return __ffs(i);
+  int bit = __ffs((int)i);
   if (bit == 0) {
-    bit = ffs((int)((uint64_t)i >> 32));
+    bit = __ffs((int)((uint64_t)i >> 32));
     if (bit)
       bit += 32;
   }
