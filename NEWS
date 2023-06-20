@@ -270,6 +270,14 @@ Guile's internal unit test harness is now compatible with Automake's
 parallel test driver, allowing `make check -j20` to use 20 cores, if you
 have them.  Send any bug reports to bug-guile@gnu.org.
 
+** Make piped-process and system* available on systems without fork
+
+Now that piped-process and system* are implemented in terms of
+`posix_spawn', they can be made available on systems without fork().
+Note that currently Guile does use fork in piped-process to set exit
+codes, so piped-process on systems without fork will have a different
+behaviror with regards to exit codes.
+
 * Bug fixes
 
 ** Fix incorrect comparison between exact and inexact numbers
