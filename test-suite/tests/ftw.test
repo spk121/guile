@@ -259,7 +259,8 @@
               (file-system-fold enter? leaf down up skip error '() name))))))
 
   (pass-if "dangling symlink and lstat"
-    (if (not (defined? 'symlink))
+    (if (or (not (defined? 'symlink))
+            (string-contains %host-type "msys")) ; MSYS has nonfunctional symlinks
         (throw 'unresolved)
         (with-file-tree %top-builddir '(directory "test-dangling"
                                                   (("dangling" -> "xxx")))
@@ -278,7 +279,8 @@
 
   (pass-if "dangling symlink and stat"
     ;; Same as above, but using `stat' instead of `lstat'.
-    (if (not (defined? 'symlink))
+    (if (or (not (defined? 'symlink))
+            (string-contains %host-type "msys")) ; MSYS has nonfunctional symlinks
         (throw 'unresolved)
         (with-file-tree %top-builddir '(directory "test-dangling"
                                                   (("dangling" -> "xxx")))
@@ -360,7 +362,8 @@
   ;; In Guile up to 2.0.6, this would return ("." ".." "link-to-dir").
   (pass-if-equal "symlink to directory"
       '("." ".." "link-to-dir" "subdir")
-    (if (not (defined? 'symlink))
+    (if (or (not (defined? 'symlink))
+            (string-contains %host-type "msys")) ; MSYS has non-functional symlinks
         (throw 'unresolved)
         (with-file-tree %top-builddir '(directory "test-scandir-symlink"
                                                   (("link-to-dir" -> "subdir")
