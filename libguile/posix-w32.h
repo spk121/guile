@@ -67,30 +67,9 @@ struct utsname
 #define WIFSTOPPED(stat_val)  ((stat_val) == (stat_val) ? 0 : 0)
 #define WSTOPSIG(stat_var)    (0)
 
-#define CPU_ZERO(s)     memset(s,0,sizeof(*s))
-#define CPU_ISSET(b,s)  ((*s) & (1U << (b))) != 0
-#define CPU_SET(b,s)    (*s) |= (1U << (b))
-#define CPU_SETSIZE     (8*sizeof(DWORD_PTR))
-typedef DWORD_PTR cpu_set_t;
-
-#define PRIO_PROCESS 1
-#define PRIO_PGRP    2
-#define PRIO_USER    3
-
 SCM_INTERNAL int uname (struct utsname * uts);
 SCM_INTERNAL int waitpid (intptr_t, int *, int);
 SCM_INTERNAL int w32_status_to_termsig (DWORD status);
-
-SCM_INTERNAL pid_t start_child (const char *exec_file, char **argv,
-                                int reading, int c2p[2], int writing, int p2c[2],
-                                int infd, int outfd, int errfd);
-
-SCM_INTERNAL int kill (int pid, int sig);
-
-SCM_INTERNAL int getpriority (int which, int who);
-SCM_INTERNAL int setpriority (int which, int who, int nice_val);
-SCM_INTERNAL int sched_getaffinity (int pid, size_t mask_size, cpu_set_t *mask);
-SCM_INTERNAL int sched_setaffinity (int pid, size_t mask_size, cpu_set_t *mask);
 SCM_INTERNAL void *dlopen_w32 (const char *name, int flags);
 SCM_INTERNAL void *dlsym_w32 (void *handle, const char *name);
 SCM_INTERNAL int dlclose_w32 (void *handle);
@@ -99,12 +78,6 @@ SCM_INTERNAL int getpagesize_w32 (void);
 
 #define HAVE_UNAME 1
 #define HAVE_WAITPID 1
-#define HAVE_START_CHILD 1
-#define HAVE_KILL 1
-#define HAVE_GETPRIORITY 1
-#define HAVE_SETPRIORITY 1
-#define HAVE_SCHED_GETAFFINITY 1
-#define HAVE_SCHED_SETAFFINITY 1
 
 #define RTLD_NOW 1
 #define RTLD_LAZY 2
