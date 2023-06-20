@@ -163,6 +163,8 @@
 
   (pass-if-exception "non-tty argument" exception:system-error
     ;; This used to crash in 1.8.1 and earlier.
+    (unless (defined? 'ttyname)
+      (throw 'unsupported))
     (let ((file (false-if-exception
                  (open-output-file "/dev/null"))))
       (if (not file)
