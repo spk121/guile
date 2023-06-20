@@ -24,6 +24,7 @@
   #:use-module (srfi srfi-11)
   #:use-module (ice-9 match)
   #:use-module ((ice-9 binary-ports) #:select (get-bytevector-some!))
+  #:use-module ((system foreign) #:select (sizeof intptr_t))
   #:use-module (rnrs io ports)
   #:use-module (rnrs io simple)
   #:use-module (rnrs exceptions)
@@ -524,6 +525,8 @@ not `set-port-position!'"
                                                 (const 0)
                                                 (const (expt 2 42))
                                                 #f #f)))
+      (when (= 4 (sizeof intptr_t))
+        (throw 'unresolved))
       (port-position port)))
 
 
