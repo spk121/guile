@@ -982,7 +982,7 @@ move_one(jit_state_t *_jit, jit_operand_t *dst, jit_operand_t *src,
         break;
       case BEING_MOVED: {
         jit_operand_t tmp;
-        if (is_fpr_arg (src[j].kind)) {
+        if (is_fpr_arg (src[j].abi)) {
           tmp_fpr = 1;
           tmp = jit_operand_fpr(src[j].abi, get_temp_fpr(_jit));
         } else {
