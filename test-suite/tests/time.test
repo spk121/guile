@@ -29,7 +29,9 @@
 
   (for-each (lambda (t)
 	      (pass-if (list "in another thread after error" t)
-		(or (provided? 'threads) (throw 'unsupported))
+		(unless (and (provided? 'threads)
+                             (defined? 'alarm))
+                  (throw 'unsupported))
 
 		(alarm 5)
 		(false-if-exception (gmtime t))
