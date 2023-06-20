@@ -95,6 +95,7 @@ SCM_INTERNAL void *dlopen_w32 (const char *name, int flags);
 SCM_INTERNAL void *dlsym_w32 (void *handle, const char *name);
 SCM_INTERNAL int dlclose_w32 (void *handle);
 SCM_INTERNAL char *dlerror_w32 (void);
+SCM_INTERNAL int getpagesize_w32 (void);
 
 #define HAVE_UNAME 1
 #define HAVE_WAITPID 1

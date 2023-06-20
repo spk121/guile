@@ -1256,3 +1256,8 @@ dlerror_w32 ()
     snprintf (dlerror_str, DLERROR_LEN, "error %ld: %s", (long) dw, msg_buf);
   return dlerror_str;
 }
+int
+getpagesize_w32 (void)
+{
+  return 4 * 1024;
+}
