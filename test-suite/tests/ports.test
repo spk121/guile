@@ -1995,7 +1995,8 @@
 
     ;; In Guile up to 2.2.2, this would return "wrong/x.scm'.
     (let* ((dir1 (string-append %temporary-directory "/something"))
-           (dir2 (string-append dir1 "-wrong")))
+           (dir2 (string-append dir1 "-wrong"))
+           (p #f))
       (with-load-path (append (list dir1 dir2) %load-path)
         (dynamic-wind
           (lambda ()
@@ -2006,9 +2007,10 @@
               (const #t)))
           (lambda ()
             (with-fluids ((%file-port-name-canonicalization 'relative))
-              (port-filename
-               (open-input-file (string-append dir2 "/x.scm")))))
+              (set! p (open-input-file (string-append dir2 "/x.scm")))
+              (port-filename p)))
           (lambda ()
+            (close p)
             (delete-file (string-append dir2 "/x.scm"))
             (rmdir dir2)
             (rmdir dir1)

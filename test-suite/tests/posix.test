@@ -207,19 +207,19 @@
               (delete-file file))))
         (throw 'unsupported)))
 
-  (define (utime-unless-unsupported oops . arguments)
+  (define (utime-unless-unsupported oops port . arguments)
     (catch 'system-error
       (lambda ()
         (catch 'wrong-type-arg
           (lambda ()
-            (apply utime arguments))
+            (apply utime port arguments))
           (lambda _
             ;; 'futimens' is not supported on all platforms.
-            (oops))))
+            (oops port))))
       (lambda args
         ;; On some platforms, 'futimens' returns ENOSYS according to Gnulib.
         (if (= (system-error-errno args) ENOSYS)
-            (oops)
+            (oops port)
             (apply throw args)))))
 
   (pass-if-equal "file port"
@@ -229,13 +229,15 @@
       (close-port (open-output-file file))
       (define (delete)
         (delete-file file))
-      (define (oops)
+      (define (oops port)
+        (close port)
         (delete)
         (throw 'unsupported))
       (call-with-input-file file
         (lambda (port)
           (utime-unless-unsupported oops port 1 1 0 0)
           (define info (stat file))
+          (close port)
           (delete)
           (list (stat:atime info) (stat:mtime info))))))
 
