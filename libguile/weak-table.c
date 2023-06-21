@@ -173,13 +173,13 @@ allocate_entry (scm_t_weak_table_kind kind)
   switch (kind)
     {
     case SCM_WEAK_TABLE_KIND_KEY:
-      ret = GC_malloc_explicitly_typed (sizeof (*ret), weak_key_descr);
+      ret = GC_MALLOC_EXPLICITLY_TYPED (sizeof (*ret), weak_key_descr);
       break;
     case SCM_WEAK_TABLE_KIND_VALUE:
-      ret = GC_malloc_explicitly_typed (sizeof (*ret), weak_value_descr);
+      ret = GC_MALLOC_EXPLICITLY_TYPED (sizeof (*ret), weak_value_descr);
       break;
     case SCM_WEAK_TABLE_KIND_BOTH:
-      ret = GC_malloc_explicitly_typed (sizeof (*ret), doubly_weak_descr);
+      ret = GC_MALLOC_EXPLICITLY_TYPED (sizeof (*ret), doubly_weak_descr);
       break;
     default:
       abort ();

@@ -83,7 +83,7 @@ scm_inline_gc_malloc_pointerless (scm_thread *thread, size_t bytes)
   size_t idx = scm_inline_gc_bytes_to_freelist_index (bytes);
 
   if (SCM_UNLIKELY (idx >= SCM_INLINE_GC_FREELIST_COUNT))
-    return GC_malloc_atomic (bytes);
+    return GC_MALLOC_ATOMIC (bytes);
 
   return scm_inline_gc_alloc
     (&thread->pointerless_freelists[idx], idx, GC_I_PTRFREE);
@@ -95,7 +95,7 @@ scm_inline_gc_malloc (scm_thread *thread, size_t bytes)
   size_t idx = scm_inline_gc_bytes_to_freelist_index (bytes);
 
   if (SCM_UNLIKELY (idx >= SCM_INLINE_GC_FREELIST_COUNT))
-    return GC_malloc (bytes);
+    return GC_MALLOC (bytes);
 
   return scm_inline_gc_alloc
     (&thread->freelists[idx], idx, GC_I_NORMAL);

@@ -430,7 +430,8 @@ scm_i_new_smob (scm_t_bits tc, scm_t_bits data)
      allocates a double cell.  We leave words 2 and 3 to there initial
      values, which is 0.  */
   if (scm_smobs [smobnum].mark)
-    ret = SCM_PACK_POINTER (GC_generic_malloc (2 * sizeof (scm_t_cell), smob_gc_kind));
+    ret = SCM_PACK_POINTER (GC_GENERIC_OR_SPECIAL_MALLOC (2 * sizeof (scm_t_cell),
+                                                          smob_gc_kind));
   else
     ret = SCM_PACK_POINTER (GC_MALLOC (sizeof (scm_t_cell)));
   
@@ -455,7 +456,8 @@ scm_i_new_double_smob (scm_t_bits tc, scm_t_bits data1,
   /* Use the smob_gc_kind if needed to allow the mark procedure to
      run.  */
   if (scm_smobs [smobnum].mark)
-    ret = SCM_PACK_POINTER (GC_generic_malloc (2 * sizeof (scm_t_cell), smob_gc_kind));
+    ret = SCM_PACK_POINTER (GC_GENERIC_OR_SPECIAL_MALLOC (2 * sizeof (scm_t_cell),
+                                                          smob_gc_kind));
   else
     ret = SCM_PACK_POINTER (GC_MALLOC (2 * sizeof (scm_t_cell)));
   
