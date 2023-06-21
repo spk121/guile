@@ -44,7 +44,6 @@
 #include "libguile/threads.h"
 
 #include <gc/gc_inline.h> /* GC_generic_malloc_many */
-
 
 
 static inline size_t
@@ -115,45 +114,14 @@ scm_inline_gc_malloc_pointerless_words (scm_thread *thread, size_t words)
 }
 
 static inline SCM
-scm_inline_cell (scm_thread *thread, scm_t_bits car, scm_t_bits cdr)
+scm_inline_cons (scm_thread *thread, SCM x, SCM y)
 {
   SCM cell = SCM_PACK_POINTER (scm_inline_gc_malloc_words (thread, 2));
   
-  SCM_GC_SET_CELL_WORD (cell, 0, car);
-  SCM_GC_SET_CELL_WORD (cell, 1, cdr);
+  SCM_GC_SET_CELL_WORD (cell, 0, SCM_UNPACK (x));
+  SCM_GC_SET_CELL_WORD (cell, 1, SCM_UNPACK (y));
 
   return cell;
 }
-
-static inline SCM
-scm_inline_double_cell (scm_thread *thread, scm_t_bits car, scm_t_bits cbr,
-                           scm_t_bits ccr, scm_t_bits cdr)
-{
-  SCM cell = SCM_PACK_POINTER (scm_inline_gc_malloc_words (thread, 4));
-  
-  SCM_GC_SET_CELL_WORD (cell, 0, car);
-  SCM_GC_SET_CELL_WORD (cell, 1, cbr);
-  SCM_GC_SET_CELL_WORD (cell, 2, ccr);
-  SCM_GC_SET_CELL_WORD (cell, 3, cdr);
-
-  return cell;
-}
-
-static inline SCM
-scm_inline_words (scm_thread *thread, scm_t_bits car, uint32_t n_words)
-{
-  SCM obj = SCM_PACK_POINTER (scm_inline_gc_malloc_words (thread, n_words));
-  
-  SCM_GC_SET_CELL_WORD (obj, 0, car);
-
-  return obj;
-}
-
-static inline SCM
-scm_inline_cons (scm_thread *thread, SCM x, SCM y)
-{
-  return scm_inline_cell (thread, SCM_UNPACK (x), SCM_UNPACK (y));
-}
-
 
 #endif  /* SCM_GC_INLINE_H */
