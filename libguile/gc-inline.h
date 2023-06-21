@@ -59,17 +59,8 @@ scm_inline_gc_freelist_object_size (size_t idx)
   return (idx + 1U) * SCM_INLINE_GC_GRANULE_BYTES;
 }
 
-/* The values of these must match the internal POINTERLESS and NORMAL
-   definitions in libgc, for which unfortunately there are no external
-   definitions.  Alack.  */
-typedef enum scm_inline_gc_kind
-  {
-    SCM_INLINE_GC_KIND_POINTERLESS,
-    SCM_INLINE_GC_KIND_NORMAL
-  } scm_inline_gc_kind;
-
 static inline void *
-scm_inline_gc_alloc (void **freelist, size_t idx, scm_inline_gc_kind kind)
+scm_inline_gc_alloc (void **freelist, size_t idx, int kind)
 {
   void *head = *freelist;
 
@@ -96,7 +87,7 @@ scm_inline_gc_malloc_pointerless (scm_thread *thread, size_t bytes)
     return GC_malloc_atomic (bytes);
 
   return scm_inline_gc_alloc
-    (&thread->pointerless_freelists[idx], idx, SCM_INLINE_GC_KIND_POINTERLESS);
+    (&thread->pointerless_freelists[idx], idx, GC_I_PTRFREE);
 }
 
 static inline void *
@@ -108,7 +99,7 @@ scm_inline_gc_malloc (scm_thread *thread, size_t bytes)
     return GC_malloc (bytes);
 
   return scm_inline_gc_alloc
-    (&thread->freelists[idx], idx, SCM_INLINE_GC_KIND_NORMAL);
+    (&thread->freelists[idx], idx, GC_I_NORMAL);
 }
 
 static inline void *
