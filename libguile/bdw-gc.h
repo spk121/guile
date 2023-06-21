@@ -31,7 +31,6 @@
    allocation.  */
 
 # define GC_THREADS 1
-# define GC_REDIRECT_TO_LOCAL 1
 
 /* Don't #define pthread routines to their GC_pthread counterparts.
    Instead we will be careful inside Guile to use the GC_pthread
