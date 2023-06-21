@@ -470,7 +470,7 @@ allocate_words_with_freelist (scm_thread *thread, size_t freelist_idx)
   return SCM_PACK_POINTER
     (scm_inline_gc_alloc (&thread->freelists[freelist_idx],
                           freelist_idx,
-                          SCM_INLINE_GC_KIND_NORMAL));
+                          GC_I_NORMAL));
 }
 
 static SCM
@@ -485,7 +485,7 @@ allocate_pointerless_words_with_freelist (scm_thread *thread, size_t freelist_id
   return SCM_PACK_POINTER
     (scm_inline_gc_alloc (&thread->pointerless_freelists[freelist_idx],
                           freelist_idx,
-                          SCM_INLINE_GC_KIND_POINTERLESS));
+                          GC_I_PTRFREE));
 }
 
 static SCM
