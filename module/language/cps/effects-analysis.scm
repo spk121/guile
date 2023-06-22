@@ -268,6 +268,7 @@ loads from objects created at known allocation sites."
     (lambda (label fx out)
       (cond
        ((causes-all-effects? fx) out)
+       ((logtest fx &allocation) out)
        ((logtest fx (logior &read &write))
         (match (intmap-ref conts label)
           ;; Assume that instructions which cause a known set of effects
