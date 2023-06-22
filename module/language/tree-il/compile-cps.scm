@@ -421,25 +421,6 @@
     (letk kheap-object ($kargs () () ($branch knot-pair k src pred #f (x))))
     (build-term ($branch knot-pair kheap-object src 'heap-object? #f (x)))))
 
-(define-primcall-converter cons
-  (lambda (cps k src op param head tail)
-    (with-cps cps
-      (letv pair)
-      (letk kdone
-            ($kargs () ()
-              ($continue k src ($values (pair)))))
-      (letk ktail
-            ($kargs () ()
-              ($continue kdone src
-                ($primcall 'scm-set!/immediate '(pair . 1) (pair tail)))))
-      (letk khead
-            ($kargs ('pair) (pair)
-              ($continue ktail src
-                ($primcall 'scm-set!/immediate '(pair . 0) (pair head)))))
-      (build-term
-        ($continue khead src
-          ($primcall 'allocate-words/immediate '(pair . 2) ()))))))
-
 (define-primcall-converter car
   (lambda (cps k src op param pair)
     (ensure-pair
@@ -448,7 +429,7 @@
        (with-cps cps
          (build-term
            ($continue k src
-             ($primcall 'scm-ref/immediate '(pair . 0) (pair)))))))))
+             ($primcall 'car #f (pair)))))))))
 
 (define-primcall-converter cdr
   (lambda (cps k src op param pair)
@@ -458,7 +439,7 @@
        (with-cps cps
          (build-term
            ($continue k src
-             ($primcall 'scm-ref/immediate '(pair . 1) (pair)))))))))
+             ($primcall 'cdr #f (pair)))))))))
 
 (define-primcall-converter set-car!
   (lambda (cps k src op param pair val)
@@ -469,7 +450,7 @@
        (with-cps cps
          (build-term
            ($continue k src
-             ($primcall 'scm-set!/immediate '(pair . 0) (pair val)))))))))
+             ($primcall 'set-car! #f (pair val)))))))))
 
 (define-primcall-converter set-cdr!
   (lambda (cps k src op param pair val)
@@ -480,7 +461,7 @@
        (with-cps cps
          (build-term
            ($continue k src
-             ($primcall 'scm-set!/immediate '(pair . 1) (pair val)))))))))
+             ($primcall 'set-cdr! #f (pair val)))))))))
 
 (define-primcall-converter %box-ref
   (lambda (cps k src op param box)
