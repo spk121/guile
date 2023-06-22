@@ -497,10 +497,6 @@ for a label, it isn't known to be constant at that label."
          (match term-key
            (('op arg ...)
             (match defs
-              (#f
-               ;; If the successor is a control-flow join, don't
-               ;; pretend to know the values of its defs.
-               #f)
               ((def) (add-def! (list 'op* arg* ...) aux) ...)))
            (_ (add-definitions . clauses))))
         ((add-definitions
