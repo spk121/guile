@@ -1,6 +1,6 @@
 ;;; Effects analysis on CPS
 
-;; Copyright (C) 2011-2015,2017-2021 Free Software Foundation, Inc.
+;; Copyright (C) 2011-2015,2017-2021,2023 Free Software Foundation, Inc.
 
 ;;;; This library is free software; you can redistribute it and/or
 ;;;; modify it under the terms of the GNU Lesser General Public
@@ -413,6 +413,14 @@ the LABELS that are clobbered by the effects of LABEL."
 
 ;; Generic objects.
 (define (annotation->memory-kind* annotation idx)
+  ;; Lowering from Tree-IL to CPS reifies type-specific constructors and
+  ;; accessors.  For these we can treat e.g. vector-length as completely
+  ;; constant as it can commute with any other instruction: the header
+  ;; initialization write of a vector is not visible.
+  ;;
+  ;; However when these instructions are later lowered to allocate-words
+  ;; with explicit initializers, we need to model the header reads and
+  ;; writes as non-commutative.
   (match (cons annotation idx)
     (('vector . 0) &header)
     (('string . (or 0 1 2 3)) &header)
@@ -438,6 +446,44 @@ the LABELS that are clobbered by the effects of LABEL."
     ('closure &closure)
     ('struct &struct)
     ('atomic-box &unknown-memory-kinds)))
+
+(define-primitive-effects* param
+  ((allocate-vector size)          (&allocate &vector))
+  ((allocate-vector/immediate)     (&allocate &vector))
+  ((vector-length v))
+  ((vector-ref/immediate v)        (&read-field &vector param))
+  ((vector-ref v idx)              (&read-object &vector))
+  ((vector-set!/immediate v val)   (&write-field &vector param))
+  ((vector-set! v idx val)         (&write-object &vector))
+
+  ((cons x y)                      (&allocate &pair))
+  ((car pair)                      (&read-field &pair 0))
+  ((cdr pair)                      (&read-field &pair 1))
+  ((set-car! pair val)             (&write-field &pair 0))
+  ((set-cdr! pair val)             (&write-field &pair 1))
+
+  ((box val)                       (&allocate &box))
+  ((box-ref b)                     (&read-object &box))
+  ((box-set! b val)                (&write-object &box))
+
+  ((allocate-struct vtable)        (&allocate &struct))
+  ((vtable-size x))
+  ((vtable-has-unboxed-fields? x))
+  ((vtable-field-boxed? x))
+  ((struct-vtable x))
+  ((struct-ref x)                  (&read-field &struct param))
+  ((struct-set! x y)               (&write-field &struct param))
+
+  ((bv-contents bv))
+  ((bv-length bv))
+
+  ((string-length str))
+  ((string-ref str idx)            (&read-object &string))
+  ((string-set! str idx cp)        (&write-object &string))
+
+  ((make-closure code)             (&allocate &closure))
+  ((closure-ref code)              (&read-field &closure param))
+  ((closure-set! code)             (&write-field &closure param)))
 
 (define-primitive-effects* param
   ((allocate-words size)           (&allocate (annotation->memory-kind param)))
