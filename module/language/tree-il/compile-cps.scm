@@ -944,19 +944,15 @@
   (define msg "Wrong type argument in position 1 (expecting string): ~S")
   (define not-string (vector 'wrong-type-arg (symbol->string op) msg))
   (with-cps cps
-    (letv ulen rlen)
+    (letv rlen)
     (letk knot-string
           ($kargs () () ($throw src 'throw/value+data not-string (x))))
     (let$ body (have-length rlen))
     (letk k ($kargs ('rlen) (rlen) ,body))
-    (letk kassume
-          ($kargs ('ulen) (ulen)
-            ($continue k src
-              ($primcall 'assume-u64 `(0 . ,(target-max-size-t)) (ulen)))))
     (letk ks
           ($kargs () ()
-            ($continue kassume src
-              ($primcall 'word-ref/immediate '(string . 3) (x)))))
+            ($continue k src
+              ($primcall 'string-length #f (x)))))
     (letk kheap-object
           ($kargs () ()
             ($branch knot-string ks src 'string? #f (x))))
@@ -990,7 +986,6 @@
   (lambda (cps k src op param s idx)
     (define out-of-range
       #(out-of-range string-ref "Argument 2 out of range: ~S"))
-    (define stringbuf-f-wide #x400)
     (ensure-string
      cps src op s
      (lambda (cps ulen)
@@ -1003,56 +998,13 @@
                ($kargs ('uchar) (uchar)
                  ($continue k src
                    ($primcall 'tag-char #f (uchar)))))
-         (letk kassume
-               ($kargs ('u32) (u32)
-                 ($continue kchar src
-                   ($primcall 'assume-u64 '(0 . #xffffff) (u32)))))
-         (letk kwideref
-               ($kargs ('uwpos) (uwpos)
-                 ($continue kassume src
-                   ($primcall 'u32-ref 'stringbuf (buf ptr uwpos)))))
-         (letk kwide
-               ($kargs () ()
-                 ($continue kwideref src
-                   ($primcall 'ulsh/immediate 2 (upos)))))
-         (letk knarrow
+         (letk kref
                ($kargs () ()
                  ($continue kchar src
-                   ($primcall 'u8-ref 'stringbuf (buf ptr upos)))))
-         (letk kcmp
-               ($kargs ('bits) (bits)
-                 ($branch kwide knarrow src 'u64-imm-= 0 (bits))))
-         (letk kmask
-               ($kargs ('mask) (mask)
-                 ($continue kcmp src
-                   ($primcall 'ulogand #f (tag mask)))))
-         (letk ktag
-               ($kargs ('tag) (tag)
-                 ($continue kmask src
-                   ($primcall 'load-u64 stringbuf-f-wide ()))))
-         (letk kptr
-               ($kargs ('ptr) (ptr)
-                 ($continue ktag src
-                   ($primcall 'word-ref/immediate '(stringbuf . 0) (buf)))))
-         (letk kwidth
-               ($kargs ('buf) (buf)
-                 ($continue kptr src
-                   ($primcall 'tail-pointer-ref/immediate '(stringbuf . 2) (buf)))))
-         (letk kbuf
-               ($kargs ('upos) (upos)
-                 ($continue kwidth src
-                   ($primcall 'scm-ref/immediate '(string . 1) (s)))))
-         (letk kadd
-               ($kargs ('start) (start)
-                 ($continue kbuf src
-                   ($primcall 'uadd #f (start uidx)))))
-         (letk kstart
-               ($kargs () ()
-                 ($continue kadd src
-                   ($primcall 'word-ref/immediate '(string . 2) (s)))))
+                   ($primcall 'string-ref #f (s uidx)))))
          (letk krange
                ($kargs ('uidx) (uidx)
-                 ($branch kout-of-range kstart src 'u64-< #f (uidx ulen))))
+                 ($branch kout-of-range kref src 'u64-< #f (uidx ulen))))
          (build-term
            ($continue krange src ($primcall 'scm->u64 #f (idx)))))))))
 
