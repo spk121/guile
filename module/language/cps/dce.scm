@@ -1,6 +1,6 @@
 ;;; Continuation-passing style (CPS) intermediate language (IL)
 
-;; Copyright (C) 2013-2021 Free Software Foundation, Inc.
+;; Copyright (C) 2013-2021, 2023 Free Software Foundation, Inc.
 
 ;;;; This library is free software; you can redistribute it and/or
 ;;;; modify it under the terms of the GNU Lesser General Public
@@ -197,8 +197,13 @@ sites."
                 (match exp
                   (($ $primcall
                       (or 'scm-set! 'scm-set!/tag 'scm-set!/immediate
-                          'word-set! 'word-set!/immediate) _
-                      (obj . _))
+                          'word-set! 'word-set!/immediate
+                          'vector-set! 'vector-set!/immediate
+                          'set-car! 'set-cdr!
+                          'box-set!
+                          'struct-set!
+                          'closure-set!)
+                      _ (obj . _))
                    (or (var-live? obj live-vars)
                        (not (intset-ref known-allocations obj))))
                   (_ #t)))))
