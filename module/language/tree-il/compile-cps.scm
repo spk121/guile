@@ -1270,29 +1270,6 @@
 (define-primcall-converter rsh convert-shift)
 (define-primcall-converter lsh convert-shift)
 
-(define-primcall-converter make-atomic-box
-  (lambda (cps k src op param val)
-    (with-cps cps
-      (letv obj tag)
-      (letk kdone
-            ($kargs () ()
-              ($continue k src ($values (obj)))))
-      (letk kval
-            ($kargs () ()
-              ($continue kdone src
-                ($primcall 'atomic-scm-set!/immediate '(atomic-box . 1) (obj val)))))
-      (letk ktag1
-            ($kargs ('tag) (tag)
-              ($continue kval src
-                ($primcall 'word-set!/immediate '(atomic-box . 0) (obj tag)))))
-      (letk ktag0
-            ($kargs ('obj) (obj)
-              ($continue ktag1 src
-                ($primcall 'load-u64 %tc7-atomic-box ()))))
-      (build-term
-        ($continue ktag0 src
-          ($primcall 'allocate-words/immediate '(atomic-box . 2) ()))))))
-
 (define (ensure-atomic-box cps src op x is-atomic-box)
   (define bad-type
     (vector 'wrong-type-arg
@@ -1311,10 +1288,9 @@
      cps src 'atomic-box-ref x
      (lambda (cps)
        (with-cps cps
-         (letv val)
          (build-term
            ($continue k src
-             ($primcall 'atomic-scm-ref/immediate '(atomic-box . 1) (x)))))))))
+             ($primcall 'atomic-box-ref #f (x)))))))))
 
 (define-primcall-converter atomic-box-set!
   (lambda (cps k src op param x val)
@@ -1324,8 +1300,7 @@
        (with-cps cps
          (build-term
            ($continue k src
-             ($primcall 'atomic-scm-set!/immediate '(atomic-box . 1)
-                        (x val)))))))))
+             ($primcall 'atomic-box-set! #f (x val)))))))))
 
 (define-primcall-converter atomic-box-swap!
   (lambda (cps k src op param x val)
@@ -1335,8 +1310,7 @@
        (with-cps cps
          (build-term
            ($continue k src
-             ($primcall 'atomic-scm-swap!/immediate '(atomic-box . 1)
-                        (x val)))))))))
+             ($primcall 'atomic-box-swap! #f (x val)))))))))
 
 (define-primcall-converter atomic-box-compare-and-swap!
   (lambda (cps k src op param x expected desired)
@@ -1346,7 +1320,7 @@
        (with-cps cps
          (build-term
            ($continue k src
-             ($primcall 'atomic-scm-compare-and-swap!/immediate '(atomic-box . 1)
+             ($primcall 'atomic-box-compare-and-swap! #f
                         (x expected desired)))))))))
 
 ;;; Guile's semantics are that a toplevel lambda captures a reference on
