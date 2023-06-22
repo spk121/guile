@@ -1,6 +1,6 @@
 ;;; Compilation targets
 
-;; Copyright (C) 2011-2014,2017-2018 Free Software Foundation, Inc.
+;; Copyright (C) 2011-2014,2017-2018,2023 Free Software Foundation, Inc.
 
 ;; This library is free software; you can redistribute it and/or
 ;; modify it under the terms of the GNU Lesser General Public
@@ -178,9 +178,7 @@
 (define (target-max-size-t/scm)
   "Return the maximum size_t value of the target platform, in units of
 SCM words."
-  ;; Apply the currently-universal restriction of a maximum 48-bit
-  ;; address space.
-  (/ (target-max-size-t) (target-word-size)))
+  (floor/ (target-max-size-t) (target-word-size)))
 
 (define (target-max-vector-length)
   "Return the maximum vector length of the target platform, in units of
