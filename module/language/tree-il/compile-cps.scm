@@ -89,34 +89,23 @@
        "Wrong type argument in position 1 (expecting mutable vector): ~S")))
   (define not-vector (vector 'wrong-type-arg (symbol->string op) msg))
   (with-cps cps
-    (letv w0 slen ulen rlen)
+    (letv ulen)
     (letk knot-vector
           ($kargs () () ($throw src 'throw/value+data not-vector (v))))
-    (let$ body (have-length slen))
-    (letk k ($kargs ('slen) (slen) ,body))
-    (letk kcast
-          ($kargs ('rlen) (rlen)
-            ($continue k src ($primcall 'u64->s64 #f (rlen)))))
-    (letk kassume
-          ($kargs ('ulen) (ulen)
-            ($continue kcast src
-              ($primcall 'assume-u64 `(0 . ,(target-max-vector-length)) (ulen)))))
-    (letk krsh
-          ($kargs ('w0) (w0)
-            ($continue kassume src ($primcall 'ursh/immediate 8 (w0)))))
+    (let$ body (have-length ulen))
+    (letk k ($kargs ('ulen) (ulen) ,body))
     (letk kv
           ($kargs () ()
-            ($continue krsh src
-              ($primcall 'word-ref/immediate '(vector . 0) (v)))))
+            ($continue k src ($primcall 'vector-length #f (v)))))
     (letk kheap-object
           ($kargs () ()
             ($branch knot-vector kv src pred #f (v))))
     (build-term
       ($branch knot-vector kheap-object src 'heap-object? #f (v)))))
 
-(define (untag-fixnum-index-in-range cps src op idx slen have-index-in-range)
-  ;; Precondition: SLEN is a non-negative S64 that is representable as a
-  ;; fixnum.
+(define (untag-fixnum-index-in-range cps src op idx ulen have-index-in-range)
+  ;; Precondition: ULEN is a U64.  Should be within positive fixnum
+  ;; range.
   (define not-fixnum
     (vector 'wrong-type-arg
             (symbol->string op)
@@ -126,25 +115,28 @@
             (symbol->string op)
             "Argument 2 out of range: ~S"))
   (with-cps cps
-    (letv sidx)
+    (letv sidx uidx)
     (letk knot-fixnum
           ($kargs () () ($throw src 'throw/value+data not-fixnum (idx))))
     (letk kout-of-range
           ($kargs () () ($throw src 'throw/value+data out-of-range (idx))))
-    (let$ body (have-index-in-range sidx))
+    (let$ body (have-index-in-range uidx))
     (letk k ($kargs () () ,body))
     (letk kboundlen
+          ($kargs ('uidx) (uidx)
+            ($branch kout-of-range k src 'u64-< #f (uidx ulen))))
+    (letk kcast
           ($kargs () ()
-            ($branch kout-of-range k src 's64-< #f (sidx slen))))
+            ($continue kboundlen src ($primcall 's64->u64 #f (sidx)))))
     (letk kbound0
           ($kargs ('sidx) (sidx)
-            ($branch kboundlen kout-of-range src 's64-imm-< 0 (sidx))))
+            ($branch kcast kout-of-range src 's64-imm-< 0 (sidx))))
     (letk kuntag
           ($kargs () ()
             ($continue kbound0 src ($primcall 'untag-fixnum #f (idx)))))
     (build-term ($branch knot-fixnum kuntag src 'fixnum? #f (idx)))))
 
-(define (untag-fixnum-in-imm-range cps src op size min max have-int-in-range)
+(define (untag-fixnum-in-imm-range cps src op size max have-int-in-range)
   (define not-fixnum
     (vector 'wrong-type-arg
             (symbol->string op)
@@ -154,52 +146,42 @@
             (symbol->string op)
             "Argument 2 out of range: ~S"))
   (with-cps cps
-    (letv ssize)
+    (letv ssize usize)
     (letk knot-fixnum
           ($kargs () () ($throw src 'throw/value+data not-fixnum (size))))
     (letk kout-of-range
           ($kargs () () ($throw src 'throw/value+data out-of-range (size))))
-    (let$ body (have-int-in-range ssize))
+    (let$ body (have-int-in-range usize))
     (letk k ($kargs () () ,body))
     (letk kboundlen
+          ($kargs ('usize) (usize)
+            ($branch k kout-of-range src 'imm-u64-< max (usize))))
+    (letk kcast
           ($kargs () ()
-            ($branch k kout-of-range src 'imm-s64-< max (ssize))))
+            ($continue kboundlen src ($primcall 's64->u64 #f (ssize)))))
     (letk kbound0
           ($kargs ('ssize) (ssize)
-            ($branch kboundlen kout-of-range src 's64-imm-< min (ssize))))
+            ($branch kcast kout-of-range src 's64-imm-< 0 (ssize))))
     (letk kuntag
           ($kargs () ()
             ($continue kbound0 src ($primcall 'untag-fixnum #f (size)))))
     (build-term ($branch knot-fixnum kuntag src 'fixnum? #f (size)))))
 
-(define (compute-vector-access-pos cps src sidx have-pos)
-  (with-cps cps
-    (letv spos upos)
-    (let$ body (have-pos upos))
-    (letk kref ($kargs ('pos) (upos) ,body))
-    (letk kcvt ($kargs ('pos) (spos)
-                 ($continue kref src ($primcall 's64->u64 #f (spos)))))
-    (build-term
-      ($continue kcvt src ($primcall 'sadd/immediate 1 (sidx))))))
-
 (define (prepare-vector-access cps src op pred v idx access)
   (ensure-vector
    cps src op pred v
-   (lambda (cps slen)
+   (lambda (cps ulen)
      (untag-fixnum-index-in-range
-      cps src op idx slen
-      (lambda (cps sidx)
-        (compute-vector-access-pos
-         cps src sidx
-         (lambda (cps pos)
-           (access cps v pos))))))))
+      cps src op idx ulen
+      (lambda (cps uidx)
+        (access cps v uidx))))))
 
 (define (prepare-vector-access/immediate cps src op pred v idx access)
   (unless (and (exact-integer? idx) (<= 0 idx (1- (target-max-vector-length))))
     (error "precondition failed" idx))
   (ensure-vector
    cps src op pred v
-   (lambda (cps slen)
+   (lambda (cps ulen)
      (define out-of-range
        (vector 'out-of-range
                (symbol->string op)
@@ -212,199 +194,161 @@
        (letk kout-of-range
              ($kargs () ()
                ($continue kthrow src ($const idx))))
-       (let$ body (access v (1+ idx)))
+       (let$ body (access v idx))
        (letk k ($kargs () () ,body))
        (build-term
-         ($branch kout-of-range k src 'imm-s64-< idx (slen)))))))
+         ($branch kout-of-range k src 'imm-u64-< idx (ulen)))))))
 
 (define-primcall-converter vector-length
   (lambda (cps k src op param v)
     (ensure-vector
      cps src op 'vector? v
-     (lambda (cps slen)
+     (lambda (cps ulen)
        (with-cps cps
+         (letv slen)
+         (letk kcast ($kargs ('slen) (slen)
+                       ($continue k src ($primcall 'tag-fixnum #f (slen)))))
          (build-term
-           ($continue k src ($primcall 'tag-fixnum #f (slen)))))))))
+           ($continue kcast src ($primcall 'u64->s64 #f (ulen)))))))))
 
 (define-primcall-converter vector-ref
   (lambda (cps k src op param v idx)
     (prepare-vector-access
      cps src op 'vector? v idx
-     (lambda (cps v upos)
+     (lambda (cps v uidx)
        (with-cps cps
          (build-term
            ($continue k src
-             ($primcall 'scm-ref 'vector (v upos)))))))))
+             ($primcall 'vector-ref #f (v uidx)))))))))
 
 (define-primcall-converter vector-ref/immediate
   (lambda (cps k src op param v)
     (prepare-vector-access/immediate
      cps src 'vector-ref 'vector? v param
-     (lambda (cps v pos)
+     (lambda (cps v idx)
        (with-cps cps
          (build-term
            ($continue k src
-             ($primcall 'scm-ref/immediate `(vector . ,pos) (v)))))))))
+             ($primcall 'vector-ref/immediate idx (v)))))))))
 
 (define-primcall-converter vector-set!
   (lambda (cps k src op param v idx val)
     (prepare-vector-access
      cps src op 'mutable-vector? v idx
-     (lambda (cps v upos)
+     (lambda (cps v uidx)
        (with-cps cps
          (build-term
            ($continue k src
-             ($primcall 'scm-set! 'vector (v upos val)))))))))
+             ($primcall 'vector-set! #f (v uidx val)))))))))
 
 (define-primcall-converter vector-set!/immediate
   (lambda (cps k src op param v val)
     (prepare-vector-access/immediate
      cps src 'vector-set! 'mutable-vector? v param
-     (lambda (cps v pos)
+     (lambda (cps v idx)
        (with-cps cps
          (build-term
            ($continue k src
-             ($primcall 'scm-set!/immediate `(vector . ,pos) (v val)))))))))
+             ($primcall 'vector-set!/immediate idx (v val)))))))))
 
 (define-primcall-converter vector-init!
+  ;; FIXME: By lowering to the same as vector-set!/immediate, we lose
+  ;; the information that this is an init, and that it can probably skip
+  ;; a write barrier.  Guile doesn't do write barriers yet, though.
   (lambda (cps k src op param v val)
-    (define pos (1+ param))
+    (define idx param)
     (with-cps cps
       (build-term
         ($continue k src
-          ($primcall 'scm-set!/immediate `(vector . ,pos) (v val)))))))
-
-(define (emit-initializations-as-loop cps k src obj annotation start nwords init)
-  (with-cps cps
-    (letv pos)
-    (letk kloop ,#f) ;; Patched later.
-    (letk kback
-          ($kargs () ()
-            ($continue kloop src
-              ($primcall 'uadd/immediate 1 (pos)))))
-    (letk kinit
-          ($kargs () ()
-            ($continue kback src
-              ($primcall 'scm-set! annotation (obj pos init)))))
-    (setk kloop
-          ($kargs ('pos) (pos)
-            ($branch k kinit src 'u64-< #f (pos nwords))))
-    (build-term
-      ($continue kloop src
-        ($primcall 'load-u64 start ())))))
+          ($primcall 'vector-set!/immediate idx (v val)))))))
 
 (define-primcall-converter allocate-vector
   (lambda (cps k src op param)
     (define size param)
-    (define nwords (1+ size))
     (unless (and (exact-integer? size) (<= 0 size (target-max-vector-length)))
       (error "precondition failed" size))
     (with-cps cps
-      (letv v w0)
-      (letk kdone
-            ($kargs () ()
-              ($continue k src ($values (v)))))
-      (letk ktag1
-            ($kargs ('w0) (w0)
-              ($continue kdone src
-                ($primcall 'word-set!/immediate '(vector . 0) (v w0)))))
-      (letk ktag0
-            ($kargs ('v) (v)
-              ($continue ktag1 src
-                ($primcall 'load-u64 (+ %tc7-vector (ash size 8)) ()))))
       (build-term
-        ($continue ktag0 src
-          ($primcall 'allocate-words/immediate `(vector . ,nwords) ()))))))
+        ($continue k src
+          ($primcall 'allocate-vector/immediate size ()))))))
 
 (define-primcall-converter make-vector
   (lambda (cps k src op param size init)
     (untag-fixnum-in-imm-range
-     cps src op size 0 (target-max-vector-length)
-     (lambda (cps ssize)
+     cps src op size (target-max-vector-length)
+     (lambda (cps usize)
        (with-cps cps
-         (letv usize nwords v w0-high w0)
+         (letv v uidx)
          (letk kdone
                ($kargs () ()
                  ($continue k src ($values (v)))))
-         (let$ init-loop
-               (emit-initializations-as-loop kdone src v 'vector 1 nwords init))
-         (letk kbody ($kargs () () ,init-loop))
-         (letk ktag2
-               ($kargs ('w0) (w0)
-                 ($continue kbody src
-                   ($primcall 'word-set!/immediate '(vector . 0) (v w0)))))
-         (letk ktag1
-               ($kargs ('w0-high) (w0-high)
-                 ($continue ktag2 src
-                   ($primcall 'uadd/immediate %tc7-vector (w0-high)))))
-         (letk ktag0
+         (letk kloop ,#f) ;; Patched later.
+         (letk kback
+               ($kargs () ()
+                 ($continue kloop src
+                   ($primcall 'uadd/immediate 1 (uidx)))))
+         (letk kinit
+               ($kargs () ()
+                 ($continue kback src
+                   ($primcall 'vector-set! #f (v uidx init)))))
+         (setk kloop
+               ($kargs ('uidx) (uidx)
+                 ($branch kdone kinit src 'u64-< #f (uidx usize))))
+         (letk kbody
                ($kargs ('v) (v)
-                 ($continue ktag1 src
-                   ($primcall 'ulsh/immediate 8 (usize)))))
-         (letk kalloc
-               ($kargs ('nwords) (nwords)
-                 ($continue ktag0 src
-                   ($primcall 'allocate-words 'vector (nwords)))))
-         (letk kadd1
-               ($kargs ('usize) (usize)
-                 ($continue kalloc src
-                   ;; Header word.
-                   ($primcall 'uadd/immediate 1 (usize)))))
+                 ($continue kloop src ($primcall 'load-u64 0 ()))))
          (build-term
-           ($continue kadd1 src
-             ;; Header word.
-             ($primcall 's64->u64 #f (ssize)))))))))
+           ($continue kbody src
+             ($primcall 'allocate-vector #f (usize)))))))))
 
 (define-primcall-converter make-vector/immediate
   (lambda (cps k src op param init)
     (define size param)
-    (define nwords (1+ size))
-    (define (init-fields cps v pos kdone)
-      ;; Inline the initializations, up to vectors of size 32.  Above
+    (define (init-fields cps v)
+      ;; Inline the initializations, up to vectors of size 31.  Above
       ;; that it's a bit of a waste, so reify a loop instead.
       (cond
-       ((<= 32 nwords)
-        (with-cps cps
-          (letv unwords)
-          (let$ init-loop
-                (emit-initializations-as-loop kdone src v 'vector
-                                              pos unwords init))
-          (letk kinit ($kargs ('unwords) (unwords) ,init-loop))
-          (letk kusize ($kargs () ()
-                         ($continue kinit src
-                           ($primcall 'load-u64 nwords ()))))
-          kusize))
-       ((< pos nwords)
-        (with-cps cps
-          (let$ knext (init-fields v (1+ pos) kdone))
-          (letk kinit
-                ($kargs () ()
+       ((< size 32)
+        (let lp ((cps cps) (idx 0))
+          (if (< idx size)
+              (with-cps cps
+                (let$ next (lp (1+ idx)))
+                (letk knext ($kargs () () ,next))
+                (build-term
                   ($continue knext src
-                    ($primcall 'scm-set!/immediate `(vector . ,pos)
-                               (v init)))))
-          kinit))
+                    ($primcall 'vector-set!/immediate idx (v init)))))
+              (with-cps cps
+                (build-term
+                  ($continue k src ($values (v))))))))
        (else
         (with-cps cps
-          kdone))))
+          (letv uidx)
+          (letk kdone
+                ($kargs () ()
+                  ($continue k src ($values (v)))))
+          (letk kloop ,#f) ;; Patched later.
+          (letk kback
+                ($kargs () ()
+                  ($continue kloop src
+                    ($primcall 'uadd/immediate 1 (uidx)))))
+          (letk kinit
+                ($kargs () ()
+                  ($continue kback src
+                    ($primcall 'vector-set! #f (v uidx init)))))
+          (setk kloop
+                ($kargs ('uidx) (uidx)
+                  ($branch kdone kinit src 'u64-imm-< size (uidx))))
+          (build-term
+            ($continue kloop src ($primcall 'load-u64 0 ())))))))
     (unless (and (exact-integer? size) (<= 0 size (target-max-vector-length)))
       (error "precondition failed" size))
     (with-cps cps
-      (letv v w0)
-      (letk kdone
-            ($kargs () ()
-              ($continue k src ($values (v)))))
-      (let$ kinit (init-fields v 1 kdone))
-      (letk ktag1
-            ($kargs ('w0) (w0)
-              ($continue kinit src
-                ($primcall 'word-set!/immediate '(vector . 0) (v w0)))))
-      (letk ktag0
-            ($kargs ('v) (v)
-              ($continue ktag1 src
-                ($primcall 'load-u64 (+ %tc7-vector (ash size 8)) ()))))
+      (letv v)
+      (let$ init-and-continue (init-fields v))
+      (letk kinit ($kargs ('v) (v) ,init-and-continue))
       (build-term
-        ($continue ktag0 src
-          ($primcall 'allocate-words/immediate `(vector . ,nwords) ()))))))
+        ($continue kinit src
+          ($primcall 'allocate-vector/immediate size ()))))))
 
 (define (ensure-pair cps src op pred x is-pair)
   (define msg
@@ -2181,8 +2125,6 @@ integer."
                           ($kfun (tree-il-srcv exp) '() init ktail kclause))))
               (with-cps (persistent-intmap (intmap-replace! cps kinit init))
                 kinit))))))))
-
-(define *comp-module* (make-fluid))
 
 (define (canonicalize exp)
   (define (reduce-conditional exp)
