@@ -1,6 +1,6 @@
 ;;; Continuation-passing style (CPS) intermediate language (IL)
 
-;; Copyright (C) 2013, 2014, 2015, 2017, 2018, 2019, 2020, 2021 Free Software Foundation, Inc.
+;; Copyright (C) 2013, 2014, 2015, 2017, 2018, 2019, 2020, 2021, 2023 Free Software Foundation, Inc.
 
 ;;;; This library is free software; you can redistribute it and/or
 ;;;; modify it under the terms of the GNU Lesser General Public
@@ -406,7 +406,9 @@ by a label, respectively."
                                'ursh/immediate 'ulsh/immediate
                                'u8-ref 'u16-ref 'u32-ref 'u64-ref
                                'word-ref 'word-ref/immediate
-                               'untag-char))
+                               'untag-char
+                               'vector-length 'vtable-size 'bv-length
+                               'string-length 'string-ref))
               (intmap-add representations var 'u64))
              (($ $primcall (or 'untag-fixnum
                                'assume-s64
@@ -414,7 +416,8 @@ by a label, respectively."
                                'srsh 'srsh/immediate
                                's8-ref 's16-ref 's32-ref 's64-ref))
               (intmap-add representations var 's64))
-             (($ $primcall (or 'pointer-ref/immediate
+             (($ $primcall (or 'bv-contents
+                               'pointer-ref/immediate
                                'tail-pointer-ref/immediate))
               (intmap-add representations var 'ptr))
              (($ $code)
