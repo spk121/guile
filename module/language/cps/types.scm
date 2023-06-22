@@ -1,5 +1,5 @@
 ;;; Type analysis on CPS
-;;; Copyright (C) 2014-2021 Free Software Foundation, Inc.
+;;; Copyright (C) 2014-2021, 2023 Free Software Foundation, Inc.
 ;;;
 ;;; This library is free software: you can redistribute it and/or modify
 ;;; it under the terms of the GNU Lesser General Public License as
@@ -79,7 +79,6 @@
 (define-module (language cps types)
   #:use-module (ice-9 match)
   #:use-module (language cps)
-  #:use-module (language cps utils)
   #:use-module (language cps intmap)
   #:use-module (language cps intset)
   #:use-module (rnrs bytevectors)
@@ -731,7 +730,77 @@ minimum, and maximum."
 
 
 ;;;
-;;; Memory.
+;;; High-level object representation.
+;;;
+
+(define-type-inferrer/param (allocate-vector param size result)
+  (define! result &vector (&min/0 size) (&max/scm-size size)))
+(define-type-inferrer/param (allocate-vector/immediate param result)
+  (define size param)
+  (define! result &vector size size))
+(define-type-inferrer (vector-length v result)
+  (define! result &u64 (&min/0 v) (&max/scm-size v)))
+(define-type-inferrer (vector-ref v idx result)
+  (restrict! v &vector (1+ (&min/0 idx)) (target-max-size-t/scm))
+  (define! result &all-types -inf.0 +inf.0))
+(define-type-inferrer/param (vector-ref/immediate param v result)
+  (define idx param)
+  (restrict! v &vector (1+ idx) (target-max-size-t/scm))
+  (define! result &all-types -inf.0 +inf.0))
+(define-type-inferrer (vector-set! v idx val)
+  (restrict! v &vector (1+ (&min/0 idx)) (target-max-size-t/scm)))
+(define-type-inferrer/param (vector-set!/immediate param v val)
+  (define idx param)
+  (restrict! v &vector (1+ param) (target-max-size-t/scm)))
+
+(define-type-inferrer (cons head tail result)
+  (define! result &pair -inf.0 +inf.0))
+(define-type-inferrer (box val result)
+  (define! result &box -inf.0 +inf.0))
+;; No inferrers for pair or box accessors; because type checks dominate
+;; these accessors, they would add no information.
+
+(define-type-inferrer/param (allocate-struct param vtable result)
+  (define nfields param)
+  ;; It would be nice to be able to restrict the vtable-size of vtable,
+  ;; but because vtables are themselves structs which have associated
+  ;; size ranges, there's nowhere to put the vtable-size ranges.  Humm!
+  (define! result &struct nfields nfields))
+(define-type-inferrer (vtable-size vtable result)
+  (define! result &u64 0 (target-max-size-t/scm)))
+;; No predicate inferrers for vtable-has-unboxed-fields? and
+;; vtable-field-boxed?, as there is nowhere to store this info.
+(define-type-inferrer (struct-vtable struct result)
+  (define! result &struct 0 (target-max-size-t/scm)))
+(define-type-inferrer/param (struct-ref param struct result)
+  (define idx param)
+  (restrict! struct &struct (1+ idx) (target-max-size-t/scm))
+  (define! result &all-types -inf.0 +inf.0))
+(define-type-inferrer/param (struct-set! param struct val)
+  (define idx param)
+  (restrict! struct &struct (1+ idx) (target-max-size-t/scm)))
+
+(define-type-inferrer (bv-contents bv result)
+  (define! result &other-heap-object -inf.0 +inf.0))
+(define-type-inferrer (bv-length bv result)
+  (define! result &u64 (&min/0 bv) (&max/size bv)))
+
+(define-type-inferrer (string-length str result)
+  (define! result &u64 (&min/0 str) (&max/size str)))
+(define-type-inferrer (string-ref str idx result)
+  (define! result &u64 0 *max-codepoint*))
+
+(define-type-inferrer/param (make-closure param code result)
+  (define nfree param)
+  (define! result &procedure nfree nfree))
+;; No information would be provided by closure-ref / closure-set!
+;; inferrers.
+
+
+
+
+;;;
+;;; Low-level object representation.
 ;;;
 
 (define (annotation->type ann)
