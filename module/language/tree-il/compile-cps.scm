@@ -737,7 +737,7 @@
 (define (prepare-bytevector-access cps src op pred bv idx width
                                    have-ptr-and-uidx)
   (with-cps cps
-    (letv ulen rlen)
+    (letv rlen)
     (let$ access
           (untag-bytevector-index
            src op idx rlen width
@@ -748,17 +748,12 @@
                (letk k ($kargs ('ptr) (ptr) ,body))
                (build-term
                  ($continue k src
-                   ($primcall 'pointer-ref/immediate '(bytevector . 2)
-                              (bv))))))))
+                   ($primcall 'bv-contents #f (bv))))))))
     (letk k ($kargs ('rlen) (rlen) ,access))
-    (letk kassume
-          ($kargs ('ulen) (ulen)
-            ($continue k src
-              ($primcall 'assume-u64 `(0 . ,(target-max-size-t)) (ulen)))))
     (letk klen
           ($kargs () ()
-            ($continue kassume src
-              ($primcall 'word-ref/immediate '(bytevector . 1) (bv)))))
+            ($continue k src
+              ($primcall 'bv-length #f (bv)))))
     ($ (ensure-bytevector klen src op pred bv))))
 
 (define (bytevector-ref-converter scheme-name ptr-op width kind)
@@ -794,7 +789,7 @@
      (lambda (cps ptr uidx)
        (with-cps cps
          (letv val)
-         (let$ body (tag k src  val))
+         (let$ body (tag k src val))
          (letk ktag ($kargs ('val) (val) ,body))
          (build-term
            ($continue ktag src
@@ -912,17 +907,13 @@
 (define-primcall-converter bv-length
   (lambda (cps k src op param bv)
     (with-cps cps
-      (letv ulen rlen)
+      (letv rlen)
       (letk ktag ($kargs ('rlen) (rlen)
                    ($continue k src ($primcall 'u64->scm #f (rlen)))))
-      (letk kassume
-          ($kargs ('ulen) (ulen)
-            ($continue ktag src
-              ($primcall 'assume-u64 `(0 . ,(target-max-size-t)) (ulen)))))
       (letk klen
             ($kargs () ()
-              ($continue kassume src
-                ($primcall 'word-ref/immediate '(bytevector . 1) (bv)))))
+              ($continue ktag src
+                ($primcall 'bv-length #f (bv)))))
       ($ (ensure-bytevector klen src op 'bytevector? bv)))))
 
 (define-bytevector-ref-converters
