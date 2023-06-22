@@ -523,7 +523,7 @@
     (let$ body (have-vtable vtable))
     (letk k ($kargs ('vtable) (vtable) ,body))
     (letk kvtable ($kargs () ()
-                    ($continue k src ($primcall 'scm-ref/tag 'struct (x)))))
+                    ($continue k src ($primcall 'struct-vtable #f (x)))))
     (letk kheap-object
           ($kargs () () ($branch knot-struct kvtable src 'struct? #f (x))))
     (build-term ($branch knot-struct kheap-object src 'heap-object? #f (x)))))
@@ -545,42 +545,19 @@
        (vector 'wrong-type-arg
                (symbol->string op)
                "Wrong type argument in position 1 (expecting vtable): ~S"))
-     (define vtable-index-flags 1)    ; FIXME: pull from struct.h
-     (define vtable-offset-flags (1+ vtable-index-flags))
-     (define vtable-validated-mask #b11)
-     (define vtable-validated-value #b11)
      (with-cps cps
-       (letv flags mask res)
-       (letk knot-vtable
+       (letk kf
              ($kargs () () ($throw src 'throw/value+data not-vtable (vtable))))
        (let$ body (is-vtable))
        (letk k ($kargs () () ,body))
-       (letk ktest
-             ($kargs ('res) (res)
-               ($branch knot-vtable k src
-                 'u64-imm-= vtable-validated-value (res))))
-       (letk kand
-             ($kargs ('mask) (mask)
-               ($continue ktest src
-                 ($primcall 'ulogand #f (flags mask)))))
-       (letk kflags
-             ($kargs ('flags) (flags)
-               ($continue kand src
-                 ($primcall 'load-u64 vtable-validated-mask ()))))
        (build-term
-         ($continue kflags src
-           ($primcall 'word-ref/immediate
-                      `(struct . ,vtable-offset-flags) (vtable-vtable))))))))
+         ($branch kf k src 'vtable-vtable? #f (vtable-vtable)))))))
 
 (define-primcall-converter allocate-struct
-  (lambda (cps k src op nwords vtable)
+  (lambda (cps k src op nfields vtable)
     (ensure-vtable
      cps src 'allocate-struct vtable
      (lambda (cps)
-       (define vtable-index-size 5) ; FIXME: pull from struct.h
-       (define vtable-index-unboxed-fields 6) ; FIXME: pull from struct.h
-       (define vtable-offset-size (1+ vtable-index-size))
-       (define vtable-offset-unboxed-fields (1+ vtable-index-unboxed-fields))
        (define wrong-number
          (vector 'wrong-number-of-args
                  (symbol->string op)
@@ -589,80 +566,40 @@
          (vector 'wrong-type-arg
                  (symbol->string op)
                  "Expected vtable with no unboxed fields: ~A"))
-       (define (check-all-boxed cps kf kt vtable ptr word)
-         (if (< (* word 32) nwords)
-             (with-cps cps
-               (letv idx bits)
-               (let$ checkboxed (check-all-boxed kf kt vtable ptr (1+ word)))
-               (letk kcheckboxed ($kargs () () ,checkboxed))
-               (letk kcheck
-                     ($kargs ('bits) (bits)
-                       ($branch kf kcheckboxed src 'u64-imm-= 0 (bits))))
-               (letk kword
-                     ($kargs ('idx) (idx)
-                       ($continue kcheck src
-                         ($primcall 'u32-ref 'bitmask (vtable ptr idx)))))
-               (build-term
-                 ($continue kword src
-                   ($primcall 'load-u64 word ()))))
-             (with-cps cps
-               (build-term ($continue kt src ($values ()))))))
        (with-cps cps
-         (letv rfields nfields ptr s)
+         (letv actual-nfields)
          (letk kwna
                ($kargs () () ($throw src 'throw/value wrong-number (vtable))))
          (letk kunboxed
                ($kargs () () ($throw src 'throw/value+data has-unboxed (vtable))))
-         (letk kdone
-               ($kargs () () ($continue k src ($values (s)))))
-         (letk ktag
-               ($kargs ('s) (s)
-                 ($continue kdone src
-                   ($primcall 'scm-set!/tag 'struct (s vtable)))))
          (letk kalloc
                ($kargs () ()
-                 ($continue ktag src
-                   ($primcall 'allocate-words/immediate
-                              `(struct . ,(1+ nwords)) ()))))
-         (let$ checkboxed (check-all-boxed kunboxed kalloc vtable ptr 0))
-         (letk kcheckboxed ($kargs ('ptr) (ptr) ,checkboxed))
+                 ($continue k src
+                   ($primcall 'allocate-struct nfields (vtable)))))
          (letk kaccess
                ($kargs () ()
-                 ($continue kcheckboxed src
-                   ($primcall 'pointer-ref/immediate
-                              `(struct . ,vtable-offset-unboxed-fields)
-                              (vtable)))))
+                 ($branch kalloc kunboxed src
+                   'vtable-has-unboxed-fields? nfields (vtable))))
          (letk knfields
-               ($kargs ('nfields) (nfields)
-                 ($branch kwna kaccess src 'u64-imm-= nwords (nfields))))
-         (letk kassume
-               ($kargs ('rfields) (rfields)
-                 ($continue knfields src
-                   ($primcall 'assume-u64 `(0 . ,(target-max-size-t/scm))
-                              (rfields)))))
+               ($kargs ('nfields) (actual-nfields)
+                 ($branch kwna kaccess src
+                   'u64-imm-= nfields (actual-nfields))))
          (build-term
-           ($continue kassume src
-             ($primcall 'word-ref/immediate
-                        `(struct . ,vtable-offset-size) (vtable)))))))))
+           ($continue knfields src
+             ($primcall 'vtable-size #f (vtable)))))))))
 
-(define (ensure-struct-index-in-range cps src op vtable idx boxed? in-range)
-  (define vtable-index-size 5)           ; FIXME: pull from struct.h
-  (define vtable-index-unboxed-fields 6) ; FIXME: pull from struct.h
-  (define vtable-offset-size (1+ vtable-index-size))
-  (define vtable-offset-unboxed-fields (1+ vtable-index-unboxed-fields))
+(define (ensure-struct-index-in-range cps src op vtable idx in-range)
   (define bad-type
     (vector
      'wrong-type-arg
      (symbol->string op)
-     (if boxed?
-         "Wrong type argument in position 2 (expecting boxed field): ~S"
-         "Wrong type argument in position 2 (expecting unboxed field): ~S")))
+     "Wrong type argument in position 2 (expecting boxed field): ~S"))
   (define out-of-range
     (vector 'out-of-range
             (symbol->string op)
             "Argument 2 out of range: ~S"))
   (with-cps cps
-    (letv rfields nfields ptr word bits mask res throwval1 throwval2)
+    (letv nfields throwval1 throwval2)
     (letk kthrow1
           ($kargs (#f) (throwval1)
             ($throw src 'throw/value+data out-of-range (throwval1))))
@@ -674,45 +611,17 @@
 
     (let$ body (in-range))
     (letk k ($kargs () () ,body))
-    (letk ktest
-          ($kargs ('res) (res)
-            ($branch (if boxed? kbadtype k) (if boxed? k kbadtype) src
-              'u64-imm-= 0 (res))))
-    (letk kand
-          ($kargs ('mask) (mask)
-            ($continue ktest src
-              ($primcall 'ulogand #f (mask bits)))))
-    (letk kbits
-          ($kargs ('bits) (bits)
-            ($continue kand src
-              ($primcall 'load-u64 (ash 1 (logand idx 31)) ()))))
-    (letk kword
-          ($kargs ('word) (word)
-            ($continue kbits src
-              ($primcall 'u32-ref 'bitmask (vtable ptr word)))))
-    (letk kptr
-          ($kargs ('ptr) (ptr)
-            ($continue kword src
-              ($primcall 'load-u64 (ash idx -5) ()))))
     (letk kaccess
           ($kargs () ()
-            ($continue kptr src
-              ($primcall 'pointer-ref/immediate
-                         `(struct . ,vtable-offset-unboxed-fields)
-                         (vtable)))))
+            ($branch kbadtype k src 'vtable-field-boxed? idx (vtable))))
     (letk knfields
           ($kargs ('nfields) (nfields)
             ($branch kbadidx kaccess src 'imm-u64-< idx (nfields))))
-    (letk kassume
-          ($kargs ('rfields) (rfields)
-            ($continue knfields src
-              ($primcall 'assume-u64 `(0 . ,(target-max-size-t)) (rfields)))))
     (build-term
-      ($continue kassume src
-        ($primcall 'word-ref/immediate
-                   `(struct . ,vtable-offset-size) (vtable))))))
+      ($continue knfields src
+        ($primcall 'vtable-size #f (vtable))))))
 
-(define (prepare-struct-scm-access cps src op struct idx boxed? have-pos)
+(define (prepare-struct-scm-access cps src op struct idx in-range)
   (define not-struct
     (vector 'wrong-type-arg
             (symbol->string op)
@@ -720,38 +629,38 @@
   (ensure-struct
    cps src op struct
    (lambda (cps vtable)
-     (ensure-struct-index-in-range
-      cps src op vtable idx boxed?
-      (lambda (cps) (have-pos cps (1+ idx)))))))
+     (ensure-struct-index-in-range cps src op vtable idx in-range))))
 
 (define-primcall-converter struct-ref/immediate
   (lambda (cps k src op param struct)
+    (define idx param)
     (prepare-struct-scm-access
-     cps src op struct param #t
-     (lambda (cps pos)
+     cps src op struct idx
+     (lambda (cps)
        (with-cps cps
          (build-term
            ($continue k src
-             ($primcall 'scm-ref/immediate `(struct . ,pos) (struct)))))))))
+             ($primcall 'struct-ref idx (struct)))))))))
 
 (define-primcall-converter struct-set!/immediate
   (lambda (cps k src op param struct val)
+    (define idx param)
     (prepare-struct-scm-access
-     cps src op struct param #t
-     (lambda (cps pos)
+     cps src op struct idx
+     (lambda (cps)
        (with-cps cps
          (letk k* ($kargs () () ($continue k src ($values (val)))))
          (build-term
            ($continue k* src
-             ($primcall 'scm-set!/immediate `(struct . ,pos) (struct val)))))))))
+             ($primcall 'struct-set! idx (struct val)))))))))
 
 (define-primcall-converter struct-init!
   (lambda (cps k src op param s val)
-    (define pos (1+ param))
+    (define idx param)
     (with-cps cps
       (build-term
         ($continue k src
-          ($primcall 'scm-set!/immediate `(struct . ,pos) (s val)))))))
+          ($primcall 'struct-set! idx (s val)))))))
 
 (define-primcall-converter struct-ref
   (lambda (cps k src op param struct idx)
