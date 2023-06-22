@@ -482,29 +482,6 @@
            ($continue k src
              ($primcall 'scm-set!/immediate '(pair . 1) (pair val)))))))))
 
-(define-primcall-converter box
-  (lambda (cps k src op param val)
-    (with-cps cps
-      (letv obj tag)
-      (letk kdone
-            ($kargs () ()
-              ($continue k src ($values (obj)))))
-      (letk kval
-            ($kargs () ()
-              ($continue kdone src
-                ($primcall 'scm-set!/immediate '(box . 1) (obj val)))))
-      (letk ktag1
-            ($kargs ('tag) (tag)
-              ($continue kval src
-                ($primcall 'word-set!/immediate '(box . 0) (obj tag)))))
-      (letk ktag0
-            ($kargs ('obj) (obj)
-              ($continue ktag1 src
-                ($primcall 'load-u64 %tc7-variable ()))))
-      (build-term
-        ($continue ktag0 src
-          ($primcall 'allocate-words/immediate '(box . 2) ()))))))
-
 (define-primcall-converter %box-ref
   (lambda (cps k src op param box)
     (define unbound
@@ -518,14 +495,14 @@
               ($branch kbound kunbound src 'undefined? #f (val))))
       (build-term
         ($continue ktest src
-          ($primcall 'scm-ref/immediate '(box . 1) (box)))))))
+          ($primcall 'box-ref #f (box)))))))
 
 (define-primcall-converter %box-set!
   (lambda (cps k src op param box val)
     (with-cps cps
       (build-term
         ($continue k src
-          ($primcall 'scm-set!/immediate '(box . 1) (box val)))))))
+          ($primcall 'box-set! #f (box val)))))))
 
 (define (ensure-box cps src op x is-box)
   (define not-box
@@ -1433,7 +1410,7 @@ use as the proc slot."
          (letk kref
                ($kargs ('var) (var)
                  ($continue kcall #f
-                   ($primcall 'scm-ref/immediate '(box . 1) (var)))))
+                   ($primcall 'box-ref #f (var)))))
          (letk kcache2
                ($kargs () ()
                  ($continue kref #f ($values (fresh-var)))))
@@ -1759,7 +1736,7 @@ use as the proc slot."
             (let$ body (k unboxed))
             (letk kunboxed ($kargs ('unboxed) (unboxed) ,body))
             (build-term ($continue kunboxed src
-                          ($primcall 'scm-ref/immediate '(box . 1) (box))))))
+                          ($primcall 'box-ref #f (box))))))
          ((orig-var subst-var #f) (k cps subst-var))
          (var (k cps var))))
       ((? single-valued?)
@@ -1811,7 +1788,7 @@ use as the proc slot."
        (let$ k (adapt-arity k src 1))
        (rewrite-term (hashq-ref subst sym)
          ((orig-var box #t) ($continue k src
-                              ($primcall 'scm-ref/immediate '(box . 1) (box))))
+                              ($primcall 'box-ref #f (box))))
          ((orig-var subst-var #f) ($continue k src ($values (subst-var))))
          (var ($continue k src ($values (var)))))))
 
@@ -1892,7 +1869,7 @@ use as the proc slot."
         (with-cps cps
           (let$ k (adapt-arity k src 1))
           (build-term ($continue k src
-                        ($primcall 'scm-ref/immediate '(box . 1) (box))))))))
+                        ($primcall 'box-ref #f (box))))))))
 
     (($ <module-set> src mod name public? exp)
      (convert-arg cps exp
@@ -1904,7 +1881,7 @@ use as the proc slot."
               (let$ k (adapt-arity k src 0))
               (build-term
                 ($continue k src
-                  ($primcall 'scm-set!/immediate '(box . 1) (box val))))))))))
+                  ($primcall 'box-set! #f (box val))))))))))
 
     (($ <toplevel-ref> src mod name)
      (toplevel-box
@@ -1914,7 +1891,7 @@ use as the proc slot."
           (let$ k (adapt-arity k src 1))
           (build-term
             ($continue k src
-              ($primcall 'scm-ref/immediate '(box . 1) (box))))))))
+              ($primcall 'box-ref #f (box))))))))
 
     (($ <toplevel-set> src mod name exp)
      (convert-arg cps exp
@@ -1926,7 +1903,7 @@ use as the proc slot."
               (let$ k (adapt-arity k src 0))
               (build-term
                 ($continue k src
-                  ($primcall 'scm-set!/immediate '(box . 1) (box val))))))))))
+                  ($primcall 'box-set! #f (box val))))))))))
 
     (($ <toplevel-define> src modname name exp)
      (convert-arg cps exp
@@ -1936,7 +1913,7 @@ use as the proc slot."
            (letv box mod)
            (letk kset ($kargs ('box) (box)
                         ($continue k src
-                          ($primcall 'scm-set!/immediate '(box . 1) (box val)))))
+                          ($primcall 'box-set! #f (box val)))))
            ($ (with-cps-constants ((name name))
                 (letk kmod
                       ($kargs ('mod) (mod)
@@ -2252,7 +2229,7 @@ use as the proc slot."
               (let$ k (adapt-arity k src 0))
               (build-term
                 ($continue k src
-                  ($primcall 'scm-set!/immediate '(box . 1) (box exp))))))))))
+                  ($primcall 'box-set! #f (box exp))))))))))
 
     (($ <seq> src head tail)
      (if (zero-valued? head)
