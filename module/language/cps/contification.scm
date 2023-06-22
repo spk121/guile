@@ -1,6 +1,6 @@
 ;;; Continuation-passing style (CPS) intermediate language (IL)
 
-;; Copyright (C) 2013-2021 Free Software Foundation, Inc.
+;; Copyright (C) 2013-2021, 2023 Free Software Foundation, Inc.
 
 ;;;; This library is free software; you can redistribute it and/or
 ;;;; modify it under the terms of the GNU Lesser General Public
@@ -426,20 +426,11 @@ function set."
            (build-term ($continue k src ($const '())))))
         ((v . vals)
          (with-cps cps
-           (letv pair tail)
-           (letk kdone ($kargs () () ($continue k src ($values (pair)))))
-           (letk ktail
-                 ($kargs () ()
-                   ($continue kdone src
-                     ($primcall 'scm-set!/immediate '(pair . 1) (pair tail)))))
-           (letk khead
-                 ($kargs ('pair) (pair)
-                   ($continue ktail src
-                     ($primcall 'scm-set!/immediate '(pair . 0) (pair v)))))
+           (letv tail)
            (letk ktail
                  ($kargs ('tail) (tail)
-                   ($continue khead src
-                     ($primcall 'allocate-words/immediate '(pair . 2) ()))))
+                   ($continue k src
+                     ($primcall 'cons #f (v tail)))))
            ($ (build-list ktail src vals))))))
     (cond
      ((and (not rest) (eqv? (length vals) nreq))
