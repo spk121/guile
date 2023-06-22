@@ -1,6 +1,6 @@
 ;;; Continuation-passing style (CPS) intermediate language (IL)
 
-;; Copyright (C) 2013-2018,2020,2021 Free Software Foundation, Inc.
+;; Copyright (C) 2013-2018,2020,2021,2023 Free Software Foundation, Inc.
 
 ;;; This library is free software; you can redistribute it and/or modify it
 ;;; under the terms of the GNU Lesser General Public License as published by
@@ -31,6 +31,7 @@
   #:use-module (language cps elide-arity-checks)
   #:use-module (language cps licm)
   #:use-module (language cps loop-instrumentation)
+  #:use-module (language cps lower-primcalls)
   #:use-module (language cps peel-loops)
   #:use-module (language cps prune-top-level-scopes)
   #:use-module (language cps reify-primitives)
@@ -121,7 +122,7 @@
 (define (cps-optimizations)
   (available-optimizations 'cps))
 
-(define (lower-cps exp opts)
+(define (lower-cps/generic exp opts)
   ;; FIXME: For now the closure conversion pass relies on $rec instances
   ;; being separated into SCCs.  We should fix this to not be the case,
   ;; and instead move the split-rec pass back to
@@ -129,22 +130,35 @@
   (set! exp (split-rec exp))
   (set! exp (optimize-higher-order-cps exp opts))
   (set! exp (convert-closures exp))
-  (set! exp (optimize-first-order-cps exp opts))
-  (set! exp (reify-primitives exp))
-  (set! exp (add-loop-instrumentation exp))
-  (renumber exp))
+  (optimize-first-order-cps exp opts))
 
-(define (make-cps-lowerer optimization-level opts)
+(define (select-opts-for-optimization-level optimization-level opts all-opts)
   (define (kw-arg-ref args kw default)
     (match (memq kw args)
       ((_ val . _) val)
       (_ default)))
   (define (enabled-for-level? level) (<= level optimization-level))
-  (let ((opts (let lp ((all-opts (cps-optimizations)))
-                (match all-opts
-                  (() '())
-                  (((kw level) . all-opts)
-                   (acons kw (kw-arg-ref opts kw (enabled-for-level? level))
-                          (lp all-opts)))))))
-    (lambda (exp env)
-      (lower-cps exp opts))))
+  (let lp ((all-opts all-opts))
+    (match all-opts
+      (() '())
+      (((kw level) . all-opts)
+       (acons kw (kw-arg-ref opts kw (enabled-for-level? level))
+              (lp all-opts))))))
+
+(define (make-backend-cps-lowerer optimization-level opts)
+  (lambda (exp env)
+    (add-loop-instrumentation
+     (reify-primitives
+      (lower-primcalls exp)))))
+
+(define (make-cps-lowerer optimization-level opts)
+  (define generic-opts
+    (select-opts-for-optimization-level optimization-level opts
+                                        (cps-optimizations)))
+  (define lower-cps/backend
+    (make-backend-cps-lowerer optimization-level opts))
+  (lambda (exp env)
+    (renumber
+     (lower-cps/backend
+      (lower-cps/generic exp generic-opts)
+      env))))
