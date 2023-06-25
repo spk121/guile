@@ -875,8 +875,10 @@ a specified set of characters.
 
 @deffn {Scheme Procedure} read-line [port] [handle-delim]
 Return a line of text from @var{port} if specified, otherwise from the
-value returned by @code{(current-input-port)}.  Under Unix, a line of text
-is terminated by the first end-of-line character or by end-of-file.
+value returned by @code{(current-input-port)}.  A line of
+text is terminated by a single linefeed character, a return followed
+by a linefeed, or by end-of-file.
+
 
 If @var{handle-delim} is specified, it should be one of the following
 symbols:

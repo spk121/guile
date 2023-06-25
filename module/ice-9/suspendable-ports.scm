@@ -1,5 +1,5 @@
 ;;; Ports, implemented in Scheme
-;;; Copyright (C) 2016, 2019 Free Software Foundation, Inc.
+;;; Copyright (C) 2016, 2018, 2019 Free Software Foundation, Inc.
 ;;;
 ;;; This library is free software: you can redistribute it and/or modify
 ;;; it under the terms of the GNU Lesser General Public License as
@@ -687,12 +687,48 @@
                          (or (eqv? char (string-ref delims i))
                              (lp (1+ i)))))))))))
 
+(define* (%read-line port)
+  (let* ((return-flag-delim-and-chars
+          (let loop ((cr #f)
+                     (chars '())
+                     (c (read-char port)))
+            (cond
+             ((eof-object? c)
+              (list #f c chars))
+             ((char=? c #\newline)
+              (list cr c chars))
+             ((char=? c #\return)
+              (loop #t (cons c chars) (read-char port)))
+             (else
+              (loop #f (cons c chars) (read-char port))))))
+         (return-flag (car return-flag-delim-and-chars))
+         (delim (cadr return-flag-delim-and-chars))
+         (chars (caddr return-flag-delim-and-chars)))
+
+    (if (and (eof-object? delim)
+             (null? chars))
+        (cons the-eof-object the-eof-object)
+        ;; Else
+        (if return-flag
+            (cons (list->string (reverse (cdr chars))) "\r\n")
+            (cons (list->string (reverse chars)) delim)))))
+
 (define* (read-line #:optional (port (current-input-port))
                     (handle-delim 'trim))
-  (read-delimited "\n" port handle-delim))
-
-(define* (%read-line port)
-  (read-line port 'split))
+  (let* ((line/delim	(%read-line port))
+	 (line		(car line/delim))
+	 (delim		(cdr line/delim)))
+    (case handle-delim
+      ((trim) line)
+      ((split) line/delim)
+      ((concat) (if (and (string? line) (char? delim))
+		    (string-append line (string delim))
+		    line))
+      ((peek) (if (char? delim)
+		  (unread-char delim port))
+	      line)
+      (else
+       (error "unexpected handle-delim value: " handle-delim)))))
 
 (define* (put-string port str #:optional (start 0)
                      (count (- (string-length str) start)))

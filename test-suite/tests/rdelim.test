@@ -62,6 +62,28 @@
                          (read-line p 'split)))
            (eof-object? (read-line p)))))
 
+  (pass-if "two lines, split, CRLF"
+    (let* ((s "foo\r\nbar\r\n")
+           (p (open-input-string s)))
+      (and (equal? '(("foo" . "\r\n")
+                     ("bar" . "\r\n"))
+                   (list (read-line p 'split)
+                         (read-line p 'split)))
+           (eof-object? (read-line p)))))
+
+  (pass-if "two long lines, split, CRLF"
+    ;; Must be longer than 256 codepoints
+    (let* ((text0 "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
+           (text1 (string-append text0 text0 text0 text0 text0))
+           (text2 (string-append text1 "\r\n" text1 "\r\n")))
+      (let* ((s text2)
+             (p (open-input-string s)))
+        (and (equal? `((,text1 . "\r\n")
+                       (,text1 . "\r\n"))
+                     (list (read-line p 'split)
+                           (read-line p 'split)))
+             (eof-object? (read-line p))))))
+
   (pass-if "two Greek lines, trim"
     (let* ((s "λαμβδα\nμυ\n")
            (p (open-input-string s)))

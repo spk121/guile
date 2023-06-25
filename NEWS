@@ -84,6 +84,17 @@ eval-in-sandbox is modified so that #:time-limit accepts #f to disable
 the time limit.  Systems without SIGALRM can use eval-in-sandbox if the
 time limit is disabled.
 
+** 'read-line' detects '\r\n' as a line delimiter
+
+read-line is updated to detect a carriage return / line feed pair as a
+line delimiter.  When CRLF is detected at the end of a line, the
+returned line delimiter is "\r\n".  Previously, when a line terminated
+with '\r\n' was read, the return character was appended to the string,
+and the returned delimiter was '\n'.
+
+Carriage return / line feed is a common line deliminator for Windows
+text files.
+
 * Bug fixes
 
 ** (ice-9 suspendable-ports) incorrect UTF-8 decoding
