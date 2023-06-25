@@ -430,6 +430,10 @@
       (list 0                                     ;exit value
             (string-append (utsname:sysname (uname)) " "
                            (utsname:machine (uname)) "\n"))
+    (when (string-contains %host-type "mingw")
+      ;; The uname command output does not exactly match our uname
+      ;; output.
+      (throw 'unresolved))
     (let* ((input+output (pipe))
            (pid (spawn "uname" '("uname" "-s" "-m")
                        #:output (cdr input+output))))
