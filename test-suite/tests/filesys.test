@@ -460,8 +460,8 @@
     (chdir (open-input-string ""))))
 
 (with-test-prefix "readlink"
-  (false-if-exception (delete-file (test-symlink)))
-  (false-if-exception (delete-file (test-file)))
+  (%delete-file (test-symlink))
+  (%delete-file (test-file))
   (call-with-output-file (test-file)
     (lambda (port)
       (display "hello" port)))
