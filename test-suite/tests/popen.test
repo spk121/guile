@@ -292,8 +292,13 @@ exec 2>~a; read REPLY"
 (pass-if-equal "piped-process"
     42
   (status:exit-val
-   (cdr (waitpid ((@@ (ice-9 popen) piped-process)
-                  "./meta/guile" '("-c" "(exit 42)"))))))
+   (cdr (waitpid
+         (if (not mingw?)
+             ((@@ (ice-9 popen) piped-process) "./meta/guile" '("-c" "(exit 42)"))
+             ;; Calling piped-process directly means that, on MinGW,
+             ;; /bin/sh is bypassed.
+             ((@@ (ice-9 popen) piped-process) "sh" '("./meta/guile" "-c" "(exit 42)")))))))
+
 
 (pass-if-equal "piped-process: with output"
     '("foo bar\n" 0)
