@@ -491,10 +491,10 @@
           (readlink '(stuff)))))
 
   (pass-if-equal "port representing a regular file" EINVAL
+    (unless (provided? 'readlink-port)
+      (throw 'unsupported))
     (call-with-input-file (test-file)
       (lambda (port)
-        (unless (provided? 'readlink-port)
-          (throw 'unsupported))
         (catch 'system-error
           (lambda ()
             (readlink port)
