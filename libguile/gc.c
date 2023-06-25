@@ -462,6 +462,14 @@ scm_storage_prehistory ()
   setenv ("GC_MARKERS", "1", 1);
 #endif
 
+#if __MINGW32__
+  /* There are undiagnosed issues that prevent incremental GC
+   * from working.  Also reducing GC_MARKERS to 1 seems to improve
+   * stability. */
+  setenv ("GC_MARKERS", "1", 1);
+  setenv ("GC_DISABLE_INCREMENTAL", "1", 1);
+#endif
+
   GC_INIT ();
 
   size_t heap_size = GC_get_heap_size ();
