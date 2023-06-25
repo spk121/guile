@@ -58,6 +58,16 @@ of waitpid could no longer emulate ENOHANG.  It relied on Guile keeping
 an internal handle-to-pid table.  It now returns ENOSYS on any non-zero
 waitpid option.
 
+** Add method to change shell used by 'open-pipe'
+
+A procedure-with-setter 'pipe-shell-command-transformer' is added that
+allows the inspection and modification of the shell command used to
+execute commands with open-pipe.  When Guile switched to using
+posix_spawn module, it hardcoded '/bin/sh -c' as the shell used by
+open-pipe.  The new procedure allows modification of that command. This
+is useful on systems that prefer other shells or on systems that don't
+have 'sh' in /bin.
+
 * Bug fixes
 
 ** (ice-9 suspendable-ports) incorrect UTF-8 decoding
@@ -85,6 +95,7 @@ a buffer overrun, and so might vary.  This problem affected a number of
 other operations, given the internal use of those functions.
 
 ** In MinGW, fix tmpnam returning names in root directory
+
 
 Changes in 3.0.9 (since 3.0.8)
 

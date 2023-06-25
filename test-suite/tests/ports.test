@@ -31,6 +31,14 @@
                                                get-bytevector-n
                                                get-bytevector-all
                                                unget-bytevector)))
+(define mingw?
+  (string-contains %host-type "-mingw32"))
+
+(when mingw?
+  ;; On MinGW, sh is not necessarily in /bin.
+  (set! (pipe-shell-command-transformer)
+        (lambda (cmd)
+          `("sh" "-c" ,cmd))))
 
 (define (display-line . args)
   (for-each display args)
