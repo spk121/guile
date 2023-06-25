@@ -1,6 +1,6 @@
 ;;;; popen.test --- exercise ice-9/popen.scm      -*- scheme -*-
 ;;;;
-;;;; Copyright 2003, 2006, 2010, 2011, 2013, 2014, 2020
+;;;; Copyright 2003, 2006, 2010, 2011, 2013, 2014, 2020, 2025
 ;;;;           2021 Free Software Foundation, Inc.
 ;;;;
 ;;;; This library is free software; you can redistribute it and/or
@@ -48,6 +48,30 @@
 (if-supported
  (use-modules (ice-9 popen))
 
+ ;;
+ ;; pipe-shell-command-transformer
+ ;;
+
+ (with-test-prefix "pipe-shell-command-transformer"
+   (pass-if-equal "default shell is /bin/sh"
+       '("/bin/sh" "-c" "test")
+     ((pipe-shell-command-transformer) "test"))
+
+   (pass-if-equal "can set to /bin/bash"
+       '("/bin/bash" "-c" "test")
+     (let ((transform-prev (pipe-shell-command-transformer)))
+       (set! (pipe-shell-command-transformer)
+             (lambda (cmd)
+               `("/bin/bash" "-c" ,cmd)))
+       (let ((cmd ((pipe-shell-command-transformer) "test")))
+         (set! (pipe-shell-command-transformer) transform-prev)
+         cmd))))
+
+ (when mingw?
+   ;; On MinGW, sh is not necessarily in /bin.
+   (set! (pipe-shell-command-transformer)
+         (lambda (cmd)
+           `("sh" "-c" ,cmd))))
 
  ;;
  ;; open-input-pipe
