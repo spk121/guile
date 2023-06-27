@@ -20,16 +20,16 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: setup git config
-        run: |
-          git config --global user.name "Badges Bot"
-          git config --global user.email "<>"    
       - name: update
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          git clone git@github.com:spk121/spk121.github.io.git
+          git clone https://user:$GITHUB_TOKEN@github.com:spk121/spk121.github.io.git
           cd spk121.github.io
+          git config user.name "badges bot"
+          git config user.email "bot@lonelycactus.com"
           mkdir -p report
           echo "foo\n" > report/foo.txt
           git add report/*
-          git commit -m "Badges update"
+          git commit -m "badges update"
           git push origin master                  
