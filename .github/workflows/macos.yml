@@ -1,4 +1,4 @@
-name: Ubuntu
+name: Mac OS
 
 on:
   # Allow manual triggering
@@ -7,7 +7,7 @@ on:
 jobs:
   build:
     name: Build
-    runs-on: ubuntu-latest
+    runs-on: macos-latest
     steps:
     - name: Checkout
       uses: actions/checkout@v3
