@@ -21,9 +21,11 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v3
+        with:
+          repository: spk121/spk121.github.io 
       - name: update
         run: |
-          git clone https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/spk121/spk121.github.io.git
           cd spk121.github.io
           git config user.name "badges bot"
           git config user.email "bot@lonelycactus.com"
@@ -31,5 +33,4 @@ jobs:
           echo "foo\n" > report/foo.txt
           git add report/*
           git commit -m "badges update"
-          git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/spk121/spk121.github.io.git
           git push                  
