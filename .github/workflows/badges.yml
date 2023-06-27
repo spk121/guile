@@ -26,7 +26,6 @@ jobs:
           repository: spk121/spk121.github.io 
       - name: update
         run: |
-          cd spk121.github.io
           git config user.name "badges bot"
           git config user.email "bot@lonelycactus.com"
           mkdir -p report
