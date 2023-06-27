@@ -22,13 +22,13 @@ jobs:
     steps:
       - name: setup git config
         run: |
-          git config user.name "GitHub Badges Bot"
-          git config user.email "<>"    
+          git config --global user.name "Badges Bot"
+          git config --global user.email "<>"    
       - name: update
         run: |
           git clone git@github.com:spk121/spk121.github.io.git
           cd spk121.github.io
-          mkdir report
+          mkdir -p report
           echo "foo\n" > report/foo.txt
           git add report/*
           git commit -m "Badges update"
