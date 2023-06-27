@@ -15,23 +15,7 @@ jobs:
         fetch-depth: 0
     - name: Install packages
       run: >-
-        sudo apt-get install -y
-        texlive
-        texlive-plain-generic
-        texinfo
-        autoconf
-        libtool
-        gettext
-        autopoint
-        gperf
-        pkg-config
-        lzip
-        libgc-dev
-        libgmp-dev
-        libltdl-dev
-        libncurses5-dev
-        libreadline6-dev
-        libunistring-dev
+        brew install bdw-gc gmp libtool libunistring pkg-config readline gnu-sed
     - name: Configure
       run: |
         export LANG=C.UTF-8 TERM=dumb VERBOSE=true DEBIAN_FRONTEND=noninteractive TZ=America/Los_Angeles
