@@ -15,7 +15,7 @@ jobs:
         fetch-depth: 0
     - name: Install packages
       run: >-
-        brew install bdw-gc gmp libtool libunistring pkg-config readline gnu-sed
+        brew install bdw-gc gmp libtool libunistring pkg-config readline gnu-sed automake autoconf
     - name: Configure
       run: |
         export LANG=C.UTF-8 TERM=dumb VERBOSE=true DEBIAN_FRONTEND=noninteractive TZ=America/Los_Angeles
