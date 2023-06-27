@@ -30,4 +30,5 @@ jobs:
           echo "foo\n" > report/foo.txt
           git add report/*
           git commit -m "badges update"
-          git push origin master                  
+          git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/spk121/spk121.github.io.git
+          git push                  
