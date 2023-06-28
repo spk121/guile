@@ -38,4 +38,7 @@ jobs:
           echo "foo\n" > report/foo.txt
           git add report/*
           git commit -m "badges update"
-          git push                  
+      - uses: ad-m/github-push-action@master
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          branch: ${{ github.ref }}
