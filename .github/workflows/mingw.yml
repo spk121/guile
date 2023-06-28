@@ -62,7 +62,7 @@ jobs:
         make check V=1
       shell: msys2 -o igncr '{0}'
     - name: Archive test logs
-      if: ${{ success() || failure() }}
+      if: ${{ always() }}
       uses: actions/upload-artifact@v3
       with:
         name: Test logs ${{matrix.sys}}-${{matrix.env}}${{matrix.jit}}${{matrix.gmp}}
