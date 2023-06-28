@@ -17,6 +17,7 @@ jobs:
 
     runs-on: windows-latest
     name: Build ${{matrix.sys}} ${{matrix.env}} ${{matrix.jit}} ${{matrix.gmp}}
+    timeout-minutes: 120
 
     steps:
     - name: Set git to Linux line endings
