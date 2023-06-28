@@ -40,6 +40,6 @@ jobs:
           git commit -m "badges update"
       - uses: ad-m/github-push-action@master
         with:
-          github_token: ${{ secrets.PAT_TOKEN }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
           repository: spk121/verbose-waffle
   
