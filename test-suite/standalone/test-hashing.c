@@ -39,18 +39,18 @@ test_hashing ()
 
   // Value determined by calling wide_string_hash on {0x3A0, 0x3B5,
   // 0x3C1, 0x3AF} via a temporary test program.
+  unsigned long actual, expect;
 #if SCM_SIZEOF_UNSIGNED_LONG == 8 && SCM_SIZEOF_UINTPTR_T == 8
-  const unsigned long expect = 4029223418961680680;
-  const unsigned long actual = scm_to_ulong (scm_symbol_hash (sym));
+  expect = 4029223418961680680;
 #elif SCM_SIZEOF_UNSIGNED_LONG == 4 && SCM_SIZEOF_UINTPTR_T == 4
-  const unsigned long expect = 938126682;
-  const unsigned long actual = scm_to_ulong (scm_symbol_hash (sym));
+  expect = 938126682;
 #else
   fprintf (stderr, "warning: skipping test for %d-byte longs and %d-byte pointers\n",
            SCM_SIZEOF_UNSIGNED_LONG, SCM_SIZEOF_UINTPTR_T);
   exit (EXIT_SUCCESS);
 #endif
 
+  actual = scm_to_ulong (scm_symbol_hash (sym));
   if (actual != expect)
     {
       fprintf (stderr, "fail: unexpected utf-8 symbol hash (%lu != %lu)\n",
