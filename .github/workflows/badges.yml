@@ -30,20 +30,22 @@ jobs:
       - name: Checkout tools repo
         uses: actions/checkout@v3
         with:
-          ref: badges
-          path: badges    
+          ref: badges-yml
+          fetch-depth: 1
+          path: ../badges    
       - name: update
         run: |
-          cd badges
+          cd ../badges
           git config user.name "badges bot"
           git config user.email "bot@lonelycactus.com"
           mkdir -p report
           echo "foo\n" > report/foo.txt
           git add report/*
           git commit -m "badges update"
-          cd ..
+          cd ../guile
       - uses: ad-m/github-push-action@master
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           branch: ${{ github.ref }}
+          path: ../badges
   
