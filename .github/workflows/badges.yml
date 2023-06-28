@@ -27,20 +27,23 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout tools repo
+        uses: actions/checkout@v3
         with:
-          repository: spk121/verbose-waffle
-          token: ${{ secrets.PAT_TOKEN }}
+          ref: badges
+          path: badges    
       - name: update
         run: |
+          cd badges
           git config user.name "badges bot"
           git config user.email "bot@lonelycactus.com"
           mkdir -p report
           echo "foo\n" > report/foo.txt
           git add report/*
           git commit -m "badges update"
+          cd ..
       - uses: ad-m/github-push-action@master
         with:
-          repository: spk121/verbose-waffle
-          github_token: ${{ secrets.PAT_TOKEN }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          branch: ${{ github.ref }}
   
