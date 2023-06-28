@@ -23,7 +23,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
         with:
-          repository: spk121/spk121.github.io
+          repository: spk121/verbose-waffle
           persist-credentials: false
       - name: update
         run: |
