@@ -49,6 +49,7 @@ see https://www.gnu.org/licenses/.  */
 #include <ctype.h>
 #include <limits.h>
 #include <stdio.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -60,6 +61,16 @@ see https://www.gnu.org/licenses/.  */
 
 
 /* Macros */
+#ifdef MINI_GMP_USE_INTPTR_T
+#define GMP_SINT_MAX (INTPTR_MAX)
+#define GMP_SINT_MIN (INTPTR_MIN)
+#define GMP_UINT_MAX (UINTPTR_MAX)
+#else
+#define GMP_SINT_MAX (LONG_MAX)
+#define GMP_SINT_MIN (LONG_MIN)
+#define GMP_UINT_MAX (ULONG_MAX)
+#endif
+
 #define GMP_LIMB_BITS (sizeof(mp_limb_t) * CHAR_BIT)
 
 #define GMP_LIMB_MAX ((mp_limb_t) ~ (mp_limb_t) 0)

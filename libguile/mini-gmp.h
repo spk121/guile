@@ -59,16 +59,10 @@ void mp_get_memory_functions (void *(**) (size_t),
 typedef uintptr_t mp_limb_t;
 typedef intptr_t gmp_sint_t;
 typedef uintptr_t gmp_uint_t;
-#define GMP_SINT_MAX (INTPTR_MAX)
-#define GMP_SINT_MIN (INTPTR_MIN)
-#define GMP_UINT_MAX (UINTPTR_MAX)
 #else
 typedef unsigned long mp_limb_t;
 typedef long gmp_sint_t;
 typedef unsigned long gmp_uint_t;
-#define GMP_SINT_MAX (LONG_MAX)
-#define GMP_SINT_MIN (LONG_MIN)
-#define GMP_UINT_MAX (ULONG_MAX)
 #endif
 
 typedef long mp_size_t;
