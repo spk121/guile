@@ -10,13 +10,13 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - { sys: MINGW64, env: x86_64,       jit: --enable-jit=no,  gmp: --enable-mini-gmp }
-          - { sys: MINGW32, env: i686,         jit: --enable-jit=yes, gmp: --enable-mini-gmp }
-          - { sys: UCRT64,  env: ucrt-x86_64,  jit: --enable-jit=no,  gmp: --enable-mini-gmp }
-          - { sys: CLANG64, env: clang-x86_64, jit: --enable-jit=no,  gmp: --enable-mini-gmp }
+          - { sys: MINGW64, env: x86_64,       thread: --without-threads, jit: --enable-jit=no,  gmp: --enable-mini-gmp }
+          - { sys: MINGW32, env: i686,         thread: --without-threads, jit: --enable-jit=yes, gmp: --enable-mini-gmp }
+          - { sys: UCRT64,  env: ucrt-x86_64,  thread: --without-threads, jit: --enable-jit=no,  gmp: --enable-mini-gmp }
+          - { sys: CLANG64, env: clang-x86_64, thread: --without-threads, jit: --enable-jit=no,  gmp: --enable-mini-gmp }
 
     runs-on: windows-latest
-    name: Build ${{matrix.sys}} ${{matrix.env}} ${{matrix.jit}} ${{matrix.gmp}}
+    name: Build ${{matrix.sys}} ${{matrix.env}} ${{matrix.thread}} ${{matrix.jit}} ${{matrix.gmp}}
     timeout-minutes: 150
 
     steps:
@@ -51,7 +51,7 @@ jobs:
         export LANG=C.UTF-8 TERM=dumb VERBOSE=true TZ=America/Los_Angeles
         mkdir `pwd`/app
         ./autogen.sh
-        ./configure CFLAGS="-g -O2 -Wall" ${{matrix.jit}} ${{matrix.gmp}} --prefix=`pwd`/app
+        ./configure CFLAGS="-g -O2 -Wall" ${{matrix.thread}} ${{matrix.jit}} ${{matrix.gmp}} --prefix=`pwd`/app
       shell: msys2 -o igncr '{0}'
     - name: Make
       run: |
@@ -65,5 +65,5 @@ jobs:
       if: ${{ always() }}
       uses: actions/upload-artifact@v3
       with:
-        name: Test logs ${{matrix.sys}}-${{matrix.env}}${{matrix.jit}}${{matrix.gmp}}
+        name: Test logs ${{matrix.sys}}-${{matrix.env}}${{matrix.thread}}${{matrix.jit}}${{matrix.gmp}}
         path: ./*.log
