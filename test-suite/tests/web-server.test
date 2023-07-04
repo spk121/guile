@@ -94,7 +94,6 @@
                          (<= n 15))
                     #f
                     (apply throw args)))))
-
           (or success?
               (begin
                 (sleep 1)
