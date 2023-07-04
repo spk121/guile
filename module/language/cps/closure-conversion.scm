@@ -520,7 +520,7 @@ Otherwise @var{var} is bound, so @var{k} is called with @var{var}."
                    (ref (cond
                          ((not self-known?)
                           (build-exp
-                            ($primcall 'closure-ref idx (self))))
+                            ($primcall 'closure-ref `(,idx . ,nfree) (self))))
                          ((= nfree 2)
                           (build-exp
                             ($primcall (match idx (0 'car) (1 'cdr)) #f
@@ -622,7 +622,7 @@ bound to @var{closure}, and continue to @var{k}."
                   ((not known?)
                    (lambda (idx val)
                      (build-exp
-                       ($primcall 'closure-set! idx (closure val)))))
+                       ($primcall 'closure-set! `(,idx . ,count) (closure val)))))
                   ((= count 2)
                    (lambda (idx val)
                      (match idx

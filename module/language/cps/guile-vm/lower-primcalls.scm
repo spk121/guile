@@ -551,7 +551,7 @@
         ($primcall 'allocate-words/immediate `(closure . ,nwords) ())))))
 
 ;; precondition: closure is closure, idx is in range
-(define-primcall-lowerer (closure-ref cps k src idx (closure))
+(define-primcall-lowerer (closure-ref cps k src (idx . nfree) (closure))
   (let ((pos (+ idx 2)))
     (with-cps cps
       (build-term
@@ -559,7 +559,7 @@
           ($primcall 'scm-ref/immediate `(closure . ,pos) (closure)))))))
 
 ;; precondition: closure is clodure, idx is in range
-(define-primcall-lowerer (closure-set! cps k src idx (closure val))
+(define-primcall-lowerer (closure-set! cps k src (idx . nfree) (closure val))
   (let ((pos (+ idx 2)))
     (with-cps cps
       (build-term

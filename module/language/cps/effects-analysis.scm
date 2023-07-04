@@ -483,8 +483,12 @@ the LABELS that are clobbered by the effects of LABEL."
   ((string-set! str idx cp)        (&write-object &string))
 
   ((make-closure code)             (&allocate &closure))
-  ((closure-ref code)              (&read-field &closure param))
-  ((closure-set! code)             (&write-field &closure param)))
+  ((closure-ref code)              (match param
+                                     ((idx . nfree)
+                                      (&read-field &closure idx))))
+  ((closure-set! code)             (match param
+                                     ((idx . nfree)
+                                      (&write-field &closure idx)))))
 
 (define-primitive-effects* param
   ((allocate-words size)           (&allocate (annotation->memory-kind param)))
