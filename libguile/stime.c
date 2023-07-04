@@ -322,52 +322,66 @@ filltime (struct tm *bd_time, int zoff, const char *zname)
   SCM_SIMPLE_VECTOR_SET (result,7, scm_from_int (bd_time->tm_yday));
   SCM_SIMPLE_VECTOR_SET (result,8, scm_from_int (bd_time->tm_isdst));
   SCM_SIMPLE_VECTOR_SET (result,9, scm_from_int (zoff));
-  SCM_SIMPLE_VECTOR_SET (result,10, (zname 
+  SCM_SIMPLE_VECTOR_SET (result,10, (zname
 				     ? scm_from_locale_string (zname)
 				     : SCM_BOOL_F));
   return result;
 }
 
-static const char tzvar[3] = "TZ";
 static scm_i_pthread_mutex_t tz_lock = SCM_I_PTHREAD_MUTEX_INITIALIZER;
 
-/* if zone is set, create a temporary environment with only a TZ
-   string.  other threads or interrupt handlers shouldn't be allowed
-   to run until the corresponding restorezone is called.  hence the use
-   of a static variable for tmpenv is no big deal.  */
-static char **
+/* If zone is set, it overwrites or adds a TZ environment variable string.
+   Other threads or interrupt handlers shouldn't be allowed
+   to run until the corresponding restorezone is called.  */
+static char *
 setzone (SCM zone, int pos, const char *subr)
 {
-  char **oldenv = 0;
+  char *oldtz = 0;
 
   if (!SCM_UNBNDP (zone))
     {
-      static char *tmpenv[2];
-      char dummy_buf[1];
-      char *buf;
-      size_t zone_len;
-      
-      zone_len = scm_to_locale_stringbuf (zone, dummy_buf, 0);
-      buf = scm_malloc (zone_len + sizeof (tzvar) + 1);
-      strcpy (buf, tzvar);
-      buf[sizeof(tzvar)-1] = '=';
-      scm_to_locale_stringbuf (zone, buf+sizeof(tzvar), zone_len);
-      buf[sizeof(tzvar)+zone_len] = '\0';
-      oldenv = environ;
-      tmpenv[0] = buf;
-      tmpenv[1] = 0;
-      environ = tmpenv;
+      char *newtz;
+
+      oldtz = getenv ("TZ");
+      newtz = scm_to_locale_string (zone);
+#ifndef _WIN32
+      setenv ("TZ", newtz, 1);
+#else
+      char *newtz_full = scm_malloc (strlen (newtz) + 4);
+      strcpy (newtz_full, "TZ=");
+      strcat (newtz_full, newtz);
+      _putenv (newtz_full);
+      free (newtz_full);
+#endif
     }
-  return oldenv;
+  return oldtz;
 }
 
 static void
-restorezone (SCM zone, char **oldenv, const char *subr SCM_UNUSED)
+restorezone (SCM zone, char *oldtz, const char *subr SCM_UNUSED)
 {
   if (!SCM_UNBNDP (zone))
     {
-      free (environ[0]);
-      environ = oldenv;
+#ifndef _WIN32
+      if (oldtz)
+        setenv ("TZ", oldtz, 1);
+      else
+        unsetenv ("TZ");
+#else
+      char *oldtz_full;
+      if (oldtz)
+        {
+          oldtz_full = scm_malloc (strlen (oldtz) + 4);
+          strcpy (oldtz_full, "TZ=");
+          strcat (oldtz_full, oldtz);
+          _putenv (oldtz_full);
+          free (oldtz_full);
+        }
+      else
+        {
+          _putenv ("TZ=");
+        }
+#endif
 #ifdef HAVE_TZSET
       /* for the possible benefit of user code linked with libguile.  */
       tzset();
@@ -389,7 +403,7 @@ SCM_DEFINE (scm_localtime, "localtime", 1, 1, 0,
   SCM result;
   int zoff;
   char *zname = 0;
-  char **oldenv;
+  char *oldtz;
   int err;
 
   itime = SCM_NUM2LONG (1, time);
@@ -399,7 +413,7 @@ SCM_DEFINE (scm_localtime, "localtime", 1, 1, 0,
   scm_dynwind_begin (0);
   scm_i_dynwind_pthread_mutex_lock (&tz_lock);
 
-  oldenv = setzone (zone, SCM_ARG2, FUNC_NAME);
+  oldtz = setzone (zone, SCM_ARG2, FUNC_NAME);
 #ifdef LOCALTIME_CACHE
   tzset ();
 #endif
@@ -432,7 +446,7 @@ SCM_DEFINE (scm_localtime, "localtime", 1, 1, 0,
   utc = gmtime (&itime);
   if (utc == NULL)
     err = errno;
-  restorezone (zone, oldenv, FUNC_NAME);
+  restorezone (zone, oldtz, FUNC_NAME);
   /* delayed until zone has been restored.  */
   errno = err;
   if (utc == NULL || ltptr == NULL)
@@ -547,7 +561,7 @@ SCM_DEFINE (scm_mktime, "mktime", 1, 1, 0,
   SCM result;
   int zoff;
   char *zname = 0;
-  char **oldenv;
+  char *oldtz;
   int err;
 
   scm_dynwind_begin (0);
@@ -559,7 +573,7 @@ SCM_DEFINE (scm_mktime, "mktime", 1, 1, 0,
 
   scm_i_dynwind_pthread_mutex_lock (&tz_lock);
 
-  oldenv = setzone (zone, SCM_ARG2, FUNC_NAME);
+  oldtz = setzone (zone, SCM_ARG2, FUNC_NAME);
 #ifdef LOCALTIME_CACHE
   tzset ();
 #endif
@@ -592,7 +606,7 @@ SCM_DEFINE (scm_mktime, "mktime", 1, 1, 0,
   if (utc == NULL)
     err = errno;
 
-  restorezone (zone, oldenv, FUNC_NAME);
+  restorezone (zone, oldtz, FUNC_NAME);
   /* delayed until zone has been restored.  */
   errno = err;
   if (utc == NULL || itime == -1)
@@ -628,6 +642,7 @@ SCM_DEFINE (scm_tzset, "tzset", 0, 0, 0,
 #define FUNC_NAME s_scm_tzset
 {
   tzset();
+
   return SCM_UNSPECIFIED;
 }
 #undef FUNC_NAME
@@ -688,7 +703,7 @@ SCM_DEFINE (scm_strftime, "strftime", 2, 0, 0,
        zone to use (for the %Z format) is to set TZ in the
        environment.  interrupts and thread switching must be deferred
        until TZ is restored.  */
-    char **oldenv = NULL;
+    char *oldtz = NULL;
     SCM zone_spec = SCM_SIMPLE_VECTOR_REF (stime, 10);
     int have_zone = 0;
 
@@ -704,7 +719,7 @@ SCM_DEFINE (scm_strftime, "strftime", 2, 0, 0,
 
 	have_zone = 1;
         scm_i_scm_pthread_mutex_lock (&tz_lock);
-	oldenv = setzone (zone, SCM_ARG2, FUNC_NAME);
+	oldtz = setzone (zone, SCM_ARG2, FUNC_NAME);
       }
 #endif
 
@@ -724,7 +739,7 @@ SCM_DEFINE (scm_strftime, "strftime", 2, 0, 0,
 #if !defined (HAVE_STRUCT_TM_TM_ZONE)
     if (have_zone)
       {
-	restorezone (zone_spec, oldenv, FUNC_NAME);
+	restorezone (zone_spec, oldtz, FUNC_NAME);
         scm_i_pthread_mutex_unlock (&tz_lock);
       }
 #endif
@@ -870,4 +885,3 @@ scm_init_stime()
   scm_add_feature ("current-time");
 #include "stime.x"
 }
-
