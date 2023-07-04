@@ -95,7 +95,8 @@
 ;; Old MS is MinGW using deprecated MSVCRT C library.
 ;; MinGW with UCRT C library prefers BCP 47 and can fall back to Old MS.
 (define old-ms?
-  (string-contains %host-type "-mingw32"))
+  (and (string-contains %host-type "-mingw32")
+       (not (defined? '%UCRT))))
 
 (define %french-locale-name
   (if old-ms?
