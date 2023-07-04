@@ -24,5 +24,5 @@
 (pass-if-equal "LATIN SMALL LETTER A" (char->formal-name #\a))
 (pass-if-equal #\a (formal-name->char "LATIN SMALL LETTER A"))
 
-(pass-if-equal #f (char->formal-name #\nul))
+(pass-if-equal "char->formal-name #\\nul" #f (char->formal-name #\nul))
 (pass-if-equal #f (formal-name->char "not a known formal name"))
