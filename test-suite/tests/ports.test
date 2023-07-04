@@ -1107,7 +1107,9 @@
   (define (input-port-list text)
 
     ;; Create a text file some of the ports will use.
-    (let ((out-port (open-output-file port-loop-temp)))
+    ;; We use binary mode to avoid having to redesign this test for CRLF
+    ;; line ending systems.
+    (let ((out-port (open-output-file port-loop-temp #:binary #t)))
       (display text out-port)
       (close-port out-port))
 
