@@ -78,6 +78,8 @@
 
 (pass-if "server is listening"
   ;; First, wait until the server is listening, up to a few seconds.
+  (unless (provided? 'threads)
+    (throw 'unresolved))
   (let ((socket (socket AF_INET SOCK_STREAM 0)))
     (let loop ((n 1))
       (define success?
