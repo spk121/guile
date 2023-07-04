@@ -1126,30 +1126,30 @@
         (for-each
          (lambda (port port-name)
            (with-test-prefix port-name
-             (pass-if "at beginning of input"
-                      (= (port-line port) 0))
-             (pass-if "read first character"
-                      (eqv? (read-char port) #\x))
-             (pass-if "after reading one character"
-                      (= (port-line port) 0))
-             (pass-if "read first newline"
-                      (eqv? (read-char port) #\newline))
-             (pass-if "after reading first newline char"
-                      (= (port-line port) 1))
-             (pass-if "second line read correctly"
-                      (equal? (read-line port) second-line))
-             (pass-if "read-line increments line number"
-                      (= (port-line port) 2))
+             (pass-if-equal "at beginning of input"
+                 0 (port-line port))
+             (pass-if-equal "read first character"
+                 #\x (read-char port))
+             (pass-if-equal "after reading one character"
+                 0 (port-line port))
+             (pass-if-equal "read first newline"
+                 #\newline (read-char port))
+             (pass-if-equal "after reading first newline char"
+                 1 (port-line port))
+             (pass-if-equal "second line read correctly"
+                 second-line (read-line port))
+             (pass-if-equal "read-line increments line number"
+                 2 (port-line port))
              (pass-if "read-line returns EOF"
                       (let loop ((i 0))
                         (cond
                          ((eof-object? (read-line port)) #t)
                          ((> i 20) #f)
                          (else (loop (+ i 1))))))
-             (pass-if "line count is 5 at EOF"
-                      (= (port-line port) 5))
-             (pass-if "column is correct at EOF"
-                      (= (port-column port) final-column))))
+             (pass-if-equal "line count is 5 at EOF"
+                 5 (port-line port))
+             (pass-if-equal "column is correct at EOF"
+                 final-column (port-column port))))
          ports port-list-names)
         (for-each close-port ports)
         (delete-file port-loop-temp))))
