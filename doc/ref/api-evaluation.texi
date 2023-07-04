@@ -1396,10 +1396,10 @@ The main sandbox interface is @code{eval-in-sandbox}.
                           [#:bindings all-pure-bindings] @
                           [#:module (make-sandbox-module bindings)] @
                           [#:sever-module? #t]
-Evaluate the Scheme expression @var{exp} within an isolated
-"sandbox".  Limit its execution to @var{time-limit} seconds of
-wall-clock time, and limit its allocation to @var{allocation-limit}
-bytes.
+Evaluate the Scheme expression @var{exp} within an isolated "sandbox".
+When @var{time-limit} is a number and is not @code{#f}, limit its
+execution to @var{time-limit} seconds of wall-clock time.  Limit its
+allocation to @var{allocation-limit} bytes.
 
 The evaluation will occur in @var{module}, which defaults to the result
 of calling @code{make-sandbox-module} on @var{bindings}, which itself
