@@ -7005,8 +7005,9 @@ log_of_fraction (SCM n, SCM d)
 {
   intptr_t n_size = scm_to_intptr_t (scm_integer_length (n));
   intptr_t d_size = scm_to_intptr_t (scm_integer_length (d));
+  intptr_t diff = n_size - d_size;
 
-  if (labs (n_size - d_size) > 1)
+  if (diff > 1 || diff < -1)
     return (scm_difference (log_of_exact_integer (n),
 			    log_of_exact_integer (d)));
   else if (scm_is_false (scm_negative_p (n)))
