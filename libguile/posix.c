@@ -1799,11 +1799,24 @@ SCM_DEFINE (scm_tmpnam, "tmpnam", 0, 0, 0,
   scm_c_issue_deprecation_warning
       ("Use of tmpnam is deprecated.  Use mkstemp instead.");
 
+#ifndef _WIN32
   SCM_SYSCALL (rv = tmpnam (name));
+#else
+  /* _tempnam properly prepends the temp directory path. */
+  SCM_SYSCALL (rv = _tempnam (NULL, ""));
+#endif
+
   if (rv == NULL)
     /* not SCM_SYSERROR since errno probably not set.  */
     SCM_MISC_ERROR ("tmpnam failed", SCM_EOL);
+
+#ifndef _WIN32
   return scm_from_locale_string (name);
+#else
+  SCM ret = scm_from_locale_string (rv);
+  free (rv);
+  return ret;
+#endif
 }
 #undef FUNC_NAME
 
