@@ -2710,7 +2710,7 @@ scm_init_posix ()
 #endif
 #ifdef _UCRT
   /* When defined, Windows systems are using the UCRT library. */
-  scm_c_define ("_UCRT", scm_from_int (_UCRT));
+  scm_c_define ("_UCRT", scm_from_int (1));
 #endif
 
 #include "cpp-SIG.c"
