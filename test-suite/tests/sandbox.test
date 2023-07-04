@@ -73,16 +73,27 @@
 
 (define-syntax-rule (pass-if-unbound foo)
   (pass-if-exception (format #f "~a unavailable" 'foo)
-      exception:unbound-var (eval-in-sandbox 'foo))
+      exception:unbound-var
+    (unless (defined? 'SIGALRM) (throw 'unsupported))
+    (eval-in-sandbox 'foo))
   )
 
 (with-test-prefix "eval-in-sandbox"
   (pass-if-equal 42
-      (eval-in-sandbox 42))
+      (begin
+        (unless (defined? 'SIGALRM)
+          (throw 'unsupported))
+        (eval-in-sandbox 42)))
   (pass-if-equal 'foo
-      (eval-in-sandbox ''foo))
+      (begin
+        (unless (defined? 'SIGALRM)
+          (throw 'unsupported))
+        (eval-in-sandbox ''foo)))
   (pass-if-equal '(1 . 2)
-      (eval-in-sandbox '(cons 1 2)))
+      (begin
+        (unless (defined? 'SIGALRM)
+          (throw 'unsupported))
+        (eval-in-sandbox '(cons 1 2))))
   (pass-if-unbound @@)
   (pass-if-unbound foo)
   (pass-if-unbound set!)
@@ -91,9 +102,36 @@
   (pass-if-unbound call-with-output-file)
   (pass-if-unbound vector-set!)
   (pass-if-equal vector-set!
-      (eval-in-sandbox 'vector-set!
-                       #:bindings all-pure-and-impure-bindings))
+      (begin
+        (unless (defined? 'SIGALRM)
+          (throw 'unsupported))
+        (eval-in-sandbox 'vector-set!
+                         #:bindings all-pure-and-impure-bindings)))
   (pass-if-exception "limit exceeded"
       '(limit-exceeded . "")
+    (unless (defined? 'SIGALRM) (throw 'unsupported))
     (eval-in-sandbox '(let lp () (lp)))))
 
+(define-syntax-rule (pass-if-unbound-no-timeout foo)
+  (pass-if-exception (format #f "~a unavailable" 'foo)
+      exception:unbound-var (eval-in-sandbox 'foo #:time-limit #f))
+  )
+
+(with-test-prefix "eval-in-sandbox no timeout"
+  (pass-if-equal 42
+      (eval-in-sandbox 42 #:time-limit #f))
+  (pass-if-equal 'foo
+      (eval-in-sandbox ''foo #:time-limit #f))
+  (pass-if-equal '(1 . 2)
+      (eval-in-sandbox '(cons 1 2) #:time-limit #f))
+  (pass-if-unbound-no-timeout @@)
+  (pass-if-unbound-no-timeout foo)
+  (pass-if-unbound-no-timeout set!)
+  (pass-if-unbound-no-timeout open-file)
+  (pass-if-unbound-no-timeout current-input-port)
+  (pass-if-unbound-no-timeout call-with-output-file)
+  (pass-if-unbound-no-timeout vector-set!)
+  (pass-if-equal vector-set!
+      (eval-in-sandbox 'vector-set!
+                       #:bindings all-pure-and-impure-bindings
+                       #:time-limit #f)))
