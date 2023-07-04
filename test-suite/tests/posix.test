@@ -55,6 +55,22 @@
 ;;   (pass-if-exception "./nosuchprog" '(system-error . ".*")
 ;;     (execle "./nosuchprog" '("FOO=1" "BAR=2") "./nosuchprog" "some arg")))
 
+;;
+;; tmpnam
+;;
+
+(with-test-prefix "tmpnam"
+  (pass-if "returns usable location"
+    (unless (defined? 'tmpnam)
+      ;; tmpnam is deprecated
+      (throw 'unsupported))
+    (let* ((filename (tmpnam))
+           (outport (open-output-file filename)))
+      (display "\n" outport)
+      (close-port outport)
+      (let ((result (access? filename R_OK)))
+        (delete-file filename)
+        result))))
   
 ;;
 ;; mkstemp
