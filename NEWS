@@ -78,6 +78,12 @@ integer size can hold a pointer.
 Internally, the scm_t_inum type has been replaced by intptr_t or
 uintptr_t as appropriate.
 
+** Add option to disable time limit in 'eval-in-sandbox'
+
+eval-in-sandbox is modified so that #:time-limit accepts #f to disable
+the time limit.  Systems without SIGALRM can use eval-in-sandbox if the
+time limit is disabled.
+
 * Bug fixes
 
 ** (ice-9 suspendable-ports) incorrect UTF-8 decoding
