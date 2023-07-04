@@ -54,7 +54,7 @@
   (slots allocation-slots)
 
   ;; A map of VAR to representation.  A representation is 'scm, 'f64,
-  ;; 'u64, or 's64.
+  ;; 'u64, 's64, 'ptr, 'bv-contents, or 'code.
   ;;
   (representations allocation-representations)
 
@@ -706,8 +706,10 @@ are comparable with eqv?.  A tmp slot may be used."
            (#f slot-map)
            (slot
             (let ((desc (match (intmap-ref representations var)
-                          ((or 'u64 'f64 's64 'ptr) slot-desc-live-raw)
-                          ('scm slot-desc-live-scm))))
+                          ((or 'u64 'f64 's64 'ptr 'bv-contents 'code)
+                           slot-desc-live-raw)
+                          ('scm
+                           slot-desc-live-scm))))
               (logior slot-map (ash desc (* 2 slot)))))))
        live-vars 0))
 

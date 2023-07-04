@@ -26,6 +26,7 @@
   #:use-module (ice-9 match)
   #:use-module (srfi srfi-1)
   #:use-module (srfi srfi-11)
+  #:use-module (system base target)
   #:use-module (language cps)
   #:use-module (language cps intset)
   #:use-module (language cps intmap)
@@ -418,12 +419,13 @@ by a label, respectively."
                                'srsh 'srsh/immediate
                                's8-ref 's16-ref 's32-ref 's64-ref))
               (intmap-add representations var 's64))
-             (($ $primcall (or 'bv-contents
-                               'pointer-ref/immediate
+             (($ $primcall (or 'pointer-ref/immediate
                                'tail-pointer-ref/immediate))
               (intmap-add representations var 'ptr))
+             (($ $primcall 'bv-contents)
+              (intmap-add representations var 'bv-contents))
              (($ $code)
-              (intmap-add representations var 'ptr))
+              (intmap-add representations var 'code))
              (_
               (intmap-add representations var 'scm))))
           (vars
