@@ -13,7 +13,7 @@ jobs:
       uses: actions/checkout@v3
       with:
         fetch-depth: 0
-    - name: Install packages in FreeBSD
+    - name: Build and Run
       uses: vmactions/freebsd-vm@v0
       with:
         prepare: >-
@@ -22,6 +22,7 @@ jobs:
           texinfo
           autoconf
           automake
+          m4
           llvm
           libtool
           gettext
@@ -44,9 +45,9 @@ jobs:
         run: |
           export LANG=C.UTF-8 TERM=dumb VERBOSE=true TZ=America/Los_Angeles
           pwd
-          ls -lR
+          ls -R
           mkdir `pwd`/app
-          ./autogen.sh
+          autoreconf -vif
           ./configure CFLAGS="-g -O2 -Wall" --prefix=`pwd`/app
           make -j4 V=1
           make check V=1
