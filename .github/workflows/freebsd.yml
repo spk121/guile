@@ -44,12 +44,10 @@ jobs:
           pkgconf
         run: |
           export LANG=C.UTF-8 LD_LIBRARY_PATH=/usr/local/lib PKG_CONFIG_PATH=/usr/local/lib/pkgconfig
-          pwd
-          ls -R /usr/local
           mkdir `pwd`/app
           autoreconf -vif
           ./configure CFLAGS="-g -O2 -Wall" CPPFLAGS="-I/usr/local/include" --prefix=`pwd`/app --enable-mini-gmp --with-libunistring-prefix=/usr/local
-          make -j4 V=1
+          make V=1
           make check V=1
     - name: Archive Test Logs
       if: success() || failure ()
