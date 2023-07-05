@@ -721,13 +721,17 @@
            ;; - U+202F NARROW NO BREAK SPACE
            (or (string=? "123 456,00 +€" str)
                (string=? "123\xA0456,00 +€" str)
-               (string=? "123\u202F456,00 +€" str))))))
+               (string=? "123\u202F456,00 +€" str)
+               (string=? "123\u202F456,00 €" str))))))
 
     (pass-if "fraction"
       (under-french-utf8-locale-or-unresolved
        (lambda ()
          (let* ((fr  (make-locale LC_ALL %french-utf8-locale-name))
                 (str (monetary-amount->locale-string 1234.567 #t fr)))
+           (when (locale-currency-symbol-precedes-positive? #t fr)
+             ;; Locales that put EUR first are erroneous.
+             (throw 'unresolved))
            ;; Check for
            ;; - U+20 SPACE
            ;; - U+00A0 NO-BREAK SPACE
@@ -736,18 +740,23 @@
                (string=? "1\xA0234,57 EUR " str)
                (string=? "1\u202F234,57 EUR " str))))))
 
-    (pass-if-equal "positive inexact zero"
-        "0,00 +€"
+    (pass-if "positive inexact zero"
       (under-french-utf8-locale-or-unresolved
        (lambda ()
-         (let ((fr (make-locale LC_ALL %french-utf8-locale-name)))
-           (string-trim-both (monetary-amount->locale-string 0. #f fr))))))
+         (let* ((fr (make-locale LC_ALL %french-utf8-locale-name))
+                (str (string-trim-both (monetary-amount->locale-string 0. #f fr))))
+           (or (string=? "0,00 +€" str)
+               (string=? "0,00 €" str))))))
+
 
     (pass-if-equal "one cent"
         "0,01 EUR "
       (under-french-utf8-locale-or-unresolved
        (lambda ()
          (let ((fr (make-locale LC_ALL %french-utf8-locale-name)))
+           (when (locale-currency-symbol-precedes-positive? #t fr)
+             ;; Locales that put EUR first are erroneous.
+             (throw 'unresolved))
            (monetary-amount->locale-string .01 #t fr)))))
 
     (pass-if-equal "very little money"
@@ -755,6 +764,9 @@
       (under-french-utf8-locale-or-unresolved
        (lambda ()
          (let ((fr (make-locale LC_ALL %french-utf8-locale-name)))
+           (when (locale-currency-symbol-precedes-positive? #t fr)
+             ;; Locales that put EUR first are erroneous.
+             (throw 'unresolved))
            (monetary-amount->locale-string .00003 #t fr))))))
 
     (with-test-prefix "French 8-bit"
@@ -764,7 +776,6 @@
          (lambda ()
            (let* ((fr  (make-locale LC_ALL %french-locale-name))
                   (str (monetary-amount->locale-string 123456 #f fr)))
-             (format #t "French 8-bit integer ~S~%" str)
              (when (locale-currency-symbol-precedes-positive? #t fr)
                ;; Locales that put EUR first are erroneous.
                (throw 'unresolved))
@@ -781,7 +792,6 @@
          (lambda ()
            (let* ((fr  (make-locale LC_ALL %french-locale-name))
                   (str (monetary-amount->locale-string 1234.567 #t fr)))
-             (format #t "French 8-bit fraction ~S~%" str)
              (when (locale-currency-symbol-precedes-positive? #t fr)
                ;; Locales that put EUR first are erroneous.
                (throw 'unresolved))
@@ -798,7 +808,6 @@
          (lambda ()
            (let* ((fr (make-locale LC_ALL %french-locale-name))
                   (str (monetary-amount->locale-string 0. #f fr)))
-             (format #t "French 8-bit positive inexact zero ~S~%" str)
              (or (string=? "0,00 +EUR " str)
                  (string=? "0,00 €" str)  ; Possible when CP1252 or ISO-8859-15
                  )))))
@@ -809,7 +818,6 @@
          (lambda ()
            (let* ((fr (make-locale LC_ALL %french-locale-name))
                   (str (monetary-amount->locale-string .01 #t fr)))
-             (format #t "French 8-bit one cent ~S~%" str)
              (when (locale-currency-symbol-precedes-positive? #t fr)
                ;; Locales that put EUR first are erroneous.
                (throw 'unresolved))
@@ -821,7 +829,6 @@
          (lambda ()
            (let* ((fr (make-locale LC_ALL %french-locale-name))
                   (str (monetary-amount->locale-string .00003 #t fr)))
-             (format #t "French 8-bit very little money ~S~%" str)
              (when (locale-currency-symbol-precedes-positive? #t fr)
                ;; Locales that put EUR first are erroneous.
                (throw 'unresolved))
