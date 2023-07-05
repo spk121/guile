@@ -48,7 +48,7 @@ jobs:
           ls -R
           mkdir `pwd`/app
           autoreconf -vif
-          ./configure CFLAGS="-g -O2 -Wall" --prefix=`pwd`/app --enable--mini-gmp
+          ./configure CFLAGS="-g -O2 -Wall" --prefix=`pwd`/app --enable-mini-gmp
           make -j4 V=1
           make check V=1
     - name: Archive Test Logs
