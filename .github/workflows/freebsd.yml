@@ -43,12 +43,12 @@ jobs:
           libunistring
           pkgconf
         run: |
-          export LANG=C.UTF-8 TERM=dumb VERBOSE=true TZ=America/Los_Angeles
+          export LANG=C.UTF-8 LD_LIBRARY_PATH=/usr/local/lib PKG_CONFIG_PATH=/usr/local/lib/pkgconfig
           pwd
-          ls -R
+          ls -R /usr/local
           mkdir `pwd`/app
           autoreconf -vif
-          ./configure CFLAGS="-g -O2 -Wall" --prefix=`pwd`/app --enable-mini-gmp
+          ./configure CFLAGS="-g -O2 -Wall" CPPFLAGS="-I/usr/local/include" --prefix=`pwd`/app --enable-mini-gmp
           make -j4 V=1
           make check V=1
     - name: Archive Test Logs
