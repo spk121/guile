@@ -45,7 +45,7 @@ jobs:
           export LANG=C.UTF-8 LD_LIBRARY_PATH=/usr/local/lib PKG_CONFIG_PATH=/usr/local/lib/pkgconfig PATH="/usr/local/bin:$PATH"
           mkdir `pwd`/app
           autoreconf -vif
-          ./configure MAKE=gmake CFLAGS="-g -O2 -Wall" CPPFLAGS="-I/usr/local/include" LDFLAGS="-L/usr/local/lib" --prefix=`pwd`/app --enable-mini-gmp --with-libunistring-prefix=/usr/local
+          ./configure MAKE=gmake CFLAGS="-g -O2 -Wall" CPPFLAGS="-I/usr/local/include" LDFLAGS="-L/usr/local/lib" --prefix=`pwd`/app --enable-mini-gmp --with-libunistring-prefix=/usr/local --with-bdw-gc=bdw-gc-threaded
           gmake V=1
           gmake check V=1
     - name: Archive Test Logs
