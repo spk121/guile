@@ -84,7 +84,7 @@ else
 fi
 
 case $host in
-  *-*-cygwin* | *-*-msys* | *-*-mingw*)
+  *-*-cygwin* | *-*-msys* | *-*-mingw* | *-*-freebsd*)
     enable_lto_default=no;
   ;;
 esac
