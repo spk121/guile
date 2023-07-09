@@ -92,7 +92,7 @@
 #  define JIT_F6   _XMM6
 #  define JIT_FTMP _XMM7
 #  define JIT_PLATFORM_CALLEE_SAVE_GPRS JIT_TMP0
-#elif __CYGWIN__
+#elif __CYGWIN__ || _WIN32
 #  define JIT_R0   _RAX
 #  define JIT_R1   _RCX
 #  define JIT_R2   _RDX
