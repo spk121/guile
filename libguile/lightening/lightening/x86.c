@@ -237,7 +237,7 @@ jit_init(jit_state_t *_jit)
 static const jit_gpr_t abi_gpr_args[] = {
 #if __X32
   /* No GPRs in args.  */
-#elif __CYGWIN__
+#elif __CYGWIN__ || _WIN32
   _RCX, _RDX, _R8, _R9
 #else
   _RDI, _RSI, _RDX, _RCX, _R8, _R9
@@ -247,7 +247,7 @@ static const jit_gpr_t abi_gpr_args[] = {
 static const jit_fpr_t abi_fpr_args[] = {
 #if __X32
   /* No FPRs in args.  */
-#elif __CYGWIN__
+#elif __CYGWIN__ || _WIN32
   _XMM0, _XMM1, _XMM2, _XMM3
 #else
   _XMM0, _XMM1, _XMM2, _XMM3, _XMM4, _XMM5, _XMM6, _XMM7
@@ -318,6 +318,7 @@ reset_abi_arg_iterator(struct abi_arg_iterator *iter, size_t argc,
   iter->argc = argc;
   iter->args = args;
 #if __X64 && (__CYGWIN__ || _WIN32)
+)
   // Reserve slots on the stack for 4 register parameters (8 bytes each).
   iter->stack_size = 32;
 #endif
@@ -330,12 +331,12 @@ next_abi_arg(struct abi_arg_iterator *iter, jit_operand_t *arg)
   enum jit_operand_abi abi = iter->args[iter->arg_idx].abi;
   if (is_gpr_arg(abi) && iter->gpr_idx < abi_gpr_arg_count) {
     *arg = jit_operand_gpr (abi, abi_gpr_args[iter->gpr_idx++]);
-#ifdef __CYGWIN__
+#if __CYGWIN__ || _WIN32
     iter->fpr_idx++;
 #endif
   } else if (is_fpr_arg(abi) && iter->fpr_idx < abi_fpr_arg_count) {
     *arg = jit_operand_fpr (abi, abi_fpr_args[iter->fpr_idx++]);
-#ifdef __CYGWIN__
+#if __CYGWIN__ || _WIN32
     iter->gpr_idx++;
 #endif
   } else {
