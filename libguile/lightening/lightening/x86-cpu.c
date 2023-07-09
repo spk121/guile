@@ -46,7 +46,7 @@
 #define _R15_REGNO                      15
 #define r7(reg)                 ((reg) & 7)
 #define r8(reg)                 ((reg) & 15)
-#if __X32
+#if __X32 || _WIN32 || __CYGWIN__ || __X64_32
 # define reg8_p(rn) ((rn) >= _RAX_REGNO && (rn) <= _RBX_REGNO)
 #else
 # define reg8_p(rn) 1
@@ -2598,7 +2598,7 @@ push_link_register(jit_state_t *_jit)
 static void
 jmpr(jit_state_t *_jit, int32_t r0)
 {
-  rex(_jit, 0, WIDE, _NOREG, _NOREG, r0);
+  rex(_jit, 0, 0, _NOREG, _NOREG, r0);
   ic(_jit, 0xff);
   mrm(_jit, 0x03, 0x04, r7(r0));
 }
