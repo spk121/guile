@@ -344,7 +344,7 @@ by a label, respectively."
                  empty-intset))
         (($ $kargs _ _ ($ $continue k src exp))
          (match exp
-           ((or ($ $const) ($ $const-fun) ($ $code))
+           ((or ($ $const) ($ $const-fun) ($ $code) ($ $prim))
             (return (get-defs k) empty-intset))
            (($ $call proc args)
             (return (get-defs k) (intset-add (vars->intset args) proc)))
