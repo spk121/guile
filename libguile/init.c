@@ -297,10 +297,18 @@ scm_boot_guile (int argc, char ** argv, void (*main_func) (), void *closure)
   /* If the caller doesn't want this, they should exit from main_func
      themselves.
   */
+#ifdef _WIN32
+  if (res == NULL)
+    _exit (EXIT_FAILURE);
+  else
+    _exit (EXIT_SUCCESS);
+#else
+      
   if (res == NULL)
     exit (EXIT_FAILURE);
   else
     exit (EXIT_SUCCESS);
+#endif
 }
 
 static void *
