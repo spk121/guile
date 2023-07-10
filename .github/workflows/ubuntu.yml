@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - main
-      -staging
+      - staging
   # Allow manual triggering
   workflow_dispatch:
 
