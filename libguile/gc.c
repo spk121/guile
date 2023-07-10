@@ -466,8 +466,8 @@ scm_storage_prehistory ()
   /* There are undiagnosed issues that prevent incremental GC
    * from working.  Also reducing GC_MARKERS to 1 seems to improve
    * stability. */
-  setenv ("GC_MARKERS", "1", 1);
-  setenv ("GC_DISABLE_INCREMENTAL", "1", 1);
+  //setenv ("GC_MARKERS", "1", 1);
+  //setenv ("GC_DISABLE_INCREMENTAL", "1", 1);
 #endif
 
   GC_INIT ();

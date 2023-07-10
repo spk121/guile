@@ -1,6 +1,10 @@
 name: MSYS
 
 on:
+  push:
+    branches:
+      - main
+      -staging
   # Allow manual triggering
   workflow_dispatch:
 
