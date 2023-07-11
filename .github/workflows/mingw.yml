@@ -14,10 +14,10 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - { sys: MINGW64, env: x86_64,       thread: --with-threads, jit: --enable-jit=no,  gmp: --enable-mini-gmp }
-          - { sys: MINGW32, env: i686,         thread: --with-threads, jit: --enable-jit=yes, gmp: --enable-mini-gmp }
-          - { sys: UCRT64,  env: ucrt-x86_64,  thread: --with-threads, jit: --enable-jit=no,  gmp: --enable-mini-gmp }
-          - { sys: CLANG64, env: clang-x86_64, thread: --with-threads, jit: --enable-jit=no,  gmp: --enable-mini-gmp }
+          - { sys: MINGW64, env: x86_64,       thread: --without-threads, jit: --enable-jit=no,  gmp: --enable-mini-gmp }
+          - { sys: MINGW32, env: i686,         thread: --without-threads, jit: --enable-jit=yes, gmp: --enable-mini-gmp }
+          - { sys: UCRT64,  env: ucrt-x86_64,  thread: --without-threads, jit: --enable-jit=no,  gmp: --enable-mini-gmp }
+          - { sys: CLANG64, env: clang-x86_64, thread: --without-threads, jit: --enable-jit=no,  gmp: --enable-mini-gmp }
 
     runs-on: windows-latest
     name: Build ${{matrix.sys}} ${{matrix.env}} ${{matrix.thread}} ${{matrix.jit}} ${{matrix.gmp}}
