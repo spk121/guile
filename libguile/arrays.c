@@ -240,11 +240,11 @@ SCM_DEFINE (scm_array_in_bounds_p, "array-in-bounds?", 1, 0, 1,
 
   for (k = 0; k < ndim; k++)
     {
-      long ind;
+      ssize_t ind;
 
       if (!scm_is_pair (args))
         SCM_WRONG_NUM_ARGS ();
-      ind = scm_to_long (SCM_CAR (args));
+      ind = scm_to_ssize_t (SCM_CAR (args));
       args = SCM_CDR (args);
 
       if (ind < s[k].lbnd || ind > s[k].ubnd)
@@ -377,14 +377,14 @@ SCM_DEFINE (scm_i_array_set_x, "array-set!", 2, 2, 1,
 
 
 static SCM
-array_to_list (scm_t_array_handle *h, size_t dim, unsigned long pos)
+array_to_list (scm_t_array_handle *h, size_t dim, size_t pos)
 {
   if (dim == scm_array_handle_rank (h))
     return scm_array_handle_ref (h, pos);
   else
     {
       SCM res = SCM_EOL;
-      long inc;
+      ssize_t inc;
       size_t i;
 
       i = h->dims[dim].ubnd - h->dims[dim].lbnd + 1;
@@ -620,7 +620,7 @@ SCM_DEFINE (scm_make_shared_array, "make-shared-array", 2, 0, 1,
   SCM imap;
   size_t k;
   ssize_t i;
-  long old_base, old_min, new_min, old_max, new_max;
+  ssize_t old_base, old_min, new_min, old_max, new_max;
   scm_t_array_dim *s;
 
   SCM_VALIDATE_REST_ARGUMENT (dims);
