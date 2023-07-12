@@ -494,11 +494,11 @@
       exception:wrong-type-arg
     (string-utf8-length 50))
 
-  (pass-if-equal 0 (string-utf8-length ""))
-  (pass-if-equal 1 (string-utf8-length "\0"))
-  (pass-if-equal 5 (string-utf8-length "hello"))
-  (pass-if-equal 7 (string-utf8-length "helloλ"))
-  (pass-if-equal 9 (string-utf8-length "ሠላም")))
+  (pass-if-equal "string-utf8-length empty string" 0 (string-utf8-length ""))
+  (pass-if-equal "string-utf8-length string w/ null" 1 (string-utf8-length "\0"))
+  (pass-if-equal "string-utf8-length 'hello'" 5 (string-utf8-length "hello"))
+  (pass-if-equal "string-utf8-length 'helloλ'" 7 (string-utf8-length "helloλ"))
+  (pass-if-equal "string-utf8-length 'ሠላም'" 9 (string-utf8-length "ሠላም")))
 
 ;;
 ;; string-ref

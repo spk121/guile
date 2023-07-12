@@ -690,6 +690,6 @@
     (equal? '("foo+bar") (split-and-decode-uri-path "foo+bar"))))
 
 (with-test-prefix "encode"
-  (pass-if (equal? "foo%20bar" (uri-encode "foo bar")))
-  (pass-if (equal? "foo%0A%00bar" (uri-encode "foo\n\x00bar")))
-  (pass-if (equal? "%3C%3E%5C%5E" (uri-encode "<>\\^"))))
+  (pass-if "uri-encode 'foo bar'" (equal? "foo%20bar" (uri-encode "foo bar")))
+  (pass-if "uri-encode 'foo\\n\\x00bar'" (equal? "foo%0A%00bar" (uri-encode "foo\n\x00bar")))
+  (pass-if "uri-encode '<>\\\\^'"(equal? "%3C%3E%5C%5E" (uri-encode "<>\\^"))))
