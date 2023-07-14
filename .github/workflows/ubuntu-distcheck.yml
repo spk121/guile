@@ -1,0 +1,55 @@
+name: Ubuntu Distcheck
+
+on:
+  # Allow manual triggering
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+    - name: Install packages
+      run: >-
+        sudo apt-get update &&
+        sudo apt-get install -y
+        texlive
+        texlive-plain-generic
+        texinfo
+        autoconf
+        libtool
+        gettext
+        autopoint
+        gperf
+        pkg-config
+        lzip
+        libgc-dev
+        libgmp-dev
+        libltdl-dev
+        libncurses5-dev
+        libreadline6-dev
+        libunistring-dev
+    - name: Configure
+      run: |
+        export LANG=C.UTF-8 TERM=dumb VERBOSE=true DEBIAN_FRONTEND=noninteractive TZ=America/Los_Angeles
+        mkdir `pwd`/app
+        ./autogen.sh
+        ./configure CFLAGS="-g -O2 -Wall" --prefix=`pwd`/app
+    - name: Build
+      run: |
+        make -j4 V=1
+    - name: Run Dist Check
+      run: make -j4 distcheck V=1
+
+    - name: Make Source Package
+      run: |
+        gunzip *.tar.gz
+    - name: Archive Source Package
+      uses: actions/upload-artifact@v3
+      with:
+        name: Source Package
+        path: guile*tar ./*.log
