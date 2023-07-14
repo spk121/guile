@@ -2141,14 +2141,14 @@ scm_ungetc (scm_t_wchar c, SCM port)
     free (result);
 
   {
-    long line;
+    ssize_t line;
     int column;
 
-    line = scm_to_long (scm_port_position_line (pt->position));
+    line = scm_to_ssize_t (scm_port_position_line (pt->position));
     column = scm_to_int (scm_port_position_column (pt->position));
 
     if (c == '\n')
-      scm_port_position_set_line (pt->position, scm_from_long (line - 1));
+      scm_port_position_set_line (pt->position, scm_from_ssize_t (line - 1));
     if (column > 0)
       scm_port_position_set_column (pt->position, scm_from_int (column - 1));
   }
@@ -3915,7 +3915,7 @@ SCM_DEFINE (scm_set_port_line_x, "set-port-line!", 2, 0, 0,
 {
   port = SCM_COERCE_OUTPORT (port);
   SCM_VALIDATE_OPENPORT (1, port);
-  scm_to_long (line);
+  scm_to_ssize_t (line);
   scm_port_position_set_line (SCM_PORT (port)->position, line);
   return SCM_UNSPECIFIED;
 }
