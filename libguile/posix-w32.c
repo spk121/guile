@@ -269,32 +269,33 @@ dlerror_w32 ()
   return dlerror_str;
 }
 
+/* Check for the Windows 11 bug where there's a return character in the
+ * console input queue despite draining the input. */
 int
 console_has_return_keyevent_w32 (int fdes)
 {
-  /* Check for the Windows 11 bug where there's a return character in
-   * the console input queue after draining the input. */
   HANDLE h;
-  BOOL bRet;
-  DWORD avail;
-  DWORD nbuffer;
-  int n_chars = 0;
-  int n_returns = 0;
-  INPUT_RECORD *irbuffer;
-  int i;
   DWORD mode;
 
   h = (HANDLE) _get_osfhandle (fdes);
+  if (h == -1)
+    return 0;
   if (GetConsoleMode (h, &mode) == 0)
     return 0;
-  if (GetNumberOfConsoleInputEvents (h, &nbuffer) == 0)
-    return 0;
-  if (nbuffer == 0)
-    return 0;
-  irbuffer = scm_malloc (sizeof (INPUT_RECORD) * nbuffer);
+
+  // Rarely need more than 1 INPUT_RECORD for this test, but just in
+  // case there is a mouse event in the queue.
+#define NBUFFER 8
+  INPUT_RECORD irbuffer[NBUFFER];
+  BOOL bRet;
+  DWORD avail;
+  int i;
+  int n_chars = 0;
+  int n_returns = 0;
+
   while (1)
     {
-      bRet = PeekConsoleInput (h, irbuffer, nbuffer, &avail);
+      bRet = PeekConsoleInput (h, irbuffer, NBUFFER, &avail);
       if (!bRet || avail == 0)
         break;
 
@@ -305,14 +306,14 @@ console_has_return_keyevent_w32 (int fdes)
             if (irbuffer[i].Event.KeyEvent.uChar.AsciiChar == 13)
               n_returns ++;
           }
-      if (avail < nbuffer)
+      if (avail < NBUFFER)
         break;
     }
 
-  free (irbuffer);
   if (n_chars == 1 && n_returns == 1)
     return 1;
   return 0;
+#undef NBUFFER
 }
 
 int
