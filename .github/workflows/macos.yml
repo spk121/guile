@@ -1,0 +1,35 @@
+name: MacOS
+
+on:
+  # Allow manual triggering
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build
+    runs-on: macos-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+    - name: Install packages
+      run: >-
+        brew install bdw-gc gmp libtool libunistring pkg-config readline gnu-sed automake autoconf
+    - name: Configure
+      run: |
+        export LANG=C.UTF-8 TERM=dumb VERBOSE=true TZ=America/Los_Angeles
+        mkdir `pwd`/app
+        ./autogen.sh
+        ./configure CFLAGS="-g -O2 -Wall -std=c2x" --prefix=`pwd`/app
+    - name: Build
+      run: |
+        make -j4 V=1
+    - name: Run Unit Tests
+      run: make check V=1
+    - name: Archive Test Logs
+      if: success() || failure ()
+      uses: actions/upload-artifact@v3
+      with:
+        name: Test Logs
+        path: ./*.log
