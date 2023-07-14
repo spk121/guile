@@ -1074,7 +1074,7 @@ SCM_DEFINE (scm_string, "string", 0, 0, 1,
   SCM rest;
   size_t len;
   size_t p = 0;
-  long i;
+  ssize_t i;
   int wide = 0;
 
   /* Verify that this is a list of chars.  */
@@ -1219,7 +1219,7 @@ SCM_DEFINE (scm_string_ref, "string-ref", 2, 0, 0,
 #define FUNC_NAME s_scm_string_ref
 {
   size_t len;
-  unsigned long idx;
+  size_t idx;
 
   SCM_VALIDATE_STRING (1, str);
 
@@ -1256,7 +1256,7 @@ SCM_DEFINE (scm_string_set_x, "string-set!", 3, 0, 0,
 #define FUNC_NAME s_scm_string_set_x
 {
   size_t len;
-  unsigned long idx;
+  size_t idx;
 
   SCM_VALIDATE_STRING (1, str);
 
