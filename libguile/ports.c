@@ -1713,8 +1713,8 @@ update_port_position (SCM position, scm_t_wchar c)
       break;
     case '\n':
       {
-        long line = scm_to_long (scm_port_position_line (position));
-        scm_port_position_set_line (position, scm_from_long (line + 1));
+        ssize_t line = scm_to_ssize_t (scm_port_position_line (position));
+        scm_port_position_set_line (position, scm_from_ssize_t (line + 1));
         scm_port_position_set_column (position, SCM_INUM0);
       }
       break;
