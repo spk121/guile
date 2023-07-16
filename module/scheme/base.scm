@@ -1,5 +1,5 @@
 ;;; R7RS compatibility libraries
-;;; Copyright (C) 2019-2021 Free Software Foundation, Inc.
+;;; Copyright (C) 2019-2021, 2023 Free Software Foundation, Inc.
 ;;;
 ;;; This library is free software: you can redistribute it and/or modify
 ;;; it under the terms of the GNU Lesser General Public License as
@@ -368,7 +368,7 @@
 (define* (peek-u8 #:optional (port (current-input-port)))
   (lookahead-u8 port))
 
-(define* (read-u8 #:optional (port (current-output-port)))
+(define* (read-u8 #:optional (port (current-input-port)))
   (get-u8 port))
 
 (define* (read-bytevector len #:optional (port (current-input-port)))
