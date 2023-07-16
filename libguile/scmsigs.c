@@ -1,4 +1,4 @@
-/* Copyright 1995-2002,2004,2006-2009,2011,2013-2014,2017-2018
+/* Copyright 1995-2002,2004,2006-2009,2011,2013-2014,2017-2018,2023
      Free Software Foundation, Inc.
 
    This file is part of Guile.
@@ -336,8 +336,12 @@ SCM_DEFINE (scm_sigaction_for_thread, "sigaction", 1, 3, 0,
   scm_i_ensure_signal_delivery_thread ();
 
   scm_dynwind_begin (0);
-  scm_i_dynwind_pthread_mutex_lock (&signal_handler_lock);
+
+  /* Among the pending asyncs, there might be signal handlers that will
+     call this very function.  Thus, to avoid deadlocks, block asyncs
+     before grabbing SIGNAL_HANDLER_LOCK.  */
   scm_dynwind_block_asyncs ();
+  scm_i_dynwind_pthread_mutex_lock (&signal_handler_lock);
 
   old_handler = SCM_SIMPLE_VECTOR_REF (*signal_handlers, csig);
   if (SCM_UNBNDP (handler))
