@@ -37,7 +37,6 @@ SUBDIRS =					\
 	guile-readline				\
 	examples				\
 	test-suite				\
-	benchmark-suite				\
 	doc
 
 DIST_SUBDIRS = $(SUBDIRS) prebuilt
@@ -142,6 +141,7 @@ $(top_srcdir)/.version:
 gen-tarball-version:
 	echo $(VERSION) > $(distdir)/.tarball-version
 
+include benchmark-suite/local.mk
 include gc-benchmarks/local.mk
 
 # Makefile.am ends here
