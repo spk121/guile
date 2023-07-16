@@ -1,6 +1,6 @@
 ;;;; web-server.test --- HTTP server       -*- mode: scheme; coding: utf-8; -*-
 ;;;;
-;;;; 	Copyright (C) 2019-2020, 2022 Free Software Foundation, Inc.
+;;;; 	Copyright (C) 2019-2020, 2022, 2023 Free Software Foundation, Inc.
 ;;;;
 ;;;; This library is free software; you can redistribute it and/or
 ;;;; modify it under the terms of the GNU Lesser General Public
@@ -78,26 +78,28 @@
 
 (pass-if "server is listening"
   ;; First, wait until the server is listening, up to a few seconds.
-  (let ((socket (socket AF_INET SOCK_STREAM 0)))
-    (let loop ((n 1))
-      (define success?
-        (catch 'system-error
-          (lambda ()
-            (format (current-error-port)
-                    "connecting to the server, attempt #~a~%" n)
-            (connect socket AF_INET INADDR_LOOPBACK %port-number)
-            (close-port socket)
-            #t)
-          (lambda args
-            (if (and (= ECONNREFUSED (system-error-errno args))
-                     (<= n 15))
-                #f
-                (apply throw args)))))
+  (if (provided? 'threads)
+      (let ((socket (socket AF_INET SOCK_STREAM 0)))
+        (let loop ((n 1))
+          (define success?
+            (catch 'system-error
+              (lambda ()
+                (format (current-error-port)
+                        "connecting to the server, attempt #~a~%" n)
+                (connect socket AF_INET INADDR_LOOPBACK %port-number)
+                (close-port socket)
+                #t)
+              (lambda args
+                (if (and (= ECONNREFUSED (system-error-errno args))
+                         (<= n 15))
+                    #f
+                    (apply throw args)))))
 
-      (or success?
-          (begin
-            (sleep 1)
-            (loop (+ n 1)))))))
+          (or success?
+              (begin
+                (sleep 1)
+                (loop (+ n 1))))))
+      (throw 'unresolved)))
 
 (pass-if-equal "GET /"
     "Hello, λ world!"
