@@ -73,7 +73,7 @@
    compilation failures.  It can be revived if it's useful, but my naive
    hope is that simply annotating the locals with "register" will be a
    sufficient hint to the compiler.  */
-#ifdef __GNUC__
+#if defined(__GNUC__) && ! defined(__clang__)
 # if defined __x86_64__
 /* GCC 4.6 chooses %rbp for IP_REG and %rbx for SP_REG, which works
    well.  Tell it to keep the jump table in a r12, which is
