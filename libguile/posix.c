@@ -1773,7 +1773,11 @@ SCM_DEFINE (scm_environ, "environ", 0, 1, 0,
     {
       /* Arrange to not use GC-allocated storage for what goes into
          'environ' as libc might reallocate it behind our back.  */
+#if HAVE_CLEARENV
       clearenv ();
+#else
+      environ = NULL;
+#endif
       while (!scm_is_null (env))
         {
           scm_putenv (scm_car (env));
