@@ -1,0 +1,70 @@
+name: MinGW
+
+on:
+  push:
+  # Allow manual triggering
+  workflow_dispatch:
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { sys: MINGW64, env: x86_64,       thread: --without-threads, jit: --enable-jit=no,  gmp: --enable-mini-gmp }
+          - { sys: MINGW32, env: i686,         thread: --without-threads, jit: --enable-jit=yes, gmp: --enable-mini-gmp }
+          - { sys: UCRT64,  env: ucrt-x86_64,  thread: --without-threads, jit: --enable-jit=no,  gmp: --enable-mini-gmp }
+          - { sys: CLANG64, env: clang-x86_64, thread: --without-threads, jit: --enable-jit=no,  gmp: --enable-mini-gmp }
+
+    runs-on: windows-latest
+    name: Build ${{matrix.sys}} ${{matrix.env}} ${{matrix.thread}} ${{matrix.jit}} ${{matrix.gmp}}
+    timeout-minutes: 150
+
+    steps:
+    - name: Set git to Linux line endings
+      run: git config --global core.autocrlf input
+    - name: Checkout
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+    - name: Install MSYS2
+      uses: msys2/setup-msys2@v2
+      with:
+        msystem: ${{matrix.sys}}
+        install: >-
+          autotools
+          base-devel
+          mingw-w64-${{matrix.env}}-toolchain
+          flex
+          gperf
+          lzip xz
+          pkgconf
+          mingw-w64-${{matrix.env}}-gettext
+          mingw-w64-${{matrix.env}}-gmp
+          mingw-w64-${{matrix.env}}-libffi
+          mingw-w64-${{matrix.env}}-gc
+          mingw-w64-${{matrix.env}}-libiconv
+          mingw-w64-${{matrix.env}}-readline
+          mingw-w64-${{matrix.env}}-libunistring
+          texinfo
+    - name: Configure
+      run: |
+        export LANG=C.UTF-8 TERM=dumb VERBOSE=true TZ=America/Los_Angeles
+        mkdir `pwd`/app
+        ./autogen.sh
+        ./configure CFLAGS="-g -O2 -Wall" ${{matrix.thread}} ${{matrix.jit}} ${{matrix.gmp}} --prefix=`pwd`/app --disable-lto
+      shell: msys2 -o igncr '{0}'
+    - name: Make
+      run: |
+        make -j4 V=1
+      shell: msys2 -o igncr '{0}'
+    - name: Run Unit Tests
+      run: |
+        make check V=1
+      shell: msys2 -o igncr '{0}'
+    - name: Archive test logs
+      if: ${{ always() }}
+      uses: actions/upload-artifact@v3
+      with:
+        name: Test logs ${{matrix.sys}}-${{matrix.env}}${{matrix.thread}}${{matrix.jit}}${{matrix.gmp}}
+        path: ./*.log
