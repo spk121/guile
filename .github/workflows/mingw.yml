@@ -51,7 +51,7 @@ jobs:
         export LANG=C.UTF-8 TERM=dumb VERBOSE=true TZ=America/Los_Angeles
         mkdir `pwd`/app
         ./autogen.sh
-        ./configure CFLAGS="-g -O2 -Wall" ${{matrix.thread}} ${{matrix.jit}} ${{matrix.gmp}} --prefix=`pwd`/app
+        ./configure CFLAGS="-g -O2 -Wall" ${{matrix.thread}} ${{matrix.jit}} ${{matrix.gmp}} --prefix=`pwd`/app -mcmodel=medium
       shell: msys2 -o igncr '{0}'
     - name: Make
       run: |
