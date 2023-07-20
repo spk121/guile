@@ -42,14 +42,6 @@ verify (SCM_MOST_POSITIVE_FIXNUM <= (mp_limb_t) -1);
 
 #define NLIMBS_MAX (SSIZE_MAX / sizeof(mp_limb_t))
 
-#if SIZEOF_INTPTR_T == 4
-#define L1 INT32_C(1)
-#elif SIZEOF_INTPTR_T == 8
-#define L1 INT64_C(1)
-#else
-#error "Bad SIZEOF_INTPTR_T"
-#endif
-
 #ifndef NDEBUG
 #define ASSERT(x)                                                       \
   do {                                                                  \
@@ -110,17 +102,17 @@ bignum_limbs (struct scm_bignum *z)
   return z->u.z.limbs;
 }
 
-static inline uintptr_t
-intptr_t_magnitude (intptr_t l)
+static inline unsigned long
+long_magnitude (long l)
 {
-  uintptr_t mag = l;
+  unsigned long mag = l;
   return l < 0 ? ~mag + 1 : mag;
 }
 
-static inline intptr_t
-negative_intptr_t (uintptr_t mag)
+static inline long
+negative_long (unsigned long mag)
 {
-  ASSERT (mag <= (uintptr_t) INTPTR_MIN);
+  ASSERT (mag <= (unsigned long) LONG_MIN);
   return ~mag + 1;
 }
 
@@ -141,7 +133,7 @@ int64_magnitude (int64_t i)
 }
 
 static inline scm_t_bits
-inum_magnitude (intptr_t i)
+inum_magnitude (scm_t_inum i)
 {
   scm_t_bits mag = i;
   if (i < 0)
@@ -231,7 +223,7 @@ make_bignum_2 (int is_negative, mp_limb_t lo, mp_limb_t hi)
 static struct scm_bignum *
 make_bignum_from_uint64 (uint64_t val)
 {
-#if SCM_SIZEOF_INTPTR_T == 4
+#if SCM_SIZEOF_LONG == 4
   if (val > UINT32_MAX)
     return make_bignum_2 (0, val, val >> 32);
 #endif
@@ -247,18 +239,18 @@ make_bignum_from_int64 (int64_t val)
 }
 
 static struct scm_bignum *
-uintptr_t_to_bignum (uintptr_t u)
+ulong_to_bignum (unsigned long u)
 {
   return u == 0 ? make_bignum_0 () : make_bignum_1 (0, u);
 };
 
 static struct scm_bignum *
-intptr_t_to_bignum (intptr_t i)
+long_to_bignum (long i)
 {
   if (i > 0)
-    return uintptr_t_to_bignum (i);
+    return ulong_to_bignum (i);
 
-  return i == 0 ? make_bignum_0 () : make_bignum_1 (1, intptr_t_magnitude (i));
+  return i == 0 ? make_bignum_0 () : make_bignum_1 (1, long_magnitude (i));
 };
 
 static inline SCM
@@ -268,19 +260,19 @@ scm_from_bignum (struct scm_bignum *x)
 }
 
 static SCM
-intptr_t_to_scm (intptr_t i)
+long_to_scm (long i)
 {
   if (SCM_FIXABLE (i))
     return SCM_I_MAKINUM (i);
-  return scm_from_bignum (intptr_t_to_bignum (i));
+  return scm_from_bignum (long_to_bignum (i));
 }
 
 static SCM
-uintptr_t_to_scm (uintptr_t i)
+ulong_to_scm (unsigned long i)
 {
   if (SCM_POSFIXABLE (i))
     return SCM_I_MAKINUM (i);
-  return scm_from_bignum (uintptr_t_to_bignum (i));
+  return scm_from_bignum (ulong_to_bignum (i));
 }
 
 static struct scm_bignum *
@@ -317,7 +309,7 @@ normalize_bignum (struct scm_bignum *z)
     {
     case -1:
       if (bignum_limbs (z)[0] <= inum_magnitude (SCM_MOST_NEGATIVE_FIXNUM))
-        return SCM_I_MAKINUM (negative_intptr_t (bignum_limbs (z)[0]));
+        return SCM_I_MAKINUM (negative_long (bignum_limbs (z)[0]));
       break;
     case 0:
       return SCM_INUM0;
@@ -336,7 +328,7 @@ take_mpz (mpz_ptr mpz)
 {
   SCM ret;
   if (mpz_fits_slong_p (mpz))
-    ret = intptr_t_to_scm (mpz_get_si (mpz));
+    ret = long_to_scm (mpz_get_si (mpz));
   else
     ret = scm_from_bignum (make_bignum_from_mpz (mpz));
   mpz_clear (mpz);
@@ -344,7 +336,7 @@ take_mpz (mpz_ptr mpz)
 }
 
 static int
-intptr_t_sign (intptr_t l)
+long_sign (long l)
 {
   if (l < 0) return -1;
   if (l == 0) return 0;
@@ -374,7 +366,7 @@ bignum_to_int64 (struct scm_bignum *z, int64_t *val)
 {
   switch (bignum_size (z))
     {
-#if SCM_SIZEOF_INTPTR_T == 4
+#if SCM_SIZEOF_LONG == 4
     case -2:
       {
         uint64_t mag = bignum_limbs (z)[0];
@@ -389,7 +381,7 @@ bignum_to_int64 (struct scm_bignum *z, int64_t *val)
       return 1;
     case 1:
       return positive_uint64_to_int64 (bignum_limbs (z)[0], val);
-#if SCM_SIZEOF_INTPTR_T == 4
+#if SCM_SIZEOF_LONG == 4
     case 2:
       {
         uint64_t mag = bignum_limbs (z)[0];
@@ -413,7 +405,7 @@ bignum_to_uint64 (struct scm_bignum *z, uint64_t *val)
     case 1:
       *val = bignum_limbs (z)[0];
       return 1;
-#if SCM_SIZEOF_INTPTR_T == 4
+#if SCM_SIZEOF_LONG == 4
     case 2:
       {
         uint64_t mag = bignum_limbs (z)[0];
@@ -427,13 +419,13 @@ bignum_to_uint64 (struct scm_bignum *z, uint64_t *val)
     }
 }
 
-#if SCM_SIZEOF_INTPTR_T == 4
+#if SCM_SIZEOF_LONG == 4
 static int
 negative_uint32_to_int32 (uint32_t magnitude, int32_t *val)
 {
-  if (magnitude > intptr_t_magnitude (INT32_MIN))
+  if (magnitude > long_magnitude (INT32_MIN))
     return 0;
-  *val = negative_intptr_t (magnitude);
+  *val = negative_long (magnitude);
   return 1;
 }
 
@@ -481,22 +473,22 @@ bignum_to_uint32 (struct scm_bignum *z, uint32_t *val)
 #endif
 
 static int
-bignum_cmp_intptr_t (struct scm_bignum *z, intptr_t l)
+bignum_cmp_long (struct scm_bignum *z, long l)
 {
   switch (bignum_size (z))
     {
     case -1:
       if (l >= 0)
         return -1;
-      return intptr_t_sign (intptr_t_magnitude (l) - bignum_limbs (z)[0]);
+      return long_sign (long_magnitude (l) - bignum_limbs (z)[0]);
     case 0:
-      return intptr_t_sign (l);
+      return long_sign (l);
     case 1:
       if (l <= 0)
         return 1;
-      return intptr_t_sign (bignum_limbs (z)[0] - (uintptr_t) l);
+      return long_sign (bignum_limbs (z)[0] - (unsigned long) l);
     default:
-      return intptr_t_sign (bignum_size (z));
+      return long_sign (bignum_size (z));
     }
 }
 
@@ -507,7 +499,7 @@ scm_integer_from_mpz (const mpz_t mpz)
 }
 
 int
-scm_is_integer_odd_i (intptr_t i)
+scm_is_integer_odd_i (scm_t_inum i)
 {
   return i & 1;
 }
@@ -519,12 +511,12 @@ scm_is_integer_odd_z (struct scm_bignum *z)
 }
 
 SCM
-scm_integer_abs_i (intptr_t i)
+scm_integer_abs_i (scm_t_inum i)
 {
   if (i >= 0)
     return SCM_I_MAKINUM (i);
 
-  return uintptr_t_to_scm (intptr_t_magnitude (i));
+  return ulong_to_scm (long_magnitude (i));
 }
 
 SCM
@@ -537,7 +529,7 @@ scm_integer_abs_z (struct scm_bignum *z)
 }
 
 SCM
-scm_integer_floor_quotient_ii (intptr_t x, intptr_t y)
+scm_integer_floor_quotient_ii (scm_t_inum x, scm_t_inum y)
 {
   if (y > 0)
     {
@@ -548,12 +540,12 @@ scm_integer_floor_quotient_ii (intptr_t x, intptr_t y)
     scm_num_overflow ("floor-quotient");
   else if (x > 0)
     x = x - y - 1;
-  intptr_t q = x / y;
-  return intptr_t_to_scm (q);
+  scm_t_inum q = x / y;
+  return long_to_scm (q);
 }
 
 SCM
-scm_integer_floor_quotient_iz (intptr_t x, struct scm_bignum *y)
+scm_integer_floor_quotient_iz (scm_t_inum x, struct scm_bignum *y)
 {
   if (x == 0 || ((x < 0) == bignum_is_negative (y)))
     return SCM_INUM0;
@@ -561,7 +553,7 @@ scm_integer_floor_quotient_iz (intptr_t x, struct scm_bignum *y)
 }
  
 SCM
-scm_integer_floor_quotient_zi (struct scm_bignum *x, intptr_t y)
+scm_integer_floor_quotient_zi (struct scm_bignum *x, scm_t_inum y)
 {
   if (y == 0)
     scm_num_overflow ("floor-quotient");
@@ -595,11 +587,11 @@ scm_integer_floor_quotient_zz (struct scm_bignum *x, struct scm_bignum *y)
 }
 
 SCM
-scm_integer_floor_remainder_ii (intptr_t x, intptr_t y)
+scm_integer_floor_remainder_ii (scm_t_inum x, scm_t_inum y)
 {
   if (y == 0)
     scm_num_overflow ("floor-remainder");
-  intptr_t r = x % y;
+  scm_t_inum r = x % y;
   int needs_adjustment = (y > 0) ? (r < 0) : (r > 0);
   if (needs_adjustment)
     r += y;
@@ -607,7 +599,7 @@ scm_integer_floor_remainder_ii (intptr_t x, intptr_t y)
 }
 
 SCM
-scm_integer_floor_remainder_iz (intptr_t x, struct scm_bignum *y)
+scm_integer_floor_remainder_iz (scm_t_inum x, struct scm_bignum *y)
 {
   if (bignum_is_positive (y))
     {
@@ -637,13 +629,13 @@ scm_integer_floor_remainder_iz (intptr_t x, struct scm_bignum *y)
 }
 
 SCM
-scm_integer_floor_remainder_zi (struct scm_bignum *x, intptr_t y)
+scm_integer_floor_remainder_zi (struct scm_bignum *x, scm_t_inum y)
 {
   if (y == 0)
     scm_num_overflow ("floor-remainder");
   else
     {
-      intptr_t r;
+      scm_t_inum r;
       mpz_t zx;
       alias_bignum_to_mpz (x, zx);
       if (y > 0)
@@ -668,13 +660,13 @@ scm_integer_floor_remainder_zz (struct scm_bignum *x, struct scm_bignum *y)
 }
 
 void
-scm_integer_floor_divide_ii (intptr_t x, intptr_t y, SCM *qp, SCM *rp)
+scm_integer_floor_divide_ii (scm_t_inum x, scm_t_inum y, SCM *qp, SCM *rp)
 {
   if (y == 0)
     scm_num_overflow ("floor-divide");
 
-  intptr_t q = x / y;
-  intptr_t r = x % y;
+  scm_t_inum q = x / y;
+  scm_t_inum r = x % y;
   int needs_adjustment = (y > 0) ? (r < 0) : (r > 0);
 
   if (needs_adjustment)
@@ -683,12 +675,12 @@ scm_integer_floor_divide_ii (intptr_t x, intptr_t y, SCM *qp, SCM *rp)
       q--;
     }
 
-  *qp = intptr_t_to_scm (q);
+  *qp = long_to_scm (q);
   *rp = SCM_I_MAKINUM (r);
 }
 
 void
-scm_integer_floor_divide_iz (intptr_t x, struct scm_bignum *y, SCM *qp, SCM *rp)
+scm_integer_floor_divide_iz (scm_t_inum x, struct scm_bignum *y, SCM *qp, SCM *rp)
 {
   if (bignum_is_positive (y))
     {
@@ -726,7 +718,7 @@ scm_integer_floor_divide_iz (intptr_t x, struct scm_bignum *y, SCM *qp, SCM *rp)
 }
 
 void
-scm_integer_floor_divide_zi (struct scm_bignum *x, intptr_t y, SCM *qp, SCM *rp)
+scm_integer_floor_divide_zi (struct scm_bignum *x, scm_t_inum y, SCM *qp, SCM *rp)
 {
   if (y == 0)
     scm_num_overflow ("floor-divide");
@@ -762,7 +754,7 @@ scm_integer_floor_divide_zz (struct scm_bignum *x, struct scm_bignum *y, SCM *qp
 }
 
 SCM
-scm_integer_ceiling_quotient_ii (intptr_t x, intptr_t y)
+scm_integer_ceiling_quotient_ii (scm_t_inum x, scm_t_inum y)
 {
   if (y == 0)
     scm_num_overflow ("ceiling-quotient");
@@ -774,20 +766,20 @@ scm_integer_ceiling_quotient_ii (intptr_t x, intptr_t y)
     }
   else if (x < 0)
     x = x + y + 1;
-  intptr_t q = x / y;
+  scm_t_inum q = x / y;
 
-  return intptr_t_to_scm (q);
+  return long_to_scm (q);
 }
 
 SCM
-scm_integer_ceiling_quotient_iz (intptr_t x, struct scm_bignum *y)
+scm_integer_ceiling_quotient_iz (scm_t_inum x, struct scm_bignum *y)
 {
   if (bignum_is_positive (y))
     {
       if (x > 0)
         return SCM_INUM1;
       else if (x == SCM_MOST_NEGATIVE_FIXNUM &&
-               bignum_cmp_intptr_t (y, -SCM_MOST_NEGATIVE_FIXNUM) == 0)
+               bignum_cmp_long (y, -SCM_MOST_NEGATIVE_FIXNUM) == 0)
         {
           /* Special case: x == fixnum-min && y == abs (fixnum-min) */
           scm_remember_upto_here_1 (y);
@@ -803,7 +795,7 @@ scm_integer_ceiling_quotient_iz (intptr_t x, struct scm_bignum *y)
 }
 
 SCM
-scm_integer_ceiling_quotient_zi (struct scm_bignum *x, intptr_t y)
+scm_integer_ceiling_quotient_zi (struct scm_bignum *x, scm_t_inum y)
 {
   if (y == 0)
     scm_num_overflow ("ceiling-quotient");
@@ -839,12 +831,12 @@ scm_integer_ceiling_quotient_zz (struct scm_bignum *x, struct scm_bignum *y)
 }
 
 SCM
-scm_integer_ceiling_remainder_ii (intptr_t x, intptr_t y)
+scm_integer_ceiling_remainder_ii (scm_t_inum x, scm_t_inum y)
 {
   if (y == 0)
     scm_num_overflow ("ceiling-remainder");
 
-  intptr_t r = x % y;
+  scm_t_inum r = x % y;
   int needs_adjustment = (y > 0) ? (r > 0) : (r < 0);
   if (needs_adjustment)
     r -= y;
@@ -853,7 +845,7 @@ scm_integer_ceiling_remainder_ii (intptr_t x, intptr_t y)
 }
 
 SCM
-scm_integer_ceiling_remainder_iz (intptr_t x, struct scm_bignum *y)
+scm_integer_ceiling_remainder_iz (scm_t_inum x, struct scm_bignum *y)
 {
   if (bignum_is_positive (y))
     {
@@ -868,7 +860,7 @@ scm_integer_ceiling_remainder_iz (intptr_t x, struct scm_bignum *y)
           return take_mpz (r);
         }
       else if (x == SCM_MOST_NEGATIVE_FIXNUM &&
-               bignum_cmp_intptr_t (y, -SCM_MOST_NEGATIVE_FIXNUM) == 0)
+               bignum_cmp_long (y, -SCM_MOST_NEGATIVE_FIXNUM) == 0)
         {
           /* Special case: x == fixnum-min && y == abs (fixnum-min) */
           scm_remember_upto_here_1 (y);
@@ -892,7 +884,7 @@ scm_integer_ceiling_remainder_iz (intptr_t x, struct scm_bignum *y)
 }
 
 SCM
-scm_integer_ceiling_remainder_zi (struct scm_bignum *x, intptr_t y)
+scm_integer_ceiling_remainder_zi (struct scm_bignum *x, scm_t_inum y)
 {
   if (y == 0)
     scm_num_overflow ("ceiling-remainder");
@@ -900,7 +892,7 @@ scm_integer_ceiling_remainder_zi (struct scm_bignum *x, intptr_t y)
     {
       mpz_t zx;
       alias_bignum_to_mpz (x, zx);
-      intptr_t r;
+      scm_t_inum r;
       if (y > 0)
         r = -mpz_cdiv_ui (zx, y);
       else
@@ -923,14 +915,14 @@ scm_integer_ceiling_remainder_zz (struct scm_bignum *x, struct scm_bignum *y)
 }
 
 void
-scm_integer_ceiling_divide_ii (intptr_t x, intptr_t y, SCM *qp, SCM *rp)
+scm_integer_ceiling_divide_ii (scm_t_inum x, scm_t_inum y, SCM *qp, SCM *rp)
 {
   if (y == 0)
     scm_num_overflow ("ceiling-divide");
   else
     {
-      intptr_t q = x / y;
-      intptr_t r = x % y;
+      scm_t_inum q = x / y;
+      scm_t_inum r = x % y;
       int needs_adjustment;
 
       if (y > 0)
@@ -943,13 +935,13 @@ scm_integer_ceiling_divide_ii (intptr_t x, intptr_t y, SCM *qp, SCM *rp)
           r -= y;
           q++;
         }
-      *qp = intptr_t_to_scm (q);
+      *qp = long_to_scm (q);
       *rp = SCM_I_MAKINUM (r);
     }
 }
 
 void
-scm_integer_ceiling_divide_iz (intptr_t x, struct scm_bignum *y, SCM *qp, SCM *rp)
+scm_integer_ceiling_divide_iz (scm_t_inum x, struct scm_bignum *y, SCM *qp, SCM *rp)
 {
   if (bignum_is_positive (y))
     {
@@ -965,7 +957,7 @@ scm_integer_ceiling_divide_iz (intptr_t x, struct scm_bignum *y, SCM *qp, SCM *r
           *rp = take_mpz (r);
         }
       else if (x == SCM_MOST_NEGATIVE_FIXNUM &&
-               bignum_cmp_intptr_t (y, -SCM_MOST_NEGATIVE_FIXNUM) == 0)
+               bignum_cmp_long (y, -SCM_MOST_NEGATIVE_FIXNUM) == 0)
         {
           /* Special case: x == fixnum-min && y == abs (fixnum-min) */
           scm_remember_upto_here_1 (y);
@@ -997,7 +989,7 @@ scm_integer_ceiling_divide_iz (intptr_t x, struct scm_bignum *y, SCM *qp, SCM *r
 }
 
 void
-scm_integer_ceiling_divide_zi (struct scm_bignum *x, intptr_t y, SCM *qp, SCM *rp)
+scm_integer_ceiling_divide_zi (struct scm_bignum *x, scm_t_inum y, SCM *qp, SCM *rp)
 {
   if (y == 0)
     scm_num_overflow ("ceiling-divide");
@@ -1035,22 +1027,22 @@ scm_integer_ceiling_divide_zz (struct scm_bignum *x, struct scm_bignum *y, SCM *
 }
 
 SCM
-scm_integer_truncate_quotient_ii (intptr_t x, intptr_t y)
+scm_integer_truncate_quotient_ii (scm_t_inum x, scm_t_inum y)
 {
   if (y == 0)
     scm_num_overflow ("truncate-quotient");
   else
     {
-      intptr_t q = x / y;
-      return intptr_t_to_scm (q);
+      scm_t_inum q = x / y;
+      return long_to_scm (q);
     }
 }
 
 SCM
-scm_integer_truncate_quotient_iz (intptr_t x, struct scm_bignum *y)
+scm_integer_truncate_quotient_iz (scm_t_inum x, struct scm_bignum *y)
 {
   if (x == SCM_MOST_NEGATIVE_FIXNUM &&
-      bignum_cmp_intptr_t (y, -SCM_MOST_NEGATIVE_FIXNUM) == 0)
+      bignum_cmp_long (y, -SCM_MOST_NEGATIVE_FIXNUM) == 0)
     {
       /* Special case: x == fixnum-min && y == abs (fixnum-min) */
       scm_remember_upto_here_1 (y);
@@ -1061,7 +1053,7 @@ scm_integer_truncate_quotient_iz (intptr_t x, struct scm_bignum *y)
 }
 
 SCM
-scm_integer_truncate_quotient_zi (struct scm_bignum *x, intptr_t y)
+scm_integer_truncate_quotient_zi (struct scm_bignum *x, scm_t_inum y)
 {
   if (y == 0)
     scm_num_overflow ("truncate-quotient");
@@ -1097,22 +1089,22 @@ scm_integer_truncate_quotient_zz (struct scm_bignum *x, struct scm_bignum *y)
 }
 
 SCM
-scm_integer_truncate_remainder_ii (intptr_t x, intptr_t y)
+scm_integer_truncate_remainder_ii (scm_t_inum x, scm_t_inum y)
 {
   if (y == 0)
     scm_num_overflow ("truncate-remainder");
   else
     {
-      intptr_t q = x % y;
-      return intptr_t_to_scm (q);
+      scm_t_inum q = x % y;
+      return long_to_scm (q);
     }
 }
 
 SCM
-scm_integer_truncate_remainder_iz (intptr_t x, struct scm_bignum *y)
+scm_integer_truncate_remainder_iz (scm_t_inum x, struct scm_bignum *y)
 {
   if (x == SCM_MOST_NEGATIVE_FIXNUM &&
-      bignum_cmp_intptr_t (y, -SCM_MOST_NEGATIVE_FIXNUM) == 0)
+      bignum_cmp_long (y, -SCM_MOST_NEGATIVE_FIXNUM) == 0)
     {
       /* Special case: x == fixnum-min && y == abs (fixnum-min) */
       scm_remember_upto_here_1 (y);
@@ -1123,7 +1115,7 @@ scm_integer_truncate_remainder_iz (intptr_t x, struct scm_bignum *y)
 }
 
 SCM
-scm_integer_truncate_remainder_zi (struct scm_bignum *x, intptr_t y)
+scm_integer_truncate_remainder_zi (struct scm_bignum *x, scm_t_inum y)
 {
   if (y == 0)
     scm_num_overflow ("truncate-remainder");
@@ -1131,7 +1123,7 @@ scm_integer_truncate_remainder_zi (struct scm_bignum *x, intptr_t y)
     {
       mpz_t zx;
       alias_bignum_to_mpz (x, zx);
-      intptr_t r = mpz_tdiv_ui (zx, (y > 0) ? y : -y) * mpz_sgn (zx);
+      scm_t_inum r = mpz_tdiv_ui (zx, (y > 0) ? y : -y) * mpz_sgn (zx);
       scm_remember_upto_here_1 (x);
       return SCM_I_MAKINUM (r);
     }
@@ -1150,24 +1142,24 @@ scm_integer_truncate_remainder_zz (struct scm_bignum *x, struct scm_bignum *y)
 }
 
 void
-scm_integer_truncate_divide_ii (intptr_t x, intptr_t y, SCM *qp, SCM *rp)
+scm_integer_truncate_divide_ii (scm_t_inum x, scm_t_inum y, SCM *qp, SCM *rp)
 {
   if (y == 0)
     scm_num_overflow ("truncate-divide");
   else
     {
-      intptr_t q = x / y;
-      intptr_t r = x % y;
-      *qp = intptr_t_to_scm (q);
+      scm_t_inum q = x / y;
+      scm_t_inum r = x % y;
+      *qp = long_to_scm (q);
       *rp = SCM_I_MAKINUM (r);
     }
 }
 
 void
-scm_integer_truncate_divide_iz (intptr_t x, struct scm_bignum *y, SCM *qp, SCM *rp)
+scm_integer_truncate_divide_iz (scm_t_inum x, struct scm_bignum *y, SCM *qp, SCM *rp)
 {
   if (x == SCM_MOST_NEGATIVE_FIXNUM &&
-      bignum_cmp_intptr_t (y, -SCM_MOST_NEGATIVE_FIXNUM) == 0)
+      bignum_cmp_long (y, -SCM_MOST_NEGATIVE_FIXNUM) == 0)
     {
       /* Special case: x == fixnum-min && y == abs (fixnum-min) */
       scm_remember_upto_here_1 (y);
@@ -1182,7 +1174,7 @@ scm_integer_truncate_divide_iz (intptr_t x, struct scm_bignum *y, SCM *qp, SCM *
 }
 
 void
-scm_integer_truncate_divide_zi (struct scm_bignum *x, intptr_t y, SCM *qp, SCM *rp)
+scm_integer_truncate_divide_zi (struct scm_bignum *x, scm_t_inum y, SCM *qp, SCM *rp)
 {
   if (y == 0)
     scm_num_overflow ("truncate-divide");
@@ -1191,7 +1183,7 @@ scm_integer_truncate_divide_zi (struct scm_bignum *x, intptr_t y, SCM *qp, SCM *
       mpz_t q, zx;
       mpz_init (q);
       alias_bignum_to_mpz (x, zx);
-      intptr_t r;
+      scm_t_inum r;
       if (y > 0)
         r = mpz_tdiv_q_ui (q, zx, y);
       else
@@ -1259,13 +1251,13 @@ integer_centered_quotient_zz (struct scm_bignum *x, struct scm_bignum *y)
 }
 
 SCM
-scm_integer_centered_quotient_ii (intptr_t x, intptr_t y)
+scm_integer_centered_quotient_ii (scm_t_inum x, scm_t_inum y)
 {
   if (y == 0)
     scm_num_overflow ("centered-quotient");
 
-  intptr_t q = x / y;
-  intptr_t r = x % y;
+  scm_t_inum q = x / y;
+  scm_t_inum r = x % y;
   if (x > 0)
     {
       if (y > 0)
@@ -1292,18 +1284,18 @@ scm_integer_centered_quotient_ii (intptr_t x, intptr_t y)
             q++;
         }
     }
-  return intptr_t_to_scm (q);
+  return long_to_scm (q);
 }
 
 SCM
-scm_integer_centered_quotient_iz (intptr_t x, struct scm_bignum *y)
+scm_integer_centered_quotient_iz (scm_t_inum x, struct scm_bignum *y)
 {
-  return integer_centered_quotient_zz (intptr_t_to_bignum (x),
+  return integer_centered_quotient_zz (long_to_bignum (x),
                                        y);
 }
 
 SCM
-scm_integer_centered_quotient_zi (struct scm_bignum *x, intptr_t y)
+scm_integer_centered_quotient_zi (struct scm_bignum *x, scm_t_inum y)
 {
   if (y == 0)
     scm_num_overflow ("centered-quotient");
@@ -1314,7 +1306,7 @@ scm_integer_centered_quotient_zi (struct scm_bignum *x, intptr_t y)
       mpz_t q, zx;
       mpz_init (q);
       alias_bignum_to_mpz (x, zx);
-      intptr_t r;
+      scm_t_inum r;
       /* Arrange for r to initially be non-positive, because that
          simplifies the test to see if it is within the needed
          bounds. */
@@ -1379,12 +1371,12 @@ integer_centered_remainder_zz (struct scm_bignum *x, struct scm_bignum *y)
 }
 
 SCM
-scm_integer_centered_remainder_ii (intptr_t x, intptr_t y)
+scm_integer_centered_remainder_ii (scm_t_inum x, scm_t_inum y)
 {
   if (y == 0)
     scm_num_overflow ("centered-remainder");
 
-  intptr_t r = x % y;
+  scm_t_inum r = x % y;
   if (x > 0)
     {
       if (y > 0)
@@ -1415,14 +1407,14 @@ scm_integer_centered_remainder_ii (intptr_t x, intptr_t y)
 }
 
 SCM
-scm_integer_centered_remainder_iz (intptr_t x, struct scm_bignum *y)
+scm_integer_centered_remainder_iz (scm_t_inum x, struct scm_bignum *y)
 {
-  return integer_centered_remainder_zz (intptr_t_to_bignum (x),
+  return integer_centered_remainder_zz (long_to_bignum (x),
                                         y);
 }
 
 SCM
-scm_integer_centered_remainder_zi (struct scm_bignum *x, intptr_t y)
+scm_integer_centered_remainder_zi (struct scm_bignum *x, scm_t_inum y)
 {
   mpz_t zx;
   alias_bignum_to_mpz (x, zx);
@@ -1430,7 +1422,7 @@ scm_integer_centered_remainder_zi (struct scm_bignum *x, intptr_t y)
   if (y == 0)
     scm_num_overflow ("centered-remainder");
 
-  intptr_t r;
+  scm_t_inum r;
   /* Arrange for r to initially be non-positive, because that simplifies
      the test to see if it is within the needed bounds. */
   if (y > 0)
@@ -1500,13 +1492,13 @@ integer_centered_divide_zz (struct scm_bignum *x, struct scm_bignum *y,
 }
 
 void
-scm_integer_centered_divide_ii (intptr_t x, intptr_t y, SCM *qp, SCM *rp)
+scm_integer_centered_divide_ii (scm_t_inum x, scm_t_inum y, SCM *qp, SCM *rp)
 {
   if (y == 0)
     scm_num_overflow ("centered-divide");
 
-  intptr_t q = x / y;
-  intptr_t r = x % y;
+  scm_t_inum q = x / y;
+  scm_t_inum r = x % y;
   if (x > 0)
     {
       if (y > 0)
@@ -1533,18 +1525,18 @@ scm_integer_centered_divide_ii (intptr_t x, intptr_t y, SCM *qp, SCM *rp)
             { q++; r -= y; }
         }
     }
-  *qp = intptr_t_to_scm (q);
+  *qp = long_to_scm (q);
   *rp = SCM_I_MAKINUM (r);
 }
 
 void
-scm_integer_centered_divide_iz (intptr_t x, struct scm_bignum *y, SCM *qp, SCM *rp)
+scm_integer_centered_divide_iz (scm_t_inum x, struct scm_bignum *y, SCM *qp, SCM *rp)
 {
-  integer_centered_divide_zz (intptr_t_to_bignum (x), y, qp, rp);
+  integer_centered_divide_zz (long_to_bignum (x), y, qp, rp);
 }
 
 void
-scm_integer_centered_divide_zi (struct scm_bignum *x, intptr_t y, SCM *qp, SCM *rp)
+scm_integer_centered_divide_zi (struct scm_bignum *x, scm_t_inum y, SCM *qp, SCM *rp)
 {
   if (y == 0)
     scm_num_overflow ("centered-divide");
@@ -1552,7 +1544,7 @@ scm_integer_centered_divide_zi (struct scm_bignum *x, intptr_t y, SCM *qp, SCM *
   mpz_t q, zx;
   mpz_init (q);
   alias_bignum_to_mpz (x, zx);
-  intptr_t r;
+  scm_t_inum r;
 
   /* Arrange for r to initially be non-positive, because that
      simplifies the test to see if it is within the needed bounds. */
@@ -1621,15 +1613,15 @@ integer_round_quotient_zz (struct scm_bignum *x, struct scm_bignum *y)
 }
 
 SCM
-scm_integer_round_quotient_ii (intptr_t x, intptr_t y)
+scm_integer_round_quotient_ii (scm_t_inum x, scm_t_inum y)
 {
   if (y == 0)
     scm_num_overflow ("round-quotient");
 
-  intptr_t q = x / y;
-  intptr_t r = x % y;
-  intptr_t ay = y;
-  intptr_t r2 = 2 * r;
+  scm_t_inum q = x / y;
+  scm_t_inum r = x % y;
+  scm_t_inum ay = y;
+  scm_t_inum r2 = 2 * r;
 
   if (y < 0)
     {
@@ -1637,7 +1629,7 @@ scm_integer_round_quotient_ii (intptr_t x, intptr_t y)
       r2 = -r2;
     }
 
-  if (q & L1)
+  if (q & 1L)
     {
       if (r2 >= ay)
         q++;
@@ -1651,17 +1643,17 @@ scm_integer_round_quotient_ii (intptr_t x, intptr_t y)
       else if (r2 < -ay)
         q--;
     }
-  return intptr_t_to_scm (q);
+  return long_to_scm (q);
 }
 
 SCM
-scm_integer_round_quotient_iz (intptr_t x, struct scm_bignum *y)
+scm_integer_round_quotient_iz (scm_t_inum x, struct scm_bignum *y)
 {
-  return integer_round_quotient_zz (intptr_t_to_bignum (x), y);
+  return integer_round_quotient_zz (long_to_bignum (x), y);
 }
 
 SCM
-scm_integer_round_quotient_zi (struct scm_bignum *x, intptr_t y)
+scm_integer_round_quotient_zi (struct scm_bignum *x, scm_t_inum y)
 {
   if (y == 0)
     scm_num_overflow ("round-quotient");
@@ -1671,7 +1663,7 @@ scm_integer_round_quotient_zi (struct scm_bignum *x, intptr_t y)
   mpz_t q, zx;
   mpz_init (q);
   alias_bignum_to_mpz (x, zx);
-  intptr_t r;
+  scm_t_inum r;
   int needs_adjustment;
 
   if (y > 0)
@@ -1760,15 +1752,15 @@ integer_round_remainder_zz (struct scm_bignum *x, struct scm_bignum *y)
 }
 
 SCM
-scm_integer_round_remainder_ii (intptr_t x, intptr_t y)
+scm_integer_round_remainder_ii (scm_t_inum x, scm_t_inum y)
 {
   if (y == 0)
     scm_num_overflow ("round-remainder");
 
-  intptr_t q = x / y;
-  intptr_t r = x % y;
-  intptr_t ay = y;
-  intptr_t r2 = 2 * r;
+  scm_t_inum q = x / y;
+  scm_t_inum r = x % y;
+  scm_t_inum ay = y;
+  scm_t_inum r2 = 2 * r;
 
   if (y < 0)
     {
@@ -1776,7 +1768,7 @@ scm_integer_round_remainder_ii (intptr_t x, intptr_t y)
       r2 = -r2;
     }
 
-  if (q & L1)
+  if (q & 1L)
     {
       if (r2 >= ay)
         r -= y;
@@ -1795,19 +1787,19 @@ scm_integer_round_remainder_ii (intptr_t x, intptr_t y)
 }
 
 SCM
-scm_integer_round_remainder_iz (intptr_t x, struct scm_bignum *y)
+scm_integer_round_remainder_iz (scm_t_inum x, struct scm_bignum *y)
 {
-  return integer_round_remainder_zz (intptr_t_to_bignum (x), y);
+  return integer_round_remainder_zz (long_to_bignum (x), y);
 }
 
 SCM
-scm_integer_round_remainder_zi (struct scm_bignum *x, intptr_t y)
+scm_integer_round_remainder_zi (struct scm_bignum *x, scm_t_inum y)
 {
   if (y == 0)
     scm_num_overflow ("round-remainder");
 
   mpz_t q, zx;
-  intptr_t r;
+  scm_t_inum r;
   int needs_adjustment;
 
   mpz_init (q);
@@ -1880,15 +1872,15 @@ integer_round_divide_zz (struct scm_bignum *x, struct scm_bignum *y,
 }
 
 void
-scm_integer_round_divide_ii (intptr_t x, intptr_t y, SCM *qp, SCM *rp)
+scm_integer_round_divide_ii (scm_t_inum x, scm_t_inum y, SCM *qp, SCM *rp)
 {
   if (y == 0)
     scm_num_overflow ("round-divide");
 
-  intptr_t q = x / y;
-  intptr_t r = x % y;
-  intptr_t ay = y;
-  intptr_t r2 = 2 * r;
+  scm_t_inum q = x / y;
+  scm_t_inum r = x % y;
+  scm_t_inum ay = y;
+  scm_t_inum r2 = 2 * r;
 
   if (y < 0)
     {
@@ -1896,7 +1888,7 @@ scm_integer_round_divide_ii (intptr_t x, intptr_t y, SCM *qp, SCM *rp)
       r2 = -r2;
     }
 
-  if (q & L1)
+  if (q & 1L)
     {
       if (r2 >= ay)
         { q++; r -= y; }
@@ -1910,18 +1902,18 @@ scm_integer_round_divide_ii (intptr_t x, intptr_t y, SCM *qp, SCM *rp)
       else if (r2 < -ay)
         { q--; r += y; }
     }
-  *qp = intptr_t_to_scm (q);
+  *qp = long_to_scm (q);
   *rp = SCM_I_MAKINUM (r);
 }
 
 void
-scm_integer_round_divide_iz (intptr_t x, struct scm_bignum *y, SCM *qp, SCM *rp)
+scm_integer_round_divide_iz (scm_t_inum x, struct scm_bignum *y, SCM *qp, SCM *rp)
 {
-  integer_round_divide_zz (intptr_t_to_bignum (x), y, qp, rp);
+  integer_round_divide_zz (long_to_bignum (x), y, qp, rp);
 }
 
 void
-scm_integer_round_divide_zi (struct scm_bignum *x, intptr_t y, SCM *qp, SCM *rp)
+scm_integer_round_divide_zi (struct scm_bignum *x, scm_t_inum y, SCM *qp, SCM *rp)
 {
   if (y == 0)
     scm_num_overflow ("round-divide");
@@ -1929,7 +1921,7 @@ scm_integer_round_divide_zi (struct scm_bignum *x, intptr_t y, SCM *qp, SCM *rp)
   mpz_t q, zx;
   mpz_init (q);
   alias_bignum_to_mpz (x, zx);
-  intptr_t r;
+  scm_t_inum r;
   int needs_adjustment;
 
   if (y > 0)
@@ -1966,11 +1958,11 @@ scm_integer_round_divide_zz (struct scm_bignum *x, struct scm_bignum *y, SCM *qp
 }
 
 SCM
-scm_integer_gcd_ii (intptr_t x, intptr_t y)
+scm_integer_gcd_ii (scm_t_inum x, scm_t_inum y)
 {
-  intptr_t u = x < 0 ? -x : x;
-  intptr_t v = y < 0 ? -y : y;
-  intptr_t result;
+  scm_t_inum u = x < 0 ? -x : x;
+  scm_t_inum v = y < 0 ? -y : y;
+  scm_t_inum result;
   if (x == 0)
     result = v;
   else if (y == 0)
@@ -2012,11 +2004,11 @@ scm_integer_gcd_ii (intptr_t x, intptr_t y)
         }
       result = u << k;
     }
-  return uintptr_t_to_scm (result);
+  return ulong_to_scm (result);
 }
 
 SCM
-scm_integer_gcd_zi (struct scm_bignum *x, intptr_t y)
+scm_integer_gcd_zi (struct scm_bignum *x, scm_t_inum y)
 {
   scm_t_bits result;
   if (y == 0)
@@ -2027,7 +2019,7 @@ scm_integer_gcd_zi (struct scm_bignum *x, intptr_t y)
   alias_bignum_to_mpz (x, zx);
   result = mpz_gcd_ui (NULL, zx, y);
   scm_remember_upto_here_1 (x);
-  return uintptr_t_to_scm (result);
+  return ulong_to_scm (result);
 }
 
 SCM
@@ -2043,7 +2035,7 @@ scm_integer_gcd_zz (struct scm_bignum *x, struct scm_bignum *y)
 }
 
 SCM
-scm_integer_lcm_ii (intptr_t x, intptr_t y)
+scm_integer_lcm_ii (scm_t_inum x, scm_t_inum y)
 {
   SCM d = scm_integer_gcd_ii (x, y);
   if (scm_is_eq (d, SCM_INUM0))
@@ -2054,7 +2046,7 @@ scm_integer_lcm_ii (intptr_t x, intptr_t y)
 }
 
 SCM
-scm_integer_lcm_zi (struct scm_bignum *x, intptr_t y)
+scm_integer_lcm_zi (struct scm_bignum *x, scm_t_inum y)
 {
   if (y == 0) return SCM_INUM0;
   if (y < 0) y = - y;
@@ -2116,13 +2108,13 @@ scm_integer_lcm_zz (struct scm_bignum *x, struct scm_bignum *y)
 */
 
 SCM
-scm_integer_logand_ii (intptr_t x, intptr_t y)
+scm_integer_logand_ii (scm_t_inum x, scm_t_inum y)
 {
   return SCM_I_MAKINUM (x & y);
 }
 
 SCM
-scm_integer_logand_zi (struct scm_bignum *x, intptr_t y)
+scm_integer_logand_zi (struct scm_bignum *x, scm_t_inum y)
 {
   if (y == 0)
     return SCM_INUM0;
@@ -2162,13 +2154,13 @@ scm_integer_logand_zz (struct scm_bignum *x, struct scm_bignum *y)
 }
 
 SCM
-scm_integer_logior_ii (intptr_t x, intptr_t y)
+scm_integer_logior_ii (scm_t_inum x, scm_t_inum y)
 {
   return SCM_I_MAKINUM (x | y);
 }
 
 SCM
-scm_integer_logior_zi (struct scm_bignum *x, intptr_t y)
+scm_integer_logior_zi (struct scm_bignum *x, scm_t_inum y)
 {
   if (y == 0)
     return scm_from_bignum (x);
@@ -2196,13 +2188,13 @@ scm_integer_logior_zz (struct scm_bignum *x, struct scm_bignum *y)
 }
 
 SCM
-scm_integer_logxor_ii (intptr_t x, intptr_t y)
+scm_integer_logxor_ii (scm_t_inum x, scm_t_inum y)
 {
   return SCM_I_MAKINUM (x ^ y);
 }
 
 SCM
-scm_integer_logxor_zi (struct scm_bignum *x, intptr_t y)
+scm_integer_logxor_zi (struct scm_bignum *x, scm_t_inum y)
 {
   mpz_t result, zx, zy;
   mpz_init (result);
@@ -2227,13 +2219,13 @@ scm_integer_logxor_zz (struct scm_bignum *x, struct scm_bignum *y)
 }
 
 int
-scm_integer_logtest_ii (intptr_t x, intptr_t y)
+scm_integer_logtest_ii (scm_t_inum x, scm_t_inum y)
 {
   return (x & y) ? 1 : 0;
 }
 
 int
-scm_integer_logtest_zi (struct scm_bignum *x, intptr_t y)
+scm_integer_logtest_zi (struct scm_bignum *x, scm_t_inum y)
 {
   return scm_is_eq (scm_integer_logand_zi (x, y), SCM_INUM0);
 }
@@ -2245,9 +2237,9 @@ scm_integer_logtest_zz (struct scm_bignum *x, struct scm_bignum *y)
 }
 
 int
-scm_integer_logbit_ui (uintptr_t index, intptr_t n)
+scm_integer_logbit_ui (unsigned long index, scm_t_inum n)
 {
-  if (index < SCM_INTPTR_T_BIT)
+  if (index < SCM_LONG_BIT)
     /* Assume two's complement representation.  */
     return (n >> index) & 1;
   else
@@ -2255,7 +2247,7 @@ scm_integer_logbit_ui (uintptr_t index, intptr_t n)
 }
 
 int
-scm_integer_logbit_uz (uintptr_t index, struct scm_bignum *n)
+scm_integer_logbit_uz (unsigned long index, struct scm_bignum *n)
 {
   mpz_t zn;
   alias_bignum_to_mpz (n, zn);
@@ -2265,7 +2257,7 @@ scm_integer_logbit_uz (uintptr_t index, struct scm_bignum *n)
 }
 
 SCM
-scm_integer_lognot_i (intptr_t n)
+scm_integer_lognot_i (scm_t_inum n)
 {
   return SCM_I_MAKINUM (~n);
 }
@@ -2282,7 +2274,7 @@ scm_integer_lognot_z (struct scm_bignum *n)
 }
 
 SCM
-scm_integer_expt_ii (intptr_t n, intptr_t k)
+scm_integer_expt_ii (scm_t_inum n, scm_t_inum k)
 {
   ASSERT (k >= 0);
   if (k == 0)
@@ -2294,7 +2286,7 @@ scm_integer_expt_ii (intptr_t n, intptr_t k)
   if (n == 2)
     {
       if (k < SCM_I_FIXNUM_BIT - 1)
-        return SCM_I_MAKINUM (L1 << k);
+        return SCM_I_MAKINUM (1L << k);
       if (k < 64)
         return scm_integer_from_uint64 (((uint64_t) 1) << k);
       size_t nlimbs = k / (sizeof (mp_limb_t)*8) + 1;
@@ -2315,7 +2307,7 @@ scm_integer_expt_ii (intptr_t n, intptr_t k)
 }
 
 SCM
-scm_integer_expt_zi (struct scm_bignum *n, intptr_t k)
+scm_integer_expt_zi (struct scm_bignum *n, scm_t_inum k)
 {
   ASSERT (k >= 0);
   mpz_t res, zn;
@@ -2386,7 +2378,7 @@ scm_integer_modulo_expt_nnn (SCM n, SCM k, SCM m)
 /* Efficiently compute (N * 2^COUNT), where N is an exact integer, and
    COUNT > 0. */
 SCM
-scm_integer_lsh_iu (intptr_t n, uintptr_t count)
+scm_integer_lsh_iu (scm_t_inum n, unsigned long count)
 {
   ASSERT (count > 0);
   /* Left shift of count >= SCM_I_FIXNUM_BIT-1 will almost[*] always
@@ -2414,7 +2406,7 @@ scm_integer_lsh_iu (intptr_t n, uintptr_t count)
 }
 
 SCM
-scm_integer_lsh_zu (struct scm_bignum *n, uintptr_t count)
+scm_integer_lsh_zu (struct scm_bignum *n, unsigned long count)
 {
   ASSERT (count > 0);
   mpz_t result, zn;
@@ -2428,7 +2420,7 @@ scm_integer_lsh_zu (struct scm_bignum *n, uintptr_t count)
 /* Efficiently compute floor (N / 2^COUNT), where N is an exact integer
    and COUNT > 0. */
 SCM
-scm_integer_floor_rsh_iu (intptr_t n, uintptr_t count)
+scm_integer_floor_rsh_iu (scm_t_inum n, unsigned long count)
 {
   ASSERT (count > 0);
   if (count >= SCM_I_FIXNUM_BIT)
@@ -2438,7 +2430,7 @@ scm_integer_floor_rsh_iu (intptr_t n, uintptr_t count)
 }
 
 SCM
-scm_integer_floor_rsh_zu (struct scm_bignum *n, uintptr_t count)
+scm_integer_floor_rsh_zu (struct scm_bignum *n, unsigned long count)
 {
   ASSERT (count > 0);
   mpz_t result, zn;
@@ -2452,26 +2444,26 @@ scm_integer_floor_rsh_zu (struct scm_bignum *n, uintptr_t count)
 /* Efficiently compute round (N / 2^COUNT), where N is an exact integer
    and COUNT > 0. */
 SCM
-scm_integer_round_rsh_iu (intptr_t n, uintptr_t count)
+scm_integer_round_rsh_iu (scm_t_inum n, unsigned long count)
 {
   ASSERT (count > 0);
   if (count >= SCM_I_FIXNUM_BIT)
     return SCM_INUM0;
   else
     {
-      intptr_t q = SCM_SRS (n, count);
+      scm_t_inum q = SCM_SRS (n, count);
 
-      if (0 == (n & (L1 << (count-1))))
+      if (0 == (n & (1L << (count-1))))
         return SCM_I_MAKINUM (q);                /* round down */
-      else if (n & ((L1 << (count-1)) - 1))
+      else if (n & ((1L << (count-1)) - 1))
         return SCM_I_MAKINUM (q + 1);            /* round up */
       else
-        return SCM_I_MAKINUM ((~L1) & (q + 1));  /* round to even */
+        return SCM_I_MAKINUM ((~1L) & (q + 1));  /* round to even */
     }
 }
 
 SCM
-scm_integer_round_rsh_zu (struct scm_bignum *n, uintptr_t count)
+scm_integer_round_rsh_zu (struct scm_bignum *n, unsigned long count)
 {
   ASSERT (count > 0);
   mpz_t q, zn;
@@ -2488,8 +2480,8 @@ scm_integer_round_rsh_zu (struct scm_bignum *n, uintptr_t count)
 #define MIN(A, B) ((A) <= (B) ? (A) : (B))
 
 SCM
-scm_integer_bit_extract_i (intptr_t n, uintptr_t start,
-                           uintptr_t bits)
+scm_integer_bit_extract_i (scm_t_inum n, unsigned long start,
+                           unsigned long bits)
 {
   /* When istart>=SCM_I_FIXNUM_BIT we can just limit the shift to
      SCM_I_FIXNUM_BIT-1 to get either 0 or -1 per the sign of "n". */
@@ -2508,11 +2500,11 @@ scm_integer_bit_extract_i (intptr_t n, uintptr_t start,
 
   /* mask down to requisite bits */
   bits = MIN (bits, SCM_I_FIXNUM_BIT);
-  return SCM_I_MAKINUM (n & ((L1 << bits) - 1));
+  return SCM_I_MAKINUM (n & ((1L << bits) - 1));
 }
 
 SCM
-scm_integer_bit_extract_z (struct scm_bignum *n, uintptr_t start, uintptr_t bits)
+scm_integer_bit_extract_z (struct scm_bignum *n, unsigned long start, unsigned long bits)
 {
   mpz_t zn;
   alias_bignum_to_mpz (n, zn);
@@ -2540,9 +2532,9 @@ static const char scm_logtab[] = {
 };
 
 SCM
-scm_integer_logcount_i (intptr_t n)
+scm_integer_logcount_i (scm_t_inum n)
 {
-  uintptr_t c = 0;
+  unsigned long c = 0;
   if (n < 0)
     n = -1 - n;
   while (n)
@@ -2556,7 +2548,7 @@ scm_integer_logcount_i (intptr_t n)
 SCM
 scm_integer_logcount_z (struct scm_bignum *n)
 {
-  uintptr_t count;
+  unsigned long count;
   mpz_t zn;
   alias_bignum_to_mpz (n, zn);
   if (mpz_sgn (zn) >= 0)
@@ -2569,7 +2561,7 @@ scm_integer_logcount_z (struct scm_bignum *n)
       mpz_clear (z_negative_one);
     }
   scm_remember_upto_here_1 (n);
-  return scm_from_uintptr_t (count);
+  return scm_from_ulong (count);
 }
 
 static const char scm_ilentab[] = {
@@ -2577,9 +2569,9 @@ static const char scm_ilentab[] = {
 };
 
 SCM
-scm_integer_length_i (intptr_t n)
+scm_integer_length_i (scm_t_inum n)
 {
-  uintptr_t c = 0;
+  unsigned long c = 0;
   unsigned int l = 4;
   if (n < 0)
     n = -1 - n;
@@ -2601,16 +2593,15 @@ scm_integer_length_z (struct scm_bignum *n)
   mpz_t zn;
   alias_bignum_to_mpz (n, zn);
   size_t size = mpz_sizeinbase (zn, 2);
-  mp_bitcnt_t bitcnt_max = (mp_bitcnt_t) ~ (mp_bitcnt_t) 0;
   /* If negative and no 0 bits above the lowest 1, adjust result.  */
-  if (mpz_sgn (zn) < 0 && mpz_scan0 (zn, mpz_scan1 (zn, 0)) == bitcnt_max)
+  if (mpz_sgn (zn) < 0 && mpz_scan0 (zn, mpz_scan1 (zn, 0)) == ULONG_MAX)
     size--;
   scm_remember_upto_here_1 (n);
   return scm_from_size_t (size);
 }
 
 SCM
-scm_integer_to_string_i (intptr_t n, int base)
+scm_integer_to_string_i (scm_t_inum n, int base)
 {
   // FIXME: Use mpn_get_str instead.
   char num_buf [SCM_INTBUFLEN];
@@ -2634,7 +2625,7 @@ scm_integer_to_string_z (struct scm_bignum *n, int base)
 }
 
 int
-scm_is_integer_equal_ir (intptr_t x, double y)
+scm_is_integer_equal_ir (scm_t_inum x, double y)
 {
   /* On a 32-bit system an inum fits a double, we can cast the inum
      to a double and compare.
@@ -2648,15 +2639,15 @@ scm_is_integer_equal_ir (intptr_t x, double y)
 
      An alternative (for any size system actually) would be to check y
      is an integer (with floor) and is in range of an inum (compare
-     against appropriate powers of 2) then test x==(intptr_t)y.  It's
+     against appropriate powers of 2) then test x==(scm_t_inum)y.  It's
      just a matter of which casts/comparisons might be fastest or
      easiest for the cpu.  */
   return (double) x == y
-    && (DBL_MANT_DIG >= SCM_I_FIXNUM_BIT-1 || x == (intptr_t) y);
+    && (DBL_MANT_DIG >= SCM_I_FIXNUM_BIT-1 || x == (scm_t_inum) y);
 }
 
 int
-scm_is_integer_equal_ic (intptr_t x, double real, double imag)
+scm_is_integer_equal_ic (scm_t_inum x, double real, double imag)
 {
   return imag == 0.0 && scm_is_integer_equal_ir (x, real);
 }
@@ -2691,7 +2682,7 @@ scm_is_integer_equal_zc (struct scm_bignum *x, double real, double imag)
 }
 
 int
-scm_is_integer_less_than_ir (intptr_t x, double y)
+scm_is_integer_less_than_ir (scm_t_inum x, double y)
 {
   /* We can safely take the ceiling of y without changing the
      result of x<y, given that x is an integer. */
@@ -2709,11 +2700,11 @@ scm_is_integer_less_than_ir (intptr_t x, double y)
     return 0;
   else
     /* y is a finite integer that fits in an inum. */
-    return x < (intptr_t) y;
+    return x < (scm_t_inum) y;
 }
 
 int
-scm_is_integer_less_than_ri (double x, intptr_t y)
+scm_is_integer_less_than_ri (double x, scm_t_inum y)
 {
   /* We can safely take the floor of x without changing the
      result of x<y, given that y is an integer. */
@@ -2731,7 +2722,7 @@ scm_is_integer_less_than_ri (double x, intptr_t y)
     return 0;
   else
     /* x is a finite integer that fits in an inum. */
-    return (intptr_t) x < y;
+    return (scm_t_inum) x < y;
 }
 
 int
@@ -2783,7 +2774,7 @@ scm_is_integer_negative_z (struct scm_bignum *x)
 
 #if SCM_ENABLE_MINI_GMP
 static double
-mpz_get_d_2exp (intptr_t *exp, mpz_srcptr z)
+mpz_get_d_2exp (long *exp, mpz_srcptr z)
 {
   double signif = mpz_get_d (z);
   int iexp;
@@ -2794,7 +2785,7 @@ mpz_get_d_2exp (intptr_t *exp, mpz_srcptr z)
 #endif
 
 double
-scm_integer_frexp_z (struct scm_bignum *x, intptr_t *exp)
+scm_integer_frexp_z (struct scm_bignum *x, long *exp)
 {
   mpz_t zx;
   alias_bignum_to_mpz (x, zx);
@@ -2826,7 +2817,7 @@ scm_integer_frexp_z (struct scm_bignum *x, intptr_t *exp)
 double
 scm_integer_to_double_z (struct scm_bignum *x)
 {
-  intptr_t exponent;
+  long exponent;
   double significand = scm_integer_frexp_z (x, &exponent);
   return ldexp (significand, exponent);
 }
@@ -2846,9 +2837,9 @@ scm_integer_from_double (double val)
 }
 
 SCM
-scm_integer_add_ii (intptr_t x, intptr_t y)
+scm_integer_add_ii (scm_t_inum x, scm_t_inum y)
 {
-  return intptr_t_to_scm (x + y);
+  return long_to_scm (x + y);
 }
 
 static SCM
@@ -2914,7 +2905,7 @@ do_cmp (mp_limb_t *xd, size_t xn, mp_limb_t *yd, size_t yn)
 }
 
 SCM
-scm_integer_add_zi (struct scm_bignum *x, intptr_t y)
+scm_integer_add_zi (struct scm_bignum *x, scm_t_inum y)
 {
   if (y == 0)
     return scm_from_bignum (x);
@@ -2964,9 +2955,9 @@ scm_integer_add_zz (struct scm_bignum *x, struct scm_bignum *y)
 }
 
 SCM
-scm_integer_negate_i (intptr_t x)
+scm_integer_negate_i (scm_t_inum x)
 {
-  return intptr_t_to_scm (-x);
+  return long_to_scm (-x);
 }
 
 SCM
@@ -2978,16 +2969,16 @@ scm_integer_negate_z (struct scm_bignum *x)
 }
 
 SCM
-scm_integer_sub_ii (intptr_t x, intptr_t y)
+scm_integer_sub_ii (scm_t_inum x, scm_t_inum y)
 {
-  // Assumes that -INUM_MIN can fit in a intptr_t, even if that
-  // intptr_t is not fixable, and that scm_integer_add_ii can handle
-  // intptr_t inputs outside the fixable range.
+  // Assumes that -INUM_MIN can fit in a scm_t_inum, even if that
+  // scm_t_inum is not fixable, and that scm_integer_add_ii can handle
+  // scm_t_inum inputs outside the fixable range.
   return scm_integer_add_ii (x, -y);
 }
 
 SCM
-scm_integer_sub_iz (intptr_t x, struct scm_bignum *y)
+scm_integer_sub_iz (scm_t_inum x, struct scm_bignum *y)
 {
   if (x == 0)
     return scm_integer_negate_z (y);
@@ -3008,7 +2999,7 @@ scm_integer_sub_iz (intptr_t x, struct scm_bignum *y)
 }
 
 SCM
-scm_integer_sub_zi (struct scm_bignum *x, intptr_t y)
+scm_integer_sub_zi (struct scm_bignum *x, scm_t_inum y)
 {
   if (y == 0)
     return scm_from_bignum (x);
@@ -3058,7 +3049,7 @@ scm_integer_sub_zz (struct scm_bignum *x, struct scm_bignum *y)
 }
 
 SCM
-scm_integer_mul_ii (intptr_t x, intptr_t y)
+scm_integer_mul_ii (scm_t_inum x, scm_t_inum y)
 {
 #if SCM_I_FIXNUM_BIT < 32
   int64_t k = x * (int64_t) y;
@@ -3066,16 +3057,16 @@ scm_integer_mul_ii (intptr_t x, intptr_t y)
     return SCM_I_MAKINUM (k);
 #endif
 
-  mp_limb_t xd[1] = { intptr_t_magnitude (x) };
+  mp_limb_t xd[1] = { long_magnitude (x) };
   mp_limb_t lo;
   int negative = (x < 0) != (y < 0);
-  mp_limb_t hi = mpn_mul_1 (&lo, xd, 1, intptr_t_magnitude (y));
+  mp_limb_t hi = mpn_mul_1 (&lo, xd, 1, long_magnitude (y));
   if (!hi)
     {
       if (negative)
         {
-          if (lo <= intptr_t_magnitude (SCM_MOST_NEGATIVE_FIXNUM))
-            return SCM_I_MAKINUM (negative_intptr_t (lo));
+          if (lo <= long_magnitude (SCM_MOST_NEGATIVE_FIXNUM))
+            return SCM_I_MAKINUM (negative_long (lo));
         }
       else if (lo <= SCM_MOST_POSITIVE_FIXNUM)
         return SCM_I_MAKINUM (lo);
@@ -3086,7 +3077,7 @@ scm_integer_mul_ii (intptr_t x, intptr_t y)
 }
 
 SCM
-scm_integer_mul_zi (struct scm_bignum *x, intptr_t y)
+scm_integer_mul_zi (struct scm_bignum *x, scm_t_inum y)
 {
   switch (y)
     {
@@ -3105,7 +3096,7 @@ scm_integer_mul_zi (struct scm_bignum *x, intptr_t y)
         struct scm_bignum *result = allocate_bignum (xn + 1);
         mp_limb_t *rd = bignum_limbs (result);
         const mp_limb_t *xd = bignum_limbs (x);
-        mp_limb_t yd = intptr_t_magnitude (y);
+        mp_limb_t yd = long_magnitude (y);
         int negate = bignum_is_negative (x) != (y < 0);
         mp_limb_t hi = mpn_mul_1 (rd, xd, xn, yd);
         if (hi)
@@ -3143,14 +3134,14 @@ scm_integer_mul_zz (struct scm_bignum *x, struct scm_bignum *y)
 }
 
 int
-scm_is_integer_divisible_ii (intptr_t x, intptr_t y)
+scm_is_integer_divisible_ii (scm_t_inum x, scm_t_inum y)
 {
   ASSERT (y != 0);
   return (x % y) == 0;
 }
 
 int
-scm_is_integer_divisible_zi (struct scm_bignum *x, intptr_t y)
+scm_is_integer_divisible_zi (struct scm_bignum *x, scm_t_inum y)
 {
   ASSERT (y != 0);
   switch (y)
@@ -3160,7 +3151,7 @@ scm_is_integer_divisible_zi (struct scm_bignum *x, intptr_t y)
       return 1;
     default:
       {
-        intptr_t abs_y = y < 0 ? -y : y;
+        scm_t_inum abs_y = y < 0 ? -y : y;
         mpz_t zx;
         alias_bignum_to_mpz (x, zx);
         int divisible = mpz_divisible_ui_p (zx, abs_y);
@@ -3182,13 +3173,13 @@ scm_is_integer_divisible_zz (struct scm_bignum *x, struct scm_bignum *y)
 }
 
 SCM
-scm_integer_exact_quotient_ii (intptr_t n, intptr_t d)
+scm_integer_exact_quotient_ii (scm_t_inum n, scm_t_inum d)
 {
   return scm_integer_truncate_quotient_ii (n, d);
 }
 
 SCM
-scm_integer_exact_quotient_iz (intptr_t n, struct scm_bignum *d)
+scm_integer_exact_quotient_iz (scm_t_inum n, struct scm_bignum *d)
 {
   // There are only two fixnum numerators that are evenly divided by
   // bignum denominators: 0, which is evenly divided 0 times by
@@ -3197,7 +3188,7 @@ scm_integer_exact_quotient_iz (intptr_t n, struct scm_bignum *d)
   if (n == 0)
     return SCM_INUM0;
   ASSERT (n == SCM_MOST_NEGATIVE_FIXNUM);
-  ASSERT (bignum_cmp_intptr_t (d, SCM_MOST_POSITIVE_FIXNUM + 1) == 0);
+  ASSERT (bignum_cmp_long (d, SCM_MOST_POSITIVE_FIXNUM + 1) == 0);
   return SCM_I_MAKINUM (-1);
 }
 
@@ -3206,7 +3197,7 @@ scm_integer_exact_quotient_iz (intptr_t n, struct scm_bignum *d)
    remainder).  For large integers, this can be computed more
    efficiently than when the remainder is unknown. */
 SCM
-scm_integer_exact_quotient_zi (struct scm_bignum *n, intptr_t d)
+scm_integer_exact_quotient_zi (struct scm_bignum *n, scm_t_inum d)
 {
   if (SCM_UNLIKELY (d == 0))
     scm_num_overflow ("quotient");
@@ -3240,13 +3231,13 @@ scm_integer_exact_quotient_zz (struct scm_bignum *n, struct scm_bignum *d)
   return take_mpz (q);
 }
 
-#if SCM_SIZEOF_INTPTR_T == 4
+#if SCM_SIZEOF_LONG == 4
 SCM
 scm_integer_from_int32 (int32_t n)
 {
   if (SCM_FIXABLE (n))
     return SCM_I_MAKINUM (n);
-  return scm_from_bignum (intptr_t_to_bignum (n));
+  return scm_from_bignum (long_to_bignum (n));
 }
 
 SCM
@@ -3254,7 +3245,7 @@ scm_integer_from_uint32 (uint32_t n)
 {
   if (SCM_POSFIXABLE (n))
     return SCM_I_MAKINUM (n);
-  return scm_from_bignum (uintptr_t_to_bignum (n));
+  return scm_from_bignum (ulong_to_bignum (n));
 }
 
 int
@@ -3315,7 +3306,7 @@ scm_integer_init_set_mpz_z (struct scm_bignum *z, mpz_t n)
 }
 
 void
-scm_integer_exact_sqrt_i (intptr_t k, SCM *s, SCM *r)
+scm_integer_exact_sqrt_i (scm_t_inum k, SCM *s, SCM *r)
 {
   ASSERT (k >= 0);
   if (k == 0)
@@ -3345,7 +3336,7 @@ scm_integer_exact_sqrt_z (struct scm_bignum *k, SCM *s, SCM *r)
 }
 
 int
-scm_is_integer_perfect_square_i (intptr_t k)
+scm_is_integer_perfect_square_i (scm_t_inum k)
 {
   if (k < 0)
     return 0;
@@ -3366,7 +3357,7 @@ scm_is_integer_perfect_square_z (struct scm_bignum *k)
 }
 
 SCM
-scm_integer_floor_sqrt_i (intptr_t k)
+scm_integer_floor_sqrt_i (scm_t_inum k)
 {
   if (k <= 0)
     return SCM_INUM0;
@@ -3388,7 +3379,7 @@ scm_integer_floor_sqrt_z (struct scm_bignum *k)
 }
 
 double
-scm_integer_inexact_sqrt_i (intptr_t k)
+scm_integer_inexact_sqrt_i (scm_t_inum k)
 {
   if (k < 0)
     return -sqrt ((double) -k);
@@ -3398,7 +3389,7 @@ scm_integer_inexact_sqrt_i (intptr_t k)
 double
 scm_integer_inexact_sqrt_z (struct scm_bignum *k)
 {
-  intptr_t expon;
+  long expon;
   double signif = scm_integer_frexp_z (k, &expon);
   int negative = signif < 0;
   if (negative)
@@ -3414,7 +3405,7 @@ scm_integer_inexact_sqrt_z (struct scm_bignum *k)
 }
 
 SCM
-scm_integer_scan1_i (intptr_t n)
+scm_integer_scan1_i (scm_t_inum n)
 {
   if (n == 0)
     return SCM_I_MAKINUM (-1);
@@ -3427,7 +3418,7 @@ scm_integer_scan1_z (struct scm_bignum *n)
 {
   mpz_t zn;
   alias_bignum_to_mpz (n, zn);
-  uintptr_t pos = mpz_scan1 (zn, 0L);
+  unsigned long pos = mpz_scan1 (zn, 0L);
   scm_remember_upto_here_1 (n);
-  return uintptr_t_to_scm (pos);
+  return ulong_to_scm (pos);
 }
