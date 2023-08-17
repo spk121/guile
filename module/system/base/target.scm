@@ -26,6 +26,8 @@
 
             target-cpu target-vendor target-os
 
+            target-runtime
+
             target-endianness target-word-size
 
             target-max-size-t
@@ -156,6 +158,14 @@
 (define (target-vendor)
   "Return the vendor name of the target platform."
   (triplet-vendor (target-type)))
+
+(define target-runtime
+  (make-parameter
+   'guile-vm
+   (lambda (val)
+     "Determine what kind of virtual machine we are targetting.  Usually this
+is @code{guile-vm} when generating bytecode for Guile's virtual machine."
+     val)))
 
 (define (target-os)
   "Return the operating system name of the target platform."

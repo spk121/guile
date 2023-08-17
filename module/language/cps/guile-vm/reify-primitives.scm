@@ -24,7 +24,7 @@
 ;;;
 ;;; Code:
 
-(define-module (language cps reify-primitives)
+(define-module (language cps guile-vm reify-primitives)
   #:use-module (ice-9 match)
   #:use-module (language cps)
   #:use-module (language cps utils)

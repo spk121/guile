@@ -1,6 +1,6 @@
 ;;; Continuation-passing style (CPS) intermediate language (IL)
 
-;; Copyright (C) 2016, 2017, 2018, 2020 Free Software Foundation, Inc.
+;; Copyright (C) 2016, 2017, 2018, 2020, 2023 Free Software Foundation, Inc.
 
 ;;;; This library is free software; you can redistribute it and/or
 ;;;; modify it under the terms of the GNU Lesser General Public
@@ -22,7 +22,7 @@
 ;;;
 ;;; Code:
 
-(define-module (language cps loop-instrumentation)
+(define-module (language cps guile-vm loop-instrumentation)
   #:use-module (ice-9 match)
   #:use-module (language cps)
   #:use-module (language cps utils)

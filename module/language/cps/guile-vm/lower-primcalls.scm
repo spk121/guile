@@ -25,7 +25,7 @@
 ;;;
 ;;; Code:
 
-(define-module (language cps lower-primcalls)
+(define-module (language cps guile-vm lower-primcalls)
   #:use-module (ice-9 match)
   #:use-module (language cps)
   #:use-module (language cps intmap)

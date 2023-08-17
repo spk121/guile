@@ -30,11 +30,8 @@
   #:use-module (language cps devirtualize-integers)
   #:use-module (language cps elide-arity-checks)
   #:use-module (language cps licm)
-  #:use-module (language cps loop-instrumentation)
-  #:use-module (language cps lower-primcalls)
   #:use-module (language cps peel-loops)
   #:use-module (language cps prune-top-level-scopes)
-  #:use-module (language cps reify-primitives)
   #:use-module (language cps renumber)
   #:use-module (language cps rotate-loops)
   #:use-module (language cps return-types)
@@ -47,6 +44,7 @@
   #:use-module (language cps type-fold)
   #:use-module (language cps verify)
   #:use-module (system base optimize)
+  #:use-module (system base target)
   #:export (optimize-higher-order-cps
             optimize-first-order-cps
             cps-optimizations
@@ -122,6 +120,11 @@
 (define (cps-optimizations)
   (available-optimizations 'cps))
 
+(define (make-backend-cps-lowerer optimization-level opts)
+  (let* ((iface (resolve-interface `(language cps ,(target-runtime))))
+         (make-lowerer (module-ref iface 'make-lowerer)))
+    (make-lowerer optimization-level opts)))
+
 (define (lower-cps/generic exp opts)
   ;; FIXME: For now the closure conversion pass relies on $rec instances
   ;; being separated into SCCs.  We should fix this to not be the case,
@@ -132,7 +135,7 @@
   (set! exp (convert-closures exp))
   (optimize-first-order-cps exp opts))
 
-(define (select-opts-for-optimization-level optimization-level opts all-opts)
+(define (select-optimizations optimization-level opts all-opts)
   (define (kw-arg-ref args kw default)
     (match (memq kw args)
       ((_ val . _) val)
@@ -145,16 +148,9 @@
        (acons kw (kw-arg-ref opts kw (enabled-for-level? level))
               (lp all-opts))))))
 
-(define (make-backend-cps-lowerer optimization-level opts)
-  (lambda (exp env)
-    (add-loop-instrumentation
-     (reify-primitives
-      (lower-primcalls exp)))))
-
 (define (make-cps-lowerer optimization-level opts)
   (define generic-opts
-    (select-opts-for-optimization-level optimization-level opts
-                                        (cps-optimizations)))
+    (select-optimizations optimization-level opts (cps-optimizations)))
   (define lower-cps/backend
     (make-backend-cps-lowerer optimization-level opts))
   (lambda (exp env)

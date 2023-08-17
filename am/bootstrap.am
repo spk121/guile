@@ -98,12 +98,9 @@ SOURCES =					\
   language/cps/intmap.scm			\
   language/cps/intset.scm			\
   language/cps/licm.scm				\
-  language/cps/loop-instrumentation.scm		\
-  language/cps/lower-primcalls.scm		\
   language/cps/optimize.scm			\
   language/cps/peel-loops.scm			\
   language/cps/prune-top-level-scopes.scm	\
-  language/cps/reify-primitives.scm		\
   language/cps/renumber.scm			\
   language/cps/return-types.scm			\
   language/cps/rotate-loops.scm			\
@@ -121,6 +118,11 @@ SOURCES =					\
   language/cps/utils.scm			\
   language/cps/verify.scm			\
   language/cps/with-cps.scm			\
+						\
+  language/cps/guile-vm.scm			\
+  language/cps/guile-vm/loop-instrumentation.scm\
+  language/cps/guile-vm/lower-primcalls.scm	\
+  language/cps/guile-vm/reify-primitives.scm	\
 						\
   ice-9/and-let-star.scm			\
   ice-9/arrays.scm				\
