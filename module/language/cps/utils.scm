@@ -383,6 +383,7 @@ by a label, respectively."
       load-f64 s64->f64
       f32-ref f64-ref
       fadd fsub fmul fdiv fsqrt fabs
+      fadd/immediate fmul/immediate
       ffloor fceiling
       fsin fcos ftan fasin facos fatan fatan2)
      '(f64))
