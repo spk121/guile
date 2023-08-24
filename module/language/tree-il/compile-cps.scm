@@ -62,7 +62,7 @@
   #:use-module (language tree-il cps-primitives)
   #:use-module (language tree-il)
   #:use-module (language cps intmap)
-  #:export (compile-cps))
+  #:export (compile-cps define-custom-primcall-converter))
 
 (define (convert-primcall/default cps k src op param . args)
   (with-cps cps
@@ -1438,6 +1438,82 @@ use as the proc slot."
                           ($continue kvalues src ($prim 'values))))
              kval))))))))
 
+(define *custom-primcall-converters* (make-hash-table))
+(define-syntax-rule
+  (define-custom-primcall-converter (name cps src args convert-args k)
+    . body)
+  (let ((convert (lambda (cps src args convert-args k) . body)))
+    (hashq-set! *custom-primcall-converters* 'name convert)))
+(define (custom-primcall-converter name)
+  (hashq-ref *custom-primcall-converters* name))
+
+(define-custom-primcall-converter (throw cps src args convert-args k)
+  (define (fallback)
+    (convert-args cps args
+      (lambda (cps args)
+        (match args
+          ((key . args)
+           (with-cps cps
+             (letv arglist)
+             (letk kargs ($kargs ('arglist) (arglist)
+                           ($throw src 'throw #f (key arglist))))
+             ($ (build-list kargs src args))))))))
+  (define (specialize op param . args)
+    (convert-args cps args
+      (lambda (cps args)
+        (with-cps cps
+          (build-term
+            ($throw src op param args))))))
+  (match args
+    ((($ <const> _ key) ($ <const> _ subr) ($ <const> _ msg) args data)
+     ;; Specialize `throw' invocations corresponding to common
+     ;; "error" invocations.
+     (let ()
+       (match (vector args data)
+         (#(($ <primcall> _ 'cons (x ($ <const> _ ())))
+            ($ <primcall> _ 'cons (x ($ <const> _ ()))))
+          (specialize 'throw/value+data `#(,key ,subr ,msg) x))
+         (#(($ <primcall> _ 'cons (x ($ <const> _ ()))) ($ <const> _ #f))
+          (specialize 'throw/value `#(,key ,subr ,msg) x))
+         (_ (fallback)))))
+    (_ (fallback))))
+
+(define-custom-primcall-converter (values cps src args convert-args k)
+  (convert-args cps args
+    (lambda (cps args)
+      (match (intmap-ref cps k)
+        (($ $ktail)
+         (with-cps cps
+           (build-term
+             ($continue k src ($values args)))))
+        (($ $kargs names)
+         ;; Can happen if continuation already saw we produced the
+         ;; right number of values.
+         (with-cps cps
+           (build-term
+             ($continue k src ($values args)))))
+        (($ $kreceive ($ $arity req () rest () #f) kargs)
+         (cond
+          ((and (not rest) (= (length args) (length req)))
+           (with-cps cps
+             (build-term
+               ($continue kargs src ($values args)))))
+          ((and rest (>= (length args) (length req)))
+           (with-cps cps
+             (letv rest)
+             (letk krest ($kargs ('rest) (rest)
+                           ($continue kargs src
+                             ($values ,(append (list-head args (length req))
+                                               (list rest))))))
+             ($ (build-list krest src (list-tail args (length req))))))
+          (else
+           ;; Number of values mismatch; reify a values call.
+           (with-cps cps
+             (letv val values)
+             (letk kvalues ($kargs ('values) (values)
+                             ($continue k src ($call values args))))
+             (build-term ($continue kvalues src ($prim 'values)))))))))))
+
 ;; cps exp k-name alist -> cps term
 (define (convert cps exp k subst)
   (define (zero-valued? exp)
@@ -1696,72 +1772,9 @@ use as the proc slot."
 
     (($ <primcall> src name args)
      (cond
-      ((eq? name 'throw)
-       (let ()
-         (define (fallback)
-           (convert-args cps args
-             (lambda (cps args)
-               (match args
-                 ((key . args)
-                  (with-cps cps
-                    (letv arglist)
-                    (letk kargs ($kargs ('arglist) (arglist)
-                                  ($throw src 'throw #f (key arglist))))
-                    ($ (build-list kargs src args))))))))
-         (define (specialize op param . args)
-           (convert-args cps args
-             (lambda (cps args)
-               (with-cps cps
-                 (build-term
-                   ($throw src op param args))))))
-         (match args
-           ((($ <const> _ key) ($ <const> _ subr) ($ <const> _ msg) args data)
-            ;; Specialize `throw' invocations corresponding to common
-            ;; "error" invocations.
-            (let ()
-              (match (vector args data)
-                (#(($ <primcall> _ 'cons (x ($ <const> _ ())))
-                   ($ <primcall> _ 'cons (x ($ <const> _ ()))))
-                 (specialize 'throw/value+data `#(,key ,subr ,msg) x))
-                (#(($ <primcall> _ 'cons (x ($ <const> _ ()))) ($ <const> _ #f))
-                 (specialize 'throw/value `#(,key ,subr ,msg) x))
-                (_ (fallback)))))
-           (_ (fallback)))))
-      ((eq? name 'values)
-       (convert-args cps args
-         (lambda (cps args)
-           (match (intmap-ref cps k)
-             (($ $ktail)
-              (with-cps cps
-                (build-term
-                  ($continue k src ($values args)))))
-             (($ $kargs names)
-              ;; Can happen if continuation already saw we produced the
-              ;; right number of values.
-              (with-cps cps
-                (build-term
-                  ($continue k src ($values args)))))
-             (($ $kreceive ($ $arity req () rest () #f) kargs)
-              (cond
-               ((and (not rest) (= (length args) (length req)))
-                (with-cps cps
-                  (build-term
-                    ($continue kargs src ($values args)))))
-               ((and rest (>= (length args) (length req)))
-                (with-cps cps
-                  (letv rest)
-                  (letk krest ($kargs ('rest) (rest)
-                                ($continue kargs src
-                                  ($values ,(append (list-head args (length req))
-                                                    (list rest))))))
-                  ($ (build-list krest src (list-tail args (length req))))))
-               (else
-                ;; Number of values mismatch; reify a values call.
-                (with-cps cps
-                  (letv val values)
-                  (letk kvalues ($kargs ('values) (values)
-                                  ($continue k src ($call values args))))
-                  (build-term ($continue kvalues src ($prim 'values)))))))))))
+      ((custom-primcall-converter name)
+       => (lambda (convert-primcall)
+            (convert-primcall cps src args convert-args k)))
       ((tree-il-primitive->cps-primitive+nargs+nvalues name)
        =>
        (match-lambda
