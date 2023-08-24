@@ -194,7 +194,7 @@ given `tree-il' element."
 ;; definition we're currently in).  The second part (`refs' below) is
 ;; effectively a graph from which we can determine unused top-level definitions.
 (define-record-type <reference-graph>
-  (make-reference-graph refs defs toplevel-context)
+  (make-reference-graph defs refs toplevel-context)
   reference-graph?
   (defs             reference-graph-defs) ;; ((NAME . LOC) ...)
   (refs             reference-graph-refs) ;; ((REF-CONTEXT REF ...) ...)
@@ -257,46 +257,66 @@ given `tree-il' element."
 
 (define unused-toplevel-analysis
   ;; Report unused top-level definitions that are not exported.
-  (let ((add-ref-from-context
-         (lambda (graph name)
-           ;; Add an edge CTX -> NAME in GRAPH.
-           (let* ((refs     (reference-graph-refs graph))
-                  (defs     (reference-graph-defs graph))
-                  (ctx      (reference-graph-toplevel-context graph))
-                  (ctx-refs (or (and=> (vhash-assq ctx refs) cdr) '())))
-             (make-reference-graph (vhash-consq ctx (cons name ctx-refs) refs)
-                                   defs ctx)))))
+  (let ()
+    (define initial-graph
+      (make-reference-graph vlist-null vlist-null #f))
+
+    (define (add-def graph name src)
+      (match graph
+        (($ <reference-graph> defs refs ctx)
+         (make-reference-graph (vhash-consq name src defs) refs name))))
+
+    (define (add-ref graph pred succ)
+      ;; Add a ref edge PRED -> SUCC in GRAPH.
+      (match graph
+        (($ <reference-graph> defs refs ctx)
+         (let* ((succs (match (vhash-assq pred refs)
+                         ((pred . succs) succs)
+                         (#f '())))
+                (refs (vhash-consq pred (cons succ succs) refs)))
+           (make-reference-graph defs refs ctx)))))
+
+    (define (add-ref-from-context graph name)
+      ;; Add a ref edge from the current context to NAME in GRAPH.
+      (add-ref graph (reference-graph-toplevel-context graph) name))
+
+    (define (add-root-ref graph name)
+      ;; Add a ref edge to NAME from the root, because its metadata is
+      ;; marked maybe-unused.
+      (add-ref graph #f name))
+
     (define (macro-variable? name env)
       (and (module? env)
            (let ((var (module-variable env name)))
              (and var (variable-bound? var)
                   (macro? (variable-ref var))))))
 
+    (define (maybe-unused? metadata)
+      (assq 'maybe-unused metadata))
+
     (make-tree-analysis
      (lambda (x graph env locs)
        ;; Going down into X.
-       (let ((ctx  (reference-graph-toplevel-context graph))
-             (refs (reference-graph-refs graph))
-             (defs (reference-graph-defs graph)))
-         (match x
-           (($ <toplevel-ref> src mod name)
-            (add-ref-from-context graph name))
-           (($ <toplevel-define> src mod name expr)
-            (let ((refs refs)
-                  (defs (vhash-consq name (or src (find pair? locs))
-                                     defs)))
-              (make-reference-graph refs defs name)))
-           (($ <toplevel-set> src mod name expr)
-            (add-ref-from-context graph name))
-           (_ graph))))
+       (match x
+         (($ <toplevel-ref> src mod name)
+          (add-ref-from-context graph name))
+         (($ <toplevel-define> src mod name expr)
+          (let ((graph (add-def graph name (or src (find pair? locs)))))
+            (match expr
+              (($ <lambda> src (? maybe-unused?) body)
+               (add-root-ref graph name))
+              (_ graph))))
+         (($ <toplevel-set> src mod name expr)
+          (add-ref-from-context graph name))
+         (_ graph)))
 
      (lambda (x graph env locs)
        ;; Leaving X's scope.
        (match x
          (($ <toplevel-define>)
-          (let ((refs (reference-graph-refs graph))
-                (defs (reference-graph-defs graph)))
-            (make-reference-graph refs defs #f)))
+          (match graph
+            (($ <reference-graph> defs refs ctx)
+             (make-reference-graph defs refs #f))))
          (_ graph)))
 
      (lambda (graph env)
@@ -308,9 +328,15 @@ given `tree-il' element."
        ;; private bindings.  FIXME: The `make-syntax-transformer' calls don't
        ;; contain any literal `toplevel-ref' of the global bindings they use so
        ;; this strategy fails.
+       (define exports (make-hash-table))
+       (when (module? env)
+         (module-for-each (lambda (name var) (hashq-set! exports var name))
+                          (module-public-interface env)))
        (define (exported? name)
          (if (module? env)
-             (module-variable (module-public-interface env) name)
+             (and=> (module-variable env name)
+                    (lambda (var)
+                      (hashq-ref exports var)))
              #t))
 
        (let-values (((public-defs private-defs)
@@ -332,7 +358,7 @@ given `tree-il' element."
                                    (warning 'unused-toplevel loc name))))
                            unused))))
 
-     (make-reference-graph vlist-null vlist-null #f))))
+     initial-graph)))
 
 
 ;;;

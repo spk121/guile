@@ -724,6 +724,15 @@ in the frame with for the lambda-case clause @var{clause}."
              (visit body))  ; Body.
         temporary-count)))) ; Temporaries.
 
+(define (sanitize-meta meta)
+  (match meta
+    (() '())
+    (((k . v) . meta)
+     (let ((meta (sanitize-meta meta)))
+       (case k
+         ((maybe-unused) meta)
+         (else (acons k v meta)))))))
+
 (define (compile-closure asm closure assigned? lookup-closure)
   (define-record-type <env>
     (make-env prev name id idx closure? boxed? next-local)
@@ -1375,7 +1384,7 @@ in the frame with for the lambda-case clause @var{clause}."
   (match closure
     (($ <closure> label ($ <lambda> src meta body) module-scope free)
      (when src (emit-source asm src))
-     (emit-begin-program asm label meta)
+     (emit-begin-program asm label (sanitize-meta meta))
      (emit-clause #f body module-scope free)
      (emit-end-program asm))))
 
