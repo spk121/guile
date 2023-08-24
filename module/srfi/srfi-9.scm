@@ -1,6 +1,6 @@
 ;;; srfi-9.scm --- define-record-type
 
-;; Copyright (C) 2001-2002, 2006, 2008-2014, 2018-2019
+;; Copyright (C) 2001-2002, 2006, 2008-2014, 2018-2019, 2023
 ;;   Free Software Foundation, Inc.
 ;;
 ;; This library is free software; you can redistribute it and/or
@@ -108,20 +108,21 @@
                                     '-procedure)))
 
     (syntax-case x ()
-      ((_ ((key value) ...) (name formals ...) body ...)
+      ((_ ((key value) ...) (name formals ...) body0 body ...)
        (identifier? #'name)
        (with-syntax ((proc-name  (make-procedure-name #'name))
                      ((args ...) (generate-temporaries #'(formals ...))))
          #`(begin
              (define (proc-name formals ...)
-               body ...)
+               #((maybe-unused))
+               body0 body ...)
              (define-syntax name
                (lambda (x)
                  (syntax-case x (%%on-error key ...)
                    ((_ (%%on-error err) key s) #'(ck s 'value)) ...
                    ((_ args ...)
                     #'((lambda (formals ...)
-                         body ...)
+                         body0 body ...)
                        args ...))
                    ((_ a (... ...))
                     (syntax-violation 'name "Wrong number of arguments" x))
