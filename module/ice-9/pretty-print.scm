@@ -106,7 +106,7 @@ port directly after OBJ, like (pretty-print OBJ PORT)."
     (when (< 0 n)
       (put-string port "        " 0 (min 8 n))
       (when (< 8 n)
-        (spaces (- 8 n)))))
+        (spaces (- n 8)))))
 
   (define (indent to)
     (let ((col (port-column port)))

@@ -1,6 +1,6 @@
 ;;;; -*- coding: utf-8; mode: scheme; -*-
 ;;;;
-;;;; Copyright (C) 2010, 2013, 2014  Free Software Foundation, Inc.
+;;;; Copyright (C) 2010, 2013, 2014, 2023  Free Software Foundation, Inc.
 ;;;;
 ;;;; This library is free software; you can redistribute it and/or
 ;;;; modify it under the terms of the GNU Lesser General Public
@@ -23,11 +23,11 @@
 (define-syntax prints?
   ;; #t if EXP prints as RESULT.
   (syntax-rules ()
-    ((_ exp result)
+    ((_ exp result arg ...)
      (string=? result
                (with-output-to-string
                  (lambda ()
-                   (pretty-print 'exp)))))))
+                   (pretty-print 'exp arg ...)))))))
 
 (define (with-print-options opts thunk)
   (let ((saved-options (print-options)))
@@ -111,7 +111,23 @@
 
   (pass-if "quasiquote & co."
     (prints?  (define foo `(bar ,(+ 2 3)))
-             "(define foo `(bar ,(+ 2 3)))\n")))
+              "(define foo `(bar ,(+ 2 3)))\n"))
+
+  (pass-if "indent"
+    (prints? (9 (8 (7 (6 (5 (4 (3 (2 (1 (0 0))))))))))
+             (string-append
+              "(9\n"
+              " (8\n"
+              "  (7\n"
+              "   (6\n"
+              "    (5\n"
+              "     (4\n"
+              "      (3\n"
+              "       (2\n"
+              "        (1\n"
+              "         (0\n"
+              "          0))))))))))\n")
+             #:width 10)))
 
 
 (with-test-prefix "truncated-print"
