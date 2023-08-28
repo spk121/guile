@@ -417,7 +417,9 @@
         (#('throw/value param (val))
          (emit-throw/value asm (from-sp (slot val)) param))
         (#('throw/value+data param (val))
-         (emit-throw/value+data asm (from-sp (slot val)) param))))
+         (emit-throw/value+data asm (from-sp (slot val)) param))
+        (#('unreachable #f ())
+         (emit-unreachable asm))))
 
     (define (compile-prompt label k kh escape? tag)
       (let ((receive-args (gensym "handler"))

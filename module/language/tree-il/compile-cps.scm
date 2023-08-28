@@ -1478,6 +1478,33 @@ use as the proc slot."
          (_ (fallback)))))
     (_ (fallback))))
 
+(define-custom-primcall-converter (raise-exception cps src args convert-args k)
+  ;; When called with just one arg, we know that raise-exception is
+  ;; non-continuing, and so we can prune the graph at its continuation.
+  ;; This improves flow analysis, because the path that leads to the
+  ;; raise-exception doesn't rejoin the graph.
+  (convert-args cps args
+    (lambda (cps args)
+      (define (maybe-prune-graph cps k)
+        (match args
+          ((_)
+           (with-cps cps
+             (letv vals)
+             (letk kunreachable ($kargs (#f) (vals)
+                                  ($throw src 'unreachable #f ())))
+             (letk kret ($kreceive '() 'rest kunreachable))
+             kret))
+          (_
+           (with-cps cps
+             k))))
+      (with-cps cps
+        (letv prim)
+        (let$ k (maybe-prune-graph k))
+        (letk kcall ($kargs ('prim) (prim)
+                      ($continue k src ($call prim args))))
+        (build-term
+          ($continue kcall src ($prim 'raise-exception)))))))
+
 (define-custom-primcall-converter (values cps src args convert-args k)
   (convert-args cps args
     (lambda (cps args)

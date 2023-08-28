@@ -95,7 +95,7 @@
     abort-to-prompt* abort-to-prompt
     make-prompt-tag
 
-    throw error scm-error
+    throw error scm-error raise-exception
 
     string-length string-ref string-set!
 

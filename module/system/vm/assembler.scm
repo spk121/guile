@@ -109,6 +109,7 @@
             emit-throw
             (emit-throw/value* . emit-throw/value)
             (emit-throw/value+data* . emit-throw/value+data)
+            emit-unreachable
 
             emit-pair?
             emit-struct?

@@ -1,4 +1,4 @@
-/* Copyright 2001,2009-2015,2017-2021
+/* Copyright 2001,2009-2015,2017-2021,2023
      Free Software Foundation, Inc.
 
    This file is part of Guile.
@@ -3478,7 +3478,17 @@ VM_NAME (scm_thread *thread)
       NEXT (4);
     }
 
-  VM_DEFINE_OP (167, unused_167, NULL, NOP)
+  /* unreachable _:24
+   *
+   * Abort the process.  Guile's compiler emits these bytecodes where it
+   * knows that control cannot continue, for example after a call to
+   * non-continuing `raise-exception'.
+   */
+  VM_DEFINE_OP (167, unreachable, "unreachable", OP1 (X32))
+    {
+      abort (); /* never reached */
+    }
+
   VM_DEFINE_OP (168, unused_168, NULL, NOP)
   VM_DEFINE_OP (169, unused_169, NULL, NOP)
   VM_DEFINE_OP (170, unused_170, NULL, NOP)

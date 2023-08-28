@@ -1,6 +1,6 @@
 @c -*-texinfo-*-
 @c This is part of the GNU Guile Reference Manual.
-@c Copyright (C)  2008-2011, 2013, 2015, 2018, 2019, 2020, 2022
+@c Copyright (C)  2008-2011, 2013, 2015, 2018, 2019, 2020, 2022, 2023
 @c   Free Software Foundation, Inc.
 @c See the file guile.texi for copying conditions.
 
@@ -1012,6 +1012,14 @@ Both of these instructions throw to a key with four arguments: the
 procedure that indicates the error (or @code{#f}, the format string, a
 list with @var{value}, and either @code{#f} or the list with @var{value}
 as the last argument respectively.
+@end deftypefn
+
+@deftypefn Instruction {} unreachable x24:@var{_}
+Abort the process.  This instruction should never be reached and must
+not continue.  You would think this is useless but that's not the case:
+it is inserted after a primcall to @code{raise-exception}, and allows
+compilers to know that this branch of control flow does not rejoin the
+graph.
 @end deftypefn
 
 

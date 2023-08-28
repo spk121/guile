@@ -1,6 +1,6 @@
 ;;; Guile bytecode disassembler
 
-;;; Copyright (C) 2001, 2009-2010, 2012-2015, 2017-2020, 2022 Free Software Foundation, Inc.
+;;; Copyright (C) 2001, 2009-2010, 2012-2015, 2017-2020, 2022, 2023 Free Software Foundation, Inc.
 ;;;
 ;;; This library is free software; you can redistribute it and/or
 ;;; modify it under the terms of the GNU Lesser General Public
@@ -583,7 +583,7 @@ address of that offset."
 (define (instruction-has-fallthrough? code pos)
   (define non-fallthrough-set
     (static-opcode-set halt
-                       throw throw/value throw/value+data
+                       throw throw/value throw/value+data unreachable
                        tail-call tail-call-label
                        return-values
                        subr-call foreign-call continuation-call

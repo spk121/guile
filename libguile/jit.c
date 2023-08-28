@@ -1,4 +1,4 @@
-/* Copyright 2018-2021
+/* Copyright 2018-2021, 2023
      Free Software Foundation, Inc.
 
    This file is part of Guile.
@@ -1988,6 +1988,17 @@ compile_throw_value_and_data (scm_jit_state *j, uint32_t val,
 static void
 compile_throw_value_and_data_slow (scm_jit_state *j, uint32_t val,
                               const void *key_subr_and_message)
+{
+}
+
+static void
+compile_unreachable (scm_jit_state *j)
+{
+  jit_breakpoint (j->jit);
+  set_register_state (j, UNREACHABLE);
+}
+static void
+compile_unreachable_slow (scm_jit_state *j)
 {
 }
 
