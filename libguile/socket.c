@@ -406,7 +406,7 @@ SCM_DEFINE (scm_socket, "socket", 3, 0, 0,
 	    "@var{proto} can be obtained from a protocol name using\n"
 	    "@code{getprotobyname}.  A value of zero specifies the default\n"
 	    "protocol, which is usually right.\n\n"
-	    "A single socket port cannot by used for communication until it\n"
+	    "A single socket port cannot be used for communication until it\n"
 	    "has been connected to another socket.")
 #define FUNC_NAME s_scm_socket
 {
