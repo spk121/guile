@@ -294,16 +294,11 @@ scm_i_divide2double (SCM n, SCM d)
           else
             return 0.0 / 0.0;
         }
-
-      mpz_init_set_si (dd, SCM_I_INUM (d));
     }
-  else
-    scm_integer_init_set_mpz_z (scm_bignum (d), dd);
 
-  if (SCM_I_INUMP (n))
-    mpz_init_set_si (nn, SCM_I_INUM (n));
-  else
-    scm_integer_init_set_mpz_z (scm_bignum (n), nn);
+  mpz_inits (nn, dd, lo, hi, x, NULL);
+  scm_to_mpz (d, dd);
+  scm_to_mpz (n, nn);
 
   neg = (mpz_sgn (nn) < 0) ^ (mpz_sgn (dd) < 0);
   mpz_abs (nn, nn);
@@ -351,7 +346,6 @@ scm_i_divide2double (SCM n, SCM d)
 
   /* Compute the initial values of lo, x, and hi
      based on the initial guess of e */
-  mpz_inits (lo, hi, x, NULL);
   mpz_mul_2exp (x, nn, 2 + ((e < 0) ? -e : 0));
   mpz_mul (lo, dd, scm_i_divide2double_lo2b);
   if (e > 0)
