@@ -52,12 +52,10 @@ extern "C++" {
  *
  * Inums are exact integers that fit within an SCM word
  * (along with two tagging bits).
- *
- * In the current implementation, Inums must also fit within a long
- * because that's what GMP's mpz_*_si functions accept.  */
-typedef long scm_t_inum;
-#define SCM_I_FIXNUM_BIT         (SCM_LONG_BIT - 2)
-#define SCM_MOST_NEGATIVE_FIXNUM (-1L << (SCM_I_FIXNUM_BIT - 1))
+ */
+typedef intptr_t scm_t_inum;
+#define SCM_I_FIXNUM_BIT         (SCM_INTPTR_T_BIT - 2)
+#define SCM_MOST_NEGATIVE_FIXNUM (((scm_t_inum) -1) << (SCM_I_FIXNUM_BIT - 1))
 #define SCM_MOST_POSITIVE_FIXNUM (- (SCM_MOST_NEGATIVE_FIXNUM + 1))
 
 /* SCM_SRS (X, Y) is signed right shift, defined as floor (X / 2^Y),

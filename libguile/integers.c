@@ -247,10 +247,14 @@ ulong_to_bignum (unsigned long u)
 static struct scm_bignum *
 inum_to_bignum (scm_t_inum i)
 {
+#if SCM_LONG_BIT >= SCM_I_FIXNUM_BIT
   if (i > 0)
     return ulong_to_bignum (i);
 
   return i == 0 ? make_bignum_0 () : make_bignum_1 (1, long_magnitude (i));
+#else
+  return make_bignum_from_int64 (i);
+#endif
 };
 
 static inline SCM
@@ -2015,6 +2019,14 @@ scm_integer_gcd_zi (struct scm_bignum *x, scm_t_inum y)
     return scm_integer_abs_z (x);
   if (y < 0)
     y = -y;
+#if SCM_I_FIXNUM_BIT > SCM_LONG_BIT
+  if (y > ULONG_MAX)
+    {
+      struct scm_bignum *y_bignum = inum_to_bignum (y);
+      return scm_integer_gcd_zz (x, y_bignum);
+    }
+#endif
+
   mpz_t zx;
   alias_bignum_to_mpz (x, zx);
   result = mpz_gcd_ui (NULL, zx, y);

@@ -843,6 +843,8 @@ typedef struct scm_thread scm_thread;
 # define SCM_LONG_BIT (SCM_SIZEOF_LONG * 8)
 #endif
 
+#define SCM_INTPTR_T_BIT (SCM_SIZEOF_INTPTR_T * 8)
+
 
 
 /* Cast pointer through (void *) in order to avoid compiler warnings
