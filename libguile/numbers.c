@@ -94,10 +94,10 @@ verify (FLT_RADIX == 2);
 /* Make sure that scm_t_inum fits within a SCM value.  */
 verify (sizeof (scm_t_inum) <= sizeof (scm_t_bits));
 
-/* Several functions below assume that fixnums fit within a long, and
+/* Several functions below assume that fixnums fit within an intptr_t, and
    furthermore that there is some headroom to spare for other operations
    without overflowing. */
-verify (SCM_I_FIXNUM_BIT <= SCM_LONG_BIT - 2);
+verify (SCM_I_FIXNUM_BIT <= SCM_INTPTR_T_BIT - 2);
 
 /* Some functions that use GMP's mpn functions assume that a
    non-negative fixnum will always fit in a 'mp_limb_t'.  */
@@ -6868,7 +6868,18 @@ void
 scm_to_mpz (SCM val, mpz_t rop)
 {
   if (SCM_I_INUMP (val))
-    mpz_set_si (rop, SCM_I_INUM (val));
+    {
+      scm_t_inum inum = SCM_I_INUM (val);
+#if SCM_LONG_BIT >= SCM_I_FIXNUM_BIT
+      mpz_set_si (rop, (long)inum);
+#else
+      /* SCM_INUM_MIN > INTPTR_MIN, so this is safe from overflow. */
+      scm_t_inum inum_abs = inum >= 0 ? inum : -inum;
+      mpz_import (rop, 1, -1, sizeof (inum_abs), 0, 0, &inum_abs);
+      if (inum < 0)
+        mpz_neg (rop, rop);
+#endif
+    }
   else if (SCM_BIGP (val))
     scm_integer_set_mpz_z (scm_bignum (val), rop);
   else
