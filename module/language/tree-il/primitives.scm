@@ -84,7 +84,7 @@
     length
 
     make-vector vector-length vector-ref vector-set!
-    variable? variable-ref variable-set!
+    variable? make-variable variable-ref variable-set!
     variable-bound?
 
     current-module define!
@@ -145,7 +145,8 @@
   ;; Primitives that return a fresh object.
   '(acons cons cons* list vector make-vector
     make-struct/simple
-    make-prompt-tag))
+    make-prompt-tag
+    make-variable))
 
 (define *primitive-accessors*
   ;; Primitives that are pure, but whose result depends on the mutable
@@ -205,7 +206,7 @@
     exact-integer?
     bytevector? keyword? bitvector?
     procedure? thunk? atomic-box?
-    acons cons cons* list vector))
+    acons cons cons* list vector make-variable))
 
 ;; Primitives that don't always return one value.
 (define *multiply-valued-primitives* 

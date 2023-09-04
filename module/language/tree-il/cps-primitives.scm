@@ -1,6 +1,6 @@
 ;;; Continuation-passing style (CPS) intermediate language (IL)
 
-;; Copyright (C) 2013-2015, 2017-2020 Free Software Foundation, Inc.
+;; Copyright (C) 2013-2015, 2017-2020, 2023 Free Software Foundation, Inc.
 
 ;;;; This library is free software; you can redistribute it and/or
 ;;;; modify it under the terms of the GNU Lesser General Public
@@ -45,7 +45,7 @@
 (define (tree-il-primitive->cps-primitive+nargs+nvalues name)
   (hashq-ref *primitives* name))
 
-(define-cps-primitive box 1 1)
+(define-cps-primitive (make-variable box) 1 1)
 (define-cps-primitive (variable-ref box-ref) 1 1)
 (define-cps-primitive (variable-set! box-set!) 2 0)
 (define-cps-primitive (%variable-ref %box-ref) 1 1)
