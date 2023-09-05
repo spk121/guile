@@ -404,6 +404,9 @@ by a label, respectively."
     ((untag-fixnum
       assume-s64
       scm->s64 load-s64 u64->s64
+      sadd ssub smul
+      sadd/immediate ssub/immediate smul/immediate
+      slsh slsh/immediate
       srsh srsh/immediate
       s8-ref s16-ref s32-ref s64-ref)
      '(s64))
