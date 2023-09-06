@@ -302,7 +302,7 @@ port directly after OBJ, like (pretty-print OBJ PORT)."
 
   (put-string port per-line-prefix)
   (pr obj pp-expr)
-  (newline)
+  (newline port)
   ;; Return `unspecified'
   (if #f #f))
 
