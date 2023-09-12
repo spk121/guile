@@ -1,5 +1,5 @@
 ;;; Abstract constant folding on CPS
-;;; Copyright (C) 2014-2020 Free Software Foundation, Inc.
+;;; Copyright (C) 2014-2020, 2023 Free Software Foundation, Inc.
 ;;;
 ;;; This library is free software: you can redistribute it and/or modify
 ;;; it under the terms of the GNU Lesser General Public License as
@@ -142,22 +142,39 @@
    (else (values #f #f))))
 
 ;; All the cases that are in compile-bytecode.
-(define-unary-type-predicate-folder fixnum? &fixnum)
 (define-unary-type-predicate-folder bignum? &bignum)
-(define-unary-type-predicate-folder pair? &pair)
-(define-unary-type-predicate-folder symbol? &symbol)
-(define-unary-type-predicate-folder variable? &box)
-(define-unary-type-predicate-folder mutable-vector? &mutable-vector)
-(define-unary-type-predicate-folder immutable-vector? &immutable-vector)
-(define-unary-type-predicate-folder struct? &struct)
-(define-unary-type-predicate-folder string? &string)
-(define-unary-type-predicate-folder number? &number)
+(define-unary-type-predicate-folder bitvector? &bitvector)
+(define-unary-type-predicate-folder bytevector? &bytevector)
 (define-unary-type-predicate-folder char? &char)
+(define-unary-type-predicate-folder compnum? &complex)
+(define-unary-type-predicate-folder fixnum? &fixnum)
+(define-unary-type-predicate-folder flonum? &flonum)
+(define-unary-type-predicate-folder fluid? &fluid)
+(define-unary-type-predicate-folder fracnum? &fraction)
+(define-unary-type-predicate-folder immutable-vector? &immutable-vector)
+(define-unary-type-predicate-folder keyword? &keyword)
+(define-unary-type-predicate-folder mutable-vector? &mutable-vector)
+(define-unary-type-predicate-folder number? &number)
+(define-unary-type-predicate-folder pair? &pair)
+(define-unary-type-predicate-folder pointer? &pointer)
+(define-unary-type-predicate-folder program? &procedure)
+(define-unary-type-predicate-folder string? &string)
+(define-unary-type-predicate-folder struct? &struct)
+(define-unary-type-predicate-folder symbol? &symbol)
+(define-unary-type-predicate-folder syntax? &syntax)
+(define-unary-type-predicate-folder variable? &box)
 
 (define-unary-branch-folder (vector? type min max)
   (cond
    ((zero? (logand type &vector)) (values #t #f))
    ((type<=? type &vector) (values #t #t))
+   (else (values #f #f))))
+
+(define-unary-branch-folder (procedure? type min max)
+  (define applicable-types (logior &procedure &struct &other-heap-object))
+  (cond
+   ((zero? (logand type applicable-types)) (values #t #f))
+   ((= type &procedure) (values #t #t))
    (else (values #f #f))))
 
 (define-binary-branch-folder (eq? type0 min0 max0 type1 min1 max1)

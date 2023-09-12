@@ -191,3 +191,5 @@
 (define-branching-primitive < 2)
 (define-branching-primitive <= 2)
 (define-branching-primitive = 2)
+
+(define-branching-primitive procedure? 1)

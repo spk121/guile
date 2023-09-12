@@ -597,6 +597,21 @@
                                  (8 2)))
                    ())))))
 
+(define-branching-primcall-lowerer (procedure? cps kf kt src #f (x))
+  (with-cps cps
+    (letv procedure? result)
+    (letk kresult
+          ($kargs ('result) (result)
+            ($branch kt kf src 'eq-constant? #f (result))))
+    (letk krecv
+          ($kreceive '(result) '() kresult))
+    (letk kcall
+          ($kargs ('procedure?) (procedure?)
+            ($continue krecv src
+              ($call procedure? (x)))))
+    (build-term
+      ($continue kcall src ($prim 'procedure?)))))
+
 (define (lower-primcalls cps)
   (with-fresh-name-state cps
     (persistent-intmap
