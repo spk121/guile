@@ -267,6 +267,7 @@
   (string->number   #:nargs 1 #:has-result? #t #:emit emit-string->number)
   (string->symbol   #:nargs 1 #:has-result? #t #:emit emit-string->symbol)
   (symbol->keyword  #:nargs 1 #:has-result? #t #:emit emit-symbol->keyword)
+  (symbol->string   #:nargs 1 #:has-result? #t #:emit emit-symbol->string)
 
   (class-of         #:nargs 1 #:has-result? #t #:emit emit-class-of)
 

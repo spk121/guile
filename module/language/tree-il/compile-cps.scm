@@ -350,6 +350,28 @@
         ($continue kinit src
           ($primcall 'allocate-vector/immediate size ()))))))
 
+(define-primcall-converter symbol->string
+  (lambda (cps k src op param sym)
+    (define not-symbol
+      #(wrong-type-arg
+        "symbol->string"
+        "Wrong type argument in position 1 (expecting symbol): ~S"))
+    (with-cps cps
+      (letk knot-symbol
+            ($kargs () () ($throw src 'throw/value+data not-symbol (sym))))
+      ;; This is the right lowering but the Guile-VM backend gets it a
+      ;; bit wrong: the symbol->string intrinsic instruction includes a
+      ;; type-check and actually allocates.  We should change symbols in
+      ;; Guile-VM so that symbol->string is cheaper.
+      (letk ksym
+            ($kargs () ()
+              ($continue k src ($primcall 'symbol->string #f (sym)))))
+      (letk kheap-object
+            ($kargs () ()
+              ($branch knot-symbol ksym src 'symbol? #f (sym))))
+      (build-term
+        ($branch knot-symbol kheap-object src 'heap-object? #f (sym))))))
+
 (define (ensure-pair cps src op pred x is-pair)
   (define msg
     (match pred

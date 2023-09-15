@@ -1,4 +1,4 @@
-/* Copyright 2018-2021
+/* Copyright 2018-2021, 2023
      Free Software Foundation, Inc.
 
    This file is part of Guile.
@@ -678,6 +678,7 @@ scm_bootstrap_intrinsics (void)
   scm_vm_intrinsics.struct_set_x = struct_set_x;
   scm_vm_intrinsics.struct_ref_immediate = struct_ref_immediate;
   scm_vm_intrinsics.struct_set_x_immediate = struct_set_x_immediate;
+  scm_vm_intrinsics.symbol_to_string = scm_symbol_to_string;
   
   scm_c_register_extension ("libguile-" SCM_EFFECTIVE_VERSION,
                             "scm_init_intrinsics",

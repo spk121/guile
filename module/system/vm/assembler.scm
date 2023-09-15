@@ -258,6 +258,7 @@
             emit-lookup-bound-private
             emit-define!
             emit-current-module
+            emit-symbol->string
 
             ;; Intrinsics for use by the baseline compiler.
             emit-$car
@@ -1572,6 +1573,7 @@ returned instead."
 (define-scm<-scmn-scmn-intrinsic lookup-bound-private)
 (define-scm<-scm-scm-intrinsic define!)
 (define-scm<-thread-intrinsic current-module)
+(define-scm<-scm-intrinsic symbol->string)
 
 (define-scm<-scm-intrinsic $car)
 (define-scm<-scm-intrinsic $cdr)

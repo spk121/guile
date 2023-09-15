@@ -408,6 +408,12 @@ the LABELS that are clobbered by the effects of LABEL."
   ((push-dynamic-state state)      (&write-object &fluid)      &type-check)
   ((pop-dynamic-state)             (&write-object &fluid)))
 
+(define-primitive-effects
+  ((symbol->string x))             ;; CPS lowering includes symbol? type check.
+  ((symbol->keyword)               &type-check)
+  ((string->symbol)                &type-check)
+  ((keyword->symbol)               &type-check))
+
 ;; Threads.  Calls cause &all-effects, which reflects the fact that any
 ;; call can capture a partial continuation and reinstate it on another
 ;; thread.

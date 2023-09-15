@@ -337,6 +337,7 @@
       string->number
       string->symbol
       symbol->keyword
+      symbol->string
       class-of
       scm->f64
       s64->u64 s64->scm scm->s64

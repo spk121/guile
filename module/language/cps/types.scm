@@ -926,6 +926,18 @@ minimum, and maximum."
 
 
 ;;;
+;;; Symbols and keywords
+;;;
+(define-simple-types
+  ((symbol->keyword &symbol) &keyword)
+  ((keyword->symbol &keyword) &symbol)
+  ((symbol->string &symbol) &string)
+  ((string->symbol &string) &symbol))
+
+
+
+
+;;;
 ;;; Threads.  We don't currently track threads as an object type.
 ;;;
 

@@ -1,4 +1,4 @@
-/* Copyright 2018-2021
+/* Copyright 2018-2021, 2023
      Free Software Foundation, Inc.
 
    This file is part of Guile.
@@ -217,6 +217,7 @@ typedef void (*scm_t_scm_uimm_scm_intrinsic) (SCM, uint8_t, SCM);
   M(scm_from_scm_scm, lookup_bound, "lookup-bound", LOOKUP_BOUND) \
   M(scm_from_scmn_scmn, lookup_bound_public, "lookup-bound-public", LOOKUP_BOUND_PUBLIC) \
   M(scm_from_scmn_scmn, lookup_bound_private, "lookup-bound-private", LOOKUP_BOUND_PRIVATE) \
+  M(scm_from_scm, symbol_to_string, "symbol->string", SYMBOL_TO_STRING) \
   /* Add new intrinsics here; also update scm_bootstrap_intrinsics.  */
 
 /* Intrinsics prefixed with $ are meant to reduce bytecode size,

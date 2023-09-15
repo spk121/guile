@@ -70,6 +70,7 @@
 (define-cps-primitive string->number 1 1)
 (define-cps-primitive string->symbol 1 1)
 (define-cps-primitive symbol->keyword 1 1)
+(define-cps-primitive symbol->string 1 1)
 
 (define-cps-primitive integer->char 1 1)
 (define-cps-primitive char->integer 1 1)
