@@ -612,6 +612,17 @@
     (build-term
       ($continue kcall src ($prim 'procedure?)))))
 
+(define-branching-primcall-lowerer (number? cps kf kt src #f (x))
+  (with-cps cps
+    (letk kheap-num
+          ($kargs () ()
+            ($branch kf kt src 'heap-number? #f (x))))
+    (letk kheap
+          ($kargs () ()
+            ($branch kf kheap-num src 'heap-object? #f (x))))
+    (build-term
+      ($branch kheap kt src 'fixnum? #f (x)))))
+
 (define (lower-primcalls cps)
   (with-fresh-name-state cps
     (persistent-intmap
