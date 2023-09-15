@@ -29,7 +29,8 @@
   #:use-module (system base types internal)
   #:export (tree-il-primitive->cps-primitive+nargs+nvalues
             branching-primitive?
-            heap-type-predicate?))
+            heap-type-predicate?
+            number-type-predicate?))
 
 (define *primitives* (make-hash-table))
 
@@ -175,15 +176,6 @@
 (visit-immediate-tags define-immediate-type-predicate)
 (visit-heap-tags define-heap-type-predicate)
 
-(define (branching-primitive? name)
-  "Is @var{name} a primitive that can only appear in $branch CPS terms?"
-  (hashq-ref *branching-primitive-arities* name))
-
-(define (heap-type-predicate? name)
-  "Is @var{name} a predicate that needs guarding by @code{heap-object?}
- before it is lowered to CPS?"
-  (hashq-ref *heap-type-predicates* name))
-
 ;; We only need to define those branching primitives that are used as
 ;; Tree-IL primitives.  There are others like u64-= which are emitted by
 ;; CPS code.
@@ -194,4 +186,34 @@
 (define-branching-primitive = 2)
 
 (define-branching-primitive procedure? 1)
+
 (define-branching-primitive number? 1)
+(define-branching-primitive complex? 1)
+(define-branching-primitive real? 1)
+(define-branching-primitive rational? 1)
+(define-branching-primitive integer? 1)
+(define-branching-primitive exact-integer? 1)
+
+(define *number-type-predicates* (make-hash-table))
+(define-syntax-rule (define-number-type-predicate pred nargs)
+  (begin
+    (hashq-set! *number-type-predicates* 'pred #t)
+    (define-branching-primitive pred nargs)))
+
+(define-number-type-predicate exact? 1)
+(define-number-type-predicate inexact? 1)
+
+(define (branching-primitive? name)
+  "Is @var{name} a primitive that can only appear in $branch CPS terms?"
+  (hashq-ref *branching-primitive-arities* name))
+
+(define (heap-type-predicate? name)
+  "Is @var{name} a predicate that needs guarding by @code{heap-object?}
+ before it is lowered to CPS?"
+  (hashq-ref *heap-type-predicates* name))
+
+(define (number-type-predicate? name)
+  "Is @var{name} a predicate that needs guarding by @code{number?}
+ before it is lowered to CPS?"
+  (hashq-ref *number-type-predicates* name))
+

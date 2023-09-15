@@ -2004,14 +2004,32 @@ use as the proc slot."
          (($ <primcall> src (? branching-primitive? name) args)
           (convert-args cps args
             (lambda (cps args)
-              (if (heap-type-predicate? name)
-                  (with-cps cps
-                    (letk kt* ($kargs () ()
-                                ($branch kf kt src name #f args)))
-                    (build-term
-                      ($branch kf kt* src 'heap-object? #f args)))
-                  (with-cps cps
-                    (build-term ($branch kf kt src name #f args)))))))
+              (cond
+               ((heap-type-predicate? name)
+                (with-cps cps
+                  (letk kt* ($kargs () ()
+                              ($branch kf kt src name #f args)))
+                  (build-term
+                    ($branch kf kt* src 'heap-object? #f args))))
+               ((number-type-predicate? name)
+                (match args
+                  ((arg)
+                   (define not-number
+                     (vector
+                      'wrong-type-arg
+                      (symbol->string name)
+                      "Wrong type argument in position 1 (expecting number): ~S"))
+                   (with-cps cps
+                     (letk kerr
+                           ($kargs () ()
+                             ($throw src 'throw/value+data not-number (arg))))
+                     (letk ktest ($kargs () ()
+                                   ($branch kf kt src name #f (arg))))
+                     (build-term
+                       ($branch kerr ktest src 'number? #f (arg)))))))
+               (else
+                (with-cps cps
+                  (build-term ($branch kf kt src name #f args))))))))
          (($ <conditional> src test consequent alternate)
           (with-cps cps
             (let$ t (convert-test consequent kt kf))
@@ -2229,16 +2247,6 @@ integer."
      (match exp
        (($ <conditional>)
         (reduce-conditional exp))
-
-       (($ <primcall> src 'exact-integer? (x))
-        ;; Both fixnum? and bignum? are branching primitives.
-        (with-lexicals src (x)
-          (make-conditional
-           src (make-primcall src 'fixnum? (list x))
-           (make-const src #t)
-           (make-conditional src (make-primcall src 'bignum? (list x))
-                             (make-const src #t)
-                             (make-const src #f)))))
 
        (($ <primcall> src '<= (a b))
         ;; No need to reduce as <= is a branching primitive.

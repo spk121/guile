@@ -57,6 +57,11 @@
       (match (cons param args)
         ((param-pat . args-pat)
          body ...)))))
+(define-syntax-rule (define-branching-primcall-alias def use ...)
+  (let ((proc (or (hashq-ref *branching-primcall-lowerers* 'def)
+                  (error "def not found" 'def))))
+    (hashq-set! *branching-primcall-lowerers* 'use proc)
+    ...))
 
 ;; precondition: v is vector.  result is u64
 (define-primcall-lowerer (vector-length cps k src #f (v))
@@ -622,6 +627,82 @@
             ($branch kf kheap-num src 'heap-object? #f (x))))
     (build-term
       ($branch kheap kt src 'fixnum? #f (x)))))
+(define-branching-primcall-alias number? complex?)
+
+(define-branching-primcall-lowerer (real? cps kf kt src #f (x))
+  (with-cps cps
+    (letk kcomp
+          ($kargs () ()
+            ($branch kt kf src 'compnum? #f (x))))
+    (letk kheap-num
+          ($kargs () ()
+            ($branch kf kcomp src 'heap-number? #f (x))))
+    (letk kheap
+          ($kargs () ()
+            ($branch kf kheap-num src 'heap-object? #f (x))))
+    (build-term
+      ($branch kheap kt src 'fixnum? #f (x)))))
+
+(define-branching-primcall-lowerer (rational? cps kf kt src #f (x))
+  (with-cps cps
+    (letv res prim)
+    (letk ktest
+          ($kargs ('res) (res)
+            ($branch kt kf src 'false? #f (res))))
+    (letk krecv
+          ($kreceive '(val) #f ktest))
+    (letk kcall
+          ($kargs ('prim) (prim)
+            ($continue krecv src ($call prim (x)))))
+    (build-term
+      ($continue kcall src ($prim 'rational?)))))
+
+(define-branching-primcall-lowerer (integer? cps kf kt src #f (x))
+  (with-cps cps
+    (letv res prim)
+    (letk ktest
+          ($kargs ('res) (res)
+            ($branch kt kf src 'false? #f (res))))
+    (letk krecv
+          ($kreceive '(val) #f ktest))
+    (letk kcall
+          ($kargs ('prim) (prim)
+            ($continue krecv src ($call prim (x)))))
+    (build-term
+      ($continue kcall src ($prim 'integer?)))))
+
+(define-branching-primcall-lowerer (exact-integer? cps kf kt src #f (x))
+  (with-cps cps
+    (letk kbig
+          ($kargs () ()
+            ($branch kf kt src 'bignum? #f (x))))
+    (letk kheap
+          ($kargs () ()
+            ($branch kf kbig src 'heap-object? #f (x))))
+    (build-term
+      ($branch kheap kt src 'fixnum? #f (x)))))
+
+(define-branching-primcall-lowerer (exact? cps kf kt src #f (x))
+  (with-cps cps
+    (letk kfrac
+          ($kargs () ()
+            ($branch kf kt src 'fracnum? #f (x))))
+    (letk kbig
+          ($kargs () ()
+            ($branch kfrac kt src 'bignum? #f (x))))
+    (build-term
+      ($branch kbig kt src 'fixnum? #f (x)))))
+
+(define-branching-primcall-lowerer (inexact? cps kf kt src #f (x))
+  (with-cps cps
+    (letk kcomp
+          ($kargs () ()
+            ($branch kf kt src 'compnum? #f (x))))
+    (letk kflo
+          ($kargs () ()
+            ($branch kcomp kt src 'flonum? #f (x))))
+    (build-term
+      ($branch kflo kf src 'fixnum? #f (x)))))
 
 (define (lower-primcalls cps)
   (with-fresh-name-state cps

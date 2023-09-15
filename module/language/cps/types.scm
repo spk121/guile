@@ -195,6 +195,8 @@
   (identifier-syntax (logior &fixnum &bignum &fraction)))
 (define-syntax &real
   (identifier-syntax (logior &fixnum &bignum &flonum &fraction)))
+(define-syntax &heap-number
+  (identifier-syntax (logior &flonum &bignum &complex &fraction)))
 (define-syntax &number
   (identifier-syntax (logior &fixnum &bignum &flonum &complex &fraction)))
 
@@ -633,13 +635,6 @@ minimum, and maximum."
     (logand &all-types (lognot &immediate-types)))
   (restrict! val (if true? &heap-object-types &immediate-types) -inf.0 +inf.0))
 
-(define-predicate-inferrer (heap-number? val true?)
-  (define &heap-number-types
-    (logior &bignum &flonum &complex &fraction))
-  (define &other-types
-    (logand &all-types (lognot &heap-number-types)))
-  (restrict! val (if true? &heap-number-types &other-types) -inf.0 +inf.0))
-
 (define-predicate-inferrer (fixnum? val true?)
   (cond
    (true?
@@ -674,10 +669,7 @@ minimum, and maximum."
 
 (define-syntax-rule (define-simple-predicate-inferrer predicate type)
   (define-predicate-inferrer (predicate val true?)
-    (let ((type (if true?
-                    type
-                    (logand (&type val) (lognot type)))))
-      (restrict! val type -inf.0 +inf.0))))
+    (restrict! val (if true? type (lognot type)) -inf.0 +inf.0)))
 
 (define-simple-predicate-inferrer bignum? &bignum)
 (define-simple-predicate-inferrer bitvector? &bitvector)
@@ -691,7 +683,6 @@ minimum, and maximum."
 (define-simple-predicate-inferrer immutable-vector? &immutable-vector)
 (define-simple-predicate-inferrer keyword? &keyword)
 (define-simple-predicate-inferrer mutable-vector? &mutable-vector)
-(define-simple-predicate-inferrer number? &number)
 (define-simple-predicate-inferrer pair? &pair)
 (define-simple-predicate-inferrer pointer? &pointer)
 (define-simple-predicate-inferrer program? &procedure)
@@ -700,6 +691,19 @@ minimum, and maximum."
 (define-simple-predicate-inferrer symbol? &symbol)
 (define-simple-predicate-inferrer syntax? &syntax)
 (define-simple-predicate-inferrer variable? &box)
+
+(define-simple-predicate-inferrer number? &number)
+(define-type-inferrer-aliases number? rational? complex?)
+(define-simple-predicate-inferrer heap-number? &heap-number)
+(define-simple-predicate-inferrer real? &real)
+(let ((&maybe-integer (logior &exact-integer &flonum &complex)))
+  (define-simple-predicate-inferrer integer? &maybe-integer))
+(define-simple-predicate-inferrer exact-integer? &exact-integer)
+(define-simple-predicate-inferrer exact? &exact-number)
+(let ((&inexact-number (logior &flonum &complex)))
+  (define-simple-predicate-inferrer inexact? &inexact-number))
+
+(define-type-inferrer-aliases eq? heap-numbers-equal?)
 
 (define-predicate-inferrer (procedure? val true?)
   ;; Besides proper procedures, structs and smobs can also be applicable
@@ -1438,16 +1442,6 @@ minimum, and maximum."
     (define! result &special-immediate &true &true))
    (else
     (define! result &special-immediate &false &true))))
-
-(define-simple-type-checker (exact? &number))
-(define-type-inferrer (exact? val result)
-  (restrict! val &number -inf.0 +inf.0)
-  (define-type-predicate-result val result &exact-number))
-
-(define-simple-type-checker (inexact? &number))
-(define-type-inferrer (inexact? val result)
-  (restrict! val &number -inf.0 +inf.0)
-  (define-type-predicate-result val result (logior &flonum &complex)))
 
 (define-simple-type-checker (inf? &real))
 (define-type-inferrer (inf? val result)
