@@ -1,4 +1,4 @@
-;; Copyright (C) 1991, 1992, 1993, 1994, 1995, 2006 Free Software Foundation, Inc.
+;; Copyright (C) 1991, 1992, 1993, 1994, 1995, 2006, 2023 Free Software Foundation, Inc.
 ;; 
 ;;;; This library is free software; you can redistribute it and/or
 ;;;; modify it under the terms of the GNU Lesser General Public
@@ -399,7 +399,7 @@
 ;;; Not for Guile
 ;(test #t eq? 'mISSISSIppi 'mississippi)
 ;(test #f 'string->symbol (eq? 'bitBlt (string->symbol "bitBlt")))
-(test 'JollyWog string->symbol (symbol->string 'JollyWog))
+(test 'HeyJeffrey string->symbol (symbol->string 'HeyJeffrey))
 
 (SECTION 6 5 5)
 (test #t number? 3)

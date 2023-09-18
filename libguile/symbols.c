@@ -1,4 +1,4 @@
-/* Copyright 1995-1998,2000-2001,2003-2004,2006,2009,2011,2013,2015,2018,2022
+/* Copyright 1995-1998,2000-2001,2003-2004,2006,2009,2011,2013,2015,2018,2022,2023
      Free Software Foundation, Inc.
 
    This file is part of Guile.
@@ -301,29 +301,8 @@ SCM_DEFINE (scm_make_symbol, "make-symbol", 1, 0, 0,
 
 SCM_DEFINE (scm_symbol_to_string, "symbol->string", 1, 0, 0, 
            (SCM s),
-	    "Return the name of @var{symbol} as a string.  If the symbol was\n"
-	    "part of an object returned as the value of a literal expression\n"
-	    "(section @pxref{Literal expressions,,,r5rs, The Revised^5\n"
-	    "Report on Scheme}) or by a call to the @code{read} procedure,\n"
-	    "and its name contains alphabetic characters, then the string\n"
-	    "returned will contain characters in the implementation's\n"
-	    "preferred standard case---some implementations will prefer\n"
-	    "upper case, others lower case.  If the symbol was returned by\n"
-	    "@code{string->symbol}, the case of characters in the string\n"
-	    "returned will be the same as the case in the string that was\n"
-	    "passed to @code{string->symbol}.  It is an error to apply\n"
-	    "mutation procedures like @code{string-set!} to strings returned\n"
-	    "by this procedure.\n"
-	    "\n"
-	    "The following examples assume that the implementation's\n"
-	    "standard case is lower case:\n"
-	    "\n"
-	    "@lisp\n"
-	    "(symbol->string 'flying-fish)    @result{} \"flying-fish\"\n"
-	    "(symbol->string 'Martin)         @result{}  \"martin\"\n"
-	    "(symbol->string\n"
-	    "   (string->symbol \"Malvina\")) @result{} \"Malvina\"\n"
-	    "@end lisp")
+	    "Return the name of @var{symbol} as a string.  The resulting\n"
+            "string is immutable.")
 #define FUNC_NAME s_scm_symbol_to_string
 {
   SCM_VALIDATE_SYMBOL (1, s);
@@ -334,26 +313,7 @@ SCM_DEFINE (scm_symbol_to_string, "symbol->string", 1, 0, 0,
 
 SCM_DEFINE (scm_string_to_symbol, "string->symbol", 1, 0, 0, 
 	    (SCM string),
-	    "Return the symbol whose name is @var{string}. This procedure\n"
-	    "can create symbols with names containing special characters or\n"
-	    "letters in the non-standard case, but it is usually a bad idea\n"
-	    "to create such symbols because in some implementations of\n"
-	    "Scheme they cannot be read as themselves.  See\n"
-	    "@code{symbol->string}.\n"
-	    "\n"
-	    "The following examples assume that the implementation's\n"
-	    "standard case is lower case:\n"
-	    "\n"
-	    "@lisp\n"
-	    "(eq? 'mISSISSIppi 'mississippi) @result{} #t\n"
-	    "(string->symbol \"mISSISSIppi\") @result{} @r{the symbol with name \"mISSISSIppi\"}\n"
-	    "(eq? 'bitBlt (string->symbol \"bitBlt\")) @result{} #f\n"
-	    "(eq? 'JollyWog\n"
-	    "  (string->symbol (symbol->string 'JollyWog))) @result{} #t\n"
-	    "(string=? \"K. Harper, M.D.\"\n"
-	    "  (symbol->string\n"
-	    "    (string->symbol \"K. Harper, M.D.\"))) @result{}#t\n"
-	    "@end lisp")
+	    "Return the symbol whose name is @var{string}.")
 #define FUNC_NAME s_scm_string_to_symbol
 {
   SCM_VALIDATE_STRING (1, string);
