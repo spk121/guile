@@ -602,6 +602,12 @@
                                  (8 2)))
                    ())))))
 
+(define-primcall-lowerer (keyword->symbol cps k src #f (kw))
+  (with-cps cps
+    (build-term
+      ($continue k src
+        ($primcall 'scm-ref/immediate '(keyword . 1) (kw))))))
+
 (define-branching-primcall-lowerer (procedure? cps kf kt src #f (x))
   (with-cps cps
     (letv procedure? result)

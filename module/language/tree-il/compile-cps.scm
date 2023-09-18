@@ -372,6 +372,42 @@
       (build-term
         ($branch knot-symbol kheap-object src 'heap-object? #f (sym))))))
 
+(define-primcall-converter symbol->keyword
+  (lambda (cps k src op param sym)
+    (define not-symbol
+      #(wrong-type-arg
+        "symbol->keyword"
+        "Wrong type argument in position 1 (expecting symbol): ~S"))
+    (with-cps cps
+      (letk knot-symbol
+            ($kargs () () ($throw src 'throw/value+data not-symbol (sym))))
+      (letk ksym
+            ($kargs () ()
+              ($continue k src ($primcall 'symbol->keyword #f (sym)))))
+      (letk kheap-object
+            ($kargs () ()
+              ($branch knot-symbol ksym src 'symbol? #f (sym))))
+      (build-term
+        ($branch knot-symbol kheap-object src 'heap-object? #f (sym))))))
+
+(define-primcall-converter keyword->symbol
+  (lambda (cps k src op param kw)
+    (define not-keyword
+      #(wrong-type-arg
+        "keyword->symbol"
+        "Wrong type argument in position 1 (expecting keyword): ~S"))
+    (with-cps cps
+      (letk knot-keyword
+            ($kargs () () ($throw src 'throw/value+data not-keyword (kw))))
+      (letk kkw
+            ($kargs () ()
+              ($continue k src ($primcall 'keyword->symbol #f (kw)))))
+      (letk kheap-object
+            ($kargs () ()
+              ($branch knot-keyword kkw src 'keyword? #f (kw))))
+      (build-term
+        ($branch knot-keyword kheap-object src 'heap-object? #f (kw))))))
+
 (define (ensure-pair cps src op pred x is-pair)
   (define msg
     (match pred

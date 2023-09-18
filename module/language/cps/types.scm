@@ -831,7 +831,8 @@ minimum, and maximum."
     ('box &box)
     ('closure &procedure)
     ('struct &struct)
-    ('atomic-box &all-types)))
+    ('atomic-box &all-types)
+    ('keyword &keyword)))
 
 (define (annotation->mutable-type ann)
   (match ann

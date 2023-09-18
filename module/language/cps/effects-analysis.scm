@@ -409,9 +409,9 @@ the LABELS that are clobbered by the effects of LABEL."
 
 (define-primitive-effects
   ((symbol->string x))             ;; CPS lowering includes symbol? type check.
-  ((symbol->keyword)               &type-check)
-  ((string->symbol)                &type-check)
-  ((keyword->symbol)               &type-check))
+  ((symbol->keyword))              ;; Same.
+  ((keyword->symbol))              ;; Same, for keyword?.
+  ((string->symbol)                (&read-object &string)      &type-check))
 
 ;; Threads.  Calls cause &all-effects, which reflects the fact that any
 ;; call can capture a partial continuation and reinstate it on another
@@ -457,7 +457,8 @@ the LABELS that are clobbered by the effects of LABEL."
     ('box &box)
     ('closure &closure)
     ('struct &struct)
-    ('atomic-box &unknown-memory-kinds)))
+    ('atomic-box &unknown-memory-kinds)
+    ('keyword &unknown-memory-kinds)))
 
 (define-primitive-effects* param
   ((allocate-vector size)          (&allocate &vector))

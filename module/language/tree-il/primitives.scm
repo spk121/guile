@@ -57,6 +57,7 @@
     bytevector? keyword? bitvector?
 
     symbol->string string->symbol
+    keyword->symbol symbol->keyword
 
     procedure? thunk?
 
@@ -185,6 +186,7 @@
     char<? char<=? char>=? char>?
     integer->char char->integer number->string string->number
     symbol->string string->symbol
+    keyword->symbol symbol->keyword
     struct-vtable
     length string-length vector-length bytevector-length
     ;; These all should get expanded out by expand-primitives.
