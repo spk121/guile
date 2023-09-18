@@ -82,11 +82,10 @@
       (with-sigprof-interrupts
        1000                             ; Hz
        (lambda ()
-         ;; Could throw an exception if the prompt is
-         ;; not active (i.e. interrupt happens
-         ;; outside running a cothread).  Ignore in
-         ;; that case.
-         (false-if-exception (abort-to-prompt preempt-tag)))
+         ;; Interrupt could fire outside running a cothread, or
+         ;; recursively within an async; ignore in that case.
+         (when (suspendable-continuation? preempt-tag)
+           (abort-to-prompt preempt-tag)))
        run-cothreads)
       (equal? (atomic-box-ref box) 100))))
 
@@ -118,22 +117,21 @@
                                (atomic-box-set! box (1+ x)))
                              (lp))))))
       (let* ((main-thread (current-thread))
-             (preempt-thread (call-with-new-thread
-                              (lambda ()
-                                (let lp ()
-                                  (unless (= (atomic-box-ref box) 100)
-                                    (usleep 1000)
-                                    (system-async-mark
-                                     (lambda ()
-                                       ;; Could throw an exception if the
-                                       ;; prompt is not active
-                                       ;; (i.e. interrupt happens outside
-                                       ;; running a cothread).  Ignore in
-                                       ;; that case.
-                                       (false-if-exception
-                                        (abort-to-prompt preempt-tag)))
-                                     main-thread)
-                                    (lp)))))))
+             (preempt-thread
+              (call-with-new-thread
+               (lambda ()
+                 (let lp ()
+                   (unless (= (atomic-box-ref box) 100)
+                     (usleep 1000)
+                     (system-async-mark
+                      (lambda ()
+                        ;; Interrupt could fire outside running a
+                        ;; cothread, or recursively within an async;
+                        ;; ignore in that case.
+                        (when (suspendable-continuation? preempt-tag)
+                          (abort-to-prompt preempt-tag)))
+                      main-thread)
+                     (lp)))))))
         (run-cothreads)
         (join-thread preempt-thread)
         (equal? (atomic-box-ref box) 100)))))
