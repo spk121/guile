@@ -1773,6 +1773,14 @@
        "abcde")
       v))
 
+(test '(4 3 2 1)
+    (let ((v '()))
+      (string-for-each
+       (lambda (b c) (set! v (cons (- (char->integer b) (char->integer c)) v)))
+       "bdfh"
+       "abcde")
+      v))
+
 (test '(0 1 4 9 16) (let ((v (make-list 5)))
   (vector-for-each
    (lambda (i) (list-set! v i (* i i)))
