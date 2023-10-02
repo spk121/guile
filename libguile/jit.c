@@ -5957,6 +5957,19 @@ analyze (scm_jit_state *j)
         case scm_op_imm_u64_less:
         case scm_op_s64_imm_less:
         case scm_op_imm_s64_less:
+          {
+            uint8_t next = j->next_ip[0] & 0xff;
+            if (next == scm_op_drop)
+              {
+                j->next_ip += op_lengths[next];
+                next = j->next_ip[0] & 0xff;
+              }
+            if (next == scm_op_pop)
+              {
+                j->next_ip += op_lengths[next];
+                next = j->next_ip[0] & 0xff;
+              }
+          }
           attrs |= OP_ATTR_BLOCK;
           fuse_conditional_branch (j, &target);
           j->op_attrs[target - j->start] |= attrs;
