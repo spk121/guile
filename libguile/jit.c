@@ -1667,7 +1667,7 @@ compile_instrument_loop_slow (scm_jit_state *j, void *data)
 }
 
 static void
-compile_receive (scm_jit_state *j, uint16_t dst, uint16_t proc, uint32_t nlocals)
+compile_receive (scm_jit_state *j, uint32_t dst, uint32_t proc, uint32_t nlocals)
 {
   jit_gpr_t t = T0;
 
@@ -1680,7 +1680,7 @@ compile_receive (scm_jit_state *j, uint16_t dst, uint16_t proc, uint32_t nlocals
   j->frame_size_min = j->frame_size_max = nlocals;
 }
 static void
-compile_receive_slow (scm_jit_state *j, uint16_t dst, uint16_t proc, uint32_t nlocals)
+compile_receive_slow (scm_jit_state *j, uint32_t dst, uint32_t proc, uint32_t nlocals)
 {
   emit_store_current_ip (j, T0);
   emit_call_0 (j, scm_vm_intrinsics.error_no_values);
@@ -1722,7 +1722,7 @@ compile_receive_values_slow (scm_jit_state *j, uint32_t proc, uint8_t allow_extr
 }
 
 static void
-compile_shuffle_down (scm_jit_state *j, uint16_t from, uint16_t to)
+compile_shuffle_down (scm_jit_state *j, uint32_t from, uint32_t to)
 {
   jit_gpr_t walk = T0, t = T1;
   size_t offset = (from - to) * sizeof (union scm_vm_stack_element);
@@ -1747,7 +1747,7 @@ compile_shuffle_down (scm_jit_state *j, uint16_t from, uint16_t to)
     j->frame_size_max -= (from - to);
 }
 static void
-compile_shuffle_down_slow (scm_jit_state *j, uint16_t from, uint16_t to)
+compile_shuffle_down_slow (scm_jit_state *j, uint32_t from, uint32_t to)
 {
 }
 
@@ -1823,7 +1823,7 @@ compile_subr_call_slow (scm_jit_state *j, uint32_t idx)
 }
 
 static void
-compile_foreign_call (scm_jit_state *j, uint16_t cif_idx, uint16_t ptr_idx)
+compile_foreign_call (scm_jit_state *j, uint32_t cif_idx, uint32_t ptr_idx)
 {
   uint32_t saved_state;
 
@@ -1842,7 +1842,7 @@ compile_foreign_call (scm_jit_state *j, uint16_t cif_idx, uint16_t ptr_idx)
   j->frame_size_min = j->frame_size_max = 2; /* Return value and errno.  */
 }
 static void
-compile_foreign_call_slow (scm_jit_state *j, uint16_t cif_idx, uint16_t ptr_idx)
+compile_foreign_call_slow (scm_jit_state *j, uint32_t cif_idx, uint32_t ptr_idx)
 {
 }
 
@@ -1930,7 +1930,7 @@ compile_abort_slow (scm_jit_state *j)
 }
 
 static void
-compile_builtin_ref (scm_jit_state *j, uint16_t dst, uint16_t idx)
+compile_builtin_ref (scm_jit_state *j, uint32_t dst, uint16_t idx)
 {
   SCM builtin = scm_vm_builtin_ref (idx);
 
@@ -1938,12 +1938,12 @@ compile_builtin_ref (scm_jit_state *j, uint16_t dst, uint16_t idx)
   emit_sp_set_scm (j, dst, T0);
 }
 static void
-compile_builtin_ref_slow (scm_jit_state *j, uint16_t dst, uint16_t idx)
+compile_builtin_ref_slow (scm_jit_state *j, uint32_t dst, uint16_t idx)
 {
 }
 
 static void
-compile_throw (scm_jit_state *j, uint16_t key, uint16_t args)
+compile_throw (scm_jit_state *j, uint32_t key, uint32_t args)
 {
   emit_store_current_ip (j, T0);
   emit_call_2 (j, scm_vm_intrinsics.throw_, sp_scm_operand (j, key),
@@ -1952,7 +1952,7 @@ compile_throw (scm_jit_state *j, uint16_t key, uint16_t args)
   set_register_state (j, UNREACHABLE);
 }
 static void
-compile_throw_slow (scm_jit_state *j, uint16_t key, uint16_t args)
+compile_throw_slow (scm_jit_state *j, uint32_t key, uint32_t args)
 {
 }
 
@@ -2140,8 +2140,8 @@ compile_drop_slow (scm_jit_state *j, uint32_t nvalues)
 }
 
 static void
-compile_assert_nargs_ee_locals (scm_jit_state *j, uint16_t expected,
-                                uint16_t nlocals)
+compile_assert_nargs_ee_locals (scm_jit_state *j, uint32_t expected,
+                                uint32_t nlocals)
 {
   jit_gpr_t t = T0;
 
@@ -2160,8 +2160,8 @@ compile_assert_nargs_ee_locals (scm_jit_state *j, uint16_t expected,
   j->frame_size_min = j->frame_size_max = expected + nlocals;
 }
 static void
-compile_assert_nargs_ee_locals_slow (scm_jit_state *j, uint16_t expected,
-                                     uint16_t nlocals)
+compile_assert_nargs_ee_locals_slow (scm_jit_state *j, uint32_t expected,
+                                     uint32_t nlocals)
 {
   jit_gpr_t t = T0;
 
@@ -2312,7 +2312,7 @@ compile_bind_optionals_slow (scm_jit_state *j, uint32_t nlocals)
 }
 
 static void
-compile_allocate_words (scm_jit_state *j, uint16_t dst, uint16_t nwords)
+compile_allocate_words (scm_jit_state *j, uint32_t dst, uint32_t nwords)
 {
   jit_gpr_t t = T0;
 
@@ -2325,12 +2325,12 @@ compile_allocate_words (scm_jit_state *j, uint16_t dst, uint16_t nwords)
   emit_sp_set_scm (j, dst, t);
 }
 static void
-compile_allocate_words_slow (scm_jit_state *j, uint16_t dst, uint16_t nwords)
+compile_allocate_words_slow (scm_jit_state *j, uint32_t dst, uint32_t nwords)
 {
 }
 
 static void
-compile_allocate_words_immediate (scm_jit_state *j, uint16_t dst, uint16_t nwords)
+compile_allocate_words_immediate (scm_jit_state *j, uint32_t dst, uint32_t nwords)
 {
   size_t bytes = nwords * sizeof(SCM);
   size_t idx = scm_inline_gc_bytes_to_freelist_index (bytes);
@@ -2358,7 +2358,7 @@ compile_allocate_words_immediate (scm_jit_state *j, uint16_t dst, uint16_t nword
     }
 }
 static void
-compile_allocate_words_immediate_slow (scm_jit_state *j, uint16_t dst, uint16_t nwords)
+compile_allocate_words_immediate_slow (scm_jit_state *j, uint32_t dst, uint32_t nwords)
 {
   size_t bytes = nwords * sizeof(SCM);
   size_t idx = scm_inline_gc_bytes_to_freelist_index (bytes);
@@ -2381,7 +2381,7 @@ compile_allocate_words_immediate_slow (scm_jit_state *j, uint16_t dst, uint16_t 
 }
 
 static void
-compile_allocate_pointerless_words (scm_jit_state *j, uint16_t dst, uint16_t nwords)
+compile_allocate_pointerless_words (scm_jit_state *j, uint32_t dst, uint32_t nwords)
 {
   jit_gpr_t t = T0;
 
@@ -2394,12 +2394,12 @@ compile_allocate_pointerless_words (scm_jit_state *j, uint16_t dst, uint16_t nwo
   emit_sp_set_scm (j, dst, t);
 }
 static void
-compile_allocate_pointerless_words_slow (scm_jit_state *j, uint16_t dst, uint16_t nwords)
+compile_allocate_pointerless_words_slow (scm_jit_state *j, uint32_t dst, uint32_t nwords)
 {
 }
 
 static void
-compile_allocate_pointerless_words_immediate (scm_jit_state *j, uint16_t dst, uint16_t nwords)
+compile_allocate_pointerless_words_immediate (scm_jit_state *j, uint32_t dst, uint32_t nwords)
 {
   size_t bytes = nwords * sizeof(SCM);
   size_t idx = scm_inline_gc_bytes_to_freelist_index (bytes);
@@ -2427,7 +2427,7 @@ compile_allocate_pointerless_words_immediate (scm_jit_state *j, uint16_t dst, ui
     }
 }
 static void
-compile_allocate_pointerless_words_immediate_slow (scm_jit_state *j, uint16_t dst, uint16_t nwords)
+compile_allocate_pointerless_words_immediate_slow (scm_jit_state *j, uint32_t dst, uint32_t nwords)
 {
   size_t bytes = nwords * sizeof(SCM);
   size_t idx = scm_inline_gc_bytes_to_freelist_index (bytes);
@@ -2450,7 +2450,7 @@ compile_allocate_pointerless_words_immediate_slow (scm_jit_state *j, uint16_t ds
 }
 
 static void
-compile_scm_ref (scm_jit_state *j, uint8_t dst, uint8_t obj, uint8_t idx)
+compile_scm_ref (scm_jit_state *j, uint32_t dst, uint32_t obj, uint32_t idx)
 {
   emit_sp_ref_scm (j, T0, obj);
   emit_sp_ref_sz (j, T1, idx);
@@ -2459,12 +2459,12 @@ compile_scm_ref (scm_jit_state *j, uint8_t dst, uint8_t obj, uint8_t idx)
   emit_sp_set_scm (j, dst, T0);
 }
 static void
-compile_scm_ref_slow (scm_jit_state *j, uint8_t dst, uint8_t obj, uint8_t idx)
+compile_scm_ref_slow (scm_jit_state *j, uint32_t dst, uint32_t obj, uint32_t idx)
 {
 }
 
 static void
-compile_scm_set (scm_jit_state *j, uint8_t obj, uint8_t idx, uint8_t val)
+compile_scm_set (scm_jit_state *j, uint32_t obj, uint32_t idx, uint32_t val)
 {
   emit_sp_ref_scm (j, T0, obj);
   emit_sp_ref_sz (j, T1, idx);
@@ -2473,12 +2473,12 @@ compile_scm_set (scm_jit_state *j, uint8_t obj, uint8_t idx, uint8_t val)
   jit_stxr (j->jit, T0, T1, T2);
 }
 static void
-compile_scm_set_slow (scm_jit_state *j, uint8_t obj, uint8_t idx, uint8_t val)
+compile_scm_set_slow (scm_jit_state *j, uint32_t obj, uint32_t idx, uint32_t val)
 {
 }
 
 static void
-compile_scm_ref_tag (scm_jit_state *j, uint8_t dst, uint8_t obj, uint8_t tag)
+compile_scm_ref_tag (scm_jit_state *j, uint32_t dst, uint32_t obj, uint32_t tag)
 {
   emit_sp_ref_scm (j, T0, obj);
   emit_ldr (j, T0, T0);
@@ -2486,12 +2486,12 @@ compile_scm_ref_tag (scm_jit_state *j, uint8_t dst, uint8_t obj, uint8_t tag)
   emit_sp_set_scm (j, dst, T0);
 }
 static void
-compile_scm_ref_tag_slow (scm_jit_state *j, uint8_t dst, uint8_t obj, uint8_t tag)
+compile_scm_ref_tag_slow (scm_jit_state *j, uint32_t dst, uint32_t obj, uint32_t tag)
 {
 }
 
 static void
-compile_scm_set_tag (scm_jit_state *j, uint8_t obj, uint8_t tag, uint8_t val)
+compile_scm_set_tag (scm_jit_state *j, uint32_t obj, uint32_t tag, uint32_t val)
 {
   emit_sp_ref_scm (j, T0, obj);
   emit_sp_ref_scm (j, T1, val);
@@ -2499,36 +2499,36 @@ compile_scm_set_tag (scm_jit_state *j, uint8_t obj, uint8_t tag, uint8_t val)
   jit_str (j->jit, T0, T1);
 }
 static void
-compile_scm_set_tag_slow (scm_jit_state *j, uint8_t obj, uint8_t tag, uint8_t val)
+compile_scm_set_tag_slow (scm_jit_state *j, uint32_t obj, uint32_t tag, uint32_t val)
 {
 }
 
 static void
-compile_scm_ref_immediate (scm_jit_state *j, uint8_t dst, uint8_t obj, uint8_t idx)
+compile_scm_ref_immediate (scm_jit_state *j, uint32_t dst, uint32_t obj, uint32_t idx)
 {
   emit_sp_ref_scm (j, T0, obj);
   emit_ldxi (j, T0, T0, idx * sizeof (SCM));
   emit_sp_set_scm (j, dst, T0);
 }
 static void
-compile_scm_ref_immediate_slow (scm_jit_state *j, uint8_t dst, uint8_t obj, uint8_t idx)
+compile_scm_ref_immediate_slow (scm_jit_state *j, uint32_t dst, uint32_t obj, uint32_t idx)
 {
 }
 
 static void
-compile_scm_set_immediate (scm_jit_state *j, uint8_t obj, uint8_t idx, uint8_t val)
+compile_scm_set_immediate (scm_jit_state *j, uint32_t obj, uint32_t idx, uint32_t val)
 {
   emit_sp_ref_scm (j, T0, obj);
   emit_sp_ref_scm (j, T1, val);
   jit_stxi (j->jit, idx * sizeof (SCM), T0, T1);
 }
 static void
-compile_scm_set_immediate_slow (scm_jit_state *j, uint8_t obj, uint8_t idx, uint8_t val)
+compile_scm_set_immediate_slow (scm_jit_state *j, uint32_t obj, uint32_t idx, uint32_t val)
 {
 }
 
 static void
-compile_word_ref (scm_jit_state *j, uint8_t dst, uint8_t obj, uint8_t idx)
+compile_word_ref (scm_jit_state *j, uint32_t dst, uint32_t obj, uint32_t idx)
 {
   emit_sp_ref_scm (j, T0, obj);
   emit_sp_ref_sz (j, T1, idx);
@@ -2537,12 +2537,12 @@ compile_word_ref (scm_jit_state *j, uint8_t dst, uint8_t obj, uint8_t idx)
   emit_sp_set_sz (j, dst, T0);
 }
 static void
-compile_word_ref_slow (scm_jit_state *j, uint8_t dst, uint8_t obj, uint8_t idx)
+compile_word_ref_slow (scm_jit_state *j, uint32_t dst, uint32_t obj, uint32_t idx)
 {
 }
 
 static void
-compile_word_set (scm_jit_state *j, uint8_t obj, uint8_t idx, uint8_t val)
+compile_word_set (scm_jit_state *j, uint32_t obj, uint32_t idx, uint32_t val)
 {
   emit_sp_ref_scm (j, T0, obj);
   emit_sp_ref_sz (j, T1, idx);
@@ -2551,77 +2551,77 @@ compile_word_set (scm_jit_state *j, uint8_t obj, uint8_t idx, uint8_t val)
   jit_stxr (j->jit, T0, T1, T2);
 }
 static void
-compile_word_set_slow (scm_jit_state *j, uint8_t obj, uint8_t idx, uint8_t val)
+compile_word_set_slow (scm_jit_state *j, uint32_t obj, uint32_t idx, uint32_t val)
 {
 }
 
 static void
-compile_word_ref_immediate (scm_jit_state *j, uint8_t dst, uint8_t obj, uint8_t idx)
+compile_word_ref_immediate (scm_jit_state *j, uint32_t dst, uint32_t obj, uint32_t idx)
 {
   emit_sp_ref_scm (j, T0, obj);
   emit_ldxi (j, T0, T0, idx * sizeof (SCM));
   emit_sp_set_sz (j, dst, T0);
 }
 static void
-compile_word_ref_immediate_slow (scm_jit_state *j, uint8_t dst, uint8_t obj, uint8_t idx)
+compile_word_ref_immediate_slow (scm_jit_state *j, uint32_t dst, uint32_t obj, uint32_t idx)
 {
 }
 
 static void
-compile_word_set_immediate (scm_jit_state *j, uint8_t obj, uint8_t idx, uint8_t val)
+compile_word_set_immediate (scm_jit_state *j, uint32_t obj, uint32_t idx, uint32_t val)
 {
   emit_sp_ref_scm (j, T0, obj);
   emit_sp_ref_sz (j, T1, val);
   jit_stxi (j->jit, idx * sizeof (SCM), T0, T1);
 }
 static void
-compile_word_set_immediate_slow (scm_jit_state *j, uint8_t obj, uint8_t idx, uint8_t val)
+compile_word_set_immediate_slow (scm_jit_state *j, uint32_t obj, uint32_t idx, uint32_t val)
 {
 }
 
 static void
-compile_pointer_ref_immediate (scm_jit_state *j, uint8_t dst, uint8_t obj, uint8_t idx)
+compile_pointer_ref_immediate (scm_jit_state *j, uint32_t dst, uint32_t obj, uint32_t idx)
 {
   emit_sp_ref_scm (j, T0, obj);
   emit_ldxi (j, T0, T0, idx * sizeof (SCM));
   emit_sp_set_scm (j, dst, T0);
 }
 static void
-compile_pointer_ref_immediate_slow (scm_jit_state *j, uint8_t dst, uint8_t obj, uint8_t idx)
+compile_pointer_ref_immediate_slow (scm_jit_state *j, uint32_t dst, uint32_t obj, uint32_t idx)
 {
 }
 
 static void
-compile_pointer_set_immediate (scm_jit_state *j, uint8_t obj, uint8_t idx, uint8_t val)
+compile_pointer_set_immediate (scm_jit_state *j, uint32_t obj, uint32_t idx, uint32_t val)
 {
   emit_sp_ref_scm (j, T0, obj);
   emit_sp_ref_scm (j, T1, val);
   jit_stxi (j->jit, idx * sizeof (SCM), T0, T1);
 }
 static void
-compile_pointer_set_immediate_slow (scm_jit_state *j, uint8_t obj, uint8_t idx, uint8_t val)
+compile_pointer_set_immediate_slow (scm_jit_state *j, uint32_t obj, uint32_t idx, uint32_t val)
 {
 }
 
 static void
-compile_tail_pointer_ref_immediate (scm_jit_state *j, uint8_t dst, uint8_t obj, uint8_t idx)
+compile_tail_pointer_ref_immediate (scm_jit_state *j, uint32_t dst, uint32_t obj, uint32_t idx)
 {
   emit_sp_ref_scm (j, T0, obj);
   emit_addi (j, T0, T0, idx * sizeof (SCM));
   emit_sp_set_scm (j, dst, T0);
 }
 static void
-compile_tail_pointer_ref_immediate_slow (scm_jit_state *j, uint8_t dst, uint8_t obj, uint8_t idx)
+compile_tail_pointer_ref_immediate_slow (scm_jit_state *j, uint32_t dst, uint32_t obj, uint32_t idx)
 {
 }
 
 static void
-compile_mov (scm_jit_state *j, uint16_t dst, uint16_t src)
+compile_mov (scm_jit_state *j, uint32_t dst, uint32_t src)
 {
   emit_mov (j, dst, src, T0);
 }
 static void
-compile_mov_slow (scm_jit_state *j, uint16_t dst, uint16_t src)
+compile_mov_slow (scm_jit_state *j, uint32_t dst, uint32_t src)
 {
 }
 
@@ -2649,7 +2649,7 @@ compile_long_fmov_slow (scm_jit_state *j, uint32_t dst, uint32_t src)
 }
 
 static void
-compile_call_scm_from_scm_scm (scm_jit_state *j, uint8_t dst, uint8_t a, uint8_t b, uint32_t idx)
+compile_call_scm_from_scm_scm (scm_jit_state *j, uint32_t dst, uint32_t a, uint32_t b, uint32_t idx)
 {
   switch ((enum scm_vm_intrinsic) idx)
     {
@@ -2688,7 +2688,7 @@ compile_call_scm_from_scm_scm (scm_jit_state *j, uint8_t dst, uint8_t a, uint8_t
   emit_sp_set_scm (j, dst, T0);
 }
 static void
-compile_call_scm_from_scm_scm_slow (scm_jit_state *j, uint8_t dst, uint8_t a, uint8_t b, uint32_t idx)
+compile_call_scm_from_scm_scm_slow (scm_jit_state *j, uint32_t dst, uint32_t a, uint32_t b, uint32_t idx)
 {
   switch ((enum scm_vm_intrinsic) idx)
     {
@@ -2712,7 +2712,7 @@ compile_call_scm_from_scm_scm_slow (scm_jit_state *j, uint8_t dst, uint8_t a, ui
 }
 
 static void
-compile_call_scm_from_scm_uimm (scm_jit_state *j, uint8_t dst, uint8_t a, uint8_t b, uint32_t idx)
+compile_call_scm_from_scm_uimm (scm_jit_state *j, uint32_t dst, uint32_t a, uint32_t b, uint32_t idx)
 {
   switch ((enum scm_vm_intrinsic) idx)
     {
@@ -2749,7 +2749,7 @@ compile_call_scm_from_scm_uimm (scm_jit_state *j, uint8_t dst, uint8_t a, uint8_
   emit_sp_set_scm (j, dst, T0);
 }
 static void
-compile_call_scm_from_scm_uimm_slow (scm_jit_state *j, uint8_t dst, uint8_t a, uint8_t b, uint32_t idx)
+compile_call_scm_from_scm_uimm_slow (scm_jit_state *j, uint32_t dst, uint32_t a, uint32_t b, uint32_t idx)
 {
   switch ((enum scm_vm_intrinsic) idx)
     {
@@ -2773,7 +2773,7 @@ compile_call_scm_from_scm_uimm_slow (scm_jit_state *j, uint8_t dst, uint8_t a, u
 }
 
 static void
-compile_call_scm_sz_u32 (scm_jit_state *j, uint8_t a, uint8_t b, uint8_t c, uint32_t idx)
+compile_call_scm_sz_u32 (scm_jit_state *j, uint32_t a, uint32_t b, uint32_t c, uint32_t idx)
 {
   void *intrinsic = ((void **) &scm_vm_intrinsics)[idx];
 
@@ -2783,12 +2783,12 @@ compile_call_scm_sz_u32 (scm_jit_state *j, uint8_t a, uint8_t b, uint8_t c, uint
   emit_reload_sp (j);
 }
 static void
-compile_call_scm_sz_u32_slow (scm_jit_state *j, uint8_t a, uint8_t b, uint8_t c, uint32_t idx)
+compile_call_scm_sz_u32_slow (scm_jit_state *j, uint32_t a, uint32_t b, uint32_t c, uint32_t idx)
 {
 }
 
 static void
-compile_call_scm_from_scm (scm_jit_state *j, uint16_t dst, uint16_t a, uint32_t idx)
+compile_call_scm_from_scm (scm_jit_state *j, uint32_t dst, uint32_t a, uint32_t idx)
 {
   void *intrinsic = ((void **) &scm_vm_intrinsics)[idx];
 
@@ -2799,12 +2799,12 @@ compile_call_scm_from_scm (scm_jit_state *j, uint16_t dst, uint16_t a, uint32_t 
   emit_sp_set_scm (j, dst, T0);
 }
 static void
-compile_call_scm_from_scm_slow (scm_jit_state *j, uint16_t dst, uint16_t a, uint32_t idx)
+compile_call_scm_from_scm_slow (scm_jit_state *j, uint32_t dst, uint32_t a, uint32_t idx)
 {
 }
 
 static void
-compile_call_f64_from_scm (scm_jit_state *j, uint16_t dst, uint16_t a, uint32_t idx)
+compile_call_f64_from_scm (scm_jit_state *j, uint32_t dst, uint32_t a, uint32_t idx)
 {
   void *intrinsic = ((void **) &scm_vm_intrinsics)[idx];
 
@@ -2815,12 +2815,12 @@ compile_call_f64_from_scm (scm_jit_state *j, uint16_t dst, uint16_t a, uint32_t 
   emit_sp_set_f64 (j, dst, JIT_F0);
 }
 static void
-compile_call_f64_from_scm_slow (scm_jit_state *j, uint16_t dst, uint16_t a, uint32_t idx)
+compile_call_f64_from_scm_slow (scm_jit_state *j, uint32_t dst, uint32_t a, uint32_t idx)
 {
 }
 
 static void
-compile_call_f64_from_f64 (scm_jit_state *j, uint16_t dst, uint16_t src, uint32_t idx)
+compile_call_f64_from_f64 (scm_jit_state *j, uint32_t dst, uint32_t src, uint32_t idx)
 {
   switch ((enum scm_vm_intrinsic) idx)
     {
@@ -2850,12 +2850,12 @@ compile_call_f64_from_f64 (scm_jit_state *j, uint16_t dst, uint16_t src, uint32_
     }
 }
 static void
-compile_call_f64_from_f64_slow (scm_jit_state *j, uint16_t dst, uint16_t src, uint32_t idx)
+compile_call_f64_from_f64_slow (scm_jit_state *j, uint32_t dst, uint32_t src, uint32_t idx)
 {
 }
 
 static void
-compile_call_f64_from_f64_f64 (scm_jit_state *j, uint8_t dst, uint8_t a, uint8_t b, uint32_t idx)
+compile_call_f64_from_f64_f64 (scm_jit_state *j, uint32_t dst, uint32_t a, uint32_t b, uint32_t idx)
 {
   void *intrinsic = ((void **) &scm_vm_intrinsics)[idx];
   emit_call_2 (j, intrinsic, sp_f64_operand (j, a), sp_f64_operand (j, b));
@@ -2864,12 +2864,12 @@ compile_call_f64_from_f64_f64 (scm_jit_state *j, uint8_t dst, uint8_t a, uint8_t
   emit_sp_set_f64 (j, dst, JIT_F0);
 }
 static void
-compile_call_f64_from_f64_f64_slow (scm_jit_state *j, uint8_t dst, uint8_t a, uint8_t b, uint32_t idx)
+compile_call_f64_from_f64_f64_slow (scm_jit_state *j, uint32_t dst, uint32_t a, uint32_t b, uint32_t idx)
 {
 }
 
 static void
-compile_call_u64_from_scm (scm_jit_state *j, uint16_t dst, uint16_t a, uint32_t idx)
+compile_call_u64_from_scm (scm_jit_state *j, uint32_t dst, uint32_t a, uint32_t idx)
 {
   void *intrinsic = ((void **) &scm_vm_intrinsics)[idx];
 
@@ -2885,29 +2885,29 @@ compile_call_u64_from_scm (scm_jit_state *j, uint16_t dst, uint16_t a, uint32_t 
 #endif
 }
 static void
-compile_call_u64_from_scm_slow (scm_jit_state *j, uint16_t dst, uint16_t a, uint32_t idx)
+compile_call_u64_from_scm_slow (scm_jit_state *j, uint32_t dst, uint32_t a, uint32_t idx)
 {
 }
 
 static void
-compile_make_immediate (scm_jit_state *j, uint8_t dst, SCM a)
+compile_make_immediate (scm_jit_state *j, uint32_t dst, SCM a)
 {
   emit_movi (j, T0, SCM_UNPACK (a));
   emit_sp_set_scm (j, dst, T0);
 }
 static void
-compile_make_immediate_slow (scm_jit_state *j, uint8_t dst, SCM a)
+compile_make_immediate_slow (scm_jit_state *j, uint32_t dst, SCM a)
 {
 }
 
 static void
-compile_make_short_immediate (scm_jit_state *j, uint8_t dst, SCM a)
+compile_make_short_immediate (scm_jit_state *j, uint32_t dst, SCM a)
 {
   emit_movi (j, T0, SCM_UNPACK (a));
   emit_sp_set_scm (j, dst, T0);
 }
 static void
-compile_make_short_immediate_slow (scm_jit_state *j, uint8_t dst, SCM a)
+compile_make_short_immediate_slow (scm_jit_state *j, uint32_t dst, SCM a)
 {
 }
 
@@ -3023,17 +3023,17 @@ compile_load_label_slow (scm_jit_state *j, uint32_t dst, const uint32_t *vcode)
 }
 
 static void
-compile_call_s64_from_scm (scm_jit_state *j, uint16_t dst, uint16_t a, uint32_t idx)
+compile_call_s64_from_scm (scm_jit_state *j, uint32_t dst, uint32_t a, uint32_t idx)
 {
   compile_call_u64_from_scm (j, dst, a, idx);
 }
 static void
-compile_call_s64_from_scm_slow (scm_jit_state *j, uint16_t dst, uint16_t a, uint32_t idx)
+compile_call_s64_from_scm_slow (scm_jit_state *j, uint32_t dst, uint32_t a, uint32_t idx)
 {
 }
 
 static void
-compile_call_scm_from_u64 (scm_jit_state *j, uint16_t dst, uint16_t src, uint32_t idx)
+compile_call_scm_from_u64 (scm_jit_state *j, uint32_t dst, uint32_t src, uint32_t idx)
 {
   void *intrinsic = ((void **) &scm_vm_intrinsics)[idx];
 
@@ -3048,22 +3048,22 @@ compile_call_scm_from_u64 (scm_jit_state *j, uint16_t dst, uint16_t src, uint32_
   emit_sp_set_scm (j, dst, T0);
 }
 static void
-compile_call_scm_from_u64_slow (scm_jit_state *j, uint16_t dst, uint16_t src, uint32_t idx)
+compile_call_scm_from_u64_slow (scm_jit_state *j, uint32_t dst, uint32_t src, uint32_t idx)
 {
 }
 
 static void
-compile_call_scm_from_s64 (scm_jit_state *j, uint16_t dst, uint16_t a, uint32_t b)
+compile_call_scm_from_s64 (scm_jit_state *j, uint32_t dst, uint32_t a, uint32_t b)
 {
   compile_call_scm_from_u64 (j, dst, a, b);
 }
 static void
-compile_call_scm_from_s64_slow (scm_jit_state *j, uint16_t dst, uint16_t a, uint32_t b)
+compile_call_scm_from_s64_slow (scm_jit_state *j, uint32_t dst, uint32_t a, uint32_t b)
 {
 }
 
 static void
-compile_tag_char (scm_jit_state *j, uint16_t dst, uint16_t src)
+compile_tag_char (scm_jit_state *j, uint32_t dst, uint32_t src)
 {
 #if SIZEOF_UINTPTR_T >= 8
   emit_sp_ref_u64 (j, T0, src);
@@ -3075,12 +3075,12 @@ compile_tag_char (scm_jit_state *j, uint16_t dst, uint16_t src)
   emit_sp_set_scm (j, dst, T0);
 }
 static void
-compile_tag_char_slow (scm_jit_state *j, uint16_t dst, uint16_t src)
+compile_tag_char_slow (scm_jit_state *j, uint32_t dst, uint32_t src)
 {
 }
 
 static void
-compile_untag_char (scm_jit_state *j, uint16_t dst, uint16_t src)
+compile_untag_char (scm_jit_state *j, uint32_t dst, uint32_t src)
 {
   emit_sp_ref_scm (j, T0, src);
   emit_rshi (j, T0, T0, 8);
@@ -3092,12 +3092,12 @@ compile_untag_char (scm_jit_state *j, uint16_t dst, uint16_t src)
 #endif
 }
 static void
-compile_untag_char_slow (scm_jit_state *j, uint16_t dst, uint16_t src)
+compile_untag_char_slow (scm_jit_state *j, uint32_t dst, uint32_t src)
 {
 }
 
 static void
-compile_atomic_scm_ref_immediate (scm_jit_state *j, uint8_t dst, uint8_t obj, uint8_t offset)
+compile_atomic_scm_ref_immediate (scm_jit_state *j, uint32_t dst, uint32_t obj, uint32_t offset)
 {
   emit_sp_ref_scm (j, T0, obj);
   emit_addi (j, T0, T0, offset * sizeof (SCM));
@@ -3106,12 +3106,12 @@ compile_atomic_scm_ref_immediate (scm_jit_state *j, uint8_t dst, uint8_t obj, ui
   emit_sp_set_scm (j, dst, T0);
 }
 static void
-compile_atomic_scm_ref_immediate_slow (scm_jit_state *j, uint8_t dst, uint8_t obj, uint8_t offset)
+compile_atomic_scm_ref_immediate_slow (scm_jit_state *j, uint32_t dst, uint32_t obj, uint32_t offset)
 {
 }
 
 static void
-compile_atomic_scm_set_immediate (scm_jit_state *j, uint8_t obj, uint8_t offset, uint8_t val)
+compile_atomic_scm_set_immediate (scm_jit_state *j, uint32_t obj, uint32_t offset, uint32_t val)
 {
   emit_sp_ref_scm (j, T0, obj);
   emit_sp_ref_scm (j, T1, val);
@@ -3119,12 +3119,12 @@ compile_atomic_scm_set_immediate (scm_jit_state *j, uint8_t obj, uint8_t offset,
   jit_str_atomic (j->jit, T0, T1);
 }
 static void
-compile_atomic_scm_set_immediate_slow (scm_jit_state *j, uint8_t obj, uint8_t offset, uint8_t val)
+compile_atomic_scm_set_immediate_slow (scm_jit_state *j, uint32_t obj, uint32_t offset, uint32_t val)
 {
 }
 
 static void
-compile_atomic_scm_swap_immediate (scm_jit_state *j, uint32_t dst, uint32_t obj, uint8_t offset, uint32_t val)
+compile_atomic_scm_swap_immediate (scm_jit_state *j, uint32_t dst, uint32_t obj, uint32_t offset, uint32_t val)
 {
   emit_sp_ref_scm (j, T0, obj);
   emit_sp_ref_scm (j, T1, val);
@@ -3134,13 +3134,13 @@ compile_atomic_scm_swap_immediate (scm_jit_state *j, uint32_t dst, uint32_t obj,
   emit_sp_set_scm (j, dst, T1);
 }
 static void
-compile_atomic_scm_swap_immediate_slow (scm_jit_state *j, uint32_t dst, uint32_t obj, uint8_t offset, uint32_t val)
+compile_atomic_scm_swap_immediate_slow (scm_jit_state *j, uint32_t dst, uint32_t obj, uint32_t offset, uint32_t val)
 {
 }
 
 static void
 compile_atomic_scm_compare_and_swap_immediate (scm_jit_state *j, uint32_t dst,
-                                               uint32_t obj, uint8_t offset,
+                                               uint32_t obj, uint32_t offset,
                                                uint32_t expected, uint32_t desired)
 {
   emit_sp_ref_scm (j, T0, obj);
@@ -3153,13 +3153,13 @@ compile_atomic_scm_compare_and_swap_immediate (scm_jit_state *j, uint32_t dst,
 }
 static void
 compile_atomic_scm_compare_and_swap_immediate_slow (scm_jit_state *j, uint32_t dst,
-                                               uint32_t obj, uint8_t offset,
+                                               uint32_t obj, uint32_t offset,
                                                uint32_t expected, uint32_t desired)
 {
 }
 
 static void
-compile_call_thread_scm_scm (scm_jit_state *j, uint16_t a, uint16_t b, uint32_t idx)
+compile_call_thread_scm_scm (scm_jit_state *j, uint32_t a, uint32_t b, uint32_t idx)
 {
   void *intrinsic = ((void **) &scm_vm_intrinsics)[idx];
 
@@ -3169,7 +3169,7 @@ compile_call_thread_scm_scm (scm_jit_state *j, uint16_t a, uint16_t b, uint32_t 
   emit_reload_sp (j);
 }
 static void
-compile_call_thread_scm_scm_slow (scm_jit_state *j, uint16_t a, uint16_t b, uint32_t idx)
+compile_call_thread_scm_scm_slow (scm_jit_state *j, uint32_t a, uint32_t b, uint32_t idx)
 {
 }
 
@@ -3188,7 +3188,7 @@ compile_call_thread_slow (scm_jit_state *j, uint32_t idx)
 }
 
 static void
-compile_call_scm_from_thread_scm (scm_jit_state *j, uint16_t dst, uint16_t a, uint32_t idx)
+compile_call_scm_from_thread_scm (scm_jit_state *j, uint32_t dst, uint32_t a, uint32_t idx)
 {
   void *intrinsic = ((void **) &scm_vm_intrinsics)[idx];
 
@@ -3199,7 +3199,7 @@ compile_call_scm_from_thread_scm (scm_jit_state *j, uint16_t dst, uint16_t a, ui
   emit_sp_set_scm (j, dst, T0);
 }
 static void
-compile_call_scm_from_thread_scm_slow (scm_jit_state *j, uint16_t dst, uint16_t a, uint32_t idx)
+compile_call_scm_from_thread_scm_slow (scm_jit_state *j, uint32_t dst, uint32_t a, uint32_t idx)
 {
 }
 
@@ -3218,7 +3218,7 @@ compile_call_thread_scm_slow (scm_jit_state *j, uint32_t a, uint32_t idx)
 }
 
 static void
-compile_call_scm_from_scm_u64 (scm_jit_state *j, uint8_t dst, uint8_t a, uint8_t b, uint32_t idx)
+compile_call_scm_from_scm_u64 (scm_jit_state *j, uint32_t dst, uint32_t a, uint32_t b, uint32_t idx)
 {
   void *intrinsic = ((void **) &scm_vm_intrinsics)[idx];
 
@@ -3233,7 +3233,7 @@ compile_call_scm_from_scm_u64 (scm_jit_state *j, uint8_t dst, uint8_t a, uint8_t
   emit_sp_set_scm (j, dst, T0);
 }
 static void
-compile_call_scm_from_scm_u64_slow (scm_jit_state *j, uint8_t dst, uint8_t a, uint8_t b, uint32_t idx)
+compile_call_scm_from_scm_u64_slow (scm_jit_state *j, uint32_t dst, uint32_t a, uint32_t b, uint32_t idx)
 {
 }
 
@@ -3254,7 +3254,7 @@ compile_call_scm_from_thread_slow (scm_jit_state *j, uint32_t dst, uint32_t idx)
 }
 
 static void
-compile_call_scm_scm (scm_jit_state *j, uint16_t a, uint16_t b, uint32_t idx)
+compile_call_scm_scm (scm_jit_state *j, uint32_t a, uint32_t b, uint32_t idx)
 {
   void *intrinsic = ((void **) &scm_vm_intrinsics)[idx];
 
@@ -3263,13 +3263,13 @@ compile_call_scm_scm (scm_jit_state *j, uint16_t a, uint16_t b, uint32_t idx)
   emit_reload_sp (j);
 }
 static void
-compile_call_scm_scm_slow (scm_jit_state *j, uint16_t a, uint16_t b,
+compile_call_scm_scm_slow (scm_jit_state *j, uint32_t a, uint32_t b,
                            uint32_t idx)
 {
 }
 
 static void
-compile_call_scm_scm_scm (scm_jit_state *j, uint8_t a, uint8_t b, uint8_t c,
+compile_call_scm_scm_scm (scm_jit_state *j, uint32_t a, uint32_t b, uint32_t c,
                           uint32_t idx)
 {
   void *intrinsic = ((void **) &scm_vm_intrinsics)[idx];
@@ -3280,13 +3280,13 @@ compile_call_scm_scm_scm (scm_jit_state *j, uint8_t a, uint8_t b, uint8_t c,
   emit_reload_sp (j);
 }
 static void
-compile_call_scm_scm_scm_slow (scm_jit_state *j, uint8_t a, uint8_t b,
-                               uint8_t c, uint32_t idx)
+compile_call_scm_scm_scm_slow (scm_jit_state *j, uint32_t a, uint32_t b,
+                               uint32_t c, uint32_t idx)
 {
 }
 
 static void
-compile_call_scm_uimm_scm (scm_jit_state *j, uint8_t a, uint8_t b, uint8_t c,
+compile_call_scm_uimm_scm (scm_jit_state *j, uint32_t a, uint8_t b, uint32_t c,
                            uint32_t idx)
 {
   void *intrinsic = ((void **) &scm_vm_intrinsics)[idx];
@@ -3298,13 +3298,13 @@ compile_call_scm_uimm_scm (scm_jit_state *j, uint8_t a, uint8_t b, uint8_t c,
   emit_reload_sp (j);
 }
 static void
-compile_call_scm_uimm_scm_slow (scm_jit_state *j, uint8_t a, uint8_t b,
-                                uint8_t c, uint32_t idx)
+compile_call_scm_uimm_scm_slow (scm_jit_state *j, uint32_t a, uint8_t b,
+                                uint32_t c, uint32_t idx)
 {
 }
 
 static void
-compile_fadd (scm_jit_state *j, uint8_t dst, uint8_t a, uint8_t b)
+compile_fadd (scm_jit_state *j, uint32_t dst, uint32_t a, uint32_t b)
 {
   emit_sp_ref_f64 (j, JIT_F0, a);
   emit_sp_ref_f64 (j, JIT_F1, b);
@@ -3312,12 +3312,12 @@ compile_fadd (scm_jit_state *j, uint8_t dst, uint8_t a, uint8_t b)
   emit_sp_set_f64 (j, dst, JIT_F0);
 }
 static void
-compile_fadd_slow (scm_jit_state *j, uint8_t dst, uint8_t a, uint8_t b)
+compile_fadd_slow (scm_jit_state *j, uint32_t dst, uint32_t a, uint32_t b)
 {
 }
 
 static void
-compile_fsub (scm_jit_state *j, uint8_t dst, uint8_t a, uint8_t b)
+compile_fsub (scm_jit_state *j, uint32_t dst, uint32_t a, uint32_t b)
 {
   emit_sp_ref_f64 (j, JIT_F0, a);
   emit_sp_ref_f64 (j, JIT_F1, b);
@@ -3325,12 +3325,12 @@ compile_fsub (scm_jit_state *j, uint8_t dst, uint8_t a, uint8_t b)
   emit_sp_set_f64 (j, dst, JIT_F0);
 }
 static void
-compile_fsub_slow (scm_jit_state *j, uint8_t dst, uint8_t a, uint8_t b)
+compile_fsub_slow (scm_jit_state *j, uint32_t dst, uint32_t a, uint32_t b)
 {
 }
 
 static void
-compile_fmul (scm_jit_state *j, uint8_t dst, uint8_t a, uint8_t b)
+compile_fmul (scm_jit_state *j, uint32_t dst, uint32_t a, uint32_t b)
 {
   emit_sp_ref_f64 (j, JIT_F0, a);
   emit_sp_ref_f64 (j, JIT_F1, b);
@@ -3338,12 +3338,12 @@ compile_fmul (scm_jit_state *j, uint8_t dst, uint8_t a, uint8_t b)
   emit_sp_set_f64 (j, dst, JIT_F0);
 }
 static void
-compile_fmul_slow (scm_jit_state *j, uint8_t dst, uint8_t a, uint8_t b)
+compile_fmul_slow (scm_jit_state *j, uint32_t dst, uint32_t a, uint32_t b)
 {
 }
 
 static void
-compile_fdiv (scm_jit_state *j, uint8_t dst, uint8_t a, uint8_t b)
+compile_fdiv (scm_jit_state *j, uint32_t dst, uint32_t a, uint32_t b)
 {
   emit_sp_ref_f64 (j, JIT_F0, a);
   emit_sp_ref_f64 (j, JIT_F1, b);
@@ -3351,12 +3351,12 @@ compile_fdiv (scm_jit_state *j, uint8_t dst, uint8_t a, uint8_t b)
   emit_sp_set_f64 (j, dst, JIT_F0);
 }
 static void
-compile_fdiv_slow (scm_jit_state *j, uint8_t dst, uint8_t a, uint8_t b)
+compile_fdiv_slow (scm_jit_state *j, uint32_t dst, uint32_t a, uint32_t b)
 {
 }
 
 static void
-compile_uadd (scm_jit_state *j, uint8_t dst, uint8_t a, uint8_t b)
+compile_uadd (scm_jit_state *j, uint32_t dst, uint32_t a, uint32_t b)
 {
 #if SIZEOF_UINTPTR_T >= 8
   emit_sp_ref_u64 (j, T0, a);
@@ -3372,12 +3372,12 @@ compile_uadd (scm_jit_state *j, uint8_t dst, uint8_t a, uint8_t b)
 #endif
 }
 static void
-compile_uadd_slow (scm_jit_state *j, uint8_t dst, uint8_t a, uint8_t b)
+compile_uadd_slow (scm_jit_state *j, uint32_t dst, uint32_t a, uint32_t b)
 {
 }
 
 static void
-compile_usub (scm_jit_state *j, uint8_t dst, uint8_t a, uint8_t b)
+compile_usub (scm_jit_state *j, uint32_t dst, uint32_t a, uint32_t b)
 {
 #if SIZEOF_UINTPTR_T >= 8
   emit_sp_ref_u64 (j, T0, a);
@@ -3393,12 +3393,12 @@ compile_usub (scm_jit_state *j, uint8_t dst, uint8_t a, uint8_t b)
 #endif
 }
 static void
-compile_usub_slow (scm_jit_state *j, uint8_t dst, uint8_t a, uint8_t b)
+compile_usub_slow (scm_jit_state *j, uint32_t dst, uint32_t a, uint32_t b)
 {
 }
 
 static void
-compile_umul (scm_jit_state *j, uint8_t dst, uint8_t a, uint8_t b)
+compile_umul (scm_jit_state *j, uint32_t dst, uint32_t a, uint32_t b)
 {
 #if SIZEOF_UINTPTR_T >= 8
   emit_sp_ref_u64 (j, T0, a);
@@ -3418,12 +3418,12 @@ compile_umul (scm_jit_state *j, uint8_t dst, uint8_t a, uint8_t b)
 #endif
 }
 static void
-compile_umul_slow (scm_jit_state *j, uint8_t dst, uint8_t a, uint8_t b)
+compile_umul_slow (scm_jit_state *j, uint32_t dst, uint32_t a, uint32_t b)
 {
 }
 
 static void
-compile_uadd_immediate (scm_jit_state *j, uint8_t dst, uint8_t a, uint8_t b)
+compile_uadd_immediate (scm_jit_state *j, uint32_t dst, uint32_t a, uint32_t b)
 {
 #if SIZEOF_UINTPTR_T >= 8
   emit_sp_ref_u64 (j, T0, a);
@@ -3437,12 +3437,12 @@ compile_uadd_immediate (scm_jit_state *j, uint8_t dst, uint8_t a, uint8_t b)
 #endif
 }
 static void
-compile_uadd_immediate_slow (scm_jit_state *j, uint8_t dst, uint8_t a, uint8_t b)
+compile_uadd_immediate_slow (scm_jit_state *j, uint32_t dst, uint32_t a, uint32_t b)
 {
 }
 
 static void
-compile_usub_immediate (scm_jit_state *j, uint8_t dst, uint8_t a, uint8_t b)
+compile_usub_immediate (scm_jit_state *j, uint32_t dst, uint32_t a, uint32_t b)
 {
 #if SIZEOF_UINTPTR_T >= 8
   emit_sp_ref_u64 (j, T0, a);
@@ -3456,12 +3456,12 @@ compile_usub_immediate (scm_jit_state *j, uint8_t dst, uint8_t a, uint8_t b)
 #endif
 }
 static void
-compile_usub_immediate_slow (scm_jit_state *j, uint8_t dst, uint8_t a, uint8_t b)
+compile_usub_immediate_slow (scm_jit_state *j, uint32_t dst, uint32_t a, uint32_t b)
 {
 }
 
 static void
-compile_umul_immediate (scm_jit_state *j, uint8_t dst, uint8_t a, uint8_t b)
+compile_umul_immediate (scm_jit_state *j, uint32_t dst, uint32_t a, uint32_t b)
 {
 #if SIZEOF_UINTPTR_T >= 8
   emit_sp_ref_u64 (j, T0, a);
@@ -3479,7 +3479,7 @@ compile_umul_immediate (scm_jit_state *j, uint8_t dst, uint8_t a, uint8_t b)
 #endif
 }
 static void
-compile_umul_immediate_slow (scm_jit_state *j, uint8_t dst, uint8_t a, uint8_t b)
+compile_umul_immediate_slow (scm_jit_state *j, uint32_t dst, uint32_t a, uint32_t b)
 {
 }
 
@@ -3534,7 +3534,7 @@ compile_current_thread_slow (scm_jit_state *j, uint32_t dst)
 }
 
 static void
-compile_ulogand (scm_jit_state *j, uint8_t dst, uint8_t a, uint8_t b)
+compile_ulogand (scm_jit_state *j, uint32_t dst, uint32_t a, uint32_t b)
 {
 #if SIZEOF_UINTPTR_T >= 8
   emit_sp_ref_u64 (j, T0, a);
@@ -3550,12 +3550,12 @@ compile_ulogand (scm_jit_state *j, uint8_t dst, uint8_t a, uint8_t b)
 #endif
 }
 static void
-compile_ulogand_slow (scm_jit_state *j, uint8_t dst, uint8_t a, uint8_t b)
+compile_ulogand_slow (scm_jit_state *j, uint32_t dst, uint32_t a, uint32_t b)
 {
 }
 
 static void
-compile_ulogior (scm_jit_state *j, uint8_t dst, uint8_t a, uint8_t b)
+compile_ulogior (scm_jit_state *j, uint32_t dst, uint32_t a, uint32_t b)
 {
 #if SIZEOF_UINTPTR_T >= 8
   emit_sp_ref_u64 (j, T0, a);
@@ -3571,12 +3571,12 @@ compile_ulogior (scm_jit_state *j, uint8_t dst, uint8_t a, uint8_t b)
 #endif
 }
 static void
-compile_ulogior_slow (scm_jit_state *j, uint8_t dst, uint8_t a, uint8_t b)
+compile_ulogior_slow (scm_jit_state *j, uint32_t dst, uint32_t a, uint32_t b)
 {
 }
 
 static void
-compile_ulogsub (scm_jit_state *j, uint8_t dst, uint8_t a, uint8_t b)
+compile_ulogsub (scm_jit_state *j, uint32_t dst, uint32_t a, uint32_t b)
 {
 #if SIZEOF_UINTPTR_T >= 8
   emit_sp_ref_u64 (j, T0, a);
@@ -3595,12 +3595,12 @@ compile_ulogsub (scm_jit_state *j, uint8_t dst, uint8_t a, uint8_t b)
 #endif
 }
 static void
-compile_ulogsub_slow (scm_jit_state *j, uint8_t dst, uint8_t a, uint8_t b)
+compile_ulogsub_slow (scm_jit_state *j, uint32_t dst, uint32_t a, uint32_t b)
 {
 }
 
 static void
-compile_ursh (scm_jit_state *j, uint8_t dst, uint8_t a, uint8_t b)
+compile_ursh (scm_jit_state *j, uint32_t dst, uint32_t a, uint32_t b)
 {
 #if SIZEOF_UINTPTR_T >= 8
   emit_sp_ref_u64 (j, T0, a);
@@ -3639,12 +3639,12 @@ compile_ursh (scm_jit_state *j, uint8_t dst, uint8_t a, uint8_t b)
 #endif
 }
 static void
-compile_ursh_slow (scm_jit_state *j, uint8_t dst, uint8_t a, uint8_t b)
+compile_ursh_slow (scm_jit_state *j, uint32_t dst, uint32_t a, uint32_t b)
 {
 }
 
 static void
-compile_ulsh (scm_jit_state *j, uint8_t dst, uint8_t a, uint8_t b)
+compile_ulsh (scm_jit_state *j, uint32_t dst, uint32_t a, uint32_t b)
 {
 #if SIZEOF_UINTPTR_T >= 8
   emit_sp_ref_u64 (j, T0, a);
@@ -3683,12 +3683,12 @@ compile_ulsh (scm_jit_state *j, uint8_t dst, uint8_t a, uint8_t b)
 #endif
 }
 static void
-compile_ulsh_slow (scm_jit_state *j, uint8_t dst, uint8_t a, uint8_t b)
+compile_ulsh_slow (scm_jit_state *j, uint32_t dst, uint32_t a, uint32_t b)
 {
 }
 
 static void
-compile_ursh_immediate (scm_jit_state *j, uint8_t dst, uint8_t a, uint8_t b)
+compile_ursh_immediate (scm_jit_state *j, uint32_t dst, uint32_t a, uint32_t b)
 {
   b &= 63;
 
@@ -3727,12 +3727,12 @@ compile_ursh_immediate (scm_jit_state *j, uint8_t dst, uint8_t a, uint8_t b)
 #endif
 }
 static void
-compile_ursh_immediate_slow (scm_jit_state *j, uint8_t dst, uint8_t a, uint8_t b)
+compile_ursh_immediate_slow (scm_jit_state *j, uint32_t dst, uint32_t a, uint32_t b)
 {
 }
 
 static void
-compile_ulsh_immediate (scm_jit_state *j, uint8_t dst, uint8_t a, uint8_t b)
+compile_ulsh_immediate (scm_jit_state *j, uint32_t dst, uint32_t a, uint32_t b)
 {
   b &= 63;
 
@@ -3771,12 +3771,12 @@ compile_ulsh_immediate (scm_jit_state *j, uint8_t dst, uint8_t a, uint8_t b)
 #endif
 }
 static void
-compile_ulsh_immediate_slow (scm_jit_state *j, uint8_t dst, uint8_t a, uint8_t b)
+compile_ulsh_immediate_slow (scm_jit_state *j, uint32_t dst, uint32_t a, uint32_t b)
 {
 }
 
 static void
-compile_ulogxor (scm_jit_state *j, uint8_t dst, uint8_t a, uint8_t b)
+compile_ulogxor (scm_jit_state *j, uint32_t dst, uint32_t a, uint32_t b)
 {
 #if SIZEOF_UINTPTR_T >= 8
   emit_sp_ref_u64 (j, T0, a);
@@ -3792,7 +3792,7 @@ compile_ulogxor (scm_jit_state *j, uint8_t dst, uint8_t a, uint8_t b)
 #endif
 }
 static void
-compile_ulogxor_slow (scm_jit_state *j, uint8_t dst, uint8_t a, uint8_t b)
+compile_ulogxor_slow (scm_jit_state *j, uint32_t dst, uint32_t a, uint32_t b)
 {
 }
 
@@ -3868,7 +3868,7 @@ fuse_conditional_branch (scm_jit_state *j, uint32_t **target)
 }
 
 static void
-compile_u64_numerically_equal (scm_jit_state *j, uint16_t a, uint16_t b)
+compile_u64_numerically_equal (scm_jit_state *j, uint32_t a, uint32_t b)
 {
   uint32_t *target;
 #if SIZEOF_UINTPTR_T >= 8
@@ -3911,12 +3911,12 @@ compile_u64_numerically_equal (scm_jit_state *j, uint16_t a, uint16_t b)
 #endif
 }
 static void
-compile_u64_numerically_equal_slow (scm_jit_state *j, uint16_t a, uint16_t b)
+compile_u64_numerically_equal_slow (scm_jit_state *j, uint32_t a, uint32_t b)
 {
 }
 
 static void
-compile_u64_less (scm_jit_state *j, uint16_t a, uint16_t b)
+compile_u64_less (scm_jit_state *j, uint32_t a, uint32_t b)
 {
   uint32_t *target;
 #if SIZEOF_UINTPTR_T >= 8
@@ -3961,12 +3961,12 @@ compile_u64_less (scm_jit_state *j, uint16_t a, uint16_t b)
 #endif
 }
 static void
-compile_u64_less_slow (scm_jit_state *j, uint16_t a, uint16_t b)
+compile_u64_less_slow (scm_jit_state *j, uint32_t a, uint32_t b)
 {
 }
 
 static void
-compile_s64_less (scm_jit_state *j, uint16_t a, uint16_t b)
+compile_s64_less (scm_jit_state *j, uint32_t a, uint32_t b)
 {
   uint32_t *target;
 #if SIZEOF_UINTPTR_T >= 8
@@ -4011,12 +4011,12 @@ compile_s64_less (scm_jit_state *j, uint16_t a, uint16_t b)
 #endif
 }
 static void
-compile_s64_less_slow (scm_jit_state *j, uint16_t a, uint16_t b)
+compile_s64_less_slow (scm_jit_state *j, uint32_t a, uint32_t b)
 {
 }
 
 static void
-compile_f64_numerically_equal (scm_jit_state *j, uint16_t a, uint16_t b)
+compile_f64_numerically_equal (scm_jit_state *j, uint32_t a, uint32_t b)
 {
   jit_reloc_t k;
   uint32_t *target;
@@ -4037,12 +4037,12 @@ compile_f64_numerically_equal (scm_jit_state *j, uint16_t a, uint16_t b)
   add_inter_instruction_patch (j, k, target);
 }
 static void
-compile_f64_numerically_equal_slow (scm_jit_state *j, uint16_t a, uint16_t b)
+compile_f64_numerically_equal_slow (scm_jit_state *j, uint32_t a, uint32_t b)
 {
 }
 
 static void
-compile_f64_less (scm_jit_state *j, uint16_t a, uint16_t b)
+compile_f64_less (scm_jit_state *j, uint32_t a, uint32_t b)
 {
   jit_reloc_t k;
   uint32_t *target;
@@ -4069,12 +4069,12 @@ compile_f64_less (scm_jit_state *j, uint16_t a, uint16_t b)
   add_inter_instruction_patch (j, k, target);
 }
 static void
-compile_f64_less_slow (scm_jit_state *j, uint16_t a, uint16_t b)
+compile_f64_less_slow (scm_jit_state *j, uint32_t a, uint32_t b)
 {
 }
 
 static void
-compile_numerically_equal (scm_jit_state *j, uint16_t a, uint16_t b)
+compile_numerically_equal (scm_jit_state *j, uint32_t a, uint32_t b)
 {
   jit_reloc_t k;
   uint32_t *target;
@@ -4099,7 +4099,7 @@ compile_numerically_equal (scm_jit_state *j, uint16_t a, uint16_t b)
   add_inter_instruction_patch (j, k, target);
 }
 static void
-compile_numerically_equal_slow (scm_jit_state *j, uint16_t a, uint16_t b)
+compile_numerically_equal_slow (scm_jit_state *j, uint32_t a, uint32_t b)
 {
   jit_reloc_t k;
   uint32_t *target;
@@ -4126,7 +4126,7 @@ compile_numerically_equal_slow (scm_jit_state *j, uint16_t a, uint16_t b)
 }
 
 static void
-compile_less (scm_jit_state *j, uint16_t a, uint16_t b)
+compile_less (scm_jit_state *j, uint32_t a, uint32_t b)
 {
   jit_reloc_t k;
   uint32_t *target;
@@ -4154,7 +4154,7 @@ compile_less (scm_jit_state *j, uint16_t a, uint16_t b)
   add_inter_instruction_patch (j, k, target);
 }
 static void
-compile_less_slow (scm_jit_state *j, uint16_t a, uint16_t b)
+compile_less_slow (scm_jit_state *j, uint32_t a, uint32_t b)
 {
   jit_reloc_t k;
   uint32_t *target;
@@ -4271,8 +4271,8 @@ compile_check_positional_arguments_slow (scm_jit_state *j, uint32_t nreq, uint32
 }
 
 static void
-compile_immediate_tag_equals (scm_jit_state *j, uint32_t a, uint16_t mask,
-                              uint16_t expected)
+compile_immediate_tag_equals (scm_jit_state *j, uint32_t a, uint32_t mask,
+                              uint32_t expected)
 {
   jit_reloc_t k;
   uint32_t *target;
@@ -4293,14 +4293,14 @@ compile_immediate_tag_equals (scm_jit_state *j, uint32_t a, uint16_t mask,
   add_inter_instruction_patch (j, k, target);
 }
 static void
-compile_immediate_tag_equals_slow (scm_jit_state *j, uint32_t a, uint16_t mask,
-                              uint16_t expected)
+compile_immediate_tag_equals_slow (scm_jit_state *j, uint32_t a, uint32_t mask,
+                              uint32_t expected)
 {
 }
 
 static void
 compile_heap_tag_equals (scm_jit_state *j, uint32_t obj,
-                         uint16_t mask, uint16_t expected)
+                         uint32_t mask, uint32_t expected)
 {
   jit_reloc_t k;
   uint32_t *target;
@@ -4321,12 +4321,12 @@ compile_heap_tag_equals (scm_jit_state *j, uint32_t obj,
 }
 static void
 compile_heap_tag_equals_slow (scm_jit_state *j, uint32_t obj,
-                         uint16_t mask, uint16_t expected)
+                         uint32_t mask, uint32_t expected)
 {
 }
 
 static void
-compile_eq (scm_jit_state *j, uint16_t a, uint16_t b)
+compile_eq (scm_jit_state *j, uint32_t a, uint32_t b)
 {
   jit_reloc_t k;
   uint32_t *target;
@@ -4347,12 +4347,12 @@ compile_eq (scm_jit_state *j, uint16_t a, uint16_t b)
   add_inter_instruction_patch (j, k, target);
 }
 static void
-compile_eq_slow (scm_jit_state *j, uint16_t a, uint16_t b)
+compile_eq_slow (scm_jit_state *j, uint32_t a, uint32_t b)
 {
 }
 
 static void
-compile_eq_immediate (scm_jit_state *j, uint16_t a, SCM b)
+compile_eq_immediate (scm_jit_state *j, uint32_t a, SCM b)
 {
   jit_reloc_t k;
   uint32_t *target;
@@ -4372,7 +4372,7 @@ compile_eq_immediate (scm_jit_state *j, uint16_t a, SCM b)
   add_inter_instruction_patch (j, k, target);
 }
 static void
-compile_eq_immediate_slow (scm_jit_state *j, uint16_t a, SCM b)
+compile_eq_immediate_slow (scm_jit_state *j, uint32_t a, SCM b)
 {
 }
 
@@ -4496,7 +4496,7 @@ compile_jtable_slow (scm_jit_state *j, uint32_t idx, uint32_t len,
 }
 
 static void
-compile_heap_numbers_equal (scm_jit_state *j, uint16_t a, uint16_t b)
+compile_heap_numbers_equal (scm_jit_state *j, uint32_t a, uint32_t b)
 {
   jit_reloc_t k;
   uint32_t *target;
@@ -4520,12 +4520,12 @@ compile_heap_numbers_equal (scm_jit_state *j, uint16_t a, uint16_t b)
   add_inter_instruction_patch (j, k, target);
 }
 static void
-compile_heap_numbers_equal_slow (scm_jit_state *j, uint16_t a, uint16_t b)
+compile_heap_numbers_equal_slow (scm_jit_state *j, uint32_t a, uint32_t b)
 {
 }
 
 static void
-compile_untag_fixnum (scm_jit_state *j, uint16_t dst, uint16_t a)
+compile_untag_fixnum (scm_jit_state *j, uint32_t dst, uint32_t a)
 {
   emit_sp_ref_scm (j, T0, a);
   emit_rshi (j, T0, T0, 2);
@@ -4538,12 +4538,12 @@ compile_untag_fixnum (scm_jit_state *j, uint16_t dst, uint16_t a)
 #endif
 }
 static void
-compile_untag_fixnum_slow (scm_jit_state *j, uint16_t dst, uint16_t a)
+compile_untag_fixnum_slow (scm_jit_state *j, uint32_t dst, uint32_t a)
 {
 }
 
 static void
-compile_tag_fixnum (scm_jit_state *j, uint16_t dst, uint16_t a)
+compile_tag_fixnum (scm_jit_state *j, uint32_t dst, uint32_t a)
 {
 #if SIZEOF_UINTPTR_T >= 8
   emit_sp_ref_s64 (j, T0, a);
@@ -4555,7 +4555,7 @@ compile_tag_fixnum (scm_jit_state *j, uint16_t dst, uint16_t a)
   emit_sp_set_scm (j, dst, T0);
 }
 static void
-compile_tag_fixnum_slow (scm_jit_state *j, uint16_t dst, uint16_t a)
+compile_tag_fixnum_slow (scm_jit_state *j, uint32_t dst, uint32_t a)
 {
 }
 
@@ -4648,7 +4648,7 @@ compile_srsh_immediate_slow (scm_jit_state *j, uint8_t dst, uint8_t a, uint8_t b
 }
 
 static void
-compile_s64_imm_numerically_equal (scm_jit_state *j, uint16_t a, int16_t b)
+compile_s64_imm_numerically_equal (scm_jit_state *j, uint32_t a, int16_t b)
 {
 #if SIZEOF_UINTPTR_T >= 8
   jit_reloc_t k;
@@ -4692,12 +4692,12 @@ compile_s64_imm_numerically_equal (scm_jit_state *j, uint16_t a, int16_t b)
 #endif
 }
 static void
-compile_s64_imm_numerically_equal_slow (scm_jit_state *j, uint16_t a, int16_t b)
+compile_s64_imm_numerically_equal_slow (scm_jit_state *j, uint32_t a, int16_t b)
 {
 }
 
 static void
-compile_u64_imm_less (scm_jit_state *j, uint16_t a, uint16_t b)
+compile_u64_imm_less (scm_jit_state *j, uint32_t a, uint32_t b)
 {
 #if SIZEOF_UINTPTR_T >= 8
   jit_reloc_t k;
@@ -4741,12 +4741,12 @@ compile_u64_imm_less (scm_jit_state *j, uint16_t a, uint16_t b)
 #endif
 }
 static void
-compile_u64_imm_less_slow (scm_jit_state *j, uint16_t a, uint16_t b)
+compile_u64_imm_less_slow (scm_jit_state *j, uint32_t a, uint32_t b)
 {
 }
 
 static void
-compile_imm_u64_less (scm_jit_state *j, uint16_t a, uint16_t b)
+compile_imm_u64_less (scm_jit_state *j, uint32_t a, uint32_t b)
 {
 #if SIZEOF_UINTPTR_T >= 8
   jit_reloc_t k;
@@ -4790,12 +4790,12 @@ compile_imm_u64_less (scm_jit_state *j, uint16_t a, uint16_t b)
 #endif
 }
 static void
-compile_imm_u64_less_slow (scm_jit_state *j, uint16_t a, uint16_t b)
+compile_imm_u64_less_slow (scm_jit_state *j, uint32_t a, uint32_t b)
 {
 }
 
 static void
-compile_s64_imm_less (scm_jit_state *j, uint16_t a, int16_t b)
+compile_s64_imm_less (scm_jit_state *j, uint32_t a, int16_t b)
 {
 #if SIZEOF_UINTPTR_T >= 8
   jit_reloc_t k;
@@ -4844,12 +4844,12 @@ compile_s64_imm_less (scm_jit_state *j, uint16_t a, int16_t b)
 #endif
 }
 static void
-compile_s64_imm_less_slow (scm_jit_state *j, uint16_t a, int16_t b)
+compile_s64_imm_less_slow (scm_jit_state *j, uint32_t a, int16_t b)
 {
 }
 
 static void
-compile_imm_s64_less (scm_jit_state *j, uint16_t a, int16_t b)
+compile_imm_s64_less (scm_jit_state *j, uint32_t a, int16_t b)
 {
 #if SIZEOF_UINTPTR_T >= 8
   jit_reloc_t k;
@@ -4898,7 +4898,7 @@ compile_imm_s64_less (scm_jit_state *j, uint16_t a, int16_t b)
 #endif
 }
 static void
-compile_imm_s64_less_slow (scm_jit_state *j, uint16_t a, int16_t b)
+compile_imm_s64_less_slow (scm_jit_state *j, uint32_t a, int16_t b)
 {
 }
 
@@ -5233,7 +5233,7 @@ compile_f64_set_slow (scm_jit_state *j, uint8_t ptr, uint8_t idx, uint8_t v)
 }
 
 static void
-compile_s64_to_f64 (scm_jit_state *j, uint16_t dst, uint16_t src)
+compile_s64_to_f64 (scm_jit_state *j, uint32_t dst, uint32_t src)
 {
 #if SIZEOF_UINTPTR_T >= 8
   emit_sp_ref_s64 (j, T0, src);
@@ -5247,7 +5247,7 @@ compile_s64_to_f64 (scm_jit_state *j, uint16_t dst, uint16_t src)
   emit_sp_set_f64 (j, dst, JIT_F0);
 }
 static void
-compile_s64_to_f64_slow (scm_jit_state *j, uint16_t dst, uint16_t src)
+compile_s64_to_f64_slow (scm_jit_state *j, uint32_t dst, uint32_t src)
 {
 }
 
