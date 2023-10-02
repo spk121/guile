@@ -2084,59 +2084,34 @@ compile_reset_frame_slow (scm_jit_state *j, uint32_t nlocals)
 static void
 compile_push (scm_jit_state *j, uint32_t src)
 {
-  jit_gpr_t t = T0;
-  jit_subi (j->jit, SP, SP, sizeof (union scm_vm_stack_element));
-  add_slow_path_patch (j, emit_alloc_frame_for_sp_fast (j, t));
-  emit_mov (j, 0, src + 1, t);
-
-  clear_register_state (j, SP_CACHE_GPR | SP_CACHE_FPR);
-
-  j->frame_size_min++;
-  if (j->frame_size_max != INT32_MAX)
-    j->frame_size_max++;
+  UNREACHABLE ();
 }
 static void
 compile_push_slow (scm_jit_state *j, uint32_t src)
 {
-  jit_gpr_t t = T0;
-  emit_alloc_frame_for_sp_slow (j, t);
-  emit_mov (j, 0, src + 1, t);
-  continue_after_slow_path (j, j->next_ip);
+  UNREACHABLE ();
 }
 
 static void
 compile_pop (scm_jit_state *j, uint32_t dst)
 {
-  emit_mov (j, dst + 1, 0, T0);
-  jit_addi (j->jit, SP, SP, sizeof (union scm_vm_stack_element));
-  emit_store_sp (j);
-
-  clear_register_state (j, SP_CACHE_GPR | SP_CACHE_FPR);
-
-  j->frame_size_min--;
-  if (j->frame_size_max != INT32_MAX)
-    j->frame_size_max--;
+  UNREACHABLE ();
 }
 static void
 compile_pop_slow (scm_jit_state *j, uint32_t dst)
 {
+  UNREACHABLE ();
 }
 
 static void
 compile_drop (scm_jit_state *j, uint32_t nvalues)
 {
-  jit_addi (j->jit, SP, SP, nvalues * sizeof (union scm_vm_stack_element));
-  emit_store_sp (j);
-
-  clear_register_state (j, SP_CACHE_GPR | SP_CACHE_FPR);
-
-  j->frame_size_min -= nvalues;
-  if (j->frame_size_max != INT32_MAX)
-    j->frame_size_max -= nvalues;
+  UNREACHABLE ();
 }
 static void
 compile_drop_slow (scm_jit_state *j, uint32_t nvalues)
 {
+  UNREACHABLE ();
 }
 
 static void
@@ -5337,15 +5312,34 @@ compile_call_scm_from_scmn_scmn_slow (scm_jit_state *j, uint32_t dst,
 #define COMPILE_DOP4(t0, t1, t2, t3)     COMPILE_OP4(t0, t1, t2, t3)
 #define COMPILE_DOP5(t0, t1, t2, t3, t4) COMPILE_OP5(t0, t1, t2, t3, t4)
 
+#define COMPILE_WIDE_OP1(t0) \
+  COMPILE_WIDE_##t0
+#define COMPILE_WIDE_OP2(t0, t1) \
+  COMPILE_WIDE_##t0##__##t1
+#define COMPILE_WIDE_OP3(t0, t1, t2) \
+  COMPILE_WIDE_##t0##__##t1##__##t2
+#define COMPILE_WIDE_OP4(t0, t1, t2, t3) \
+  COMPILE_WIDE_##t0##__##t1##__##t2##__##t3
+#define COMPILE_WIDE_OP5(t0, t1, t2, t3, t4) \
+  COMPILE_WIDE_##t0##__##t1##__##t2##__##t3##__##t4
+
+#define COMPILE_WIDE_DOP1(t0)                 COMPILE_WIDE_OP1(t0)
+#define COMPILE_WIDE_DOP2(t0, t1)             COMPILE_WIDE_OP2(t0, t1)
+#define COMPILE_WIDE_DOP3(t0, t1, t2)         COMPILE_WIDE_OP3(t0, t1, t2)
+#define COMPILE_WIDE_DOP4(t0, t1, t2, t3)     COMPILE_WIDE_OP4(t0, t1, t2, t3)
+#define COMPILE_WIDE_DOP5(t0, t1, t2, t3, t4) COMPILE_WIDE_OP5(t0, t1, t2, t3, t4)
+
 #define COMPILE_NOP(j, comp)          \
   {                                   \
     bad_instruction (j);              \
   }
+#define COMPILE_WIDE_NOP(j, comp) UNREACHABLE()
 
 #define COMPILE_X32(j, comp)                                            \
   {                                                                     \
     comp (j);                                                           \
   }
+#define COMPILE_WIDE_X32(j, comp) UNREACHABLE()
 
 #define COMPILE_X8_C24(j, comp)                                         \
   {                                                                     \
@@ -5353,10 +5347,15 @@ compile_call_scm_from_scmn_scmn_slow (scm_jit_state *j, uint32_t dst,
     UNPACK_24 (j->ip[0], a);                                            \
     comp (j, a);                                                        \
   }
+#define COMPILE_WIDE_X8_C24(j, comp) UNREACHABLE()
+
 #define COMPILE_X8_F24(j, comp)                                         \
   COMPILE_X8_C24 (j, comp)
+#define COMPILE_WIDE_X8_F24(j, comp) UNREACHABLE()
+
 #define COMPILE_X8_S24(j, comp)                                         \
   COMPILE_X8_C24 (j, comp)
+#define COMPILE_WIDE_X8_S24(j, comp) UNREACHABLE()
 
 #define COMPILE_X8_L24(j, comp)                                         \
   {                                                                     \
@@ -5364,24 +5363,47 @@ compile_call_scm_from_scmn_scmn_slow (scm_jit_state *j, uint32_t dst,
     a >>= 8; /* Sign extension.  */                                     \
     comp (j, j->ip + a);                                                \
   }
+#define COMPILE_WIDE_X8_L24(j, comp) UNREACHABLE()
+
 #define COMPILE_X8_C12_C12(j, comp)                                     \
   {                                                                     \
     uint16_t a, b;                                                      \
     UNPACK_12_12 (j->ip[0], a, b);                                      \
     comp (j, a, b);                                                     \
   }
+#define COMPILE_WIDE_X8_C12_C12(j, comp) UNREACHABLE()
+
 #define COMPILE_X8_S12_C12(j, comp)                                     \
   COMPILE_X8_C12_C12 (j, comp)
+#define COMPILE_WIDE_X8_S12_C12(j, comp)                                \
+  {                                                                     \
+    SCM_UNUSED uint16_t a;                                              \
+    uint16_t b;                                                         \
+    UNPACK_12_12 (j->ip[0], a, b);                                      \
+    comp (j, wide_operands[0], b);                                      \
+  }
+
 #define COMPILE_X8_S12_S12(j, comp)                                     \
   COMPILE_X8_C12_C12 (j, comp)
+#define COMPILE_WIDE_X8_S12_S12(j, comp)                                \
+  {                                                                     \
+    comp (j, wide_operands[0], wide_operands[1]);                       \
+  }
+
 #define COMPILE_X8_F12_F12(j, comp)                                     \
   COMPILE_X8_C12_C12 (j, comp)
+#define COMPILE_WIDE_X8_F12_F12(j, comp) UNREACHABLE()
 
 #define COMPILE_X8_S12_Z12(j, comp)                                     \
   {                                                                     \
     uint16_t a = (j->ip[0] >> 8) & 0xfff;                               \
     int16_t b = ((int32_t) j->ip[0]) >> 20; /* Sign extension.  */      \
     comp (j, a, b);                                                     \
+  }
+#define COMPILE_WIDE_X8_S12_Z12(j, comp)                                \
+  {                                                                     \
+    int16_t b = ((int32_t) j->ip[0]) >> 20; /* Sign extension.  */      \
+    comp (j, wide_operands[0], b);                                      \
   }
 
 #define COMPILE_X8_S8_C8_S8(j, comp)                                    \
@@ -5390,10 +5412,30 @@ compile_call_scm_from_scmn_scmn_slow (scm_jit_state *j, uint32_t dst,
     UNPACK_8_8_8 (j->ip[0], a, b, c);                                   \
     comp (j, a, b, c);                                                  \
   }
+#define COMPILE_WIDE_X8_S8_C8_S8(j, comp)                               \
+  {                                                                     \
+    SCM_UNUSED uint8_t a, c;                                            \
+    uint8_t b;                                                          \
+    UNPACK_8_8_8 (j->ip[0], a, b, c);                                   \
+    comp (j, wide_operands[0], b, wide_operands[1]);                    \
+  }
+
 #define COMPILE_X8_S8_S8_C8(j, comp)                                    \
   COMPILE_X8_S8_C8_S8 (j, comp)
+#define COMPILE_WIDE_X8_S8_S8_C8(j, comp)                               \
+  {                                                                     \
+    SCM_UNUSED uint8_t a, b;                                            \
+    uint8_t c;                                                          \
+    UNPACK_8_8_8 (j->ip[0], a, b, c);                                   \
+    comp (j, wide_operands[0], wide_operands[1], c);                    \
+  }
+
 #define COMPILE_X8_S8_S8_S8(j, comp)                                    \
   COMPILE_X8_S8_C8_S8 (j, comp)
+#define COMPILE_WIDE_X8_S8_S8_S8(j, comp)                               \
+  {                                                                     \
+    comp (j, wide_operands[0], wide_operands[1], wide_operands[2]);     \
+  }
 
 #define COMPILE_X8_S8_I16(j, comp)                                      \
   {                                                                     \
@@ -5401,6 +5443,13 @@ compile_call_scm_from_scmn_scmn_slow (scm_jit_state *j, uint32_t dst,
     scm_t_bits b;                                                       \
     UNPACK_8_16 (j->ip[0], a, b);                                       \
     comp (j, a, SCM_PACK (b));                                          \
+  }
+#define COMPILE_WIDE_X8_S8_I16(j, comp)                                 \
+  {                                                                     \
+    SCM_UNUSED uint8_t a;                                               \
+    scm_t_bits b;                                                       \
+    UNPACK_8_16 (j->ip[0], a, b);                                       \
+    comp (j, wide_operands[0], SCM_PACK(b));                            \
   }
 
 #define COMPILE_X8_S8_ZI16(j, comp)                                     \
@@ -5410,19 +5459,30 @@ compile_call_scm_from_scmn_scmn_slow (scm_jit_state *j, uint32_t dst,
     UNPACK_8_16 (j->ip[0], a, b);                                       \
     comp (j, a, SCM_PACK ((scm_t_signed_bits) b));                      \
   }
+#define COMPILE_WIDE_X8_S8_ZI16(j, comp)                                \
+  {                                                                     \
+    SCM_UNUSED uint8_t a;                                               \
+    int16_t b;                                                          \
+    UNPACK_8_16 (j->ip[0], a, b);                                       \
+    comp (j, wide_operands[0], SCM_PACK ((scm_t_signed_bits) b));       \
+  }
 
 #define COMPILE_X32__C32(j, comp)                                       \
   {                                                                     \
     comp (j, j->ip[1]);                                                 \
   }
+#define COMPILE_WIDE_X32__C32(j, comp) UNREACHABLE()
 
 #define COMPILE_X32__L32(j, comp)                                       \
   {                                                                     \
     int32_t a = j->ip[1];                                               \
     comp (j, j->ip + a);                                                \
   }
+#define COMPILE_WIDE_X32__L32(j, comp) UNREACHABLE()
+
 #define COMPILE_X32__N32(j, comp)                                       \
   COMPILE_X32__L32 (j, comp)
+#define COMPILE_WIDE_X32__N32(j, comp) UNREACHABLE()
 
 #define COMPILE_X8_C24__L32(j, comp)                                    \
   {                                                                     \
@@ -5432,14 +5492,23 @@ compile_call_scm_from_scmn_scmn_slow (scm_jit_state *j, uint32_t dst,
     b = j->ip[1];                                                       \
     comp (j, a, j->ip + b);                                             \
   }
+#define COMPILE_WIDE_X8_C24__L32(j, comp) UNREACHABLE()
+
 #define COMPILE_X8_S24__L32(j, comp)                                    \
   COMPILE_X8_C24__L32 (j, comp)
+#define COMPILE_WIDE_X8_S24__L32(j, comp) UNREACHABLE()
+
 #define COMPILE_X8_S24__LO32(j, comp)                                   \
   COMPILE_X8_C24__L32 (j, comp)
+#define COMPILE_WIDE_X8_S24__LO32(j, comp) UNREACHABLE()
+
 #define COMPILE_X8_S24__N32(j, comp)                                    \
   COMPILE_X8_C24__L32 (j, comp)
+#define COMPILE_WIDE_X8_S24__N32(j, comp) UNREACHABLE()
+
 #define COMPILE_X8_S24__R32(j, comp)                                    \
   COMPILE_X8_C24__L32 (j, comp)
+#define COMPILE_WIDE_X8_S24__R32(j, comp) UNREACHABLE()
 
 #define COMPILE_X8_C24__X8_C24(j, comp)                                 \
   {                                                                     \
@@ -5448,12 +5517,19 @@ compile_call_scm_from_scmn_scmn_slow (scm_jit_state *j, uint32_t dst,
     UNPACK_24 (j->ip[1], b);                                            \
     comp (j, a, b);                                                     \
   }
+#define COMPILE_WIDE_X8_C24__X8_C24(j, comp) UNREACHABLE()
+
 #define COMPILE_X8_F24__X8_C24(j, comp)                                 \
   COMPILE_X8_C24__X8_C24(j, comp)
+#define COMPILE_WIDE_X8_F24__X8_C24(j, comp) UNREACHABLE()
+
 #define COMPILE_X8_F24__X8_F24(j, comp)                                 \
   COMPILE_X8_C24__X8_C24(j, comp)
+#define COMPILE_WIDE_X8_F24__X8_F24(j, comp) UNREACHABLE()
+
 #define COMPILE_X8_S24__X8_S24(j, comp)                                 \
   COMPILE_X8_C24__X8_C24(j, comp)
+#define COMPILE_WIDE_X8_S24__X8_S24(j, comp) UNREACHABLE()
 
 #define COMPILE_X8_F12_F12__X8_C24(j, comp)                             \
   {                                                                     \
@@ -5463,6 +5539,7 @@ compile_call_scm_from_scmn_scmn_slow (scm_jit_state *j, uint32_t dst,
     UNPACK_24 (j->ip[1], c);                                            \
     comp (j, a, b, c);                                                  \
   }
+#define COMPILE_WIDE_X8_F12_F12__X8_C24(j, comp) UNREACHABLE()
 
 #define COMPILE_X8_F24__B1_X7_C24(j, comp)                              \
   {                                                                     \
@@ -5473,6 +5550,7 @@ compile_call_scm_from_scmn_scmn_slow (scm_jit_state *j, uint32_t dst,
     UNPACK_24 (j->ip[1], c);                                            \
     comp (j, a, b, c);                                                  \
   }
+#define COMPILE_WIDE_X8_F24__B1_X7_C24(j, comp) UNREACHABLE()
 
 #define COMPILE_X8_S12_S12__C32(j, comp)                                \
   {                                                                     \
@@ -5481,6 +5559,11 @@ compile_call_scm_from_scmn_scmn_slow (scm_jit_state *j, uint32_t dst,
     UNPACK_12_12 (j->ip[0], a, b);                                      \
     c = j->ip[1];                                                       \
     comp (j, a, b, c);                                                  \
+  }
+#define COMPILE_WIDE_X8_S12_S12__C32(j, comp)                           \
+  {                                                                     \
+    uint32_t c = j->ip[1];                                              \
+    comp (j, wide_operands[0], wide_operands[1], c);                    \
   }
 
 #define COMPILE_X8_S24__C16_C16(j, comp)                                \
@@ -5491,6 +5574,7 @@ compile_call_scm_from_scmn_scmn_slow (scm_jit_state *j, uint32_t dst,
     UNPACK_16_16 (j->ip[1], b, c);                                      \
     comp (j, a, b, c);                                                  \
   }
+#define COMPILE_WIDE_X8_S24__C16_C16(j, comp) UNREACHABLE()
 
 #define COMPILE_X8_S24__C32(j, comp)                                    \
   {                                                                     \
@@ -5499,6 +5583,7 @@ compile_call_scm_from_scmn_scmn_slow (scm_jit_state *j, uint32_t dst,
     b = j->ip[1];                                                       \
     comp (j, a, b);                                                     \
   }
+#define COMPILE_WIDE_X8_S24__C32(j, comp) UNREACHABLE()
 
 #define COMPILE_X8_S24__I32(j, comp)                                    \
   {                                                                     \
@@ -5508,19 +5593,43 @@ compile_call_scm_from_scmn_scmn_slow (scm_jit_state *j, uint32_t dst,
     b = j->ip[1];                                                       \
     comp (j, a, SCM_PACK (b));                                          \
   }
+#define COMPILE_WIDE_X8_S24__I32(j, comp) UNREACHABLE()
 
 #define COMPILE_X8_S8_S8_C8__C32(j, comp)                               \
   {                                                                     \
     uint8_t a, b, c;                                                    \
-    uint32_t d;                                                         \
     UNPACK_8_8_8 (j->ip[0], a, b, c);                                   \
+    uint32_t d;                                                         \
     d = j->ip[1];                                                       \
     comp (j, a, b, c, d);                                               \
   }
+#define COMPILE_WIDE_X8_S8_S8_C8__C32(j, comp)                          \
+  {                                                                     \
+    SCM_UNUSED uint16_t a, b;                                           \
+    uint8_t c;                                                          \
+    UNPACK_8_8_8 (j->ip[0], a, b, c);                                   \
+    uint32_t d = j->ip[1];                                              \
+    comp (j, wide_operands[0], wide_operands[1], c, d);                 \
+  }
+
 #define COMPILE_X8_S8_S8_S8__C32(j, comp)                               \
   COMPILE_X8_S8_S8_C8__C32(j, comp)
+#define COMPILE_WIDE_X8_S8_S8_S8__C32(j, comp)                          \
+  {                                                                     \
+    uint32_t d = j->ip[1];                                              \
+    comp (j, wide_operands[0], wide_operands[1], wide_operands[2], d);  \
+  }
+
 #define COMPILE_X8_S8_C8_S8__C32(j, comp)                               \
   COMPILE_X8_S8_S8_C8__C32(j, comp)
+#define COMPILE_WIDE_X8_S8_C8_S8__C32(j, comp)                          \
+  {                                                                     \
+    SCM_UNUSED uint8_t a, c;                                            \
+    uint8_t b;                                                          \
+    UNPACK_8_8_8 (j->ip[0], a, b, c);                                   \
+    uint32_t d = j->ip[1];                                              \
+    comp (j, wide_operands[0], b, wide_operands[1], d);                 \
+  }
 
 #define COMPILE_X8_S24__V32_X8_L24(j, comp)                             \
   {                                                                     \
@@ -5530,12 +5639,14 @@ compile_call_scm_from_scmn_scmn_slow (scm_jit_state *j, uint32_t dst,
     j->next_ip += len;                                                  \
     comp (j, a, len, j->ip + 2);                                        \
   }
+#define COMPILE_WIDE_X8_S24__V32_X8_L24(j, comp) UNREACHABLE()
 
 #define COMPILE_X32__LO32__L32(j, comp)                                 \
   {                                                                     \
     int32_t a = j->ip[1], b = j->ip[2];                                 \
     comp (j, j->ip + a, j->ip + b);                                     \
   }
+#define COMPILE_WIDE_X32__LO32__L32(j, comp) UNREACHABLE()
 
 #define COMPILE_X8_F24__X8_C24__L32(j, comp)                            \
   {                                                                     \
@@ -5546,6 +5657,7 @@ compile_call_scm_from_scmn_scmn_slow (scm_jit_state *j, uint32_t dst,
     c = j->ip[2];                                                       \
     comp (j, a, b, j->ip + c);                                          \
   }
+#define COMPILE_WIDE_X8_F24__X8_C24__L32(j, comp) UNREACHABLE()
 
 #define COMPILE_X8_S24__A32__B32(j, comp)                               \
   {                                                                     \
@@ -5556,6 +5668,7 @@ compile_call_scm_from_scmn_scmn_slow (scm_jit_state *j, uint32_t dst,
     ASSERT (b <= (uint64_t) UINTPTR_MAX);                               \
     comp (j, a, SCM_PACK ((uintptr_t) b));                              \
   }
+#define COMPILE_WIDE_X8_S24__A32__B32(j, comp) UNREACHABLE()
 
 #define COMPILE_X8_S24__AF32__BF32(j, comp)                             \
   {                                                                     \
@@ -5565,6 +5678,7 @@ compile_call_scm_from_scmn_scmn_slow (scm_jit_state *j, uint32_t dst,
     b.u = (((uint64_t) j->ip[1]) << 32) | ((uint64_t) j->ip[2]);        \
     comp (j, a, b.d);                                                   \
   }
+#define COMPILE_WIDE_X8_S24__AF32__BF32(j, comp) UNREACHABLE()
 
 #define COMPILE_X8_S24__AS32__BS32(j, comp)                             \
   {                                                                     \
@@ -5574,6 +5688,7 @@ compile_call_scm_from_scmn_scmn_slow (scm_jit_state *j, uint32_t dst,
     b = (((uint64_t) j->ip[1]) << 32) | ((uint64_t) j->ip[2]);          \
     comp (j, a, (int64_t) b);                                           \
   }
+#define COMPILE_WIDE_X8_S24__AS32__BS32(j, comp) UNREACHABLE()
 
 #define COMPILE_X8_S24__AU32__BU32(j, comp)                             \
   {                                                                     \
@@ -5583,6 +5698,7 @@ compile_call_scm_from_scmn_scmn_slow (scm_jit_state *j, uint32_t dst,
     b = (((uint64_t) j->ip[1]) << 32) | ((uint64_t) j->ip[2]);          \
     comp (j, a, b);                                                     \
   }
+#define COMPILE_WIDE_X8_S24__AU32__BU32(j, comp) UNREACHABLE()
 
 #define COMPILE_X8_S24__B1_X7_F24__X8_L24(j, comp)                      \
   {                                                                     \
@@ -5595,6 +5711,7 @@ compile_call_scm_from_scmn_scmn_slow (scm_jit_state *j, uint32_t dst,
     d = j->ip[2]; d >>= 8; /* Sign extension.  */                       \
     comp (j, a, b, c, j->ip + d);                                       \
   }
+#define COMPILE_WIDE_X8_S24__B1_X7_F24__X8_L24(j, comp) UNREACHABLE()
 
 #define COMPILE_X8_S24__X8_S24__C8_S24(j, comp)                         \
   {                                                                     \
@@ -5605,6 +5722,7 @@ compile_call_scm_from_scmn_scmn_slow (scm_jit_state *j, uint32_t dst,
     UNPACK_8_24 (j->ip[2], c, d);                                       \
     comp (j, a, b, c, d);                                               \
   }
+#define COMPILE_WIDE_X8_S24__X8_S24__C8_S24(j, comp) UNREACHABLE()
 
 #define COMPILE_X8_C24__C8_C24__X8_C24__N32(j, comp)                    \
   {                                                                     \
@@ -5617,6 +5735,7 @@ compile_call_scm_from_scmn_scmn_slow (scm_jit_state *j, uint32_t dst,
     e = j->ip[3];                                                       \
     comp (j, a, b, c, d, j->ip + e);                                    \
   }
+#define COMPILE_WIDE_X8_C24__C8_C24__X8_C24__N32(j, comp) UNREACHABLE()
 
 #define COMPILE_X8_S24__X8_S24__C8_S24__X8_S24(j, comp)                 \
   {                                                                     \
@@ -5628,6 +5747,7 @@ compile_call_scm_from_scmn_scmn_slow (scm_jit_state *j, uint32_t dst,
     UNPACK_24 (j->ip[3], e);                                            \
     comp (j, a, b, c, d, e);                                            \
   }
+#define COMPILE_WIDE_X8_S24__X8_S24__C8_S24__X8_S24(j, comp) UNREACHABLE()
 
 #define COMPILE_X8_S24__N32__N32__C32(j, comp)                          \
   {                                                                     \
@@ -5638,6 +5758,54 @@ compile_call_scm_from_scmn_scmn_slow (scm_jit_state *j, uint32_t dst,
     uint32_t d = j->ip[3];                                              \
     comp (j, a, j->ip + b, j->ip + c, d);                               \
   }
+#define COMPILE_WIDE_X8_S24__N32__N32__C32(j, comp) UNREACHABLE()
+
+static uint8_t
+parse_wide_operands (scm_jit_state *j, uint32_t wide_operands[3])
+{
+  uint8_t opcode = j->ip[0] & 0xff;
+  uint32_t push_count = 0;
+  while (opcode == scm_op_push)
+    {
+      ASSERT (push_count < 3);
+      UNPACK_24 (j->ip[0], wide_operands[push_count]);
+      wide_operands[push_count] -= push_count;
+      push_count++;
+      j->ip = j->next_ip;
+      opcode = j->ip[0] & 0xff;
+      j->next_ip = j->ip + op_lengths[opcode];
+    }
+  ASSERT (push_count > 0);
+
+  uint8_t finish_opcode = j->next_ip[0] & 0xff;
+  uint32_t pop_count = 0;
+  if (finish_opcode == scm_op_drop)
+    {
+      uint32_t count;
+      UNPACK_24 (j->next_ip[0], count);
+      pop_count += count;
+      ASSERT(pop_count <= push_count);
+      j->next_ip = j->next_ip + op_lengths[finish_opcode];
+      finish_opcode = j->next_ip[0] & 0xff;
+    }
+  if (finish_opcode == scm_op_pop)
+    {
+      ASSERT (push_count < 3);
+      ASSERT (push_count - pop_count == 1);
+      switch (push_count) {
+      case 2: wide_operands[2] = wide_operands[1];  /* fall through */
+      case 1: wide_operands[1] = wide_operands[0]; break;
+      default: UNREACHABLE ();
+      }
+      UNPACK_24 (j->next_ip[0], wide_operands[0]);
+      pop_count++;
+      j->next_ip = j->next_ip + op_lengths[finish_opcode];
+      finish_opcode = j->next_ip[0] & 0xff;
+    }
+
+  ASSERT (pop_count == push_count);
+  return opcode;
+}
 
 static uintptr_t opcodes_seen[256 / (SCM_SIZEOF_UINTPTR_T * 8)];
 
@@ -5683,15 +5851,30 @@ compile1 (scm_jit_state *j)
 
   j->next_ip = j->ip + op_lengths[opcode];
 
-  switch (opcode)
+  if (opcode == scm_op_push)
     {
+      uint32_t wide_operands[3];
+      opcode = parse_wide_operands (j, wide_operands);
+      switch (opcode)
+        {
 #define COMPILE1(code, cname, name, arity) \
-      case code: COMPILE_##arity(j, compile_##cname); break;
-      FOR_EACH_VM_OPERATION(COMPILE1)
+          case code: COMPILE_WIDE_##arity(j, compile_##cname); break;
+          FOR_EACH_VM_OPERATION(COMPILE1)
 #undef COMPILE1
-    default:
-      UNREACHABLE ();
+        default:
+          UNREACHABLE ();
+        }
     }
+  else
+    switch (opcode)
+      {
+#define COMPILE1(code, cname, name, arity)                      \
+        case code: COMPILE_##arity(j, compile_##cname); break;
+        FOR_EACH_VM_OPERATION(COMPILE1)
+#undef COMPILE1
+      default:
+        UNREACHABLE ();
+      }
 
   j->ip = j->next_ip;
 }
@@ -5702,14 +5885,35 @@ compile_slow_path (scm_jit_state *j)
   uint8_t opcode = j->ip[0] & 0xff;
   j->next_ip = j->ip + op_lengths[opcode];
 
-  switch (opcode)
+  if (opcode == scm_op_push)
     {
+      uint32_t wide_operands[3];
+      opcode = parse_wide_operands (j, wide_operands);
+      ptrdiff_t offset = j->ip - j->start;
+      j->labels[slow_label_offset (offset)] = jit_address (j->jit);
+      switch (opcode)
+        {
 #define COMPILE_SLOW(code, cname, name, arity) \
-      case code: COMPILE_##arity(j, compile_##cname##_slow); break;
-      FOR_EACH_VM_OPERATION(COMPILE_SLOW)
+          case code: COMPILE_WIDE_##arity(j, compile_##cname##_slow); break;
+          FOR_EACH_VM_OPERATION(COMPILE_SLOW)
 #undef COMPILE_SLOW
-    default:
-      UNREACHABLE ();
+        default:
+          UNREACHABLE ();
+        }
+    }
+  else
+    {
+      ptrdiff_t offset = j->ip - j->start;
+      j->labels[slow_label_offset (offset)] = jit_address (j->jit);
+      switch (opcode)
+        {
+#define COMPILE_SLOW(code, cname, name, arity)                          \
+          case code: COMPILE_##arity(j, compile_##cname##_slow); break;
+          FOR_EACH_VM_OPERATION(COMPILE_SLOW)
+#undef COMPILE_SLOW
+        default:
+          UNREACHABLE ();
+        }
     }
 
   j->ip = j->next_ip;
@@ -5838,8 +6042,6 @@ compile (scm_jit_state *j)
   j->ip = (uint32_t *) j->start;
   while (j->ip < j->end)
     {
-      ptrdiff_t offset = j->ip - j->start;
-      j->labels[slow_label_offset (offset)] = jit_address (j->jit);
       // set register state from j->register_states[offset] ?
       reset_register_state (j, SP_IN_REGISTER);
       compile_slow_path (j);
