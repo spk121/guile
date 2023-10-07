@@ -503,6 +503,7 @@ dnl Check for Winsock and other functionality on Win32 (*not* CygWin)
 dnl
 EXTRA_DEFS=""
 mingw_libpath=false
+guile_tools_exe=false
 case $host in
   *-*-mingw*)
     AC_CHECK_HEADER(winsock2.h, [AC_DEFINE([HAVE_WINSOCK2_H], 1,
@@ -515,10 +516,12 @@ case $host in
         [Define if you need additional CPP macros on Win32 platforms.])
     fi
     mingw_libpath=true
+    guile_tools_exe=true
     ;;
 esac
 AC_SUBST(EXTRA_DEFS)
 AM_CONDITIONAL([MINGW_LIBPATH], [test x$mingw_libpath = xtrue])
+AM_CONDITIONAL([GUILE_TOOLE_EXE], [test x$guile_tools_exe = xtrue])
 
 # Reasons for testing:
 #   crt_externs.h - Darwin specific

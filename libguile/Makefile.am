@@ -55,6 +55,10 @@ ETAGS_ARGS = --regex='/SCM_\(GLOBAL_\)?\(G?PROC\|G?PROC1\|SYMBOL\|VCELL\|CONST_L
 lib_LTLIBRARIES = libguile-@GUILE_EFFECTIVE_VERSION@.la
 bin_PROGRAMS = guile
 
+if GUILE_TOOLS_EXE
+bin_PROGRAMS += guile-tools$(EXEEXT)
+endif
+
 noinst_PROGRAMS = guile_filter_doc_snarfage gen-scmconfig
 
 gen_scmconfig_SOURCES = gen-scmconfig.c
@@ -483,6 +487,13 @@ EXTRA_libguile_@GUILE_EFFECTIVE_VERSION@_la_SOURCES = \
     posix-w32.c					\
     locale-categories.h			\
     mini-gmp.h
+
+if GUILE_TOOLS_EXE
+guile_tools_SOURCES = guile-tools.c
+guile_tools_CFLAGS = $(GUILE_CFLAGS) $(AM_CFLAGS)
+guile_tools_LDADD = libguile-@GUILE_EFFECTIVE_VERSION@.la $(gnulib_library)
+guile_tools_LDFLAGS = $(GUILE_CFLAGS)
+endif
 
 ## delete guile-snarf.awk from the installation bindir, in case it's
 ## lingering there due to an earlier guile version not having been
