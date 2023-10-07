@@ -32,6 +32,8 @@ SCM_API SCM scm_c_primitive_load (const char *filename);
 SCM_API SCM scm_sys_package_data_dir (void);
 SCM_API SCM scm_sys_library_dir (void);
 SCM_API SCM scm_sys_site_dir (void);
+SCM_INTERNAL SCM scm_sys_extensions_dir (void);
+SCM_INTERNAL SCM scm_sys_ccache_dir (void);
 SCM_API SCM scm_sys_global_site_dir (void);
 SCM_API SCM scm_sys_site_ccache_dir (void);
 SCM_API SCM scm_search_path (SCM path, SCM filename, SCM rest);

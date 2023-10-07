@@ -247,6 +247,76 @@ struct main_func_closure
 
 static void *invoke_main_func(void *body_data);
 
+// from load.c
+extern char *scm_i_self_path;
+
+#if defined(_WIN32) && !defined(__CYGWIN__)
+#include <unistr.h>
+/* used outside this file: */
+static char *get_self_path(char *exec_file)
+{
+  wchar_t *path;
+  char *u8path;
+  DWORD r, sz = 1024;
+  size_t len;
+
+  while (1) {
+    path = (wchar_t *)malloc(sz * sizeof(wchar_t));
+    r = GetModuleFileNameW(NULL, path, sz);
+    if ((r == sz)
+        && (GetLastError() == ERROR_INSUFFICIENT_BUFFER)) {
+      // free(path);
+      sz = 2 * sz;
+    } else
+      break;
+  }
+
+  u8path = u16_to_u8 (path, wcslen(path), NULL, &len);
+
+  // strip off the last element, which should be the .exe
+  for (size_t i = len - 1; i >= 0; i --)
+    if (u8path[i] == '\\')
+      {
+        u8path[i] = '\0';
+        break;
+      }
+
+  return u8path;
+}
+#elif defined(__linux__)
+# include <errno.h>
+# include <unistd.h>
+static char *get_self_path(char *exec_file)
+{
+  char *s;
+  ssize_t len, blen = 256;
+
+  s = malloc(blen);
+
+  while (1) {
+    len = readlink("/proc/self/exe", s, blen-1);
+    if (len == (blen-1)) {
+      free(s);
+      blen *= 2;
+      s = malloc(blen);
+    } else if (len < 0) {
+      fprintf(stderr, "failed to get self (%d)\n", errno);
+      exit(1);
+    } else
+      break;
+  }
+  s[len] = '\0';
+  for (size_t i = len - 1; i >= 0; i --)
+    if (s[i] == '/')
+      {
+        s[i] = '\0';
+        break;
+      }
+
+  return s;
+}
+#endif
+
 
 /* Fire up the Guile Scheme interpreter.
 
@@ -281,6 +351,8 @@ scm_boot_guile (int argc, char ** argv, void (*main_func) (), void *closure)
 {
   void *res;
   struct main_func_closure c;
+
+  scm_i_self_path = get_self_path (argv[0]);
 
   /* On Windows, convert backslashes in argv[0] to forward
      slashes.  */
@@ -356,6 +428,13 @@ scm_i_init_guile (void *base)
 {
   if (scm_initialized_p)
     return;
+
+  if (scm_i_self_path == NULL)
+    {
+      char p[1024];
+      getcwd (p, 1024);
+      scm_i_self_path = strdup (p);
+    }
 
   scm_storage_prehistory ();
   scm_threads_prehistory (base);  /* requires storage_prehistory */
