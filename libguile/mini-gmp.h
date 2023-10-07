@@ -53,6 +53,8 @@ void mp_get_memory_functions (void *(**) (size_t),
 			      void *(**) (void *, size_t, size_t),
 			      void (**) (void *, size_t));
 
+#define MINI_GMP_USE_INTPTR_T
+
 #ifdef MINI_GMP_USE_INTPTR_T
 typedef uintptr_t mp_limb_t;
 typedef intptr_t gmp_sint_t;
