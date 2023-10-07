@@ -199,10 +199,12 @@ AC_ARG_ENABLE(guile-debug,
     SCM_I_GSC_GUILE_DEBUG=1
   fi)
 
+SCM_I_GSC_USE_RELATIVE_PATHS=0
 AC_ARG_ENABLE([relative-paths],
   [AS_HELP_STRING([--enable-relative-paths],
                   [Guile installs into a single directory])],
   if test "x$enable_relative_paths" = xyes || test "x$enable_relative_paths" = xy; then
+    SCM_I_GSC_USE_RELATIVE_PATHS=1
     bindir='${prefix}/app'
     sbindir='${prefix}/app/sbin'
     libdir='${prefix}/app/lib'
@@ -224,6 +226,7 @@ AC_ARG_ENABLE([relative-paths],
     localedir='${datarootdir}/locale'
     mandir='${datarootdir}/man'
   fi)
+AC_SUBST([SCM_I_GSC_USE_RELATIVE_PATHS])
 
 AC_ARG_ENABLE(posix,
   [  --disable-posix         omit non-essential POSIX interfaces],,
