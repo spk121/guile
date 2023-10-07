@@ -150,7 +150,6 @@ dnl locking support.  See <http://bugs.gnu.org/14404>.
 AC_DEFINE([GNULIB_LOCK], [1],
   [Define to allow Gnulib modules to use Guile's locks.])
 
-
 LT_INIT([dlopen win32-dll])
 
 AM_CONDITIONAL([HAVE_SHARED_LIBRARIES], [test "x$enable_shared" = "xyes"])
@@ -198,6 +197,32 @@ AC_ARG_ENABLE(guile-debug,
                   [include internal debugging functions])],
   if test "$enable_guile_debug" = y || test "$enable_guile_debug" = yes; then
     SCM_I_GSC_GUILE_DEBUG=1
+  fi)
+
+AC_ARG_ENABLE([relative-paths],
+  [AS_HELP_STRING([--enable-relative-paths],
+                  [Guile installs into a single directory])],
+  if test "x$enable_relative_paths" = xyes || test "x$enable_relative_paths" = xy; then
+    bindir='${prefix}/app'
+    sbindir='${prefix}/app/sbin'
+    libdir='${prefix}/app/lib'
+    libexecdir='${prefix}/app/libexec'
+    datarootdir='${prefix}/app/share'
+    datadir='${datarootdir}'
+    sysconfdir='${prefix}/app/etc'
+    sharedstatedir='${prefix}/app/com'
+    localstatedir='${prefix}/app/var'
+    runstatedir='${localstatedir}/app/run'
+    includedir='${prefix}/app/include'
+    oldincludedir='${prefix}/app/include'
+    docdir='${datarootdir}/doc/${PACKAGE_TARNAME}'
+    infodir='${datarootdir}/info'
+    htmldir='${docdir}'
+    dvidir='${docdir}'
+    pdfdir='${docdir}'
+    psdir='${docdir}'
+    localedir='${datarootdir}/locale'
+    mandir='${datarootdir}/man'
   fi)
 
 AC_ARG_ENABLE(posix,
