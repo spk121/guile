@@ -682,6 +682,43 @@ is_absolute_file_name (SCM filename)
   return 0;
 }
 
+/* Return true if COMPILED_FILENAME is in the directory PATH, and if
+   PATH contains a filename named "FINAL" to indicate that the files
+   therein should always be considered definitive, even if older
+   than the corresponding source files. */
+static int
+compiled_is_final (SCM compiled_filename, SCM path)
+{
+  size_t compiled_filename_len = scm_c_string_length (compiled_filename);
+  size_t path_len = scm_c_string_length (path);
+  size_t i;
+  char *c_path;
+  struct stat stat_buf;
+  int ret;
+
+  if (compiled_filename_len <= path_len)
+    return 0;
+
+  /* Check if compiled_filename starts with path ignoring slash
+     direction */
+  i = 0;
+  while (i < path_len)
+    {
+      scm_t_wchar c1, c2;
+      c1 = SCM_CHAR (scm_c_string_ref (compiled_filename, i));
+      c2 = SCM_CHAR (scm_c_string_ref (path, i));
+      if ((c1 != c2)
+          && ((c1 != '/' && c1 != '\\') || (c2 != '/' && c2 != '\\')))
+        return 0;
+      i++;
+    }
+
+  c_path = scm_to_locale_string (scm_string_append (scm_list_2 (path, scm_from_latin1_string ("/FINAL"))));
+  ret = stat (c_path, &stat_buf) == 0 && !(stat_buf.st_mode & S_IFDIR);
+  free (c_path);
+  return ret;
+}
+
 /* Return true if COMPILED_FILENAME is newer than source file
    FULL_FILENAME, false otherwise.  */
 static int
@@ -697,6 +734,9 @@ compiled_is_fresh (SCM full_filename, SCM compiled_filename,
   if (source_mtime.tv_sec < compiled_mtime.tv_sec
       || (source_mtime.tv_sec == compiled_mtime.tv_sec
           && source_mtime.tv_nsec <= compiled_mtime.tv_nsec))
+    compiled_is_newer = 1;
+  else if (compiled_is_final (compiled_filename, scm_sys_ccache_dir())
+           || compiled_is_final (compiled_filename, scm_sys_site_ccache_dir ()))
     compiled_is_newer = 1;
   else
     {
