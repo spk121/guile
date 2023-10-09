@@ -524,7 +524,7 @@ case $host in
 esac
 AC_SUBST(EXTRA_DEFS)
 AM_CONDITIONAL([MINGW_LIBPATH], [test x$mingw_libpath = xtrue])
-AM_CONDITIONAL([GUILE_TOOLE_EXE], [test x$guile_tools_exe = xtrue])
+AM_CONDITIONAL([GUILE_TOOLS_EXE], [test x$guile_tools_exe = xtrue])
 
 # Reasons for testing:
 #   crt_externs.h - Darwin specific
