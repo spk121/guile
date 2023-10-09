@@ -47,7 +47,7 @@ endif
 AM_CFLAGS = $(GCC_CFLAGS) $(CFLAG_VISIBILITY)
 
 ## The Gnulib Libtool archive.
-gnulib_library = $(top_builddir)/lib/libgnu.la
+LTLIBGNU = $(top_builddir)/lib/libgnu.la
 
 ETAGS_ARGS = --regex='/SCM_\(GLOBAL_\)?\(G?PROC\|G?PROC1\|SYMBOL\|VCELL\|CONST_LONG\).*\"\([^\"]\)*\"/\3/' \
    --regex='/[ \t]*SCM_[G]?DEFINE1?[ \t]*(\([^,]*\),[^,]*/\1/'
@@ -117,12 +117,12 @@ guile_filter_doc_snarfage$(EXEEXT): $(guile_filter_doc_snarfage_OBJECTS) $(guile
 	if [ "$(cross_compiling)" = "yes" ]; then \
 		$(CCLD_FOR_BUILD) -o $@ $(guile_filter_doc_snarfage_OBJECTS); \
 	else \
-		$(LINK) $(guile_filter_doc_snarfage_OBJECTS) $(LDADD) $(gnulib_library) $(LIBS); \
+		$(LINK) $(guile_filter_doc_snarfage_OBJECTS) $(LDADD) $(LTLIBGNU) $(LIBS); \
 	fi
 
 guile_SOURCES = guile.c
 guile_CFLAGS = $(GUILE_CFLAGS) $(AM_CFLAGS)
-guile_LDADD = libguile-@GUILE_EFFECTIVE_VERSION@.la $(gnulib_library)
+guile_LDADD = libguile-@GUILE_EFFECTIVE_VERSION@.la $(LTLIBGNU)
 guile_LDFLAGS = $(GUILE_CFLAGS)
 
 libguile_@GUILE_EFFECTIVE_VERSION@_la_CFLAGS = $(GUILE_CFLAGS) $(AM_CFLAGS)
@@ -490,7 +490,7 @@ EXTRA_libguile_@GUILE_EFFECTIVE_VERSION@_la_SOURCES = \
 if GUILE_TOOLS_EXE
 guile_tools_SOURCES = guile-tools.c
 guile_tools_CFLAGS = $(GUILE_CFLAGS) $(AM_CFLAGS)
-guile_tools_LDADD = libguile-@GUILE_EFFECTIVE_VERSION@.la $(gnulib_library)
+guile_tools_LDADD = libguile-@GUILE_EFFECTIVE_VERSION@.la $(LTLIBGNU)
 guile_tools_LDFLAGS = $(GUILE_CFLAGS)
 endif
 
@@ -561,7 +561,7 @@ noinst_HEADERS += vm-engine.c
 libguile_@GUILE_EFFECTIVE_VERSION@_la_DEPENDENCIES = @LIBLOBJS@
 
 libguile_@GUILE_EFFECTIVE_VERSION@_la_LIBADD =		\
-  @LIBLOBJS@ $(gnulib_library) $(LTLIBGMP) $(LTLIBLTDL)
+  @LIBLOBJS@ $(LTLIBGNU) $(LTLIBGMP)
 
 # Libtool version info.
 version_info = @LIBGUILE_INTERFACE_CURRENT@:@LIBGUILE_INTERFACE_REVISION@:@LIBGUILE_INTERFACE_AGE@
