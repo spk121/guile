@@ -46,8 +46,10 @@
 #include "gsubr.h"
 #include "list.h"
 #include "modules.h"
+#include "pairs.h"
 #include "numbers.h"
 #include "strings.h"
+#include "symbols.h"
 #include "threads.h"
 #include "variable.h"
 #include "version.h"
@@ -117,6 +119,88 @@ SCM_DEFINE_STATIC (scm_dlsym, "dlsym", 2, 0, 0, (SCM obj, SCM name), "")
   }
 
   return scm_from_pointer (sym, NULL);
+}
+#undef FUNC_NAME
+
+SCM_DEFINE_STATIC (scm_add_dll_search_directory, "add-dll-search-directory",
+                   1, 0, 0, (SCM path),
+                   "Given a string which is a path, this adds the path to\n"
+                   "the list of directories searched for DLLs.  Note that\n"
+                   "directories added will only be used when the 'user-dirs\n"
+                   "option was added to the set-default-dll-directory\n"
+                   "\n"
+                   "For systems that aren't Win32, this procedure does nothing.\n")
+#define FUNC_NAME s_scm_add_dll_search_directory
+{
+#ifdef _WIN32
+  char *c_path = scm_to_utf8_string (path);
+  size_t len = strlen (c_path);
+  for (int i = 0; i < len; i ++)
+    {
+      if (c_path[i] == '/')
+        c_path[i] = '\\';
+    }
+  uint16_t *c_wpath = u8_to_u16 ((uint8_t *) c_path, strlen(c_path) + 1, NULL, &len);
+  free (c_path);
+  wchar_t buffer[4096];
+  DWORD outlen = GetFullPathNameW (c_wpath, 4096, buffer, NULL);
+  free (c_wpath);
+  if (outlen < 4096)
+    {
+      void *ret = AddDllDirectory (buffer);
+      // A NULL return value indicates failure.
+      if (ret)
+        return SCM_BOOL_T;
+      return SCM_BOOL_F;
+    }
+  return SCM_BOOL_F;
+#endif
+  return SCM_BOOL_F;
+}
+#undef FUNC_NAME
+
+SCM_SYMBOL (sym_application_dir, "application-dir");
+SCM_SYMBOL (sym_default_dirs, "default-dirs");
+SCM_SYMBOL (sym_system32, "system32");
+SCM_SYMBOL (sym_user_dirs, "user-dirs");
+
+SCM_DEFINE_STATIC (scm_set_default_dll_directories, "set-default-dll-directories", 0, 0, 1,
+                   (SCM rest),
+                   "Receives zero or more symbols that specify a default set of directories\n"
+                   "to search when a calling process loads a DLL.  The search path is used\n"
+                   "by dlopen.\n"
+                   "'application-dir adds the installation directory of the calling process\n"
+                   "'system32 adds the C:/Windows/System32 directory\n"
+                   "'user-dirs allows the add-dll-directory to add DLLs to the search path\n"
+                   "'default-dirs is shorthand for 'application-dir, 'system32, and 'user-dirs\n"
+                   "\n"
+                   "For systems that aren't Win32, this procedure does nothing.\n")
+#define FUNC_NAME s_scm_set_default_dll_directories
+{
+#ifdef _WIN32
+  SCM l;
+  DWORD flags = 0;
+  BOOL ret;
+
+  SCM_VALIDATE_REST_ARGUMENT (rest);
+  for (l = rest; scm_is_pair (l); l = SCM_CDR (l))
+    {
+      if (scm_is_eq (l, sym_application_dir))
+        flags |= LOAD_LIBRARY_SEARCH_APPLICATION_DIR;
+      else if (scm_is_eq (l, sym_system32))
+        flags |= LOAD_LIBRARY_SEARCH_SYSTEM32;
+      else if (scm_is_eq (l, sym_user_dirs))
+        flags |= LOAD_LIBRARY_SEARCH_USER_DIRS;
+      else if (scm_is_eq (l, sym_default_dirs))
+        flags |= LOAD_LIBRARY_SEARCH_DEFAULT_DIRS;
+      else
+        scm_out_of_range (FUNC_NAME, l);
+    }
+  ret = SetDefaultDllDirectories (flags);
+  if (ret)
+    return SCM_BOOL_T;
+#endif
+  return SCM_BOOL_F;
 }
 #undef FUNC_NAME
 
