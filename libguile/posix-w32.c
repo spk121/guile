@@ -33,6 +33,7 @@
 #include <signal.h>
 #include <io.h>
 #include <fcntl.h>
+#include <unistr.h>
 
 #include "gc.h"        /* for scm_*alloc, scm_strdup */
 #include "threads.h"   /* for scm_i_scm_pthread_mutex_lock */
@@ -229,8 +230,43 @@ dlopen_w32 (const char *name, int flags)
   void *ret = NULL;
   if (name == NULL || *name == '\0')
     return (void *) GetModuleHandle (NULL);
-  ret = (void *) LoadLibrary (name);
-  GetModuleHandleEx (0, name, (HMODULE *) & ret);
+  // LoadLibrary expects a wchar_t string that is either an absolute
+  // path using backslashes or is just a filename.
+  size_t len;
+  uint16_t *c_wpath = u8_to_u16 (name, strlen(name) + 1, NULL, &len);
+  int relative = 0;
+  for (size_t i = 0; i < len; i ++)
+    {
+      if (c_wpath[i] == L'/')
+        {
+          c_wpath[i] = L'\\';
+          relative = 1;
+        }
+      // The ':' is because c:foo.dll is also a relative path.
+      else if (c_wpath[i] == L'\\' || c_wpath[i] == L':')
+        relative = 1;
+    }
+  if (relative)
+    {
+      wchar_t buffer[4096];
+      DWORD outlen = GetFullPathNameW (c_wpath, 4096, buffer, NULL);
+      if (outlen < 4096)
+        {
+          ret = (void *) LoadLibraryW (buffer);
+          if (ret != NULL)
+            GetModuleHandleExW (0, buffer, (HMODULE *) & ret);
+        }
+      else
+        ret = NULL;
+    }
+  else
+    {
+      ret = (void *) LoadLibraryW (c_wpath);
+      wprintf(L"LoadLibrary %ls %p %lu\n", c_wpath, ret, GetLastError());
+      if (ret != NULL)
+        GetModuleHandleExW (0, c_wpath, (HMODULE *) & ret);
+    }
+  free (c_wpath);
   return ret;
 }
 
