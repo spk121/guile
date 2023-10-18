@@ -248,9 +248,9 @@ dlopen_w32 (const char *name, int flags)
     }
   if (relative)
     {
-      wchar_t buffer[4096];
+      wchar_t buffer[4096] = L"";
       DWORD outlen = GetFullPathNameW (c_wpath, 4096, buffer, NULL);
-      if (outlen < 4096)
+      if (outlen > 0 && outlen < 4096)
         {
           ret = (void *) LoadLibraryW (buffer);
           if (ret != NULL)
