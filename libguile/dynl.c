@@ -37,6 +37,7 @@
 #else
 #include <dlfcn.h>
 #endif
+#include <unistr.h>
 
 #include "boolean.h"
 #include "deprecation.h"
@@ -142,10 +143,10 @@ SCM_DEFINE_STATIC (scm_add_dll_search_directory, "add-dll-search-directory",
     }
   uint16_t *c_wpath = u8_to_u16 ((uint8_t *) c_path, strlen(c_path) + 1, NULL, &len);
   free (c_path);
-  wchar_t buffer[4096];
+  wchar_t buffer[4096] = L"";
   DWORD outlen = GetFullPathNameW (c_wpath, 4096, buffer, NULL);
   free (c_wpath);
-  if (outlen < 4096)
+  if (outlen > 0 && outlen< 4096)
     {
       void *ret = AddDllDirectory (buffer);
       // A NULL return value indicates failure.
