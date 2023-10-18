@@ -350,6 +350,10 @@ setzone (SCM zone, int pos, const char *subr)
       char *newtz_full = scm_malloc (strlen (newtz) + 4);
       strcpy (newtz_full, "TZ=");
       strcat (newtz_full, newtz);
+      // In Win32, _putenv of TZ will invalidate the previous getenv of
+      // TZ.
+      if (oldtz)
+        oldtz = strdup (oldtz);
       _putenv (newtz_full);
       free (newtz_full);
 #endif
