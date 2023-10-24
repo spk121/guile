@@ -71,8 +71,8 @@ SCM_DEFINE (scm_sys_symbols, "%symbols", 0, 0, 0,
 /* {Symbols}
  */
 
-unsigned long
-scm_i_hash_symbol (SCM obj, unsigned long n, void *closure)
+uintptr_t
+scm_i_hash_symbol (SCM obj, uintptr_t n, void *closure)
 {
   return scm_i_symbol_hash (obj) % n;
 }
@@ -80,7 +80,7 @@ scm_i_hash_symbol (SCM obj, unsigned long n, void *closure)
 struct string_lookup_data
 {
   SCM string;
-  unsigned long string_hash;
+  uintptr_t string_hash;
 };
 
 static int
@@ -102,7 +102,7 @@ string_lookup_predicate_fn (SCM sym, void *closure)
 }
 
 static SCM
-lookup_interned_symbol (SCM name, unsigned long raw_hash)
+lookup_interned_symbol (SCM name, uintptr_t raw_hash)
 {
   struct string_lookup_data data;
 
@@ -118,7 +118,7 @@ struct latin1_lookup_data
 {
   const char *str;
   size_t len;
-  unsigned long string_hash;
+  uintptr_t string_hash;
 };
 
 static int
@@ -134,7 +134,7 @@ latin1_lookup_predicate_fn (SCM sym, void *closure)
 
 static SCM
 lookup_interned_latin1_symbol (const char *str, size_t len,
-                               unsigned long raw_hash)
+                               uintptr_t raw_hash)
 {
   struct latin1_lookup_data data;
 
@@ -151,7 +151,7 @@ struct utf8_lookup_data
 {
   const char *str;
   size_t len;
-  unsigned long string_hash;
+  uintptr_t string_hash;
 };
 
 static int
@@ -201,7 +201,7 @@ utf8_lookup_predicate_fn (SCM sym, void *closure)
 
 static SCM
 lookup_interned_utf8_symbol (const char *str, size_t len,
-                             unsigned long raw_hash)
+                             uintptr_t raw_hash)
 {
   struct utf8_lookup_data data;
 
@@ -239,7 +239,7 @@ static SCM
 scm_i_str2symbol (SCM str)
 {
   SCM symbol;
-  unsigned long raw_hash = scm_i_string_hash (str);
+  uintptr_t raw_hash = scm_i_string_hash (str);
 
   symbol = lookup_interned_symbol (str, raw_hash);
   if (scm_is_true (symbol))
@@ -261,7 +261,7 @@ scm_i_str2symbol (SCM str)
 static SCM
 scm_i_str2uninterned_symbol (SCM str)
 {
-  unsigned long raw_hash = scm_i_string_hash (str);
+  uintptr_t raw_hash = scm_i_string_hash (str);
 
   return scm_i_make_symbol (str, SCM_I_F_SYMBOL_UNINTERNED, raw_hash);
 }
@@ -416,7 +416,7 @@ scm_from_latin1_symbol (const char *sym)
 SCM
 scm_from_latin1_symboln (const char *sym, size_t len)
 {
-  unsigned long hash;
+  uintptr_t hash;
   SCM ret;
 
   if (len == (size_t) -1)
@@ -442,7 +442,7 @@ scm_from_utf8_symbol (const char *sym)
 SCM
 scm_from_utf8_symboln (const char *sym, size_t len)
 {
-  unsigned long hash;
+  uintptr_t hash;
   SCM ret;
 
   if (len == (size_t) -1)

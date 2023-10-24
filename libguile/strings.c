@@ -760,7 +760,7 @@ scm_i_string_set_x (SCM str, size_t p, scm_t_wchar chr)
 #define SYMBOL_STRINGBUF SCM_CELL_OBJECT_1
 
 SCM
-scm_i_make_symbol (SCM name, scm_t_bits flags, unsigned long hash)
+scm_i_make_symbol (SCM name, scm_t_bits flags, uintptr_t hash)
 {
   SCM buf, symbol;
   size_t start, length = STRING_LENGTH (name);

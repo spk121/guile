@@ -31,7 +31,7 @@
 
 
 #define scm_is_symbol(x)            (SCM_HAS_TYP7 (x, scm_tc7_symbol))
-#define scm_i_symbol_hash(x)        ((unsigned long) SCM_CELL_WORD_2 (x))
+#define scm_i_symbol_hash(x)        ((uintptr_t) SCM_CELL_WORD_2 (x))
 #define scm_i_symbol_is_interned(x) \
   (!(SCM_CELL_WORD_0 (x) & SCM_I_F_SYMBOL_UNINTERNED))
 
@@ -122,8 +122,8 @@ SCM_API SCM scm_take_utf8_symboln (char *sym, size_t len);
 
 /* internal functions. */
 
-SCM_INTERNAL unsigned long scm_i_hash_symbol (SCM obj, unsigned long n,
-                                              void *closure);
+SCM_INTERNAL uintptr_t scm_i_hash_symbol (SCM obj, uintptr_t n,
+                                          void *closure);
 
 SCM_INTERNAL void scm_symbols_prehistory (void);
 SCM_INTERNAL void scm_init_symbols (void);
