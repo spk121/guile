@@ -22,23 +22,28 @@
 
 
 
+#include <stdint.h>
+
 #include "libguile/scm.h"
 
 
 
-SCM_INTERNAL unsigned long scm_i_locale_string_hash (const char *str,
-                                                     size_t len);
-SCM_INTERNAL unsigned long scm_i_latin1_string_hash (const  char *str,
-                                                     size_t len);
-SCM_INTERNAL unsigned long scm_i_utf8_string_hash (const char *str,
-                                                   size_t len);
+/* Hashes should have the same size as pointers */
+typedef uintptr_t scm_t_hash;
 
-SCM_INTERNAL unsigned long scm_i_string_hash (SCM str);
-SCM_API unsigned long scm_ihashq (SCM obj, unsigned long n);
+SCM_INTERNAL scm_t_hash scm_i_locale_string_hash (const char *str,
+                                                  size_t len);
+SCM_INTERNAL scm_t_hash scm_i_latin1_string_hash (const  char *str,
+                                                  size_t len);
+SCM_INTERNAL scm_t_hash scm_i_utf8_string_hash (const char *str,
+                                                size_t len);
+
+SCM_INTERNAL scm_t_hash scm_i_string_hash (SCM str);
+SCM_API scm_t_hash scm_ihashq (SCM obj, scm_t_hash n);
 SCM_API SCM scm_hashq (SCM obj, SCM n);
-SCM_API unsigned long scm_ihashv (SCM obj, unsigned long n);
+SCM_API scm_t_hash scm_ihashv (SCM obj, scm_t_hash n);
 SCM_API SCM scm_hashv (SCM obj, SCM n);
-SCM_API unsigned long scm_ihash (SCM obj, unsigned long n);
+SCM_API scm_t_hash scm_ihash (SCM obj, scm_t_hash n);
 SCM_API SCM scm_hash (SCM obj, SCM n);
 SCM_INTERNAL void scm_init_hash (void);
 

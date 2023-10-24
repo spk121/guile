@@ -112,25 +112,25 @@ extern double floor();
        the hash on a 64-bit system are equal to the hash on a 32-bit    \
        system.  The low 32 bits just add more entropy.  */              \
     if (sizeof (ret) == 8)                                              \
-      ret = (((unsigned long) c) << 32) | b;                            \
+      ret = (((scm_t_hash) c) << 32) | b;                               \
     else                                                                \
       ret = c;                                                          \
   } while (0)
 
 
-static unsigned long
+static scm_t_hash
 narrow_string_hash (const uint8_t *str, size_t len)
 {
-  unsigned long ret;
+  scm_t_hash ret;
   JENKINS_LOOKUP3_HASHWORD2 (str, len, ret);
   ret >>= 2; /* Ensure that it fits in a fixnum.  */
   return ret;
 }
 
-static unsigned long
+static scm_t_hash
 wide_string_hash (const scm_t_wchar *str, size_t len)
 {
-  unsigned long ret;
+  scm_t_hash ret;
   JENKINS_LOOKUP3_HASHWORD2 (str, len, ret);
   ret >>= 2; /* Ensure that it fits in a fixnum.  */
   return ret;
@@ -138,7 +138,7 @@ wide_string_hash (const scm_t_wchar *str, size_t len)
 
 /* If you change this to a different hash, also update (language cps
    guile-vm).  */
-unsigned long
+scm_t_hash
 scm_i_string_hash (SCM str)
 {
   size_t len = scm_i_string_length (str);
@@ -150,13 +150,13 @@ scm_i_string_hash (SCM str)
     return wide_string_hash (scm_i_string_wide_chars (str), len);
 }
 
-unsigned long 
+scm_t_hash
 scm_i_locale_string_hash (const char *str, size_t len)
 {
   return scm_i_string_hash (scm_from_locale_stringn (str, len));
 }
 
-unsigned long 
+scm_t_hash
 scm_i_latin1_string_hash (const char *str, size_t len)
 {
   if (len == (size_t) -1)
@@ -166,7 +166,7 @@ scm_i_latin1_string_hash (const char *str, size_t len)
 }
 
 /* A tricky optimization, but probably worth it.  */
-unsigned long 
+scm_t_hash
 scm_i_utf8_string_hash (const char *str, size_t len)
 {
   if (len == (size_t) -1)
@@ -223,25 +223,26 @@ scm_i_utf8_string_hash (const char *str, size_t len)
 
   final (a, b, c);
 
-  if (sizeof (unsigned long) == 8)
-    ret = (((unsigned long) c) << 32) | b;
-  else
-    ret = c;
+#if SCM_SIZEOF_INTPTR_T == 8
+  ret = (((scm_t_hash) c) << 32) | b;
+#else
+  ret = c;
+#endif
 
   ret >>= 2; /* Ensure that it fits in a fixnum.  */
   return ret;
 }
 
-static unsigned long scm_raw_ihashq (scm_t_bits key);
-static unsigned long scm_raw_ihash (SCM obj, size_t depth);
+static scm_t_hash scm_raw_ihashq (scm_t_bits key);
+static scm_t_hash scm_raw_ihash (SCM obj, size_t depth);
 
 /* Return the hash of struct OBJ.  Traverse OBJ's fields to compute the
    result, unless DEPTH is zero.  Assumes that OBJ is a struct.  */
-static unsigned long
+static scm_t_hash
 scm_i_struct_hash (SCM obj, size_t depth)
 {
   size_t struct_size, field_num;
-  unsigned long hash;
+  scm_t_hash hash;
 
   struct_size = SCM_STRUCT_SIZE (obj);
 
@@ -261,7 +262,7 @@ scm_i_struct_hash (SCM obj, size_t depth)
 
 /* Thomas Wang's integer hasher, from
    http://www.cris.com/~Ttwang/tech/inthash.htm.  */
-static unsigned long
+static scm_t_hash
 scm_raw_ihashq (scm_t_bits key)
 {
   if (sizeof (key) < 8)
@@ -287,7 +288,7 @@ scm_raw_ihashq (scm_t_bits key)
 }
 
 /* `depth' is used to limit recursion. */
-static unsigned long
+static scm_t_hash
 scm_raw_ihash (SCM obj, size_t depth)
 {
   if (SCM_IMP (obj))
@@ -305,7 +306,7 @@ scm_raw_ihash (SCM obj, size_t depth)
           SCM n = SCM_I_MAKINUM (SCM_MOST_POSITIVE_FIXNUM);
           if (scm_is_inexact (obj))
             obj = scm_inexact_to_exact (obj);
-          return scm_raw_ihashq (scm_to_ulong (scm_modulo (obj, n)));
+          return scm_raw_ihashq (scm_to_uintptr_t (scm_modulo (obj, n)));
         }
       else
         return scm_i_string_hash (scm_number_to_string (obj, scm_from_int (10)));
@@ -322,7 +323,7 @@ scm_raw_ihash (SCM obj, size_t depth)
       {
 	size_t len = SCM_SIMPLE_VECTOR_LENGTH (obj);
         size_t i = depth / 2;
-        unsigned long h = scm_raw_ihashq (SCM_CELL_WORD_0 (obj));
+        scm_t_hash h = scm_raw_ihashq (SCM_CELL_WORD_0 (obj));
         if (len)
           while (i--)
             h ^= scm_raw_ihash (scm_c_vector_ref (obj, h % len), i);
@@ -330,7 +331,7 @@ scm_raw_ihash (SCM obj, size_t depth)
       }
     case scm_tc7_syntax:
       {
-        unsigned long h;
+        scm_t_hash h;
         h = scm_raw_ihash (scm_syntax_expression (obj), depth);
         h ^= scm_raw_ihash (scm_syntax_wrap (obj), depth);
         h ^= scm_raw_ihash (scm_syntax_module (obj), depth);
@@ -369,8 +370,8 @@ scm_raw_ihash (SCM obj, size_t depth)
 
 
 
-unsigned long
-scm_ihashq (SCM obj, unsigned long n)
+scm_t_hash
+scm_ihashq (SCM obj, scm_t_hash n)
 {
   return scm_raw_ihashq (SCM_UNPACK (obj)) % n;
 }
@@ -390,8 +391,8 @@ SCM_DEFINE (scm_hashq, "hashq", 2, 0, 0,
 	    "different values, since @code{foo} will be garbage collected.")
 #define FUNC_NAME s_scm_hashq
 {
-  unsigned long sz = scm_to_unsigned_integer (size, 1, ULONG_MAX);
-  return scm_from_ulong (scm_ihashq (key, sz));
+  scm_t_hash sz = scm_to_unsigned_integer (size, 1, UINTPTR_MAX);
+  return scm_from_unsigned_integer (scm_ihashq (key, sz));
 }
 #undef FUNC_NAME
 
@@ -399,8 +400,8 @@ SCM_DEFINE (scm_hashq, "hashq", 2, 0, 0,
 
 
 
-unsigned long
-scm_ihashv (SCM obj, unsigned long n)
+scm_t_hash
+scm_ihashv (SCM obj, scm_t_hash n)
 {
   if (SCM_NUMP(obj))
     return scm_raw_ihash (obj, 10) % n;
@@ -423,8 +424,8 @@ SCM_DEFINE (scm_hashv, "hashv", 2, 0, 0,
 	    "different values, since @code{foo} will be garbage collected.")
 #define FUNC_NAME s_scm_hashv
 {
-  unsigned long sz = scm_to_unsigned_integer (size, 1, ULONG_MAX);
-  return scm_from_ulong (scm_ihashv (key, sz));
+  scm_t_hash sz = scm_to_unsigned_integer (size, 1, UINTPTR_MAX);
+  return scm_from_unsigned_integer (scm_ihashv (key, sz));
 }
 #undef FUNC_NAME
 
@@ -432,10 +433,10 @@ SCM_DEFINE (scm_hashv, "hashv", 2, 0, 0,
 
 
 
-unsigned long
-scm_ihash (SCM obj, unsigned long n)
+scm_t_hash
+scm_ihash (SCM obj, scm_t_hash n)
 {
-  return (unsigned long) scm_raw_ihash (obj, 10) % n;
+  return scm_raw_ihash (obj, 10) % n;
 }
 
 SCM_DEFINE (scm_hash, "hash", 2, 0, 0,
@@ -446,8 +447,8 @@ SCM_DEFINE (scm_hash, "hash", 2, 0, 0,
 	    "integer in the range 0 to @var{size} - 1.")
 #define FUNC_NAME s_scm_hash
 {
-  unsigned long sz = scm_to_unsigned_integer (size, 1, ULONG_MAX);
-  return scm_from_ulong (scm_ihash (key, sz));
+  scm_t_hash sz = scm_to_unsigned_integer (size, 1, UINTPTR_MAX);
+  return scm_from_unsigned_integer (scm_ihash (key, sz));
 }
 #undef FUNC_NAME
 
