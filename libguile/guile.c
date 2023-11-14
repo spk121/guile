@@ -30,12 +30,14 @@
 
 #include <locale.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 #ifdef HAVE_WINSOCK2_H
 #include <winsock2.h>
 #endif
 
 #include <libguile.h>
+
 
 static void
 inner_main (void *closure SCM_UNUSED, int argc, char **argv)
@@ -80,6 +82,82 @@ should_install_locale (void)
   return get_integer_from_environment ("GUILE_INSTALL_LOCALE", 1);
 }
 
+static char *
+string_trim_both (char *buf)
+{
+  char *start, *end;
+  char *str;
+
+  start = buf;
+  end = buf + strlen(buf);
+  while (start < end && (start[0] == ' ' || start[0] == '\t'))
+    start ++;
+  while (end > start
+         && (end[-1] == ' ' || end[-1] == '\t'
+             || end[-1] == '\r' || end[-1] == '\n'))
+    end --;
+  if (start == end)
+    return NULL;
+  str = (char *) calloc (end - start + 1, sizeof (char));
+  if (str == NULL)
+    {
+      fprintf (stderr, "Out of memory\n");
+      exit (1);
+    }
+  memcpy (str, start, end - start);
+  str[end - start + 1] = '\0';
+  return str;
+}
+
+static char **
+read_command_file (char *argv0, int *n)
+{
+  int i = 0;
+  int n_max = 5;
+  char **new_argv;
+  char buf[1024];
+  char *str;
+
+  FILE *fp = fopen("cmdargs.txt", "rt");
+  if (fp == NULL)
+    {
+      *n = 1;
+      return NULL;
+    }
+
+  new_argv = (char **) malloc (n_max * sizeof (char *));
+  if (new_argv == NULL || (new_argv[i] = strdup (argv0)) == NULL)
+    {
+      fprintf (stderr, "Out of memory\n");
+      exit (1);
+    }
+
+  i ++;
+  while (1)
+    {
+      if (fgets (buf, 1024, fp) == NULL)
+        break;
+
+      if (buf[0] == '#')
+        continue;
+      str = string_trim_both (buf);
+      if (str != NULL)
+        {
+          new_argv[i] = str;
+          i ++;
+
+          if (i >= n_max)
+            {
+              n_max *= 2;
+              new_argv = (char **) realloc (new_argv, n_max * sizeof (char *));
+            }
+        }
+    }
+  *n = i;
+  new_argv[i] = NULL;
+  return new_argv;
+}
+
 int
 main (int argc, char **argv)
 {
@@ -90,6 +168,15 @@ main (int argc, char **argv)
      for the rationale.  */
   if (should_install_locale () && setlocale (LC_ALL, "") == NULL)
     fprintf (stderr, "guile: warning: failed to install locale\n");
+
+  if (argc == 1)
+    {
+      char **new_argv;
+      int n;
+      new_argv = read_command_file (argv[0], &n);
+      if (new_argv != NULL)
+        scm_boot_guile (n, new_argv, inner_main, 0);
+    }
 
   scm_boot_guile (argc, argv, inner_main, 0);
   return 0; /* never reached */

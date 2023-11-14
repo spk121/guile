@@ -47,13 +47,17 @@ endif
 AM_CFLAGS = $(GCC_CFLAGS) $(CFLAG_VISIBILITY)
 
 ## The Gnulib Libtool archive.
-gnulib_library = $(top_builddir)/lib/libgnu.la
+LTLIBGNU = $(top_builddir)/lib/libgnu.la
 
 ETAGS_ARGS = --regex='/SCM_\(GLOBAL_\)?\(G?PROC\|G?PROC1\|SYMBOL\|VCELL\|CONST_LONG\).*\"\([^\"]\)*\"/\3/' \
    --regex='/[ \t]*SCM_[G]?DEFINE1?[ \t]*(\([^,]*\),[^,]*/\1/'
 
 lib_LTLIBRARIES = libguile-@GUILE_EFFECTIVE_VERSION@.la
 bin_PROGRAMS = guile
+
+if GUILE_TOOLS_EXE
+bin_PROGRAMS += guile-tools$(EXEEXT)
+endif
 
 noinst_PROGRAMS = guile_filter_doc_snarfage gen-scmconfig
 
@@ -113,13 +117,12 @@ guile_filter_doc_snarfage$(EXEEXT): $(guile_filter_doc_snarfage_OBJECTS) $(guile
 	if [ "$(cross_compiling)" = "yes" ]; then \
 		$(CCLD_FOR_BUILD) -o $@ $(guile_filter_doc_snarfage_OBJECTS); \
 	else \
-		$(LINK) $(guile_filter_doc_snarfage_OBJECTS) $(LDADD) $(gnulib_library) $(LIBS); \
+		$(LINK) $(guile_filter_doc_snarfage_OBJECTS) $(LDADD) $(LTLIBGNU) $(LIBS); \
 	fi
-
 
 guile_SOURCES = guile.c
 guile_CFLAGS = $(GUILE_CFLAGS) $(AM_CFLAGS)
-guile_LDADD = libguile-@GUILE_EFFECTIVE_VERSION@.la
+guile_LDADD = libguile-@GUILE_EFFECTIVE_VERSION@.la $(LTLIBGNU)
 guile_LDFLAGS = $(GUILE_CFLAGS)
 
 libguile_@GUILE_EFFECTIVE_VERSION@_la_CFLAGS = $(GUILE_CFLAGS) $(AM_CFLAGS)
@@ -484,6 +487,13 @@ EXTRA_libguile_@GUILE_EFFECTIVE_VERSION@_la_SOURCES = \
     locale-categories.h			\
     mini-gmp.h
 
+if GUILE_TOOLS_EXE
+guile_tools_SOURCES = guile-tools.c
+guile_tools_CFLAGS = $(GUILE_CFLAGS) $(AM_CFLAGS)
+guile_tools_LDADD = libguile-@GUILE_EFFECTIVE_VERSION@.la $(LTLIBGNU)
+guile_tools_LDFLAGS = $(GUILE_CFLAGS)
+endif
+
 ## delete guile-snarf.awk from the installation bindir, in case it's
 ## lingering there due to an earlier guile version not having been
 ## wiped out.
@@ -551,7 +561,7 @@ noinst_HEADERS += vm-engine.c
 libguile_@GUILE_EFFECTIVE_VERSION@_la_DEPENDENCIES = @LIBLOBJS@
 
 libguile_@GUILE_EFFECTIVE_VERSION@_la_LIBADD =		\
-  @LIBLOBJS@ $(gnulib_library) $(LTLIBGMP) $(LTLIBLTDL)
+  @LIBLOBJS@ $(LTLIBGNU) $(LTLIBGMP)
 
 # Libtool version info.
 version_info = @LIBGUILE_INTERFACE_CURRENT@:@LIBGUILE_INTERFACE_REVISION@:@LIBGUILE_INTERFACE_AGE@
@@ -588,6 +598,12 @@ if HAVE_LD_VERSION_SCRIPT
 libguile_@GUILE_EFFECTIVE_VERSION@_la_LDFLAGS += -Wl,--version-script="$(srcdir)/libguile.map"
 
 endif HAVE_LD_VERSION_SCRIPT
+
+# On Windows, install the libguile DLL in the same directory
+# as the guile executable, rather than in $libdir/../bin
+if MINGW_LIBPATH
+libguile_@GUILE_EFFECTIVE_VERSION@_la_LDFLAGS += -bindir $(DESTDIR)$(bindir)
+endif
 
 
 # These are headers visible as <guile/mumble.h>

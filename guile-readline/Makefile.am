@@ -51,7 +51,8 @@ guile_readline_la_LIBADD =				\
   $(READLINE_LIBS)					\
   ../libguile/libguile-@GUILE_EFFECTIVE_VERSION@.la ../lib/libgnu.la
 
-guile_readline_la_LDFLAGS = -export-dynamic -no-undefined -module
+guile_readline_la_LDFLAGS = -export-dynamic -no-undefined -module -avoid-version \
+  -bindir $(DESTDIR)$(extensionsdir)
 
 BUILT_SOURCES = readline.x
 

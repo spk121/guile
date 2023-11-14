@@ -28,7 +28,21 @@ EXTRA_DIST=						\
   guile-$(GUILE_EFFECTIVE_VERSION)-uninstalled.pc.in	\
   guild.in guile-config.in
 
-# What we now call `guild' used to be known as `guile-tools'.
+# guild is a Guile shell script.  For the benefit of systems without a
+# posix shell, we also save guild as a regular scheme module, so that it
+# can be called by guile.
+guild.scm: guild
+	cp guild guild.scm
+
+moddir = $(pkgdatadir)/$(GUILE_EFFECTIVE_VERSION)
+nobase_mod_DATA = guild.scm
+
+
+# What we now call `guild' used to be known as `guile-tools'.  For posix
+# shell systems no harm in installing guile-tools as an alias for guild.
+# For systems without posix shell, we reserve guile-tools for the
+# non-shell version of guild.
+if !GUILE_TOOLS_EXE
 install-exec-hook:
 	guild="`echo $(ECHO_N) guild				\
 	   | $(SED) -e '$(program_transform_name)'`" ;		\
@@ -36,6 +50,8 @@ install-exec-hook:
 	   | $(SED) -e '$(program_transform_name)'`" ;		\
 	cd $(DESTDIR)$(bindir) && rm -f "$$guile_tools" &&	\
 	$(LN_S) "$$guild" "$$guile_tools"
+endif
+
 
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = guile-$(GUILE_EFFECTIVE_VERSION).pc
@@ -114,5 +130,5 @@ guild: $(srcdir)/guild.in $(top_builddir)/config.status
 	mv "$@.out" "$@"
 
 CLEANFILES =					\
-  guile-config guild				\
+  guile-config guild guild.scm			\
   guile-$(GUILE_EFFECTIVE_VERSION).pc guile-$(GUILE_EFFECTIVE_VERSION)-uninstalled.pc

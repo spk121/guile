@@ -69,6 +69,10 @@
 #define R_OK 4
 #endif
 
+// Set in guile.c
+char *scm_i_self_path;
+static int scm_i_relative_paths_p = SCM_USE_RELATIVE_PATHS;
+
 
 /* Loading a file, given an absolute filename.  */
 
@@ -80,7 +84,7 @@ static SCM *scm_loc_load_hook;
 static SCM the_reader = SCM_BOOL_F;
 
 
-SCM_DEFINE (scm_primitive_load, "primitive-load", 1, 0, 0, 
+SCM_DEFINE (scm_primitive_load, "primitive-load", 1, 0, 0,
            (SCM filename),
 	    "Load the file named @var{filename} and evaluate its contents in\n"
 	    "the top-level environment. The load paths are not searched;\n"
@@ -145,28 +149,84 @@ scm_c_primitive_load (const char *filename)
 }
 
 
-/* Builtin path to scheme library files. */
+
 #ifdef SCM_PKGDATA_DIR
-SCM_DEFINE (scm_sys_package_data_dir, "%package-data-dir", 0, 0, 0, 
+SCM_DEFINE (scm_sys_package_data_dir, "%package-data-dir", 0, 0, 0,
             (),
 	    "Return the name of the directory where Scheme packages, modules and\n"
 	    "libraries are kept.  On most Unix systems, this will be\n"
 	    "@samp{/usr/local/share/guile}.")
 #define FUNC_NAME s_scm_sys_package_data_dir
 {
-  return scm_from_utf8_string (SCM_PKGDATA_DIR);
+  static int first = 1;
+  static SCM p = SCM_BOOL_F;
+
+  if (first)
+    {
+      if (scm_i_relative_paths_p)
+        p = scm_string_append
+          (scm_list_2 (scm_from_locale_string (scm_i_self_path),
+                       scm_from_latin1_string ("/share/guile")));
+      else
+        p = scm_from_utf8_string (SCM_PKGDATA_DIR);
+      first = 0;
+    }
+  return p;
 }
 #undef FUNC_NAME
 #endif /* SCM_PKGDATA_DIR */
 
+/* Builtin path to where Guile's core scheme library files are installed
+   for a specific major revision of Guile. */
 #ifdef SCM_LIBRARY_DIR
 SCM_DEFINE (scm_sys_library_dir, "%library-dir", 0,0,0,
             (),
 	    "Return the directory where the Guile Scheme library files are installed.\n"
-	    "E.g., may return \"/usr/share/guile/1.3.5\".")
+	    "E.g., may return \"/usr/share/guile" SCM_EFFECTIVE_VERSION "/\".")
 #define FUNC_NAME s_scm_sys_library_dir
 {
-  return scm_from_utf8_string (SCM_LIBRARY_DIR);
+  static int first = 1;
+  static SCM p = SCM_BOOL_F;
+
+  if (first)
+    {
+      if (scm_i_relative_paths_p)
+        p = scm_string_append
+          (scm_list_3 (scm_from_locale_string (scm_i_self_path),
+                       scm_from_latin1_string ("/share/guile/"),
+                       scm_from_latin1_string (SCM_EFFECTIVE_VERSION)));
+      else
+        p = scm_from_utf8_string (SCM_LIBRARY_DIR);
+      first = 0;
+    }
+  return p;
+}
+#undef FUNC_NAME
+
+/* Path to where *.so, *.dll, or *.dynlib are installed by extension
+   libraries for specific major revision of Guile. */
+SCM_DEFINE (scm_sys_extensions_dir, "%extensions-dir", 0,0,0,
+            (),
+	    "Return the directory where the Guile Scheme extension library files are installed.\n"
+	    "E.g., may return \"/usr/lib/guile/3.0/extensions\".")
+#define FUNC_NAME s_scm_sys_extensions_dir
+{
+  static int first = 1;
+  static SCM p = SCM_BOOL_F;
+
+  if (first)
+    {
+      if (scm_i_relative_paths_p)
+        p = scm_string_append
+          (scm_list_4 (scm_from_locale_string (scm_i_self_path),
+                       scm_from_utf8_string ("/lib/guile/"),
+                       scm_from_utf8_string (SCM_EFFECTIVE_VERSION),
+                       scm_from_utf8_string ("/extensions")));
+      else
+        p = scm_from_utf8_string (SCM_EXTENSIONS_DIR);
+      first = 0;
+    }
+  return p;
 }
 #undef FUNC_NAME
 #endif /* SCM_LIBRARY_DIR */
@@ -179,7 +239,21 @@ SCM_DEFINE (scm_sys_site_dir, "%site-dir", 0,0,0,
 	    "E.g., may return \"/usr/share/guile/site/" SCM_EFFECTIVE_VERSION "\".")
 #define FUNC_NAME s_scm_sys_site_dir
 {
-  return scm_from_locale_string (SCM_SITE_DIR);
+  static int first = 1;
+  static SCM p = SCM_BOOL_F;
+
+  if (first)
+    {
+      if (scm_i_relative_paths_p)
+        p = scm_string_append
+          (scm_list_3 (scm_from_locale_string (scm_i_self_path),
+                       scm_from_utf8_string ("/share/guile/site/"),
+                       scm_from_utf8_string (SCM_EFFECTIVE_VERSION)));
+      else
+        p = scm_from_utf8_string (SCM_SITE_DIR);
+      first = 0;
+    }
+  return p;
 }
 #undef FUNC_NAME
 #endif /* SCM_SITE_DIR */
@@ -192,10 +266,51 @@ SCM_DEFINE (scm_sys_global_site_dir, "%global-site-dir", 0,0,0,
 	    "E.g., may return \"/usr/share/guile/site\".")
 #define FUNC_NAME s_scm_sys_global_site_dir
 {
-  return scm_from_utf8_string (SCM_GLOBAL_SITE_DIR);
+  static int first = 1;
+  static SCM p = SCM_BOOL_F;
+
+  if (first)
+    {
+      if (scm_i_relative_paths_p)
+        p = scm_string_append
+          (scm_list_2 (scm_from_locale_string (scm_i_self_path),
+                       scm_from_utf8_string ("/share/guile/site/")));
+      else
+        p = scm_from_utf8_string (SCM_GLOBAL_SITE_DIR);
+      first = 0;
+    }
+  return p;
 }
 #undef FUNC_NAME
 #endif /* SCM_GLOBAL_SITE_DIR */
+
+#ifdef SCM_CCACHE_DIR
+SCM_DEFINE (scm_sys_ccache_dir, "%ccache-dir", 0,0,0,
+            (),
+	    "Return the directory where @code{.go} files were stored\n"
+            "for use with this version of Guile.\n\n"
+	    "E.g., may return \"/usr/lib/guile/" SCM_EFFECTIVE_VERSION "/ccache\".")
+#define FUNC_NAME s_scm_sys_ccache_dir
+{
+  static int first = 1;
+  static SCM p;
+
+  if (first)
+    {
+      if (scm_i_relative_paths_p)
+        p = scm_string_append
+          (scm_list_4 (scm_from_locale_string (scm_i_self_path),
+                       scm_from_utf8_string ("/lib/guile/"),
+                       scm_from_utf8_string (SCM_EFFECTIVE_VERSION),
+                       scm_from_utf8_string ("/ccache")));
+      else
+        p = scm_from_utf8_string (SCM_CCACHE_DIR);
+      first = 0;
+    }
+  return p;
+}
+#undef FUNC_NAME
+#endif /* SCM_CCACHE_DIR */
 
 #ifdef SCM_SITE_CCACHE_DIR
 SCM_DEFINE (scm_sys_site_ccache_dir, "%site-ccache-dir", 0,0,0,
@@ -205,7 +320,22 @@ SCM_DEFINE (scm_sys_site_ccache_dir, "%site-ccache-dir", 0,0,0,
 	    "E.g., may return \"/usr/lib/guile/" SCM_EFFECTIVE_VERSION "/site-ccache\".")
 #define FUNC_NAME s_scm_sys_site_ccache_dir
 {
-  return scm_from_utf8_string (SCM_SITE_CCACHE_DIR);
+  static int first = 1;
+  static SCM p;
+
+  if (first)
+    {
+      if (scm_i_relative_paths_p)
+        p = scm_string_append
+          (scm_list_4 (scm_from_locale_string (scm_i_self_path),
+                       scm_from_utf8_string ("/lib/guile/"),
+                       scm_from_utf8_string (SCM_EFFECTIVE_VERSION),
+                       scm_from_utf8_string ("/site-ccache")));
+      else
+        p = scm_from_utf8_string (SCM_SITE_CCACHE_DIR);
+      first = 0;
+    }
+  return p;
 }
 #undef FUNC_NAME
 #endif /* SCM_SITE_CCACHE_DIR */
@@ -236,7 +366,7 @@ static SCM *scm_loc_compile_fallback_path;
 /* Ellipsis: "..." */
 static SCM scm_ellipsis;
 
-SCM_DEFINE (scm_parse_path, "parse-path", 1, 1, 0, 
+SCM_DEFINE (scm_parse_path, "parse-path", 1, 1, 0,
             (SCM path, SCM tail),
 	    "Parse @var{path}, which is expected to be a colon-separated\n"
 	    "string, into a list and return the resulting list with\n"
@@ -249,7 +379,7 @@ SCM_DEFINE (scm_parse_path, "parse-path", 1, 1, 0,
 #else
   SCM sep = SCM_MAKE_CHAR (':');
 #endif
-  
+
   if (SCM_UNBNDP (tail))
     tail = SCM_EOL;
   return (scm_is_false (path)
@@ -338,25 +468,25 @@ scm_init_load_path ()
   if (env && strcmp (env, "") == 0)
     /* special-case interpret system-path=="" as meaning no system path instead
        of '("") */
-    ; 
+    ;
   else if (env)
     path = scm_parse_path (scm_from_locale_string (env), path);
   else
-    path = scm_list_4 (scm_from_utf8_string (SCM_LIBRARY_DIR),
-                       scm_from_utf8_string (SCM_SITE_DIR),
-                       scm_from_utf8_string (SCM_GLOBAL_SITE_DIR),
-                       scm_from_utf8_string (SCM_PKGDATA_DIR));
+    path = scm_list_4 (scm_sys_library_dir(),
+                       scm_sys_site_dir(),
+                       scm_sys_global_site_dir(),
+                       scm_sys_package_data_dir());
 
   env = scm_i_mirror_backslashes (getenv ("GUILE_SYSTEM_COMPILED_PATH"));
   if (env && strcmp (env, "") == 0)
     /* like above */
-    ; 
+    ;
   else if (env)
     cpath = scm_parse_path (scm_from_locale_string (env), cpath);
   else
     {
-      cpath = scm_list_2 (scm_from_utf8_string (SCM_CCACHE_DIR),
-                          scm_from_utf8_string (SCM_SITE_CCACHE_DIR));
+      cpath = scm_list_2 (scm_sys_ccache_dir(),
+                          scm_sys_site_ccache_dir());
     }
 
 #endif /* SCM_LIBRARY_DIR */
@@ -382,9 +512,9 @@ scm_init_load_path ()
 #endif /* HAVE_GETPWENT */
 #ifdef __MINGW32__
     else if ((e = getenv ("LOCALAPPDATA")))
-      snprintf (cachedir, sizeof (cachedir), "%s/.cache/" FALLBACK_DIR, e);
+      snprintf (cachedir, sizeof (cachedir), "%s/" FALLBACK_DIR, e);
     else if ((e = getenv ("APPDATA")))
-      snprintf (cachedir, sizeof (cachedir), "%s/.cache/" FALLBACK_DIR, e);
+      snprintf (cachedir, sizeof (cachedir), "%s/" FALLBACK_DIR, e);
 #endif /* __MINGW32__ */
     else
       cachedir[0] = 0;
@@ -441,7 +571,7 @@ stringbuf_cat_locale_string (struct stringbuf *buf, SCM str)
   size_t len = scm_to_locale_stringbuf (str, buf->ptr, max_len);
   if (len > max_len)
     {
-      /* buffer is too small, double its size and try again. 
+      /* buffer is too small, double its size and try again.
        */
       stringbuf_grow (buf);
       stringbuf_cat_locale_string (buf, str);
@@ -466,7 +596,7 @@ stringbuf_cat (struct stringbuf *buf, char *str)
   size_t len = strlen (str);
   if (len > max_len)
     {
-      /* buffer is too small, double its size and try again. 
+      /* buffer is too small, double its size and try again.
        */
       stringbuf_grow (buf);
       stringbuf_cat (buf, str);
@@ -552,6 +682,43 @@ is_absolute_file_name (SCM filename)
   return 0;
 }
 
+/* Return true if COMPILED_FILENAME is in the directory PATH, and if
+   PATH contains a filename named "FINAL" to indicate that the files
+   therein should always be considered definitive, even if older
+   than the corresponding source files. */
+static int
+compiled_is_final (SCM compiled_filename, SCM path)
+{
+  size_t compiled_filename_len = scm_c_string_length (compiled_filename);
+  size_t path_len = scm_c_string_length (path);
+  size_t i;
+  char *c_path;
+  struct stat stat_buf;
+  int ret;
+
+  if (compiled_filename_len <= path_len)
+    return 0;
+
+  /* Check if compiled_filename starts with path ignoring slash
+     direction */
+  i = 0;
+  while (i < path_len)
+    {
+      scm_t_wchar c1, c2;
+      c1 = SCM_CHAR (scm_c_string_ref (compiled_filename, i));
+      c2 = SCM_CHAR (scm_c_string_ref (path, i));
+      if ((c1 != c2)
+          && ((c1 != '/' && c1 != '\\') || (c2 != '/' && c2 != '\\')))
+        return 0;
+      i++;
+    }
+
+  c_path = scm_to_locale_string (scm_string_append (scm_list_2 (path, scm_from_latin1_string ("/FINAL"))));
+  ret = stat (c_path, &stat_buf) == 0 && !(stat_buf.st_mode & S_IFDIR);
+  free (c_path);
+  return ret;
+}
+
 /* Return true if COMPILED_FILENAME is newer than source file
    FULL_FILENAME, false otherwise.  */
 static int
@@ -567,6 +734,9 @@ compiled_is_fresh (SCM full_filename, SCM compiled_filename,
   if (source_mtime.tv_sec < compiled_mtime.tv_sec
       || (source_mtime.tv_sec == compiled_mtime.tv_sec
           && source_mtime.tv_nsec <= compiled_mtime.tv_nsec))
+    compiled_is_newer = 1;
+  else if (compiled_is_final (compiled_filename, scm_sys_ccache_dir())
+           || compiled_is_final (compiled_filename, scm_sys_site_ccache_dir ()))
     compiled_is_newer = 1;
   else
     {
@@ -726,9 +896,9 @@ load_thunk_from_path (SCM filename, SCM source_file_name,
 
       buf.ptr = buf.buf;
       stringbuf_cat_locale_string (&buf, dir);
-	
+
       /* Concatenate the path name and the filename. */
-      
+
       if (buf.ptr > buf.buf
           && !is_file_name_separator (SCM_MAKE_CHAR (buf.ptr[-1])))
 	stringbuf_cat (&buf, FILE_NAME_SEPARATOR_STRING);
@@ -740,10 +910,10 @@ load_thunk_from_path (SCM filename, SCM source_file_name,
       for (exts = extensions; scm_is_pair (exts); exts = SCM_CDR (exts))
 	{
 	  SCM ext = SCM_CAR (exts);
-	  
+
 	  buf.ptr = buf.buf + sans_ext_len;
 	  stringbuf_cat_locale_string (&buf, ext);
-	  
+
 	  /* If the file exists at all, we should return it.  If the
 	     file is inaccessible, then that's an error.  */
 
@@ -778,7 +948,7 @@ load_thunk_from_path (SCM filename, SCM source_file_name,
 	      goto end;
 	    }
 	}
-      
+
       if (!SCM_NULL_OR_NIL_P (exts))
 	scm_wrong_type_arg_msg (NULL, 0, extensions, "proper list");
     }
@@ -796,7 +966,7 @@ load_thunk_from_path (SCM filename, SCM source_file_name,
    If we find one, return its full pathname; otherwise, return #f.
    If FILENAME is absolute, return it unchanged.
    We also fill *stat_buf corresponding to the returned pathname.
-   If given, EXTENSIONS is a list of strings; for each directory 
+   If given, EXTENSIONS is a list of strings; for each directory
    in PATH, we search for FILENAME concatenated with each EXTENSION.
   */
 static SCM
@@ -880,9 +1050,9 @@ search_path (SCM path, SCM filename, SCM extensions, SCM require_exts,
 
       buf.ptr = buf.buf;
       stringbuf_cat_locale_string (&buf, dir);
-	
+
       /* Concatenate the path name and the filename. */
-      
+
       if (buf.ptr > buf.buf
           && !is_file_name_separator (SCM_MAKE_CHAR (buf.ptr[-1])))
 	stringbuf_cat (&buf, FILE_NAME_SEPARATOR_STRING);
@@ -894,10 +1064,10 @@ search_path (SCM path, SCM filename, SCM extensions, SCM require_exts,
       for (exts = extensions; scm_is_pair (exts); exts = SCM_CDR (exts))
 	{
 	  SCM ext = SCM_CAR (exts);
-	  
+
 	  buf.ptr = buf.buf + sans_ext_len;
 	  stringbuf_cat_locale_string (&buf, ext);
-	  
+
 	  /* If the file exists at all, we should return it.  If the
 	     file is inaccessible, then that's an error.  */
 
@@ -909,7 +1079,7 @@ search_path (SCM path, SCM filename, SCM extensions, SCM require_exts,
 	      goto end;
 	    }
 	}
-      
+
       if (!SCM_NULL_OR_NIL_P (exts))
 	scm_wrong_type_arg_msg (NULL, 0, extensions, "proper list");
     }
@@ -984,7 +1154,7 @@ SCM_DEFINE (scm_search_path, "search-path", 2, 0, 1,
    The file must be readable, and not a directory.
    If we find one, return its full filename; otherwise, return #f.
    If FILENAME is absolute, return it unchanged.  */
-SCM_DEFINE (scm_sys_search_load_path, "%search-load-path", 1, 0, 0, 
+SCM_DEFINE (scm_sys_search_load_path, "%search-load-path", 1, 0, 0,
 	    (SCM filename),
 	    "Search @var{%load-path} for the file named @var{filename},\n"
 	    "which must be readable by the current user.  If @var{filename}\n"
@@ -996,7 +1166,7 @@ SCM_DEFINE (scm_sys_search_load_path, "%search-load-path", 1, 0, 0,
 #define FUNC_NAME s_scm_sys_search_load_path
 {
   struct stat stat_buf;
-  
+
   SCM_VALIDATE_STRING (1, filename);
 
   return search_path (*scm_loc_load_path, filename, *scm_loc_load_extensions,
@@ -1240,7 +1410,7 @@ SCM_DEFINE (scm_primitive_load_path, "primitive-load-path", 0, 0, 1,
         }
       free (fallback_chars);
     }
-  
+
   if (scm_is_false (full_filename) && scm_is_false (compiled_thunk))
     {
       if (scm_is_true (scm_procedure_p (exception_on_not_found)))
@@ -1288,7 +1458,7 @@ scm_init_eval_in_scheme (void)
   eval_thunk =
     load_thunk_from_path (scm_from_utf8_string ("ice-9/eval.go"),
                           eval_scm, &stat_source, &found_stale_eval_go);
-  
+
   if (scm_is_true (eval_thunk))
     scm_call_0 (eval_thunk);
   else
@@ -1317,8 +1487,23 @@ init_build_info ()
     {
       SCM key = scm_from_utf8_symbol (info[i].name);
       SCM val = scm_from_locale_string (info[i].value);
-      *loc = scm_acons (key, val, *loc);
+      if (scm_i_relative_paths_p)
+        {
+          if (strcmp (info[i].name, "pkgdatadir") == 0)
+            *loc = scm_acons (key, scm_sys_package_data_dir (), *loc);
+          else if (strcmp (info[i].name, "libdir") == 0)
+            *loc = scm_acons (key, scm_sys_library_dir (), *loc);
+          else if (strcmp (info[i].name, "ccachedir") == 0)
+            *loc = scm_acons (key, scm_sys_ccache_dir (), *loc);
+          else if (strcmp (info[i].name, "extensiondir") == 0)
+            *loc = scm_acons (key, scm_sys_extensions_dir (), *loc);
+          else
+            *loc = scm_acons (key, val, *loc);
+        }
+      else
+        *loc = scm_acons (key, val, *loc);
     }
+
 #ifdef PACKAGE_PACKAGER
   *loc = scm_acons (scm_from_latin1_symbol ("packager"),
                     scm_from_latin1_string (PACKAGE_PACKAGER),
@@ -1396,5 +1581,3 @@ scm_init_load_should_auto_compile ()
       *scm_loc_fresh_auto_compile = SCM_BOOL_F;
     }
 }
-  
-  
