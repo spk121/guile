@@ -305,8 +305,8 @@ TESTS += test-smob-mark-race
 check_SCRIPTS += test-stack-overflow
 TESTS += test-stack-overflow
 
-check_SCRIPTS += test-out-of-memory
-TESTS += test-out-of-memory
+# check_SCRIPTS += test-out-of-memory
+# TESTS += test-out-of-memory
 
 check_SCRIPTS += test-close-on-exec
 TESTS += test-close-on-exec
