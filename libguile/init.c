@@ -315,6 +315,25 @@ static char *get_self_path(char *exec_file)
 
   return s;
 }
+#else
+static char *get_self_path(char *exec_file)
+{
+  char *s;
+  ssize_t len = strlen (exec_file);
+  ssize_t blen = len + 1;
+
+  s = malloc(blen);
+
+  strncpy (s, exec_file, blen);
+  for (size_t i = len - 1; i >= 0; i --)
+    if (s[i] == '/')
+      {
+        s[i] = '\0';
+        break;
+      }
+
+  return s;
+}
 #endif
 
 
