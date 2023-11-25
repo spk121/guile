@@ -24,6 +24,7 @@
 # include <config.h>
 #endif
 
+#include <errno.h>
 #include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -442,6 +443,33 @@ cleanup_for_exit ()
   scm_with_guile (really_cleanup_for_exit, NULL);
 }
 
+static char *
+get_cwd()
+{
+  char *buf;
+  size_t len = 128;
+  char *ret = NULL;
+  
+  buf = malloc (len);
+  while (ret == NULL)
+    {
+      if (buf == NULL)
+        break;
+      ret = getcwd (buf, len);
+      if (ret == NULL)
+        {
+          if (errno == ERANGE)
+            {
+              len *= 2;
+              buf = realloc(buf, len);
+            }
+          else
+            break;
+        }
+    }
+  return ret;
+}
+
 void
 scm_i_init_guile (void *base)
 {
@@ -449,11 +477,7 @@ scm_i_init_guile (void *base)
     return;
 
   if (scm_i_self_path == NULL)
-    {
-      char p[1024];
-      getcwd (p, 1024);
-      scm_i_self_path = strdup (p);
-    }
+    scm_i_self_path = get_cwd ();
 
   scm_storage_prehistory ();
   scm_threads_prehistory (base);  /* requires storage_prehistory */
