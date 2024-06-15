@@ -109,13 +109,6 @@ long_magnitude (long l)
   return l < 0 ? ~mag + 1 : mag;
 }
 
-static inline long
-negative_long (unsigned long mag)
-{
-  ASSERT (mag <= (unsigned long) LONG_MIN);
-  return ~mag + 1;
-}
-
 static inline int64_t
 negative_int64 (uint64_t mag)
 {
@@ -139,6 +132,14 @@ inum_magnitude (scm_t_inum i)
   if (i < 0)
     mag = ~mag + 1;
   return mag;
+}
+
+static inline scm_t_inum
+negative_inum (scm_t_bits mag)
+{
+  scm_t_inum i = ~mag + 1;
+  ASSERT (i >= SCM_MOST_NEGATIVE_FIXNUM);
+  return i;
 }
 
 static struct scm_bignum *
@@ -313,7 +314,7 @@ normalize_bignum (struct scm_bignum *z)
     {
     case -1:
       if (bignum_limbs (z)[0] <= inum_magnitude (SCM_MOST_NEGATIVE_FIXNUM))
-        return SCM_I_MAKINUM (negative_long (bignum_limbs (z)[0]));
+        return SCM_I_MAKINUM (negative_inum (bignum_limbs (z)[0]));
       break;
     case 0:
       return SCM_INUM0;
@@ -429,7 +430,7 @@ negative_uint32_to_int32 (uint32_t magnitude, int32_t *val)
 {
   if (magnitude > long_magnitude (INT32_MIN))
     return 0;
-  *val = negative_long (magnitude);
+  *val = -magnitude;
   return 1;
 }
 
@@ -3070,7 +3071,7 @@ scm_integer_mul_ii (scm_t_inum x, scm_t_inum y)
       if (negative)
         {
           if (lo <= inum_magnitude (SCM_MOST_NEGATIVE_FIXNUM))
-            return SCM_I_MAKINUM (negative_long (lo));
+            return SCM_I_MAKINUM (negative_inum (lo));
         }
       else if (lo <= SCM_MOST_POSITIVE_FIXNUM)
         return SCM_I_MAKINUM (lo);
