@@ -2299,7 +2299,7 @@ scm_integer_expt_ii (scm_t_inum n, scm_t_inum k)
   if (n == 2)
     {
       if (k < SCM_I_FIXNUM_BIT - 1)
-        return SCM_I_MAKINUM (1L << k);
+        return SCM_I_MAKINUM (((scm_t_inum) 1) << k);
       if (k < 64)
         return scm_integer_from_uint64 (((uint64_t) 1) << k);
       size_t nlimbs = k / (sizeof (mp_limb_t)*8) + 1;
@@ -2458,12 +2458,12 @@ scm_integer_round_rsh_iu (scm_t_inum n, unsigned long count)
     {
       scm_t_inum q = SCM_SRS (n, count);
 
-      if (0 == (n & (1L << (count-1))))
+      if (0 == (n & (((scm_t_inum) 1) << (count-1))))
         return SCM_I_MAKINUM (q);                /* round down */
-      else if (n & ((1L << (count-1)) - 1))
+      else if (n & ((((scm_t_inum) 1) << (count-1)) - 1))
         return SCM_I_MAKINUM (q + 1);            /* round up */
       else
-        return SCM_I_MAKINUM ((~1L) & (q + 1));  /* round to even */
+        return SCM_I_MAKINUM (~((scm_t_inum) 1) & (q + 1));  /* round to even */
     }
 }
 
@@ -2505,7 +2505,7 @@ scm_integer_bit_extract_i (scm_t_inum n, unsigned long start,
 
   /* mask down to requisite bits */
   bits = MIN (bits, SCM_I_FIXNUM_BIT);
-  return SCM_I_MAKINUM (n & ((1L << bits) - 1));
+  return SCM_I_MAKINUM (n & ((((scm_t_inum) 1) << bits) - 1));
 }
 
 SCM
