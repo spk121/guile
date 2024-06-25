@@ -335,7 +335,7 @@ take_mpz (mpz_ptr mpz)
   if (mpz_fits_slong_p (mpz))
     ret = scm_from_inum (mpz_get_si (mpz));
   else
-    ret = scm_from_bignum (make_bignum_from_mpz (mpz));
+    ret = scm_integer_from_mpz (mpz);
   mpz_clear (mpz);
   return ret;
 }
