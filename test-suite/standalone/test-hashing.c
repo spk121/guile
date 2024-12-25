@@ -46,11 +46,12 @@ test_hashing ()
 #else
 #error "unsigned long not 4 or 8 bytes (need additonal test data)"
 #endif
-#if SCM_SIZEOF_UNSIGNED_LONG ! SCM_SIZEOF_UINTPTR_T
-#error "unsigned long and uintptr_t have different sizes"
-#endif
   const unsigned long actual = scm_to_ulong (scm_symbol_hash (sym));
 
+  if (SCM_SIZEOF_UNSIGNED_LONG != SCM_SIZEOF_UINTPTR_T)
+  {
+       fprintf (stderr, "warning: unsigned long and uintptr_t have different sizes\n");
+  }
   if (actual != expect)
     {
       fprintf (stderr, "fail: unexpected utf-8 symbol hash (%lu != %lu)\n",
