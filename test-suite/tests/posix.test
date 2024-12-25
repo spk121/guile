@@ -548,13 +548,6 @@
     ;; write such test.  However due to posix_spawnp being buggy on macOS it is
     ;; always replaced, so whatever.
     (skip-on-darwin)
-    (catch 'system-error
-      (lambda ()
-        (spawn "this-does-not-exist" '("nope")
-               #:search-path? #f))
-      (lambda args
-        (system-error-errno args)))))
-
     (begin
       (when (or (string-contains %host-type "cygwin")
                 (string-contains %host-type "msys"))
