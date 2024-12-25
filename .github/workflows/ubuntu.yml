@@ -46,7 +46,7 @@ jobs:
       run: make check V=1
     - name: Archive Test Logs
       if: success() || failure ()
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: Test Logs
         path: ./*.log
