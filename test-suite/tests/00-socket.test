@@ -137,6 +137,7 @@
 	  (let ((sa (make-socket-address AF_UNIX "/tmp/unix-socket")))
 	    (and (= (sockaddr:fam sa) AF_UNIX)
 	         (string=? (sockaddr:path sa) "/tmp/unix-socket"))))
+
         (pass-if "AF_UNIX abstract"
           (let ((sa (make-socket-address AF_UNIX "\x00/tmp/abstract-socket")))
 	    (and (= (sockaddr:fam sa) AF_UNIX)

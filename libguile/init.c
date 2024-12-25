@@ -24,6 +24,7 @@
 # include <config.h>
 #endif
 
+#include <errno.h>
 #include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -315,6 +316,26 @@ static char *get_self_path(char *exec_file)
 
   return s;
 }
+
+#else
+static char *get_self_path(char *exec_file)
+{
+  char *s;
+  ssize_t len = strlen (exec_file);
+  ssize_t blen = len + 1;
+
+  s = malloc(blen);
+
+  strncpy (s, exec_file, blen);
+  for (size_t i = len - 1; i >= 0; i --)
+    if (s[i] == '/')
+      {
+        s[i] = '\0';
+        break;
+      }
+
+  return s;
+}
 #endif
 
 
@@ -421,6 +442,33 @@ cleanup_for_exit ()
      enter it temporarily. 
   */
   scm_with_guile (really_cleanup_for_exit, NULL);
+}
+
+static char *
+get_cwd()
+{
+  char *buf;
+  size_t len = 128;
+  char *ret = NULL;
+  
+  buf = malloc (len);
+  while (ret == NULL)
+    {
+      if (buf == NULL)
+        break;
+      ret = getcwd (buf, len);
+      if (ret == NULL)
+        {
+          if (errno == ERANGE)
+            {
+              len *= 2;
+              buf = realloc(buf, len);
+            }
+          else
+            break;
+        }
+    }
+  return ret;
 }
 
 void

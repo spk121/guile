@@ -50,6 +50,7 @@ test_hashing ()
 #error "unsigned long and uintptr_t have different sizes"
 #endif
   const unsigned long actual = scm_to_ulong (scm_symbol_hash (sym));
+
   if (actual != expect)
     {
       fprintf (stderr, "fail: unexpected utf-8 symbol hash (%lu != %lu)\n",
