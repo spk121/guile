@@ -83,19 +83,24 @@ implemented in the @code{(system foreign-library)} module.
        [#:extensions=system-library-extensions] @
        [#:search-ltdl-library-path?=#t] @
        [#:search-path=search-path] @
-       [#:search-system-paths?=#t] [#:lazy?=#t] [#:global=#f]
-       [#:rename-on-cygwin?=#t]
-Find the shared library denoted by @var{library} (a string or @code{#f})
-and link it into the running Guile application.  When everything works
-out, return a Scheme object suitable for representing the linked object
-file.  Otherwise an error is thrown.
+       [#:search-system-paths?=#t] [#:lazy?=#t] [#:global=#f] @
+       [#:host-type-rename?=#t] [#:allow-dll-version-suffix?=#t]
 
-If @var{library} argument is omitted, it defaults to @code{#f}.  If
-@code{library} is false, the resulting foreign library gives access to
-all symbols available for dynamic linking in the main binary.
+This procedure finds the shared library denoted by @var{library} (a
+string) and dynamically links it into the running Guile application.  On
+success, the procedure returns a Scheme object suitable for representing
+the linked object file.  Otherwise an error is thrown.
 
-It is not necessary to include any extension such as @code{.so} in
-@var{library}.  For each system, Guile has a default set of extensions
+In the common usage, the @var{library} parameter is a filename
+with no path and with no filename extension, such as @code{.so},
+@code{.dylib} or @code{.dll}.  The procedure will search for the library
+in a set of standard locations using the common filename extensions for
+the OS.  The optional parameters can customize this behavior.
+
+When @var{library} has directory elements or a filename extension, a
+more targeted search is performed.
+
+For each system, Guile has a default set of extensions
 that it will try.  On GNU systems, the default extension set is just
 @code{.so}; on Windows, just @code{.dll}; and on Darwin (Mac OS), it is
 @code{.bundle}, @code{.so}, and @code{.dylib}.  Pass @code{#:extensions
@@ -113,10 +118,95 @@ environment variables:
 
 @table @env
 @item GUILE_EXTENSIONS_PATH
-This is the main environment variable for users to add directories
-containing Guile extensions.  The default value has no entries.  This
-environment variable was added in Guile 3.0.6.
+This is the environment variable for users to add directories containing
+Guile extensions to the search path.  The default value has no entries.
+This environment variable was added in Guile 3.0.6.
 @item LTDL_LIBRARY_PATH
+When @var{search-ltdl-library-path?} is true, this environment variable
+can also be used to add directories to the search path.  For each
+directory given in this environment variable, two directories are added
+to the search path: the given directory (for example, @code{D}) and a
+@code{.libs} subdirectory (@code{D/.libs}).
+
+For more information on the rationale, see the note below.
+@item GUILE_SYSTEM_EXTENSIONS_PATH
+The last path in Guile's search path belongs to Guile itself, and
+defaults to the libdir and the extensiondir, in that order.  For
+example, if you install to @file{/opt/guile}, these would probably be
+@file{/opt/guile/lib} and
+@code{/opt/guile/lib/guile/@value{EFFECTIVE-VERSION}/extensions},
+respectively.  @xref{Parallel Installations}, for more details on
+@code{extensionsdir}.
+
+For DLL-using systems, it searches bindir rather than libdir, so
+@file{/opt/guile/bin} in this example.
+@end table
+
+Finally, if no library is found in the search path, and if @var{library}
+is not absolute and does not include directory separators, and if
+@var{search-system-paths?} is true, the operating system may have its
+own logic for where to locate @var{library}.  For example, on GNU, there
+will be a default set of paths (often @file{/usr/lib} and @file{/lib},
+though it depends on the system), and the @code{LD_LIBRARY_PATH}
+environment variable can add additional paths.  On DLL-using systems,
+the @env{PATH} is searched. Other operating systems have other
+conventions.
+
+Falling back to the operating system for search is usually not a great
+thing; it is a recipe for making programs that work on one machine but
+not on others.  Still, when wrapping system libraries, it can be the
+only way to get things working at all.
+
+If @var{lazy?} is true (the default), Guile will request the operating
+system to resolve symbols used by the loaded library as they are first
+used.  If @var{global?} is true, symbols defined by the loaded library
+will be available when other modules need to resolve symbols; the
+default is @code{#f}, which keeps symbols local.
+
+If @var{host-type-rename?} is true (the default) library names may be
+modified based on the current @code{%host-type}.  On Cygwin hosts,
+the search behavior is modified such that a filename that starts with
+``lib'' will be searched for under the name ``cyg'', as is customary for
+Cygwin.  Similarly, for MSYS hosts, ``lib'' becomes ``msys-''.
+
+If @var{dll-version-suffix?} is true (the default), the search behavior
+is modified such that when searching for a DLL, it will also search for
+DLLs with version suffixes.  For example, a search for
+@file{libtiff.dll} will also allow @file{libtiff-1.dll}.  When the
+unversioned DLL is not found and multiple versioned DLLs exists, it will
+return the versioned DLL with the highest version. Note that when
+searching, directories take precedence. It does not return the highest
+versioned DLL among all search directories collectively; it returns the
+highest versioned in the first directory to have the DLL.
+
+If @var{library} argument is omitted, it defaults to @code{#f}.  If
+@code{library} is false, the resulting foreign library gives access to
+all symbols available for dynamic linking in the currently running
+executable.
+
+@end deffn
+
+The environment variables mentioned above are parsed when the
+foreign-library module is first loaded and bound to parameters.  Null
+path components, for example the three components of
+@env{GUILE_SYSTEM_EXTENSIONS_PATH="::"}, are ignored.
+
+@deffn {Scheme Parameter} guile-extensions-path
+@deffnx {Scheme Parameter} ltdl-library-path
+@deffnx {Scheme Parameter} guile-system-extensions-path
+Parameters whose initial values are taken from
+@env{GUILE_EXTENSIONS_PATH}, @env{LTDL_LIBRARY_PATH}, and
+@env{GUILE_SYSTEM_EXTENSIONS_PATH}, respectively.  @xref{Parameters}.
+The current values of these parameters are used when building the search
+path when @code{load-foreign-library} is called, unless the caller
+explicitly passes a @code{#:search-path} argument.
+@end deffn
+
+@deffn {Scheme Procedure} foreign-library? obj
+Return @code{#t} if @var{obj} is a foreign library, or @code{#f}
+otherwise.
+@end deffn
+
 Before Guile 3.0.6, Guile loaded foreign libraries using @code{libltdl},
 the dynamic library loader provided by libtool.  This loader used
 @env{LTDL_LIBRARY_PATH}, and for backwards compatibility we still
@@ -149,63 +239,6 @@ error-reporting reasons.  But, to keep this old use-case working, if
 additionally adding the @file{.libs} subdirectories for each entry, in
 case there are @file{.so} files there instead of alongside the
 @file{.la} files.
-@item GUILE_SYSTEM_EXTENSIONS_PATH
-The last path in Guile's search path belongs to Guile itself, and
-defaults to the libdir and the extensiondir, in that order.  For
-example, if you install to @file{/opt/guile}, these would probably be
-@file{/opt/guile/lib} and
-@code{/opt/guile/lib/guile/@value{EFFECTIVE-VERSION}/extensions},
-respectively.  @xref{Parallel Installations}, for more details on
-@code{extensionsdir}.
-@end table
-
-Finally, if no library is found in the search path, and if @var{library}
-is not absolute and does not include directory separators, and if
-@var{search-system-paths?} is true, the operating system may have its
-own logic for where to locate @var{library}.  For example, on GNU, there
-will be a default set of paths (often @file{/usr/lib} and @file{/lib},
-though it depends on the system), and the @code{LD_LIBRARY_PATH}
-environment variable can add additional paths.  Other operating systems
-have other conventions.
-
-Falling back to the operating system for search is usually not a great
-thing; it is a recipe for making programs that work on one machine but
-not on others.  Still, when wrapping system libraries, it can be the
-only way to get things working at all.
-
-If @var{lazy?} is true (the default), Guile will request the operating
-system to resolve symbols used by the loaded library as they are first
-used.  If @var{global?} is true, symbols defined by the loaded library
-will be available when other modules need to resolve symbols; the
-default is @code{#f}, which keeps symbols local.
-
-If @var{rename-on-cygwin?} is true (the default) -- on Cygwin hosts only
--- the search behavior is modified such that a filename that starts with
-``lib'' will be searched for under the name ``cyg'', as is customary for
-Cygwin.
-@end deffn
-
-The environment variables mentioned above are parsed when the
-foreign-library module is first loaded and bound to parameters.  Null
-path components, for example the three components of
-@env{GUILE_SYSTEM_EXTENSIONS_PATH="::"}, are ignored.
-
-@deffn {Scheme Parameter} guile-extensions-path
-@deffnx {Scheme Parameter} ltdl-library-path
-@deffnx {Scheme Parameter} guile-system-extensions-path
-Parameters whose initial values are taken from
-@env{GUILE_EXTENSIONS_PATH}, @env{LTDL_LIBRARY_PATH}, and
-@env{GUILE_SYSTEM_EXTENSIONS_PATH}, respectively.  @xref{Parameters}.
-The current values of these parameters are used when building the search
-path when @code{load-foreign-library} is called, unless the caller
-explicitly passes a @code{#:search-path} argument.
-@end deffn
-
-@deffn {Scheme Procedure} foreign-library? obj
-Return @code{#t} if @var{obj} is a foreign library, or @code{#f}
-otherwise.
-@end deffn
-
 
 @node Foreign Extensions
 @subsection Foreign Extensions

@@ -425,36 +425,104 @@
                                    layout)))))
 
 
-(with-test-prefix "lib->cyg"
-  (pass-if "name is #f"
-    (equal? #f (lib->cyg #f)))
+(with-test-prefix "host-type-rename?"
+  (with-test-prefix "cyg"
+    (pass-if "name is #f"
+      (equal? #f (lib->cyg #f)))
 
-  (pass-if "name too short"
-    (string=? (lib->cyg "a") "a"))
+    (pass-if "name too short"
+      (string=? (lib->cyg "a") "a"))
 
-  (pass-if "name starts with 'lib'"
-    (string=? (lib->cyg "libfoo.dll") "cygfoo.dll"))
+    (pass-if "name starts with 'lib'"
+      (string=? (lib->cyg "libfoo.dll") "cygfoo.dll"))
 
-  (pass-if "name contains 'lib'"
-    (string=? (lib->cyg "foolib.dll") "foolib.dll"))
+    (pass-if "name contains 'lib'"
+      (string=? (lib->cyg "foolib.dll") "foolib.dll"))
 
-  (pass-if "name doesn't contain 'lib'"
-    (string=? (lib->cyg "foobar.dll") "foobar.dll"))
+    (pass-if "name doesn't contain 'lib'"
+      (string=? (lib->cyg "foobar.dll") "foobar.dll"))
 
-  (pass-if "name in path too short"
-    (string=? (lib->cyg "/lib/a") "/lib/a"))
+    (pass-if "name in path too short"
+      (string=? (lib->cyg "/lib/a") "/lib/a"))
 
-  (pass-if "name in path starts with 'lib'"
-    (string=? (lib->cyg "/lib/libfoo.dll") "/lib/cygfoo.dll"))
+    (pass-if "name in path starts with 'lib'"
+      (string=? (lib->cyg "/lib/libfoo.dll") "/lib/cygfoo.dll"))
 
-  (pass-if "name in path contains 'lib'"
-    (string=? (lib->cyg "/lib/foolib.dll") "/lib/foolib.dll"))
+    (pass-if "name in path contains 'lib'"
+      (string=? (lib->cyg "/lib/foolib.dll") "/lib/foolib.dll"))
 
-  (pass-if "name in path doesn't contain 'lib'"
-    (string=? (lib->cyg "/lib/foobar.dll") "/lib/foobar.dll"))
+    (pass-if "name in path doesn't contain 'lib'"
+      (string=? (lib->cyg "/lib/foobar.dll") "/lib/foobar.dll"))
 
-  (pass-if "name in windows path starts with 'lib'"
-    (string=? (lib->cyg "c:\\lib\\libfoo.dll") "c:\\lib\\cygfoo.dll"))
+    (pass-if "name in windows path starts with 'lib'"
+      (string=? (lib->cyg "c:\\lib\\libfoo.dll") "c:\\lib\\cygfoo.dll"))
 
-  (pass-if "name in windows path doesn't contain 'lib'"
-    (string=? (lib->cyg "c:\\lib\\foobar.dll") "c:\\lib\\foobar.dll")))
+    (pass-if "name in windows path doesn't contain 'lib'"
+      (string=? (lib->cyg "c:\\lib\\foobar.dll") "c:\\lib\\foobar.dll")))
+
+  (with-test-prefix "msys"
+
+    (pass-if "name is #f"
+      (equal? #f (lib->msys #f)))
+
+    (pass-if "name too short"
+      (string=? (lib->msys "a") "a"))
+
+    (pass-if "name starts with 'lib'"
+      (string=? (lib->msys "libfoo.dll") "msys-foo.dll"))
+
+    (pass-if "name contains 'lib'"
+      (string=? (lib->msys "foolib.dll") "foolib.dll"))
+
+    (pass-if "name doesn't contain 'lib'"
+      (string=? (lib->msys "foobar.dll") "foobar.dll"))
+
+    (pass-if "name in path too short"
+      (string=? (lib->msys "/lib/a") "/lib/a"))
+
+    (pass-if "name in path starts with 'lib'"
+      (string=? (lib->msys "/lib/libfoo.dll") "/lib/msys-foo.dll"))
+
+    (pass-if "name in path contains 'lib'"
+      (string=? (lib->msys "/lib/foolib.dll") "/lib/foolib.dll"))
+
+    (pass-if "name in path doesn't contain 'lib'"
+      (string=? (lib->msys "/lib/foobar.dll") "/lib/foobar.dll"))
+
+    (pass-if "name in windows path starts with 'lib'"
+      (string=? (lib->msys "c:\\lib\\libfoo.dll") "c:\\lib\\msys-foo.dll"))
+
+    (pass-if "name in windows path doesn't contain 'lib'"
+      (string=? (lib->msys "c:\\lib\\foobar.dll") "c:\\lib\\foobar.dll"))))
+
+
+
+(with-test-prefix "dll-name-match?"
+  (let ((dll-name-match? (@@ (system foreign-library) dll-name-match?)))
+    (pass-if "libfoo.dll == libfoo.dll"
+      (dll-name-match? "libfoo.dll" "libfoo.dll"))
+    (pass-if "libfoo-1.dll == libfoo.dll"
+      (dll-name-match? "libfoo-1.dll" "libfoo.dll"))
+    (pass-if "libfoo-10.dll == libfoo.dll"
+      (dll-name-match? "libfoo-10.dll" "libfoo.dll"))
+    (pass-if "libfoo-.dll != libfoo.dll"
+      (not (dll-name-match? "libfoo-.dll" "libfoo.dll")))
+    (pass-if "libfoo-a.dll != libfoo.dll"
+      (not (dll-name-match? "libfoo-a.dll" "libfoo.dll")))
+    (pass-if "libfoo-1a.dll != libfoo.dll"
+      (not (dll-name-match? "libfoo-a.dll" "libfoo.dll")))))
+
+(with-test-prefix "find-best-dll-from-matches"
+  (let ((find-best? (@@ (system foreign-library) find-best-dll-from-matches)))
+    (pass-if-equal "prefer unversioned name"
+        "libfoo.dll"
+      (find-best? "libfoo.dll" '("libfoo.dll" "libfoo-1.dll")))
+    (pass-if-equal "allow versioned name"
+        "libfoo-1.dll"
+      (find-best? "libfoo.dll" '("libfoo-1.dll")))
+    (pass-if-equal "larger is better"
+        "libfoo-2.dll"
+      (find-best? "libfoo.dll" '("libfoo-1.dll" "libfoo-2.dll")))
+    (pass-if-equal "multiple digits ok"
+        "libfoo-123.dll"
+      (find-best? "libfoo.dll" '("libfoo-1.dll" "libfoo-123.dll")))))
