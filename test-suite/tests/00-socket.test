@@ -341,6 +341,10 @@
 
 	(pass-if "bind abstract"
           (skip-on-darwin)
+          (when (or (string-contains %host-type "cygwin")
+                    (string-contains %host-type "msys"))
+            ;; See https://cygwin.com/pipermail/cygwin/2023-June/253785.html
+            (throw 'unsupported))
 	  (catch 'system-error
 	    (lambda ()
 	      (bind server-socket AF_UNIX path)
