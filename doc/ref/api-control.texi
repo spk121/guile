@@ -404,7 +404,7 @@ For example,
 
 Note that each @code{break} and @code{continue} procedure can only be
 used within the dynamic extent of its @code{while}.  Outside the
-@code{while} their behaviour is unspecified.
+@code{while} their behavior is unspecified.
 @end deffn
 
 @cindex named let
@@ -567,14 +567,14 @@ incremented by 34:
 @end example
 
 The last example illustrates what we mean when we say, "composes with the
-current continuation". We mean that there is a current continuation -- some
+current continuation".  We mean that there is a current continuation -- some
 remaining things to compute, like @code{(lambda (x) (* x 2))} -- and that
 calling the saved continuation doesn't wipe out the current continuation, it
 composes the saved continuation with the current one.
 
 We're belaboring the point here because traditional Scheme continuations, as
 discussed in the next section, aren't composable, and are actually less
-expressive than continuations captured by prompts. But there's a place for them
+expressive than continuations captured by prompts.  But there's a place for them
 both.
 
 Before moving on, we should mention that if the handler of a prompt is a
@@ -1553,7 +1553,7 @@ The above @code{scm_with_throw_handler} takes Scheme procedures as body
 (thunk) and handler arguments.  @code{scm_c_with_throw_handler} is an
 equivalent taking C functions.  See @code{scm_c_catch}
 (@pxref{Exceptions and C}) for a description of the parameters, the
-behaviour however of course follows @code{with-throw-handler}.
+behavior however of course follows @code{with-throw-handler}.
 @end deftypefn
 
 
@@ -1655,12 +1655,12 @@ scm_foo (SCM s1, SCM s2)
 
   c_s1 = scm_to_locale_string (s1);
 
-  /* Call 'free (c_s1)' when the dynwind context is left. 
+  /* Call 'free (c_s1)' when the dynwind context is left.
   */
   scm_dynwind_unwind_handler (free, c_s1, SCM_F_WIND_EXPLICITLY);
 
   c_s2 = scm_to_locale_string (s2);
-  
+
   /* Same as above, but more concisely.
   */
   scm_dynwind_free (c_s2);
@@ -1671,7 +1671,7 @@ scm_foo (SCM s1, SCM s2)
 
   scm_dynwind_end ();
 
-  return scm_take_locale_string (res);
+  return scm_take_locale_string (c_res);
 @}
 @end example
 
@@ -1891,7 +1891,7 @@ Return @code{#t} if @var{obj} is a fluid; otherwise, return
 @deffnx {C Function} scm_fluid_ref (fluid)
 Return the value associated with @var{fluid} in the current
 dynamic root.  If @var{fluid} has not been set, then return
-its default value. Calling @code{fluid-ref} on an unbound fluid produces
+its default value.  Calling @code{fluid-ref} on an unbound fluid produces
 a runtime error.
 @end deffn
 
@@ -1996,7 +1996,7 @@ dynamic state object.
 @deffnx {C Function} scm_set_current_dynamic_state (state)
 Restore the saved fluid-value associations from @var{state}, replacing
 the current fluid-value associations.  Return the current fluid-value
-associatoins as a dynamic state object, as in
+associations as a dynamic state object, as in
 @code{current-dynamic-state}.
 @end deffn
 
@@ -2302,7 +2302,7 @@ Output}), and the corresponding arguments in the @var{args} list.
 @end deftypefn
 
 
-@subsubsection Signalling Type Errors
+@subsubsection Signaling Type Errors
 
 Every function visible at the Scheme level should aggressively check the
 types of its arguments, to avoid misinterpreting a value, and perhaps
@@ -2310,7 +2310,7 @@ causing a segmentation fault.  Guile provides some macros to make this
 easier.
 
 @deftypefn Macro void SCM_ASSERT (int @var{test}, SCM @var{obj}, unsigned int @var{position}, const char *@var{subr})
-@deftypefnx Macro void SCM_ASSERT_TYPE (int @var{test}, SCM @var{obj}, unsigned int @var{position}, const char *@var{subr}, const char *@var{expected}) 
+@deftypefnx Macro void SCM_ASSERT_TYPE (int @var{test}, SCM @var{obj}, unsigned int @var{position}, const char *@var{subr}, const char *@var{expected})
 If @var{test} is zero, signal a ``wrong type argument'' error,
 attributed to the subroutine named @var{subr}, operating on the value
 @var{obj}, which is the @var{position}'th argument of @var{subr}.

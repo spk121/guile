@@ -9,13 +9,13 @@
 
 At its best, programming in Lisp is an iterative process of building up a
 language appropriate to the problem at hand, and then solving the problem in
-that language. Defining new procedures is part of that, but Lisp also allows
+that language.  Defining new procedures is part of that, but Lisp also allows
 the user to extend its syntax, with its famous @dfn{macros}.
 
 @cindex macros
 @cindex transformation
 Macros are syntactic extensions which cause the expression that they appear in
-to be transformed in some way @emph{before} being evaluated. In expressions that
+to be transformed in some way @emph{before} being evaluated.  In expressions that
 are intended for macro transformation, the identifier that names the relevant
 macro must appear as the first element, like this:
 
@@ -29,7 +29,7 @@ macro must appear as the first element, like this:
 @cindex DSL
 @cindex EDSL
 Macro expansion is a separate phase of evaluation, run before code is
-interpreted or compiled. A macro is a program that runs on programs, translating
+interpreted or compiled.  A macro is a program that runs on programs, translating
 an embedded language into core Scheme@footnote{These days such embedded
 languages are often referred to as @dfn{embedded domain-specific
 languages}, or EDSLs.}.
@@ -51,7 +51,7 @@ languages}, or EDSLs.}.
 @node Defining Macros
 @subsection Defining Macros
 
-A macro is a binding between a keyword and a syntax transformer. Since it's
+A macro is a binding between a keyword and a syntax transformer.  Since it's
 difficult to discuss @code{define-syntax} without discussing the format of
 transformers, consider the following example macro definition:
 
@@ -103,7 +103,7 @@ A @code{let-syntax} binding only exists at expansion-time.
 @end deffn
 
 A @code{define-syntax} form is valid anywhere a definition may appear: at the
-top-level, or locally. Just as a local @code{define} expands out to an instance
+top-level, or locally.  Just as a local @code{define} expands out to an instance
 of @code{letrec}, a local @code{define-syntax} expands out to
 @code{letrec-syntax}.
 
@@ -148,20 +148,21 @@ patterns, and as many templates as there are patterns.
 
 When the syntax expander sees the invocation of a @code{syntax-rules} macro, it
 matches the expression against the patterns, in order, and rewrites the
-expression using the template from the first matching pattern. If no pattern
+expression using the template from the first matching pattern.  If no pattern
 matches, a syntax error is signaled.
 
 @subsubsection Patterns
 
 We have already seen some examples of patterns in the previous section:
-@code{(unless condition exp ...)}, @code{(my-or exp)}, and so on. A pattern is
-structured like the expression that it is to match. It can have nested structure
-as well, like @code{(let ((var val) ...) exp exp* ...)}. Broadly speaking,
+@code{(unless condition exp ...)}, @code{(my-or exp)}, and so on.  A pattern is
+structured like the expression that it is to match.  It can have nested structure
+as well, like @code{(let ((var val) ...) exp exp* ...)}.  Broadly speaking,
 patterns are made of lists, improper lists, vectors, identifiers, and datums.
 Users can match a sequence of patterns using the ellipsis (@code{...}).
 
 Identifiers in a pattern are called @dfn{literals} if they are present in the
-@code{syntax-rules} literals list, and @dfn{pattern variables} otherwise. When
+@code{syntax-rules} literals list, and @dfn{pattern variables}
+otherwise.  When
 building up the macro output, the expander replaces instances of a pattern
 variable in the template with the matched subexpression.
 
@@ -261,7 +262,7 @@ auxiliary syntax definitions, as specified by R6RS and R7RS:
 @deffnx {Scheme Syntax} ...
 Auxiliary syntax definitions.
 
-These are defined as if with a macro that never matches, e.g.:
+These are defined with a macro that never matches, e.g.:
 
 @example
 (define-syntax else (syntax-rules ()))
@@ -437,14 +438,14 @@ Scheme}.
 
 @code{syntax-rules} macros are simple and clean, but do they have limitations.
 They do not lend themselves to expressive error messages: patterns either match
-or they don't. Their ability to generate code is limited to template-driven
+or they don't.  Their ability to generate code is limited to template-driven
 expansion; often one needs to define a number of helper macros to get real work
-done. Sometimes one wants to introduce a binding into the lexical context of the
-generated code; this is impossible with @code{syntax-rules}. Relatedly, they
+done.  Sometimes one wants to introduce a binding into the lexical context of the
+generated code; this is impossible with @code{syntax-rules}.  Relatedly, they
 cannot programmatically generate identifiers.
 
 The solution to all of these problems is to use @code{syntax-case} if you need
-its features. But if for some reason you're stuck with @code{syntax-rules}, you
+its features.  But if for some reason you're stuck with @code{syntax-rules}, you
 might enjoy Joe Marshall's
 @uref{https://web.archive.org/web/20121111060531/@/
 https://d655165b-a-62cb3a1a-s-sites.googlegroups.com/site/evalapply/@/
@@ -463,8 +464,9 @@ Primer for the Merely Eccentric}.@footnote{Archived from
 worthy of Scheme.
 
 @deffn {Syntax} syntax-case syntax literals (pattern [guard] exp) @dots{}
-Match the syntax object @var{syntax} against the given patterns, in order. If a
-@var{pattern} matches, return the result of evaluating the associated @var{exp}.
+Match the syntax object @var{syntax} against the given patterns, in
+order.  If a @var{pattern} matches, return the result of evaluating the
+associated @var{exp}.
 @end deffn
 
 Compare the following definitions of @code{when}:
@@ -483,7 +485,7 @@ Compare the following definitions of @code{when}:
 @end example
 
 Clearly, the @code{syntax-case} definition is similar to its @code{syntax-rules}
-counterpart, and equally clearly there are some differences. The
+counterpart, and equally clearly there are some differences.  The
 @code{syntax-case} definition is wrapped in a @code{lambda}, a function of one
 argument; that argument is passed to the @code{syntax-case} invocation; and the
 ``return value'' of the macro has a @code{#'} prefix.
@@ -494,14 +496,14 @@ provide a way to destructure a @dfn{syntax object}, and to rebuild syntax
 objects as output.
 
 So the @code{lambda} wrapper is simply a leaky implementation detail, that
-syntax transformers are just functions that transform syntax to syntax. This
+syntax transformers are just functions that transform syntax to syntax.  This
 should not be surprising, given that we have already described macros as
 ``programs that write programs''. @code{syntax-case} is simply a way to take
 apart and put together program text, and to be a valid syntax transformer it
 needs to be wrapped in a procedure.
 
 Unlike traditional Lisp macros (@pxref{Defmacros}), @code{syntax-case} macros
-transform syntax objects, not raw Scheme forms. Recall the naive expansion of
+transform syntax objects, not raw Scheme forms.  Recall the naive expansion of
 @code{my-or} given in the previous section:
 
 @example
@@ -514,7 +516,7 @@ transform syntax objects, not raw Scheme forms. Recall the naive expansion of
 @end example
 
 Raw Scheme forms simply don't have enough information to distinguish the first
-two @code{t} instances in @code{(if t t t)} from the third @code{t}. So instead
+two @code{t} instances in @code{(if t t t)} from the third @code{t}.  So instead
 of representing identifiers as symbols, the syntax expander represents
 identifiers as annotated syntax objects, attaching such information to those
 syntax objects as is needed to maintain referential transparency.
@@ -523,8 +525,9 @@ syntax objects as is needed to maintain referential transparency.
 Create a syntax object wrapping @var{form} within the current lexical context.
 @end deffn
 
-Syntax objects are typically created internally to the process of expansion, but
-it is possible to create them outside of syntax expansion:
+Syntax objects are typically created internally to facilitate the
+process of expansion, but it is possible to create them outside of
+syntax expansion:
 
 @example
 (syntax (foo bar baz))
@@ -545,18 +548,18 @@ output from a @code{syntax-case} expression.
 
 It is not strictly necessary for a @code{syntax-case} expression to return a
 syntax object, because @code{syntax-case} expressions can be used in helper
-functions, or otherwise used outside of syntax expansion itself. However a
+functions, or otherwise used outside of syntax expansion itself.  However a
 syntax transformer procedure must return a syntax object, so most uses of
 @code{syntax-case} do end up returning syntax objects.
 
 Here in this case, the form that built the return value was @code{(syntax (+ exp
-1))}. The interesting thing about this is that within a @code{syntax}
+1))}.  The interesting thing about this is that within a @code{syntax}
 expression, any appearance of a pattern variable is substituted into the
 resulting syntax object, carrying with it all relevant metadata from the source
 expression, such as lexical identity and source location.
 
 Indeed, a pattern variable may only be referenced from inside a @code{syntax}
-form. The syntax expander would raise an error when defining @code{add1} if it
+form.  The syntax expander would raise an error when defining @code{add1} if it
 found @var{exp} referenced outside a @code{syntax} form.
 
 Since @code{syntax} appears frequently in macro-heavy code, it has a special
@@ -564,7 +567,7 @@ reader macro: @code{#'}. @code{#'foo} is transformed by the reader into
 @code{(syntax foo)}, just as @code{'foo} is transformed into @code{(quote foo)}.
 
 The pattern language used by @code{syntax-case} is conveniently the same
-language used by @code{syntax-rules}. Given this, Guile actually defines
+language used by @code{syntax-rules}.  Given this, Guile actually defines
 @code{syntax-rules} in terms of @code{syntax-case}:
 
 @example
@@ -584,13 +587,13 @@ And that's that.
 
 The examples we have shown thus far could just as well have been expressed with
 @code{syntax-rules}, and have just shown that @code{syntax-case} is more
-verbose, which is true. But there is a difference: @code{syntax-case} creates
+verbose, which is true.  But there is a difference: @code{syntax-case} creates
 @emph{procedural} macros, giving the full power of Scheme to the macro expander.
 This has many practical applications.
 
-A common desire is to be able to match a form only if it is an identifier. This
-is impossible with @code{syntax-rules}, given the datum matching forms. But with
-@code{syntax-case} it is easy:
+A common desire is to be able to match a form only if it is an
+identifier.  This is impossible with @code{syntax-rules}, given the
+datum matching forms.  But with @code{syntax-case} it is easy:
 
 @deffn {Scheme Procedure} identifier? syntax-object
 Returns @code{#t} if @var{syntax-object} is an identifier, or @code{#f}
@@ -877,7 +880,7 @@ objects.
 @end deffn
 
 @deffn {Scheme Procedure} syntax-local-binding id [#:resolve-syntax-parameters?=#t]
-Resolve the identifer @var{id}, a syntax object, within the current
+Resolve the identifier @var{id}, a syntax object, within the current
 lexical environment, and return two values, the binding type and a
 binding value.  The binding type is a symbol, which may be one of the
 following:
@@ -1104,7 +1107,7 @@ written to discriminate on the form in the operator position.
 
 @deffn {Scheme Procedure} make-variable-transformer transformer
 Mark the @var{transformer} procedure as being a ``variable
-transformer''. In practice this means that, when bound to a syntactic
+transformer''.  In practice this means that, when bound to a syntactic
 keyword, it may detect references to that keyword on the left-hand-side
 of a @code{set!}.
 
@@ -1130,7 +1133,7 @@ There is an extension to identifier-syntax which allows it to handle the
 @code{set!} case as well:
 
 @deffn {Syntax} identifier-syntax (var exp1) ((set! var val) exp2)
-Create a variable transformer. The first clause is used for references
+Create a variable transformer.  The first clause is used for references
 to the variable in operator or operand position, and the second for
 appearances of the variable on the left-hand-side of an assignment.
 
@@ -1166,7 +1169,7 @@ With syntax parameters, instead of introducing the binding
 unhygienically each time, we instead create one binding for the keyword,
 which we can then adjust later when we want the keyword to have a
 different meaning.  As no new bindings are introduced, hygiene is
-preserved. This is similar to the dynamic binding mechanisms we have at
+preserved.  This is similar to the dynamic binding mechanisms we have at
 run-time (@pxref{SRFI-39, parameters}), except that the dynamic binding
 only occurs during macro expansion.  The code after macro expansion
 remains lexically scoped.
@@ -1192,7 +1195,7 @@ their @var{transformer} @dots{}, in the expansion of the @var{exp}
 @dots{} forms.  Each @var{keyword} must be bound to a syntax-parameter.
 @code{syntax-parameterize} differs from @code{let-syntax}, in that the
 binding is not shadowed, but adjusted, and so uses of the keyword in the
-expansion of @var{exp} @dots{} use the new transformers. This is
+expansion of @var{exp} @dots{} use the new transformers.  This is
 somewhat similar to how @code{parameterize} adjusts the values of
 regular parameters, rather than creating new bindings.
 
@@ -1234,13 +1237,13 @@ program are available for the macro to use?
 
 The default answer to this question is that when you import a module (via
 @code{define-module} or @code{use-modules}), that module will be loaded up at
-expansion-time, as well as at run-time. Additionally, top-level syntactic
+expansion-time, as well as at run-time.  Additionally, top-level syntactic
 definitions within one compilation unit made by @code{define-syntax} are also
 evaluated at expansion time, in the order that they appear in the compilation
 unit (file).
 
 But if a syntactic definition needs to call out to a normal procedure at
-expansion-time, it might well need need special declarations to indicate that
+expansion-time, it might well need special declarations to indicate that
 the procedure should be made available at expansion-time.
 
 For example, the following code tries to embed a compilation
@@ -1252,7 +1255,7 @@ not in a file, as it cannot be byte-compiled:
 (use-modules (srfi srfi-19))
 (define start-date (date->string (current-date)))
 (define-syntax *compilation-date*
- (lambda (sintax)
+ (lambda (syntax)
     start-date))
 (display *compilation-date*)
 (newline)
@@ -1269,7 +1272,7 @@ The fix is to use @code{eval-when}.
 (eval-when (expand load eval)
   (define start-date (date->string (current-date))))
 (define-syntax *compilation-date*
- (lambda (sintax)
+ (lambda (syntax)
     start-date))
 (display *compilation-date*)
 (newline)
@@ -1369,7 +1372,7 @@ macro definition to be present at compile time as well, so you pass
 Compiler}.
 
 It's a terrible interface; we know.  The macroexpander is somewhat
-tricksy regarding modes, so unless you are building a macro-expanding
+tricky regarding modes, so unless you are building a macro-expanding
 tool, we suggest to avoid invoking it directly.
 
 

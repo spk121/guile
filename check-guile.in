@@ -8,44 +8,32 @@
 # ./check-guile numbers.test
 # ./check-guile -i /usr/local/bin/guile
 # ./check-guile -i /usr/local/bin/guile numbers.test
+# ./check-guile -i meta/gdb-uninstalled-guile numbers.test
 
 set -e
 
 top_builddir=@top_builddir_absolute@
 top_srcdir=@top_srcdir_absolute@
 
-TEST_SUITE_DIR=${top_srcdir}/test-suite
-export TEST_SUITE_DIR
+export TEST_SUITE_DIR="${top_srcdir}/test-suite"
 
 if [ x"$1" = x-i ] ; then
-    guile=$2
-    shift
-    shift
+    guile="$2"
+    shift 2
 else
-    guile=${top_builddir}/meta/guile
+    guile="${top_builddir}/meta/guile"
 fi
 
-GUILE_LOAD_PATH=$TEST_SUITE_DIR
-export GUILE_LOAD_PATH
+export GUILE_LOAD_PATH="$TEST_SUITE_DIR"
 
-if [ -f "$guile" -a -x "$guile" ] ; then
-    echo Testing $guile ... "$@"
-    echo with GUILE_LOAD_PATH=$GUILE_LOAD_PATH
-else
-    echo ERROR: Cannot execute $guile
-    exit 1
+if ! [ -f "$guile" -a -x "$guile" ] ; then
+    echo "ERROR: Cannot execute $guile" 1>&2
+    exit 2
 fi
 
-# documentation searching ignores GUILE_LOAD_PATH.
-if [ ! -f guile-procedures.txt ] ; then
-   @LN_S@ libguile/guile-procedures.txt .
-fi
-
-exec $guile \
+exec "$guile" \
     --debug \
     -L "$TEST_SUITE_DIR" \
     --no-auto-compile -e main -s "$TEST_SUITE_DIR/guile-test" \
     --test-suite "$TEST_SUITE_DIR/tests" \
     --log-file check-guile.log "$@"
-
-# check-guile ends here

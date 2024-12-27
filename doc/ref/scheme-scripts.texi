@@ -225,7 +225,7 @@ procedure to call after loading the script, Guile will call that
 procedure with @code{(command-line)} as its argument.  So a script that
 uses @code{-e} doesn't need to refer explicitly to @code{command-line}
 in its code.  For example, the script above would have identical
-behaviour if it was written instead like this:
+behavior if it was written instead like this:
 
 @example
 #! /usr/local/bin/guile \

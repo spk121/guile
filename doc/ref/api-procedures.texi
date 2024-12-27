@@ -1,7 +1,7 @@
 @c -*-texinfo-*-
 @c This is part of the GNU Guile Reference Manual.
 @c Copyright (C)  1996, 1997, 2000, 2001, 2002, 2003, 2004, 2009, 2010,
-@c   2011, 2012, 2013  Free Software Foundation, Inc.
+@c   2011, 2012, 2013, 2024  Free Software Foundation, Inc.
 @c See the file guile.texi for copying conditions.
 
 @node Procedures
@@ -123,23 +123,26 @@ same way as @code{scm_c_make_gsubr}, which is usually not further
 required.
 @end deftypefun
 
+@xref{Foreign Functions}, for another interface to call procedures
+written in C from Scheme.
+
 @node Compiled Procedures
 @subsection Compiled Procedures
 
 The evaluation strategy given in @ref{Lambda} describes how procedures
-are @dfn{interpreted}. Interpretation operates directly on expanded
+are @dfn{interpreted}.  Interpretation operates directly on expanded
 Scheme source code, recursively calling the evaluator to obtain the
 value of nested expressions.
 
-Most procedures are compiled, however. This means that Guile has done
+Most procedures are compiled, however.  This means that Guile has done
 some pre-computation on the procedure, to determine what it will need to
-do each time the procedure runs. Compiled procedures run faster than
+do each time the procedure runs.  Compiled procedures run faster than
 interpreted procedures.
 
 Loading files is the normal way that compiled procedures come to
-being. If Guile sees that a file is uncompiled, or that its compiled
+being.  If Guile sees that a file is uncompiled, or that its compiled
 file is out of date, it will attempt to compile the file when it is
-loaded, and save the result to disk. Procedures can be compiled at
+loaded, and save the result to disk.  Procedures can be compiled at
 runtime as well. @xref{Read/Load/Eval/Compile}, for more information
 on runtime compilation.
 
@@ -150,7 +153,7 @@ Properties}).  In addition, there are a few more accessors for low-level
 details on programs.
 
 Most people won't need to use the routines described in this section,
-but it's good to have them documented. You'll have to include the
+but it's good to have them documented.  You'll have to include the
 appropriate module first, though:
 
 @example
@@ -186,26 +189,6 @@ Users must not modify the returned value unless they think they're
 really clever.
 @end deffn
 
-@c FIXME
-
-@deffn {Scheme Procedure} program-bindings program
-@deffnx {Scheme Procedure} make-binding name boxed? index start end
-@deffnx {Scheme Procedure} binding:name binding
-@deffnx {Scheme Procedure} binding:boxed? binding
-@deffnx {Scheme Procedure} binding:index binding
-@deffnx {Scheme Procedure} binding:start binding
-@deffnx {Scheme Procedure} binding:end binding
-Bindings annotations for programs, along with their accessors.
-
-Bindings declare names and liveness extents for block-local variables.
-The best way to see what these are is to play around with them at a
-REPL. @xref{VM Concepts}, for more information.
-
-Note that bindings information is stored in a program as part of its
-metadata thunk, so including it in the generated object code does not
-impose a runtime performance penalty.
-@end deffn
-
 @deffn {Scheme Procedure} program-sources program
 @deffnx {Scheme Procedure} source:addr source
 @deffnx {Scheme Procedure} source:line source
@@ -214,9 +197,9 @@ impose a runtime performance penalty.
 Source location annotations for programs, along with their accessors.
 
 Source location information propagates through the compiler and ends
-up being serialized to the program's metadata. This information is
+up being serialized to the program's metadata.  This information is
 keyed by the offset of the instruction pointer within the object code
-of the program. Specifically, it is keyed on the @code{ip} @emph{just
+of the program.  Specifically, it is keyed on the @code{ip} @emph{just
 following} an instruction, so that backtraces can find the source
 location of a call that is in progress.
 @end deffn
@@ -233,24 +216,24 @@ location of a call that is in progress.
 @deffnx {Scheme Procedure} arity:allow-other-keys? arity
 Accessors for a representation of the ``arity'' of a program.
 
-The normal case is that a procedure has one arity. For example,
-@code{(lambda (x) x)}, takes one required argument, and that's it. One
+The normal case is that a procedure has one arity.  For example,
+@code{(lambda (x) x)}, takes one required argument, and that's it.  One
 could access that number of required arguments via @code{(arity:nreq
-(program-arities (lambda (x) x)))}. Similarly, @code{arity:nopt} gets
+(program-arities (lambda (x) x)))}.  Similarly, @code{arity:nopt} gets
 the number of optional arguments, and @code{arity:rest?} returns a true
 value if the procedure has a rest arg.
 
 @code{arity:kw} returns a list of @code{(@var{kw} . @var{idx})} pairs,
-if the procedure has keyword arguments. The @var{idx} refers to the
+if the procedure has keyword arguments.  The @var{idx} refers to the
 @var{idx}th local variable; @xref{Variables and the VM}, for more
-information. Finally @code{arity:allow-other-keys?} returns a true
+information.  Finally @code{arity:allow-other-keys?} returns a true
 value if other keys are allowed. @xref{Optional Arguments}, for more
 information.
 
-So what about @code{arity:start} and @code{arity:end}, then? They
+So what about @code{arity:start} and @code{arity:end}, then?  They
 return the range of bytes in the program's bytecode for which a given
-arity is valid. You see, a procedure can actually have more than one
-arity. The question, ``what is a procedure's arity'' only really makes
+arity is valid.  You see, a procedure can actually have more than one
+arity.  The question, ``what is a procedure's arity'' only really makes
 sense at certain points in the program, delimited by these
 @code{arity:start} and @code{arity:end} values.
 @end deffn
@@ -301,7 +284,7 @@ to give names to the fixed number of arguments, but the remaining
 
 For this reason, Guile provides an extension to @code{lambda},
 @code{lambda*}, which allows the user to define procedures with
-optional and keyword arguments. In addition, Guile's virtual machine
+optional and keyword arguments.  In addition, Guile's virtual machine
 has low-level support for optional and keyword argument dispatch.
 Calls to procedures with optional and keyword arguments can be made
 cheaply, without allocating a rest list.
@@ -584,7 +567,7 @@ Rest lists can be useful with @code{case-lambda}:
 @end lisp
 
 @fnindex case-lambda*
-Also, for completeness. Guile defines @code{case-lambda*} as well,
+Also, for completeness.  Guile defines @code{case-lambda*} as well,
 which is like @code{case-lambda}, except with @code{lambda*} clauses.
 A @code{case-lambda*} clause matches if the arguments fill the
 required arguments, but are not too many for the optional and/or rest
@@ -717,11 +700,6 @@ name of a procedure is information not for the procedure, but about
 the procedure. This meta-information can be accessed via the procedure
 properties interface.
 
-The first group of procedures in this meta-interface are predicates to
-test whether a Scheme object is a procedure, or a special procedure,
-respectively.  @code{procedure?} is the most general predicates, it
-returns @code{#t} for any kind of procedure.
-
 @rnindex procedure?
 @deffn {Scheme Procedure} procedure? obj
 @deffnx {C Function} scm_procedure_p (obj)
@@ -731,7 +709,8 @@ Return @code{#t} if @var{obj} is a procedure.
 @deffn {Scheme Procedure} thunk? obj
 @deffnx {C Function} scm_thunk_p (obj)
 Return @code{#t} if @var{obj} is a procedure that can be called with
-zero arguments.
+zero arguments.  @xref{Compiled Procedures}, to get more information
+on what arguments a procedure will accept.
 @end deffn
 
 @cindex procedure properties
@@ -739,16 +718,66 @@ Procedure properties are general properties associated with
 procedures. These can be the name of a procedure or other relevant
 information, such as debug hints.
 
-@deffn {Scheme Procedure} procedure-name proc
-@deffnx {C Function} scm_procedure_name (proc)
-Return the name of the procedure @var{proc}
+The most general way to associate a property of a procedure is
+programmatically:
+
+@deffn {Scheme Procedure} procedure-property proc key
+@deffnx {C Function} scm_procedure_property (proc, key)
+Return the property of @var{proc} with name @var{key}, or @code{#f} if
+not found.
 @end deffn
 
-@deffn {Scheme Procedure} procedure-source proc
-@deffnx {C Function} scm_procedure_source (proc)
-Return the source of the procedure @var{proc}. Returns @code{#f} if
-the source code is not available.
+@deffn {Scheme Procedure} set-procedure-property! proc key value
+@deffnx {C Function} scm_set_procedure_property_x (proc, key, value)
+Set @var{proc}'s property named @var{key} to @var{value}.
 @end deffn
+
+However, there is a more efficient interface that allows constant
+properties to be embedded into compiled binaries in a way that does
+not incur any overhead until someone asks for the property: initial
+non-tail elements of the body of a lambda expression that are literal
+vectors of pairs are interpreted as declaring procedure properties.
+This is easiest to see with an example:
+
+@example
+(define proc
+  (lambda args
+    #((a . "hey") (b . "ho")) ;; procedure properties!
+    42))
+(procedure-property proc 'a) ; @result{} "hey"
+(procedure-property proc 'b) ; @result{} "ho"
+@end example
+
+There is a shorthand for declaring the @code{documentation} property,
+which is a literal string instead of a literal vector:
+
+@example
+(define proc
+  (lambda args
+    "This is a docstring."
+    42))
+(procedure-property proc 'documentation)
+;; @result{} "This is a docstring."
+@end example
+
+Calling @code{procedure-property} with a key of @code{documentation}
+is exactly the same as calling @code{procedure-documentation}.
+Similarly, @code{procedure-name} is the same as the @code{name}
+procedure property, and @code{procedure-source} is for the
+@code{source} property.
+
+@deffn {Scheme Procedure} procedure-name proc
+@deffnx {C Function} scm_procedure_name (proc)
+@deffnx {Scheme Procedure} procedure-source proc
+@deffnx {C Function} scm_procedure_source (proc)
+@deffnx {Scheme Procedure} procedure-documentation proc
+@deffnx {C Function} scm_procedure_documentation (proc)
+Return the value of the @code{name}, @code{source}, or
+@code{documentation} property for @var{proc}, or @code{#f} if no
+property is set.
+@end deffn
+
+One can also work on the entire set of procedure properties.
 
 @deffn {Scheme Procedure} procedure-properties proc
 @deffnx {C Function} scm_procedure_properties (proc)
@@ -756,32 +785,9 @@ Return the properties associated with @var{proc}, as an association
 list.
 @end deffn
 
-@deffn {Scheme Procedure} procedure-property proc key
-@deffnx {C Function} scm_procedure_property (proc, key)
-Return the property of @var{proc} with name @var{key}.
-@end deffn
-
 @deffn {Scheme Procedure} set-procedure-properties! proc alist
 @deffnx {C Function} scm_set_procedure_properties_x (proc, alist)
 Set @var{proc}'s property list to @var{alist}.
-@end deffn
-
-@deffn {Scheme Procedure} set-procedure-property! proc key value
-@deffnx {C Function} scm_set_procedure_property_x (proc, key, value)
-In @var{proc}'s property list, set the property named @var{key} to
-@var{value}.
-@end deffn
-
-@cindex procedure documentation
-Documentation for a procedure can be accessed with the procedure
-@code{procedure-documentation}.
-
-@deffn {Scheme Procedure} procedure-documentation proc
-@deffnx {C Function} scm_procedure_documentation (proc)
-Return the documentation string associated with @code{proc}.  By
-convention, if a procedure contains more than one expression and the
-first expression is a string constant, that string is assumed to contain
-documentation for that procedure.
 @end deffn
 
 

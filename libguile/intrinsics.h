@@ -24,7 +24,11 @@
 #error intrinsics.h is private and uninstalled
 #endif
 
+#ifndef _WIN64
 #include <setjmp.h>
+#else
+#include "libguile/setjump-win.h"
+#endif
 
 #include <libguile/scm.h>
 
@@ -218,6 +222,9 @@ typedef void (*scm_t_scm_uimm_scm_intrinsic) (SCM, uint8_t, SCM);
   M(scm_from_scmn_scmn, lookup_bound_public, "lookup-bound-public", LOOKUP_BOUND_PUBLIC) \
   M(scm_from_scmn_scmn, lookup_bound_private, "lookup-bound-private", LOOKUP_BOUND_PRIVATE) \
   M(scm_from_scm, symbol_to_string, "symbol->string", SYMBOL_TO_STRING) \
+  M(scm_from_scm, string_to_utf8, "string->utf8", STRING_TO_UTF8) \
+  M(u64_from_scm, string_utf8_length, "string-utf8-length", STRING_UTF8_LENGTH) \
+  M(scm_from_scm, utf8_to_string, "utf8->string", UTF8_TO_STRING) \
   /* Add new intrinsics here; also update scm_bootstrap_intrinsics.  */
 
 /* Intrinsics prefixed with $ are meant to reduce bytecode size,

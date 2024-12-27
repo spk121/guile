@@ -114,7 +114,7 @@ port directly after OBJ, like (pretty-print OBJ PORT)."
        ((< to col)
         (put-string port "\n")
         (put-string port per-line-prefix)
-        (spaces to))
+        (spaces (- to (string-length per-line-prefix))))
        (else
         (spaces (- to col))))))
 
@@ -320,7 +320,7 @@ into @var{width} characters. By default, @var{x} will be printed using
 @code{write}, though that behavior can be overriden via the
 @var{display?} keyword argument.
 
-The default behaviour is to print depth-first, meaning that the entire
+The default behavior is to print depth-first, meaning that the entire
 remaining width will be available to each sub-expression of @var{x} --
 e.g., if @var{x} is a vector, each member of @var{x}. One can attempt to
 \"ration\" the available width, trying to allocate it equally to each

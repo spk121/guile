@@ -1,5 +1,5 @@
 ;;; Ports
-;;; Copyright (C) 2016,2019,2021 Free Software Foundation, Inc.
+;;; Copyright (C) 2016,2019,2021,2024 Free Software Foundation, Inc.
 ;;;
 ;;; This library is free software: you can redistribute it and/or modify
 ;;; it under the terms of the GNU Lesser General Public License as
@@ -30,10 +30,10 @@
             %port-property
             %set-port-property!
             current-input-port current-output-port
-            current-error-port current-warning-port
+            current-error-port current-warning-port current-info-port
             current-load-port
             set-current-input-port set-current-output-port
-            set-current-error-port
+            set-current-error-port set-current-info-port
             port-mode
             port?
             input-port?
@@ -144,7 +144,8 @@
                               call-with-output-string
                               close-port
                               current-error-port
-                              current-warning-port))
+                              current-warning-port
+                              current-info-port))
 
 (load-extension (string-append "libguile-" (effective-version))
                 "scm_init_ice_9_ports")
@@ -152,6 +153,12 @@
                 "scm_init_ice_9_fports")
 (load-extension (string-append "libguile-" (effective-version))
                 "scm_init_ice_9_ioext")
+
+(eval-when (load eval expand)
+  (when (defined? 'SEEK_DATA)
+    (module-export! (current-module) '(SEEK_DATA)))
+  (when (defined? 'SEEK_HOLE)
+    (module-export! (current-module) '(SEEK_HOLE))))
 
 
 
@@ -284,6 +291,13 @@ interpret its input and output."
                         (error "expected an output port" x))
                       x)))
 
+(define current-info-port
+  (fluid->parameter %current-info-port-fluid
+                    (lambda (x)
+                      (unless (output-port? x)
+                        (error "expected an output port" x))
+                      x)))
+
 
 
 
@@ -390,6 +404,10 @@ interpret its input and output."
   "Set the current default error port to @var{port}."
   (current-error-port port))
 
+(define (set-current-info-port port)
+  "Set the current default info port to @var{port}."
+  (current-info-port port))
+
 
 ;;;; high level routines
 
@@ -455,7 +473,7 @@ never again be used for a read or write operation."
 
 (define* (call-with-output-file file proc #:key (binary #f) (encoding #f))
   "PROC should be a procedure of one argument, and FILE should be a
-string naming a file.  The behaviour is unspecified if the file
+string naming a file.  The behavior is unspecified if the file
 already exists. These procedures call PROC
 with one argument: the port obtained by opening the named file for
 input or output.  If the file cannot be opened, an error is

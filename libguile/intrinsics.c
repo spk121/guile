@@ -26,6 +26,7 @@
 #include "alist.h"
 #include "atomics-internal.h"
 #include "boolean.h"
+#include "bytevectors.h"
 #include "cache-internal.h"
 #include "extensions.h"
 #include "fluids.h"
@@ -36,6 +37,7 @@
 #include "keywords.h"
 #include "modules.h"
 #include "numbers.h"
+#include "strings.h"
 #include "struct.h"
 #include "symbols.h"
 #include "threads.h"
@@ -560,6 +562,26 @@ struct_set_x_immediate (SCM x, uint8_t idx, SCM z)
   scm_struct_set_x (x, scm_from_uint8 (idx), z);
 }
 
+static uint64_t
+string_utf8_length (SCM str)
+{
+  return scm_c_string_utf8_length (str);
+}
+
+#if INDIRECT_INT64_INTRINSICS
+static void
+indirect_string_utf8_length (uint64_t *dst, SCM str)
+{
+  *dst = string_utf8_length (str);
+}
+#endif
+
+#if INDIRECT_INT64_INTRINSICS
+#define INT64_INTRINSIC(name) indirect_##name
+#else
+#define INT64_INTRINSIC(name) name
+#endif
+
 void
 scm_bootstrap_intrinsics (void)
 {
@@ -581,19 +603,11 @@ scm_bootstrap_intrinsics (void)
   scm_vm_intrinsics.symbol_to_keyword = scm_symbol_to_keyword;
   scm_vm_intrinsics.class_of = scm_class_of;
   scm_vm_intrinsics.scm_to_f64 = scm_to_double;
-#if INDIRECT_INT64_INTRINSICS
-  scm_vm_intrinsics.scm_to_u64 = indirect_scm_to_uint64;
-  scm_vm_intrinsics.scm_to_u64_truncate = indirect_scm_to_uint64_truncate;
-  scm_vm_intrinsics.scm_to_s64 = indirect_scm_to_int64;
-  scm_vm_intrinsics.u64_to_scm = indirect_scm_from_uint64;
-  scm_vm_intrinsics.s64_to_scm = indirect_scm_from_int64;
-#else
-  scm_vm_intrinsics.scm_to_u64 = scm_to_uint64;
-  scm_vm_intrinsics.scm_to_u64_truncate = scm_to_uint64_truncate;
-  scm_vm_intrinsics.scm_to_s64 = scm_to_int64;
-  scm_vm_intrinsics.u64_to_scm = scm_from_uint64;
-  scm_vm_intrinsics.s64_to_scm = scm_from_int64;
-#endif
+  scm_vm_intrinsics.scm_to_u64 = INT64_INTRINSIC (scm_to_uint64);
+  scm_vm_intrinsics.scm_to_u64_truncate = INT64_INTRINSIC (scm_to_uint64_truncate);
+  scm_vm_intrinsics.scm_to_s64 = INT64_INTRINSIC (scm_to_int64);
+  scm_vm_intrinsics.u64_to_scm = INT64_INTRINSIC (scm_from_uint64);
+  scm_vm_intrinsics.s64_to_scm = INT64_INTRINSIC (scm_from_int64);
   scm_vm_intrinsics.logsub = logsub;
   scm_vm_intrinsics.wind = wind;
   scm_vm_intrinsics.unwind = unwind;
@@ -603,13 +617,8 @@ scm_bootstrap_intrinsics (void)
   scm_vm_intrinsics.fluid_set_x = fluid_set_x;
   scm_vm_intrinsics.push_dynamic_state = push_dynamic_state;
   scm_vm_intrinsics.pop_dynamic_state = pop_dynamic_state;
-#if INDIRECT_INT64_INTRINSICS
-  scm_vm_intrinsics.lsh = indirect_lsh;
-  scm_vm_intrinsics.rsh = indirect_rsh;
-#else
-  scm_vm_intrinsics.lsh = lsh;
-  scm_vm_intrinsics.rsh = rsh;
-#endif
+  scm_vm_intrinsics.lsh = INT64_INTRINSIC (lsh);
+  scm_vm_intrinsics.rsh = INT64_INTRINSIC (rsh);
   scm_vm_intrinsics.lsh_immediate = lsh_immediate;
   scm_vm_intrinsics.rsh_immediate = rsh_immediate;
   scm_vm_intrinsics.heap_numbers_equal_p = scm_i_heap_numbers_equal_p;
@@ -659,6 +668,9 @@ scm_bootstrap_intrinsics (void)
   scm_vm_intrinsics.allocate_pointerless_words_with_freelist =
     allocate_pointerless_words_with_freelist;
   scm_vm_intrinsics.inexact = scm_exact_to_inexact;
+  scm_vm_intrinsics.string_to_utf8 = scm_string_to_utf8;
+  scm_vm_intrinsics.string_utf8_length = INT64_INTRINSIC (string_utf8_length);
+  scm_vm_intrinsics.utf8_to_string = scm_utf8_to_string;
 
   /* Intrinsics for the baseline compiler. */
   scm_vm_intrinsics.car = scm_car;
@@ -679,7 +691,7 @@ scm_bootstrap_intrinsics (void)
   scm_vm_intrinsics.struct_ref_immediate = struct_ref_immediate;
   scm_vm_intrinsics.struct_set_x_immediate = struct_set_x_immediate;
   scm_vm_intrinsics.symbol_to_string = scm_symbol_to_string;
-  
+
   scm_c_register_extension ("libguile-" SCM_EFFECTIVE_VERSION,
                             "scm_init_intrinsics",
                             (scm_t_extension_init_func)scm_init_intrinsics,

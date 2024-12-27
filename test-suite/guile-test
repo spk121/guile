@@ -32,9 +32,10 @@
 ;;;; fail or pass unexpectedly.
 ;;;;
 ;;;; Normally, guile-test scans the test directory, and executes all
-;;;; files whose names end in `.test'.  (It assumes they contain
-;;;; Scheme code.)  However, you can have it execute specific tests by
-;;;; listing their filenames on the command line.
+;;;; files whose names end in `.test' and don't begin with `.'.  (It
+;;;; assumes they contain Scheme code.)  However, you can have it
+;;;; execute specific tests by listing their filenames on the command
+;;;; line.
 ;;;;
 ;;;; The option `--test-suite' can be given to specify the test
 ;;;; directory.  If no such option is given, the test directory is
@@ -81,6 +82,7 @@
     (apply (module-ref module 'main) args)))
 
 (define-module (test-suite guile-test)
+  :declarative? #f
   :use-module (test-suite lib)
   :use-module (ice-9 getopt-long)
   :use-module (ice-9 and-let-star)
@@ -88,6 +90,8 @@
   :use-module (system vm coverage)
   :use-module (srfi srfi-11)
   :use-module (system vm vm)
+  #:declarative? #f
+  :use-module ((test-suite lib automake) :prefix automake/)
   :export (main data-file-name test-file-name))
 
 
@@ -157,10 +161,10 @@
   (let ((root-len (+ 1 (string-length test-dir)))
 	(tests '()))
     (for-each-file (lambda (file)
-		     (if (string-suffix? ".test" file)
-			 (let ((short-name
-				(substring file root-len)))
-			   (set! tests (cons short-name tests))))
+		     (when (string-suffix? ".test" file)
+                       (let ((short-name (substring file root-len)))
+                         (unless (eqv? #\. (string-ref short-name 0))
+			   (set! tests (cons short-name tests)))))
 		     #t)
 		   test-dir)
 
@@ -183,7 +187,9 @@
                                 (coverage
                                  (single-char #\c))
 				(debug
-				 (single-char #\d))))))
+				 (single-char #\d))
+                                (trs-file
+                                 (value #t))))))
     (define (opt tag default)
       (let ((pair (assq tag options)))
 	(if pair (cdr pair) default)))
@@ -206,11 +212,16 @@
 	      (if (null? foo)
 		  (enumerate-tests test-suite)
 		  foo)))
-	   (log-file
-	    (opt 'log-file "guile.log")))
+	   (log-file (opt 'log-file "guile.log"))
+           (trs-file (opt 'trs-file #f)))
 
       ;; Open the log file.
-      (let ((log-port (open-output-file log-file)))
+      (let ((log-port (open-output-file log-file))
+            (trs-port (and trs-file
+                           (let ((p (open-output-file trs-file)))
+                             (set-port-encoding! p "UTF-8")
+                             (display ":copy-in-global-log: no\n" p)
+                             p))))
 
         ;; Allow for arbitrary Unicode characters in the log file.
         (set-port-encoding! log-port "UTF-8")
@@ -222,9 +233,11 @@
 	;; Register some reporters.
 	(let ((global-pass #t)
 	      (counter (make-count-reporter)))
+          (when trs-port
+            (register-reporter (automake/reporter trs-port)))
 	  (register-reporter (car counter))
 	  (register-reporter (make-log-reporter log-port))
-	  (register-reporter user-reporter)
+          (register-reporter user-reporter)
 	  (register-reporter (lambda results
 			       (case (car results)
                                  ((unresolved)
@@ -254,10 +267,19 @@
 	  ;; Display the final counts, both to the user and in the log
 	  ;; file.
 	  (let ((counts ((cadr counter))))
-	    (print-counts counts)
-	    (print-counts counts log-port))
+            (unless trs-port
+              (print-counts counts))
+	    (print-counts counts log-port)
 
-	  (close-port log-port)
+	    (close-port log-port)
+
+            (when trs-port
+              (when global-pass (display ":recheck: no\n" trs-port))
+              (display ":test-global-result: " trs-port)
+              (display (count-summary-line counts) trs-port)
+              (newline trs-port)
+              (close-port trs-port)))
+
 	  (quit global-pass))))))
 
 

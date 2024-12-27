@@ -716,7 +716,7 @@
 
 (test-begin "8.6. test-apply")
 (test-equal "8.6.1. Simple (form 1) test-apply"
-            '(("w" "p" "v") () () () ("x") (3 0 0 0 1))
+            '(("w" "p" "v") () () () () (3 0 0 0 0))
             (triv-runner
              (lambda ()
                (test-begin "a")
@@ -733,7 +733,7 @@
                (test-assert "v" #t))))
 
 (test-equal "8.6.2. Simple (form 2) test-apply"
-            '(("w" "p" "v") () () () ("x") (3 0 0 0 1))
+            '(("w" "p" "v") () () () () (3 0 0 0 0))
             (triv-runner
              (lambda ()
                (test-begin "a")

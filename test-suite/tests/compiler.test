@@ -1,5 +1,5 @@
 ;;;; compiler.test --- tests for the compiler      -*- scheme -*-
-;;;; Copyright (C) 2008-2014, 2018, 2021-2022 Free Software Foundation, Inc.
+;;;; Copyright (C) 2008-2014, 2018, 2021-2022, 2024 Free Software Foundation, Inc.
 ;;;; 
 ;;;; This library is free software; you can redistribute it and/or
 ;;;; modify it under the terms of the GNU Lesser General Public
@@ -356,7 +356,14 @@
           (trampoline (lambda () (test count))))
         main)))
 
-  (pass-if-equal "running test" 42 (test-proc)))
+  (pass-if-equal "running test" 42 (test-proc))
+
+  (define test2
+    (compile '(lambda (x)
+                (define pair (cons 42 69))
+                (when x (set-car! pair 100))
+                (car pair))))
+  (pass-if-equal "clobbering" 100 (test2 #t)))
 
 (with-test-prefix "closure conversion"
   (define test-proc

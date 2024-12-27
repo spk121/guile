@@ -1,4 +1,4 @@
-/* Copyright 1995-1997,2000-2001,2003-2004,2006,2008-2015,2017-2018,2020
+/* Copyright 1995-1997,2000-2001,2003-2004,2006,2008-2015,2017-2018,2020,2023
      Free Software Foundation, Inc.
 
    This file is part of Guile.
@@ -163,25 +163,26 @@ scm_i_latin1_string_hash (const char *str, size_t len)
 uintptr_t
 scm_i_utf8_string_hash (const char *str, size_t len)
 {
-  const uint8_t *end, *ustr = (const uint8_t *) str;
-  uintptr_t ret;
-
-  /* The length of the string in characters.  This name corresponds to
-     Jenkins' original name.  */
-  size_t length;
-
-  uint32_t a, b, c, u32;
-
   if (len == (size_t) -1)
     len = strlen (str);
 
-  end = ustr + len;
+  // FIXME: eventually make fewer passes over str
 
+  const uint8_t *ustr = (const uint8_t *) str;
   if (u8_check (ustr, len) != NULL)
     /* Invalid UTF-8; punt.  */
     return scm_i_string_hash (scm_from_utf8_stringn (str, len));
 
-  length = u8_mbsnlen (ustr, len);
+  /* The length of the string in characters.  This name corresponds to
+     Jenkins' original name.  */
+  size_t length = u8_mbsnlen (ustr, len);
+
+  if (len == length) // ascii, same as narrow_string_hash above
+    return narrow_string_hash ((uint8_t *) str, len);
+
+  const uint8_t * const end = ustr + len;
+  uint32_t a, b, c, u32;
+  unsigned long ret;
 
   /* Set up the internal state.  */
   a = b = c = 0xdeadbeef + ((uint32_t)(length<<2)) + 47;
@@ -189,26 +190,27 @@ scm_i_utf8_string_hash (const char *str, size_t len)
   /* Handle most of the key.  */
   while (length > 3)
     {
-      ustr += u8_mbtouc_unsafe (&u32, ustr, end - ustr);
+      ustr += u8_mbtouc (&u32, ustr, end - ustr);
       a += u32;
-      ustr += u8_mbtouc_unsafe (&u32, ustr, end - ustr);
+      ustr += u8_mbtouc (&u32, ustr, end - ustr);
       b += u32;
-      ustr += u8_mbtouc_unsafe (&u32, ustr, end - ustr);
+      ustr += u8_mbtouc (&u32, ustr, end - ustr);
       c += u32;
       mix (a, b, c);
       length -= 3;
     }
 
-  /* Handle the last 3 elements's.  */
-  ustr += u8_mbtouc_unsafe (&u32, ustr, end - ustr);
+  // Similar to narrow_string_hash().  Handle the last 3 chars; length
+  // cannot be zero because len != length above.
+  ustr += u8_mbtouc (&u32, ustr, end - ustr);
   a += u32;
-  if (--length)
+  if (length > 1)
     {
-      ustr += u8_mbtouc_unsafe (&u32, ustr, end - ustr);
+      ustr += u8_mbtouc (&u32, ustr, end - ustr);
       b += u32;
-      if (--length)
+      if (length > 2)
         {
-          ustr += u8_mbtouc_unsafe (&u32, ustr, end - ustr);
+          ustr += u8_mbtouc (&u32, ustr, end - ustr);
           c += u32;
         }
     }

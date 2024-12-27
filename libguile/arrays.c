@@ -503,47 +503,43 @@ scm_i_make_array (int ndim)
   return ra;
 }
 
-static char s_bad_spec[] = "Bad scm_array dimension";
-
-
 /* Increments will still need to be set. */
 
 SCM
 scm_i_shap2ra (SCM args)
 {
   scm_t_array_dim *s;
-  SCM ra, spec;
   int ndim = scm_ilength (args);
   if (ndim < 0)
-    scm_misc_error (NULL, s_bad_spec, SCM_EOL);
+    scm_misc_error (NULL, "bad array bounds ~a", scm_list_1 (args));
 
-  ra = scm_i_make_array (ndim);
+  SCM ra = scm_i_make_array (ndim);
   SCM_I_ARRAY_SET_BASE (ra, 0);
   s = SCM_I_ARRAY_DIMS (ra);
   for (; !scm_is_null (args); s++, args = SCM_CDR (args))
     {
-      spec = SCM_CAR (args);
+      SCM spec = SCM_CAR (args);
       if (scm_is_integer (spec))
         {
           s->lbnd = 0;
           s->ubnd = scm_to_ssize_t (spec);
           if (s->ubnd < 0)
-            scm_misc_error (NULL, s_bad_spec, SCM_EOL);
+            scm_misc_error (NULL, "negative array dimension ~a", scm_list_1 (spec));
           --s->ubnd;
         }
       else
         {
           if (!scm_is_pair (spec) || !scm_is_integer (SCM_CAR (spec)))
-            scm_misc_error (NULL, s_bad_spec, SCM_EOL);
+            scm_misc_error (NULL, "bad array bound ~a", scm_list_1 (spec));
           s->lbnd = scm_to_ssize_t (SCM_CAR (spec));
-          spec = SCM_CDR (spec);
-          if (!scm_is_pair (spec)
-              || !scm_is_integer (SCM_CAR (spec))
-              || !scm_is_null (SCM_CDR (spec)))
-            scm_misc_error (NULL, s_bad_spec, SCM_EOL);
-          s->ubnd = scm_to_ssize_t (SCM_CAR (spec));
+          SCM rest = SCM_CDR (spec);
+          if (!scm_is_pair (rest)
+              || !scm_is_integer (SCM_CAR (rest))
+              || !scm_is_null (SCM_CDR (rest)))
+            scm_misc_error (NULL, "bad array bound ~a", scm_list_1 (spec));
+          s->ubnd = scm_to_ssize_t (SCM_CAR (rest));
           if (s->ubnd - s->lbnd < -1)
-            scm_misc_error (NULL, s_bad_spec, SCM_EOL);
+            scm_misc_error (NULL, "bad array bound ~a", scm_list_1 (spec));
         }
       s->inc = 1;
     }
@@ -695,7 +691,7 @@ SCM_DEFINE (scm_make_shared_array, "make-shared-array", 2, 0, 1,
   scm_array_handle_release (&old_handle);
 
   if (old_min > new_min || old_max < new_max)
-    SCM_MISC_ERROR ("mapping out of range", SCM_EOL);
+    scm_misc_error (FUNC_NAME, "mapping out of range", SCM_EOL);
   if (1 == SCM_I_ARRAY_NDIM (ra) && 0 == SCM_I_ARRAY_BASE (ra))
     {
       SCM v = SCM_I_ARRAY_V (ra);
@@ -712,18 +708,18 @@ SCM_DEFINE (scm_make_shared_array, "make-shared-array", 2, 0, 1,
 
 
 static void
-array_from_pos (scm_t_array_handle *handle, size_t *ndim, size_t *k, SCM *i, ssize_t *pos,
-                scm_t_array_dim **s, char const * FUNC_NAME, SCM error_args)
+array_from_pos (scm_t_array_handle *handle, size_t *k, SCM *i, ssize_t *pos,
+                scm_t_array_dim **s)
 {
   *s = scm_array_handle_dims (handle);
-  *k = *ndim = scm_array_handle_rank (handle);
+  *k = scm_array_handle_rank (handle);
   for (; *k>0 && scm_is_pair (*i); --*k, ++*s, *i=scm_cdr (*i))
     {
       ssize_t ik = scm_to_ssize_t (scm_car (*i));
       if (ik<(*s)->lbnd || ik>(*s)->ubnd)
         {
-          scm_array_handle_release (handle);
-          scm_misc_error (FUNC_NAME, "indices out of range", error_args);
+          s = NULL;
+          return;
         }
       *pos += (ik-(*s)->lbnd) * (*s)->inc;
     }
@@ -733,16 +729,20 @@ static void
 array_from_get_o (scm_t_array_handle *handle, size_t k, scm_t_array_dim *s, ssize_t pos,
                   SCM *o)
 {
-  scm_t_array_dim * os;
-  *o = scm_i_make_array (k);
-  SCM_I_ARRAY_SET_V (*o, handle->vector);
-  SCM_I_ARRAY_SET_BASE (*o, pos + handle->base);
-  os = SCM_I_ARRAY_DIMS (*o);
-  for (; k>0; --k, ++s, ++os)
+  if (k==scm_array_handle_rank (handle))
+    *o = handle->array;
+  else
     {
-      os->ubnd = s->ubnd;
-      os->lbnd = s->lbnd;
-      os->inc = s->inc;
+      *o = scm_i_make_array (k);
+      SCM_I_ARRAY_SET_V (*o, handle->vector);
+      SCM_I_ARRAY_SET_BASE (*o, pos + handle->base);
+      scm_t_array_dim * os = SCM_I_ARRAY_DIMS (*o);
+      for (; k>0; --k, ++s, ++os)
+        {
+          os->ubnd = s->ubnd;
+          os->lbnd = s->lbnd;
+          os->inc = s->inc;
+        }
     }
 }
 
@@ -760,23 +760,25 @@ SCM_DEFINE (scm_array_slice, "array-slice", 1, 0, 1,
             "@end lisp")
 #define FUNC_NAME s_scm_array_slice
 {
-  SCM o, i = indices;
-  size_t ndim, k;
-  ssize_t pos = 0;
   scm_t_array_handle handle;
-  scm_t_array_dim *s;
   scm_array_get_handle (ra, &handle);
-  array_from_pos (&handle, &ndim, &k, &i, &pos, &s, FUNC_NAME, scm_list_2 (ra, indices));
-  if (k==ndim)
-    o = ra;
-  else if (scm_is_null (i))
+  SCM i = indices;
+  size_t k;
+  ssize_t pos = 0;
+  scm_t_array_dim *s;
+  array_from_pos (&handle, &k, &i, &pos, &s);
+  if (!s)
     {
-      array_from_get_o(&handle, k, s, pos, &o);
+      scm_array_handle_release (&handle);
+      scm_misc_error (FUNC_NAME, "indices ~a out of range for array bounds ~a", scm_list_2 (indices, scm_array_dimensions (ra)));
     }
+  SCM o;
+  if (scm_is_null (i))
+    array_from_get_o (&handle, k, s, pos, &o);
   else
     {
       scm_array_handle_release (&handle);
-      scm_misc_error(FUNC_NAME, "too many indices", scm_list_2 (ra, indices));
+      scm_misc_error (FUNC_NAME, "too many indices ~a for rank ~a", scm_list_2 (indices, scm_array_rank (ra)));
     }
   scm_array_handle_release (&handle);
   return o;
@@ -799,26 +801,27 @@ SCM_DEFINE (scm_array_cell_ref, "array-cell-ref", 1, 0, 1,
             "@end lisp")
 #define FUNC_NAME s_scm_array_cell_ref
 {
-  SCM o, i = indices;
-  size_t ndim, k;
-  ssize_t pos = 0;
   scm_t_array_handle handle;
-  scm_t_array_dim *s;
   scm_array_get_handle (ra, &handle);
-  array_from_pos (&handle, &ndim, &k, &i, &pos, &s, FUNC_NAME, scm_list_2 (ra, indices));
-  if (k>0)
+  SCM i = indices;
+  size_t k;
+  ssize_t pos = 0;
+  scm_t_array_dim *s;
+  array_from_pos (&handle, &k, &i, &pos, &s);
+  if (!s)
     {
-      if (k==ndim)
-        o = ra;
-      else
-        array_from_get_o(&handle, k, s, pos, &o);
+      scm_array_handle_release (&handle);
+      scm_misc_error (FUNC_NAME, "indices ~a out of range for array bounds ~a", scm_list_2 (indices, scm_array_dimensions (ra)));
     }
+  SCM o;
+  if (k>0)
+    array_from_get_o (&handle, k, s, pos, &o);
   else if (scm_is_null(i))
     o = scm_array_handle_ref (&handle, pos);
   else
     {
       scm_array_handle_release (&handle);
-      scm_misc_error(FUNC_NAME, "too many indices", scm_list_2 (ra, indices));
+      scm_misc_error (FUNC_NAME, "too many indices ~a for rank ~a", scm_list_2 (indices, scm_array_rank (ra)));
     }
   scm_array_handle_release (&handle);
   return o;
@@ -846,19 +849,22 @@ SCM_DEFINE (scm_array_cell_set_x, "array-cell-set!", 2, 0, 1,
             "@end lisp")
 #define FUNC_NAME s_scm_array_cell_set_x
 {
-  SCM o, i = indices;
-  size_t ndim, k;
-  ssize_t pos = 0;
   scm_t_array_handle handle;
-  scm_t_array_dim *s;
   scm_array_get_handle (ra, &handle);
-  array_from_pos (&handle, &ndim, &k, &i, &pos, &s, FUNC_NAME, scm_list_3 (ra, b, indices));
+  SCM i = indices;
+  size_t k;
+  ssize_t pos = 0;
+  scm_t_array_dim *s;
+  array_from_pos (&handle, &k, &i, &pos, &s);
+  if (!s)
+    {
+      scm_array_handle_release (&handle);
+      scm_misc_error (FUNC_NAME, "indices ~a out of range for array bounds ~a", scm_list_2 (indices, scm_array_dimensions (ra)));
+    }
   if (k>0)
     {
-      if (k==ndim)
-        o = ra;
-      else
-        array_from_get_o(&handle, k, s, pos, &o);
+      SCM o;
+      array_from_get_o(&handle, k, s, pos, &o);
       scm_array_handle_release(&handle);
       /* an error is still possible here if o and b don't match. */
       /* FIXME copying like this wastes the handle, and the bounds matching
@@ -873,7 +879,7 @@ SCM_DEFINE (scm_array_cell_set_x, "array-cell-set!", 2, 0, 1,
   else
     {
       scm_array_handle_release (&handle);
-      scm_misc_error(FUNC_NAME, "too many indices", scm_list_3 (ra, b, indices));
+      scm_misc_error (FUNC_NAME, "too many indices ~a for rank ~a", scm_list_2 (indices, scm_array_rank (ra)));
     }
   return ra;
 }

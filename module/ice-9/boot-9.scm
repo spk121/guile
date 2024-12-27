@@ -1,6 +1,6 @@
 ;;; -*- mode: scheme; coding: utf-8; -*-
 
-;;;; Copyright (C) 1995-2014, 2016-2023  Free Software Foundation, Inc.
+;;;; Copyright (C) 1995-2014, 2016-2024  Free Software Foundation, Inc.
 ;;;;
 ;;;; This library is free software; you can redistribute it and/or
 ;;;; modify it under the terms of the GNU Lesser General Public
@@ -188,6 +188,13 @@ This is handy for tracing function calls, e.g.:
   (display ";;; WARNING " (current-warning-port))
   (display stuff (current-warning-port))
   (newline (current-warning-port))
+  (car (last-pair stuff)))
+
+(define (info . stuff)
+  (newline (current-info-port))
+  (display ";;; INFO " (current-info-port))
+  (display stuff (current-info-port))
+  (newline (current-info-port))
   (car (last-pair stuff)))
 
 
@@ -2750,8 +2757,8 @@ are not themselves bound to a defined value."
 
 (define (module-symbol-local-binding m v . opt-val)
   "Return the binding of variable V specified by name within module M,
-signalling an error if the variable is unbound.  If the OPT-VALUE is
-passed, then instead of signalling an error, return OPT-VALUE."
+signaling an error if the variable is unbound.  If the OPT-VALUE is
+passed, then instead of signaling an error, return OPT-VALUE."
   (let ((var (module-local-variable m v)))
     (if (and var (variable-bound? var))
         (variable-ref var)
@@ -2761,8 +2768,8 @@ passed, then instead of signalling an error, return OPT-VALUE."
 
 (define (module-symbol-binding m v . opt-val)
   "Return the binding of variable V specified by name within module M,
-signalling an error if the variable is unbound.  If the OPT-VALUE is
-passed, then instead of signalling an error, return OPT-VALUE."
+signaling an error if the variable is unbound.  If the OPT-VALUE is
+passed, then instead of signaling an error, return OPT-VALUE."
   (let ((var (module-variable m v)))
     (if (and var (variable-bound? var))
         (variable-ref var)
@@ -3352,9 +3359,7 @@ error if selected binding does not exist in the used module."
       (error "no code for module" name))
     (if (and (not select) (null? hide) (eq? renamer identity))
         public-i
-        (let ((selection (or select (module-map (lambda (sym var) sym)
-                                                public-i)))
-              (custom-i (make-module)))
+        (let ((custom-i (make-module)))
           (set-module-kind! custom-i 'custom-interface)
           (set-module-name! custom-i name)
           ;; Check that we are not hiding bindings which don't exist
@@ -3452,7 +3457,7 @@ error if selected binding does not exist in the used module."
        ;; FIXME: Avoid use of `apply'.
        (apply module-autoload! module autoloads)
        (let ((duplicates (or duplicates
-                             ;; Avoid stompling a previously installed
+                             ;; Avoid stomping a previously installed
                              ;; duplicates handlers if possible.
                              (and (not (module-duplicates-handlers module))
                                   ;; Note: If you change this default,
@@ -4350,15 +4355,15 @@ when none is available, reading FILE-NAME with READER."
            (load-thunk-from-file go-file-name)
            (begin
              (when gostat
-               (format (current-warning-port)
+               (format (current-info-port)
                        ";;; note: source file ~a\n;;;       newer than compiled ~a\n"
                        name go-file-name))
              (cond
               (%load-should-auto-compile
                (%warn-auto-compilation-enabled)
-               (format (current-warning-port) ";;; compiling ~a\n" name)
+               (format (current-info-port) ";;; compiling ~a\n" name)
                (let ((cfn (compile name)))
-                 (format (current-warning-port) ";;; compiled ~a\n" cfn)
+                 (format (current-info-port) ";;; compiled ~a\n" cfn)
                  (load-thunk-from-file cfn)))
               (else #f)))))
      #:warning "WARNING: compilation of ~a failed:\n" name))

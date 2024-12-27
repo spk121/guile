@@ -1,4 +1,4 @@
-/* Copyright 2001,2009-2015,2018,2020,2021
+/* Copyright 2001,2009-2015,2018,2020,2021,2023
      Free Software Foundation, Inc.
 
    This file is part of Guile.
@@ -40,7 +40,7 @@
 /* Major and minor versions must be single characters. */
 #define SCM_OBJCODE_MAJOR_VERSION 4
 #define SCM_OBJCODE_MINIMUM_MINOR_VERSION 2
-#define SCM_OBJCODE_MINOR_VERSION 6
+#define SCM_OBJCODE_MINOR_VERSION 7
 #define SCM_OBJCODE_MAJOR_VERSION_STRING        \
   SCM_CPP_STRINGIFY(SCM_OBJCODE_MAJOR_VERSION)
 #define SCM_OBJCODE_MINOR_VERSION_STRING        \

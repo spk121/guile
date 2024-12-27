@@ -21,7 +21,7 @@ history entries.
 
 @menu
 * Loading Readline Support::    How to load readline support into Guile.
-* Readline Options::            How to modify readline's behaviour.
+* Readline Options::            How to modify readline's behavior.
 * Readline Functions::          Programming with readline.
 @end menu
 
@@ -44,7 +44,7 @@ activate readline's features for the REPL.  If you plan to use this
 module often, you should save these to lines to your @file{.guile}
 personal startup file.
 
-You will notice that the REPL's behaviour changes a bit when you have
+You will notice that the REPL's behavior changes a bit when you have
 loaded the readline module.  For example, when you press Enter before
 typing in the closing parentheses of a list, you will see the
 @dfn{continuation} prompt, three dots: @code{...}  This gives you a nice

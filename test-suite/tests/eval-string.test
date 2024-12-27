@@ -51,4 +51,9 @@
     (equal? (call-with-values (lambda ()
                                 (eval-string "(values 1 2)" #:compile? #t))
               list)
-            '(1 2))))
+            '(1 2)))
+
+  (pass-if-equal "source properties"
+      '((filename . "test.scm") (line . 3) (column . 42))
+    (source-properties
+     (eval-string "'(1 2)" #:file "test.scm" #:line 3 #:column 41))))

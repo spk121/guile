@@ -884,7 +884,7 @@
   ; uses union/find elements with two info fields
   ; a type variable has exactly four fields:
   ; car:     TVar (the parent field; initially null)
-  ; cadr:    Number (the rank field; is always nonnegative)
+  ; cadr:    Number (the rank field; is always non-negative)
   ; caddr:   Symbol (the type variable identifier; used only for printing)
   ; cdddr:   Type (the leq field; initially null)
   (gen-element (cons (gen-id) '())))

@@ -1,6 +1,6 @@
 ## Process this file with Automake to create Makefile.in
 ##
-##   Copyright (C) 1998-2004, 2006-2014, 2016-2023
+##   Copyright (C) 1998-2004, 2006-2014, 2016-2024
 ##     Free Software Foundation, Inc.
 ##
 ##   This file is part of GUILE.
@@ -66,14 +66,14 @@ gen_scmconfig_SOURCES = gen-scmconfig.c
 ## Override default rule; this should be compiled for BUILD host.  Note
 ## that we don't add $(AM_CPPFLAGS) here, as we need to run this
 ## program, but $(top_srcdir)/lib has a gnulib configured for the
-## target.  Instead we manually add $(top_builddir), in order to pick up
-## the generated config.h and gen-scmconfig.h.  Nothing else from Guile
-## is included by this code generator.
+## target.  Instead we manually add $(top_builddir) and $(builddir), in
+## order to pick up the generated config.h and gen-scmconfig.h.  Nothing
+## else from Guile is included by this code generator.
 gen-scmconfig.$(OBJEXT): gen-scmconfig.c
 	$(AM_V_GEN) \
 	if [ "$(cross_compiling)" = "yes" ]; then \
 		$(CC_FOR_BUILD) $(DEFS) $(DEFAULT_INCLUDES) -I$(top_builddir) \
-		   -c -o $@ $<; \
+		   -iquote$(builddir) -c -o $@ $<; \
 	else \
 		$(COMPILE) -c -o $@ $<; \
 	fi
@@ -89,7 +89,7 @@ gen-scmconfig$(EXEEXT): $(gen_scmconfig_OBJECTS) $(gen_scmconfig_DEPENDENCIES)
 	fi
 
 scmconfig.h: ${top_builddir}/config.h gen-scmconfig$(EXEEXT)
-	$(AM_V_GEN)(rm -f scmconfig.h.tmp; \
+	$(AM_V_GEN)(set -e; rm -f scmconfig.h.tmp; \
 	cat $(srcdir)/scmconfig.h.top > scmconfig.h.tmp; \
 	./gen-scmconfig$(EXEEXT) >> scmconfig.h.tmp; \
 	chmod 444 scmconfig.h.tmp; \
@@ -213,7 +213,6 @@ libguile_@GUILE_EFFECTIVE_VERSION@_la_SOURCES =				\
 	smob.c					\
 	sort.c					\
 	srcprop.c				\
-	srfi-1.c				\
 	srfi-4.c				\
 	srfi-13.c				\
 	srfi-14.c				\
@@ -327,7 +326,6 @@ DOT_X_FILES =					\
 	smob.x					\
 	sort.x					\
 	srcprop.x				\
-	srfi-1.x				\
 	srfi-4.x				\
 	srfi-13.x				\
 	srfi-14.x				\
@@ -429,7 +427,6 @@ DOT_DOC_FILES = 				\
 	smob.doc				\
 	sort.doc				\
 	srcprop.doc				\
-	srfi-1.doc				\
 	srfi-4.doc				\
 	srfi-13.doc				\
 	srfi-14.doc				\
@@ -474,10 +471,6 @@ BUILT_INCLUDES = vm-operations.h scmconfig.h libpath.h srfi-14.i.c
 BUILT_SOURCES = cpp-E.c cpp-SIG.c $(BUILT_INCLUDES) \
     $(DOT_X_FILES) $(EXTRA_DOT_X_FILES)
 
-# Force the generation of `guile-procedures.texi' because the top-level
-# Makefile expects it to be built.
-all-local: guile-procedures.texi
-
 EXTRA_libguile_@GUILE_EFFECTIVE_VERSION@_la_SOURCES = \
     syscalls.h					\
     dynl.c regex-posix.c			\
@@ -502,9 +495,9 @@ install-exec-hook:
 
 ## Instantiate a template.
 INSTANTIATE =									\
-  $(SED) -i -e 's,[@]pkgdatadir[@],$(pkgdatadir),g'				\
-            -e 's,[@]pkglibdir[@],$(pkglibdir),g'				\
-            -e 's,[@]GUILE_EFFECTIVE_VERSION[@],$(GUILE_EFFECTIVE_VERSION),g'
+  $(SED) -e 's,[@]pkgdatadir[@],$(pkgdatadir),g'				\
+         -e 's,[@]pkglibdir[@],$(pkglibdir),g'					\
+         -e 's,[@]GUILE_EFFECTIVE_VERSION[@],$(GUILE_EFFECTIVE_VERSION),g'
 
 install-data-hook: libguile-@GUILE_EFFECTIVE_VERSION@-gdb.scm
 	@$(MKDIR_P) $(DESTDIR)$(libdir)
@@ -528,9 +521,10 @@ install-data-hook: libguile-@GUILE_EFFECTIVE_VERSION@-gdb.scm
 	cd $$here;						\
 	echo " $(INSTALL_DATA) $<				\
 $(DESTDIR)$(libdir)/$$libname-gdb.scm";				\
-	$(INSTALL_DATA) "$<"					\
+	$(INSTANTIATE) "$<" > $$libname-gdb.scm;		\
+	$(INSTALL_DATA) $$libname-gdb.scm			\
 	    "$(DESTDIR)$(libdir)/$$libname-gdb.scm";		\
-	$(INSTANTIATE) "$(DESTDIR)$(libdir)/$$libname-gdb.scm"
+	rm $$libname-gdb.scm
 
 # Remove the GDB support file and the Info 'dir' file that
 # 'install-info' 5.x installs.
@@ -700,13 +694,13 @@ modinclude_HEADERS =				\
 	rw.h					\
 	scmsigs.h				\
 	script.h				\
+	setjump-win.h                           \
 	simpos.h				\
 	smob.h					\
 	snarf.h					\
 	socket.h				\
 	sort.h					\
 	srcprop.h				\
-	srfi-1.h				\
 	srfi-4.h				\
 	srfi-13.h				\
 	srfi-14.h				\
@@ -753,8 +747,6 @@ EXTRA_DIST = ChangeLog-scm ChangeLog-threads				\
     unidata_to_charset.awk UnicodeData.txt				\
     vm-operations.h libguile-@GUILE_EFFECTIVE_VERSION@-gdb.scm		\
     $(lightening_c_files) $(lightening_extra_files)
-#    $(DOT_DOC_FILES) $(EXTRA_DOT_DOC_FILES) \
-#    guile-procedures.txt guile.texi
 
 ## FIXME: Consider using timestamp file, to avoid unnecessary rebuilds.
 if MINGW_LIBPATH
@@ -871,6 +863,15 @@ guile.texi: $(alldotdocfiles) guile$(EXEEXT)
 
 guile-procedures.texi: $(alldotdocfiles) guile$(EXEEXT)
 	$(AM_V_GEN)$(dotdoc2texi)          > $@ || { rm $@; false; }
+
+# Requires meta to be listed before libguile in SUBDIRS
+guile-procedures.txt: guile-procedures.texi
+	$(AM_V_GEN)						\
+	$(top_builddir)/meta/guile --no-auto-compile		\
+	  "$(srcdir)/texi-fragments-to-docstrings"		\
+	  "$(builddir)/guile-procedures.texi"			\
+	  > $@.tmp
+	@mv $@.tmp $@
 
 c-tokenize.c: c-tokenize.lex
 	flex -t $(srcdir)/c-tokenize.lex > $@ || { rm $@; false; }

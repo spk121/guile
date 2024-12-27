@@ -194,7 +194,7 @@ scm_double_cell (scm_t_bits car, scm_t_bits cbr,
      advantage of strict C aliasing rules which say that it's OK to
      interchange the initialization above and the one below when the
      pointer types appear to differ sufficiently.  We don't want that,
-     of course.  GCC allows this behaviour to be disabled with the
+     of course.  GCC allows this behavior to be disabled with the
      -fno-strict-aliasing option, but would also need to be supplied
      by Guile users.  Instead, the following statements prevent the
      reordering.
@@ -227,7 +227,7 @@ scm_words (scm_t_bits car, uint32_t n_words)
      advantage of strict C aliasing rules which say that it's OK to
      interchange the initialization above and the one below when the
      pointer types appear to differ sufficiently.  We don't want that,
-     of course.  GCC allows this behaviour to be disabled with the
+     of course.  GCC allows this behavior to be disabled with the
      -fno-strict-aliasing option, but would also need to be supplied
      by Guile users.  Instead, the following statements prevent the
      reordering.

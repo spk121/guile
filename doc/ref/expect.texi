@@ -64,10 +64,10 @@ match.  E.g.,
 The order of the substrings corresponds to the order in which the
 opening brackets occur.
 
-A number of variables can be used to control the behaviour
+A number of variables can be used to control the behavior
 of @code{expect} (and @code{expect-strings}).
 Most have default top-level bindings to the value @code{#f}, 
-which produces the default behaviour.
+which produces the default behavior.
 They can be redefined at the
 top level or locally bound in a form enclosing the expect expression.
 
@@ -142,6 +142,6 @@ of the file:
 @end lisp
 
 The control variables described for @code{expect-strings} also
-influence the behaviour of @code{expect}, with the exception of 
+influence the behavior of @code{expect}, with the exception of
 variables whose names begin with @code{expect-strings-}.
 @end defmac

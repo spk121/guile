@@ -76,10 +76,10 @@
   (syntax-rules ()
     ((_ arg predicate? message)
      (if (not (predicate? arg))
-         (error "bad argument ~a: ~a" 'arg message)))
+         (error (format #f "bad argument ~a: ~a" 'arg message))))
     ((_ arg predicate?)
      (if (not (predicate? arg))
-         (error "bad argument ~a: expected ~a" 'arg 'predicate?)))))
+         (error (format #f "bad argument ~a: expected ~a" 'arg 'predicate?))))))
 
 (define (new-disabled-trap enable disable)
   (let ((enabled? #f))
@@ -378,7 +378,8 @@
                                                      current-frame)))
                   procs))
            (if (null? traps)
-               (error "No procedures found at ~a:~a." file user-line)))
+               (error
+                 (format #f "No procedures found at ~a:~a." file user-line))))
          (lambda (frame)
            (for-each (lambda (trap) (trap frame)) traps)
            (set! traps #f)))))))

@@ -229,12 +229,17 @@
                                  (lp (cons x out)))))))
                      (lambda (k . args)
                        (handle-read-error #f k args)))))
-           (lambda (k) #f)))))           ; the abort handler
+           ;; The abort handler:
+           (lambda (k)
+             (flush-all-input)
+             #f)))))
 
     ((_ ((name category) repl . datums) docstring b0 b1 ...)
      (define-meta-command ((name category) repl () . datums)
        docstring b0 b1 ...))
 
+    ;; These cases (with category #f) will only produce functional
+    ;; commands if the name is already in the *command-table*.
     ((_ (name repl (expression0 ...) . datums) docstring b0 b1 ...)
      (define-meta-command ((name #f) repl (expression0 ...) . datums)
        docstring b0 b1 ...))
@@ -672,7 +677,7 @@ Break on calls to PROCEDURE.
 Starts a recursive prompt when PROCEDURE is called."
   (let ((proc (repl-eval repl (repl-parse repl form))))
     (if (not (procedure? proc))
-        (error "Not a procedure: ~a" proc)
+        (error (format #f "Not a procedure: ~a" proc))
         (let ((idx (add-trap-at-procedure-call! proc)))
           (format #t "Trap ~a: ~a.~%" idx (trap-name idx))))))
 
@@ -783,7 +788,7 @@ A tracepoint will print out the procedure and its arguments, when it is
 called, and its return value(s) when it returns."
   (let ((proc (repl-eval repl (repl-parse repl form))))
     (if (not (procedure? proc))
-        (error "Not a procedure: ~a" proc)
+        (error (format #f "Not a procedure: ~a" proc))
         (let ((idx (add-trace-at-procedure-call! proc)))
           (format #t "Trap ~a: ~a.~%" idx (trap-name idx))))))
 

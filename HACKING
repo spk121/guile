@@ -1,6 +1,6 @@
 -*-text-*-
 Guile Hacking Guide
-Copyright (c) 1996-2002,2008,2012,2015,2017 Free Software Foundation, Inc.
+Copyright (c) 1996-2002,2008,2012,2015,2017,2024 Free Software Foundation, Inc.
 
    Permission is granted to anyone to make or distribute verbatim copies
    of this document as received, in any medium, provided that the
@@ -25,6 +25,40 @@ http://www.gnu.org/software/guile/mail/mail.html for more info.
 
 
 Hacking It Yourself ==================================================
+
+You can spawn a shell with all the required dependencies using GNU Guix
+by running the following command:
+
+    guix shell -D -f guix.scm --pure
+
+In this way, you can effortlessly compile Guile from the Git checkout
+with just these three lines:
+
+    guix shell -CP -D -f guix.scm -- ./autogen.sh
+    guix shell -CP -D -f guix.scm -- ./configure \
+    	 --enable-mini-gmp --disable-static
+    guix shell -CP -D -f guix.scm -- make
+
+Disabling of the static libraries is optional, but it does speed up the
+builds, and you are unlikely to need them for local development.
+
+  Note: Currently JIT causes Guile to crash in obscure ways on GNU Hurd,
+        so on that platform you want to also pass the --disable-jit flag
+        to the configure script.
+
+  Note: On any i*86 architecture, you also need to pass in the compiler
+        flag -fexcess-precision=standard in order to get the test suite
+        to pass.  That can be done by passing an additional argument to
+        the configure script:
+	  CFLAGS='-g -O2 -fexcess-precision=standard'
+
+Once that finishes, you can execute your newly compiled Guile using the
+./meta/guile script:
+
+    $ guix shell -CP -D -f guix.scm -- ./meta/guile -v | head -n1
+    guile (GNU Guile) 3.0.9.139-d7cf5-dirty
+
+For more manual approach, read on.
 
 When Guile is obtained from Git, a few extra steps must be taken
 before the usual configure, make, make install.  You will need to have
@@ -73,7 +107,7 @@ Here is the authoritative list of tool/version/platform tuples that
 have been known to cause problems, and a short description of the problem.
 
 
-Sample GDB Initialization File=========================================
+Sample GDB Initialization File =======================================
 
 In GDB, you probably want to load the gdbinit file included with Guile,
 which defines a number of GDB helpers to inspect Scheme values.
@@ -83,7 +117,9 @@ Contributing Your Changes ============================================
 
 - If you have put together a change that meets the coding standards
 described below, we encourage you to submit it to Guile.  Post your
-patch to guile-devel@gnu.org.
+patch to guile-devel@gnu.org or bug-guile@gnu.org; the latter is
+tracked at <https://bugs.gnu.org/guile>, which can be browsed from
+Emacs with debbugs.el, and is thus less likely to be lost.
 
 - We prefer patches generated using 'git format-patch'.
 
@@ -215,7 +251,7 @@ The goal is to reduce (and over time, eliminate) spurious diffs.
 For Emacs users:
   (add-hook 'before-save-hook 'delete-trailing-whitespace)
 
-Naming conventions =================================================
+Naming conventions ===================================================
 
 We use certain naming conventions to structure the considerable number
 of global identifiers.  All identifiers should be either all lower

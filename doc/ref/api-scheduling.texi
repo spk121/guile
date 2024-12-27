@@ -107,7 +107,7 @@ Return @code{#t} if @var{thread} has exited, or @code{#f} otherwise.
 @deffn {Scheme Procedure} yield
 @deffnx {C Function} scm_yield (thread)
 If one or more threads are waiting to execute, calling yield forces an
-immediate context switch to one of them. Otherwise, yield has no effect.
+immediate context switch to one of them.  Otherwise, yield has no effect.
 @end deffn
 
 @deffn {Scheme Procedure} cancel-thread thread . values
@@ -181,7 +181,7 @@ other threads, which might not be what you want.  Or, it might escape
 via explicit reification via @code{current-dynamic-state}.
 
 Of course, this dynamic scoping might be exactly what you want; that's
-why fluids and parameters work this way, and is what you want for for
+why fluids and parameters work this way, and is what you want for
 many common parameters such as the current input and output ports, the
 current locale conversion parameters, and the like.  Perhaps this is the
 case for most parameters, even.  If your use case for thread-local
@@ -205,7 +205,7 @@ not inherit thread-local fluid values from the parent thread.
 
 @deffn {Scheme Procedure} fluid-thread-local? fluid
 @deffnx {C Function} scm_fluid_thread_local_p (fluid)
-Return @code{#t} if the fluid @var{fluid} is is thread-local, or
+Return @code{#t} if the fluid @var{fluid} is thread-local, or
 @code{#f} otherwise.
 @end deffn
 
@@ -258,11 +258,11 @@ C signal handlers.)
 
 Though an interrupt procedure can have any side effect permitted to
 Guile code, asynchronous interrupts are generally used either for
-profiling or for prematurely cancelling a computation.  The former case
+profiling or for prematurely canceling a computation.  The former case
 is mostly transparent to the program being run, by design, but the
 latter case can introduce bugs.  Like finalizers (@pxref{Foreign Object
 Memory Management}), asynchronous interrupts introduce concurrency in a
-program.  An asyncronous interrupt can run in the middle of some
+program.  An asynchronous interrupt can run in the middle of some
 mutex-protected operation, for example, and potentially corrupt the
 program's state.
 
@@ -338,7 +338,7 @@ and that it should avoid waiting.
 @deftypefn {C Function} int scm_c_prepare_to_wait_on_cond (scm_i_pthread_mutex_t *mutex, scm_i_pthread_cond_t *cond)
 Inform Guile that the current thread is about to sleep, and that if an
 asynchronous interrupt is signaled on this thread, Guile should wake up
-the thread by acquiring @var{mutex} and signalling @var{cond}.  The
+the thread by acquiring @var{mutex} and signaling @var{cond}.  The
 caller must already hold @var{mutex} and only drop it as part of the
 @code{pthread_cond_wait} call.  Returns zero if the prepare succeeded,
 or nonzero if the thread already has a pending async and that it should
@@ -492,7 +492,7 @@ re-entry, and you might not have to worry about early exit either.
 
 However, do consider the possibility of asynchronous interrupts
 (@pxref{Asyncs}).  If the user interrupts your code interactively, that
-can cause an exception; or your thread might be cancelled, which does
+can cause an exception; or your thread might be canceled, which does
 the same; or the user could be running your code under some pre-emptive
 system that periodically causes lightweight task switching.  (Guile does
 not currently include such a system, but it's possible to implement as a
@@ -526,7 +526,7 @@ Finally, calling @code{make-mutex} with the symbol
 @code{allow-external-unlock} creates an unowned mutex.  An unowned mutex
 is like a standard mutex, except that it can be unlocked by any thread.
 A corollary of this behavior is that a thread's attempt to lock a mutex
-that it already owns will block instead of signalling an error, as it
+that it already owns will block instead of signaling an error, as it
 could be that some other thread unlocks the mutex, allowing the owner
 thread to proceed.  This kind of mutex is a bit strange and is here for
 use by SRFI-18.

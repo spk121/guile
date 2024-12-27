@@ -22,6 +22,9 @@
   #:use-module (test-suite lib)
   #:use-module ((rnrs io ports) #:select (get-string-all)))
 
+(define (skip-on-darwin)
+  (when (string-ci=? "darwin" (utsname:sysname (uname)))
+    (throw 'untested)))
 
 ;; FIXME: The following exec tests are disabled since on an i386 debian with
 ;; glibc 2.3.2 they seem to interact badly with threads.test, the latter
@@ -382,7 +385,8 @@
 
   (pass-if-equal "https://bugs.gnu.org/52835"
       "bong\n"
-    (let ((file (tmpnam)))
+    (let* ((port (mkstemp "T-XXXXXX"))
+           (file (port-filename port)))
       ;; Redirect stdout and stderr to FILE.
       (define status
         (call-with-output-file file
@@ -494,11 +498,20 @@
 
         (let ((sysname (utsname:sysname (uname))))
           (cond
-           ;; On GNU/Hurd, the exec server prepends 'LD_ORIGIN_PATH' for
-           ;; every program: <https://bugs.gnu.org/62501>.  Strip it.
-           ((and (string=? "GNU" sysname)
-                 (string-prefix? "LD_ORIGIN_PATH=" str))
-            (string-drop str (+ 1 (string-index str #\newline))))
+           ((string=? "GNU" sysname)
+            ;; On GNU/Hurd, the exec server prepends 'LD_ORIGIN_PATH' for
+            ;; every program: <https://bugs.gnu.org/62501>.  Strip it.
+            (if (string-prefix? "LD_ORIGIN_PATH=" str)
+                (string-drop str (+ 1 (string-index str #\newline)))
+                str))
+           ((string-ci=? "darwin" sysname)
+            ;; MacOS appends '__CF_USER_TEXT_ENCODING' for every program.  Strip
+            ;; it.
+            (let ((pos (string-contains str "__CF_USER_TEXT_ENCODING=")))
+              (if pos
+                  (string-drop-right str (- (string-length str) pos))
+                  str)))
+
            ;; On MSYS and Cygwin, exec appends environment variables
            ;; required for handling fake unix paths: MSYSTEM,
            ;; SYSTEMROOT, WINDIR.  Could be more precise here and strip
@@ -529,6 +542,12 @@
 
   (pass-if-equal "file not found"
       ENOENT
+
+    ;; Actually "skip-if-posix_spawn-replaced" would be preferred, since the
+    ;; behavior below is not implemented in gnulib, but I do not know how to
+    ;; write such test.  However due to posix_spawnp being buggy on macOS it is
+    ;; always replaced, so whatever.
+    (skip-on-darwin)
     (begin
       (when (or (string-contains %host-type "cygwin")
                 (string-contains %host-type "msys"))

@@ -1,4 +1,4 @@
-/* Copyright 1995-2002,2004,2006-2009,2011,2013-2014,2017-2018,2023
+/* Copyright 1995-2002, 2004, 2006-2009, 2011, 2013-2014, 2017-2018, 2023-2024
      Free Software Foundation, Inc.
 
    This file is part of Guile.
@@ -27,6 +27,7 @@
 #include <fcntl.h>      /* for mingw */
 #include <signal.h>
 #include <stdio.h>
+#include <string.h>
 #include <errno.h>
 
 #ifdef HAVE_PROCESS_H
@@ -85,12 +86,13 @@ static SCM *signal_handlers;
 static SCM signal_handler_asyncs;
 static SCM signal_handler_threads;
 
-/* The signal delivery thread.  */
-scm_thread *scm_i_signal_delivery_thread = NULL;
+enum thread_state { STOPPED, RUNNING, STOPPING };
 
 /* The mutex held when launching the signal delivery thread.  */
 static scm_i_pthread_mutex_t signal_delivery_thread_mutex =
   SCM_I_PTHREAD_MUTEX_INITIALIZER;
+static enum thread_state signal_delivery_thread_state = STOPPED;
+static scm_i_pthread_t signal_delivery_pthread;
 
 
 /* saves the original C handlers, when a new handler is installed.
@@ -151,7 +153,7 @@ read_signal_pipe_data (void * data)
   return NULL;
 }
   
-static SCM
+static void*
 signal_delivery_thread (void *data)
 {
   int sig;
@@ -196,31 +198,92 @@ signal_delivery_thread (void *data)
 	perror ("error in signal delivery thread");
     }
 
-  return SCM_UNSPECIFIED; /* not reached unless all other threads exited */
+  close (signal_pipe[0]);
+  signal_pipe[0] = -1;
+  signal_delivery_thread_state = STOPPED;
+
+  return NULL; /* not reached unless all other threads exited */
+}
+
+static void*
+run_signal_delivery_thread (void *arg)
+{
+  return scm_with_guile (signal_delivery_thread, arg);
 }
 
 static void
 start_signal_delivery_thread (void)
 {
-  SCM signal_thread;
-
   scm_i_pthread_mutex_lock (&signal_delivery_thread_mutex);
+
+  if (signal_delivery_thread_state != STOPPED)
+    abort ();
 
   if (pipe2 (signal_pipe, O_CLOEXEC) != 0)
     scm_syserror (NULL);
-  signal_thread = scm_spawn_thread (signal_delivery_thread, NULL,
-				    scm_handle_by_message,
-				    "signal delivery thread");
-  scm_i_signal_delivery_thread = SCM_I_THREAD_DATA (signal_thread);
+
+  signal_delivery_thread_state = RUNNING;
+
+  /* As with the finalizer thread, we use the raw pthread API and
+     scm_with_guile, to avoid blocking on any lock that scm_spawn_thread
+     might want to take.  */
+  int err = pthread_create (&signal_delivery_pthread, NULL,
+                            run_signal_delivery_thread, NULL);
+  if (err)
+    {
+      close (signal_pipe[0]); signal_pipe[0] = -1;
+      close (signal_pipe[1]); signal_pipe[1] = -1;
+      fprintf (stderr, "error creating signal delivery thread: %s\n",
+               strerror (err));
+      signal_delivery_thread_state = STOPPED;
+    }
 
   scm_i_pthread_mutex_unlock (&signal_delivery_thread_mutex);
 }
 
+static scm_i_pthread_once_t once = SCM_I_PTHREAD_ONCE_INIT;
+
 void
 scm_i_ensure_signal_delivery_thread ()
 {
-  static scm_i_pthread_once_t once = SCM_I_PTHREAD_ONCE_INIT;
   scm_i_pthread_once (&once, start_signal_delivery_thread);
+}
+
+/* Precondition: there is only the current thread and possibly the
+   signal delivery thread.  */
+static void
+stop_signal_delivery_thread ()
+{
+  scm_i_pthread_mutex_lock (&signal_delivery_thread_mutex);
+  if (signal_delivery_thread_state != RUNNING)
+    goto done;
+
+  signal_delivery_thread_state = STOPPING;
+  close (signal_pipe[1]);
+  signal_pipe[1] = -1;
+
+  int res = pthread_join (signal_delivery_pthread, NULL);
+  if (res)
+    fprintf (stderr, "error joining signal delivery thread: %s\n",
+             strerror (res));
+  else
+    {
+      if (signal_delivery_thread_state != STOPPED)
+        abort ();
+    }
+
+ done:
+  scm_i_pthread_mutex_unlock (&signal_delivery_thread_mutex);
+}
+
+static int
+is_signal_delivery_thread (scm_i_pthread_t thread)
+{
+  scm_i_pthread_mutex_lock (&signal_delivery_thread_mutex);
+  int res = (signal_delivery_thread_state == RUNNING &&
+             pthread_equal (thread, signal_delivery_pthread));
+  scm_i_pthread_mutex_unlock (&signal_delivery_thread_mutex);
+  return res;
 }
 
 #else /* !SCM_USE_PTHREAD_THREADS */
@@ -248,7 +311,57 @@ scm_i_ensure_signal_delivery_thread ()
   return;
 }
 
+static void
+stop_signal_delivery_thread ()
+{
+  return;
+}
+
+static int
+is_signal_delivery_thread (scm_i_pthread_t thread)
+{
+  return 0;
+}
+
 #endif /* !SCM_USE_PTHREAD_THREADS */
+
+/* Perform pre-fork cleanup by stopping the signal delivery thread.  */
+void
+scm_i_signals_pre_fork ()
+{
+  stop_signal_delivery_thread ();
+}
+
+int
+scm_i_is_signal_delivery_thread (struct scm_thread *t)
+{
+  return is_signal_delivery_thread (t->pthread);
+}
+
+/* Perform post-fork setup by restarting the signal delivery thread if
+   it was active before fork.  This happens in both the parent and the
+   child process.  */
+void
+scm_i_signals_post_fork ()
+{
+  int active = 0;
+
+  for (int sig = 0; sig < NSIG; sig++)
+    {
+      if (scm_is_true (SCM_SIMPLE_VECTOR_REF (signal_handler_threads, sig))
+          || scm_is_true (SCM_SIMPLE_VECTOR_REF (signal_handler_asyncs, sig)))
+        {
+          active = 1;
+          break;
+        }
+    }
+
+#if SCM_USE_PTHREAD_THREADS
+  once = (scm_i_pthread_once_t) SCM_I_PTHREAD_ONCE_INIT;
+#endif
+  if (active)
+    scm_i_ensure_signal_delivery_thread ();
+}
 
 static void
 install_handler (int signum, SCM thread, SCM handler)
@@ -695,15 +808,20 @@ SCM_DEFINE (scm_raise, "raise", 1, 0, 0,
 void
 scm_i_close_signal_pipe()
 {
-  /* SIGNAL_DELIVERY_THREAD_MUTEX is only locked while the signal delivery
-     thread is being launched.  The thread that calls this function is
-     already holding the thread admin mutex, so if the delivery thread hasn't
-     been launched at this point, it never will be before shutdown.  */
-  scm_i_pthread_mutex_lock (&signal_delivery_thread_mutex);
+  /* There is at most one other Guile thread.  It may be the signal
+     delivery thread.  If it is the signal delivery thread, the mutex
+     will not be locked.  If the mutex is locked, then, we have nothing
+     to do.  */
+  if (scm_i_pthread_mutex_trylock (&signal_delivery_thread_mutex))
+    return;
 
 #if SCM_USE_PTHREAD_THREADS
-  if (scm_i_signal_delivery_thread != NULL)
-    close (signal_pipe[1]);
+  if (signal_delivery_thread_state == RUNNING)
+    {
+      signal_delivery_thread_state = STOPPING;
+      close (signal_pipe[1]);
+      signal_pipe[1] = -1;
+    }
 #endif
 
   scm_i_pthread_mutex_unlock (&signal_delivery_thread_mutex);

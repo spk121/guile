@@ -67,7 +67,7 @@
 
  ;; Reporting results in various ways.
  register-reporter unregister-reporter reporter-registered?
- make-count-reporter print-counts
+ make-count-reporter print-counts count-summary-line
  make-log-reporter
  full-reporter
  user-reporter))
@@ -695,6 +695,17 @@
 				"no total available for `" (car tag) "'"))))
      result-tags)
     (newline port)))
+
+(define (count-summary-line results)
+  (string-join
+   (map (lambda (tag-info)
+          (match-let* (((tag tag-name _) tag-info)
+                       ((_ . count) (or (assq tag results) '(#f #f))))
+            (if (zero? count)
+                ""
+                (string-append tag-name "=" (or (number->string count) "???")))))
+        result-tags)
+   " "))
 
 ;;; Return a reporter procedure which prints all results to the file
 ;;; FILE, in human-readable form.  FILE may be a filename, or a port.

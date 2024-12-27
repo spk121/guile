@@ -74,7 +74,7 @@
 (define-custom-port-dispatcher truncate length)
 
 
-(eval-when (load)
+(eval-when (expand load eval)
   (load-extension (string-append "libguile-" (effective-version))
                   "scm_init_custom_ports"))
 
@@ -146,7 +146,7 @@ methods."
       ((? symbol?)
        (string->symbol (string-upcase (symbol->string encoding))))))
   (define (canonicalize-conversion-strategy conversion-strategy)
-    (match encoding
+    (match conversion-strategy
       ('escape 'escape)
       ('substitute 'substitute)
       (_ 'error)))

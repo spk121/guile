@@ -1342,6 +1342,7 @@ alloc_literal_pool(jit_state_t *_jit, size_t capacity)
                  sizeof (struct jit_literal_pool_entry) * capacity);
   ASSERT (ret);
   ret->capacity = capacity;
+  ret->size = 0;
   reset_literal_pool(_jit, ret);
   return ret;
 }

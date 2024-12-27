@@ -252,6 +252,8 @@
          (emit-srsh/immediate asm (from-sp dst) (from-sp (slot x)) y))
         (($ $primcall 'ulsh/immediate y (x))
          (emit-ulsh/immediate asm (from-sp dst) (from-sp (slot x)) y))
+        (($ $primcall 'ulogand/immediate y (x))
+         (emit-ulogand/immediate asm (from-sp dst) (from-sp (slot x)) y))
         (($ $primcall 'builtin-ref idx ())
          (emit-builtin-ref asm (from-sp dst) idx))
         (($ $primcall 'scm->f64 #f (src))

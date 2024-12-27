@@ -16067,7 +16067,7 @@
 ; Returns a length-4 bytevector.
 ;
 ; M may be an exact integer or a length-4 bytevector.
-; N must be an exact nonnegative integer; it's interpreted modulo 33.
+; N must be an exact non-negative integer; it's interpreted modulo 33.
 
 (define (asm:lsh m n)
   (if (not (bytevector? m))
@@ -16098,7 +16098,7 @@
 ; Returns a length-4 bytevector.
 ;
 ; M may be an exact integer or a length-4 bytevector.
-; N must be an exact nonnegative integer; it's interpreted modulo 33.
+; N must be an exact non-negative integer; it's interpreted modulo 33.
 
 (define (asm:rshl m n)
   (if (not (bytevector? m))
@@ -16129,7 +16129,7 @@
 ; high end.  Returns a length-4 bytevector.
 ;
 ; M may be an exact integer or a length-4 bytevector.
-; N must be an exact nonnegative integer; it's interpreted modulo 33.
+; N must be an exact non-negative integer; it's interpreted modulo 33.
 
 (define asm:rsha
   (let ((ones (asm:bv #xff #xff #xff #xff)))
@@ -16240,7 +16240,7 @@
 
 ; Extract the n low-order bits of m.
 ; m may be an exact integer or a length-4 bytevector.
-; n must be an exact nonnegative integer, interpreted modulo 32.
+; n must be an exact non-negative integer, interpreted modulo 32.
 ; Returns length-4 bytevector.
 ;
 ; Does not depend on endian-ness.
@@ -16255,7 +16255,7 @@
 
 ; Extract the n high-order bits of m.
 ; m may be an exact integer or a length-4 bytevector.
-; n must be an exact nonnegative integer, interpreted modulo 33.
+; n must be an exact non-negative integer, interpreted modulo 33.
 ; Returns length-4 bytevector with the high-order bits of m at low end.
 ;
 ; Does not depend on endian-ness.
@@ -16553,7 +16553,7 @@
 ;
 ;  version          a fixnum (constant) - heap type version number
 ;  roots            an assoc list that maps root names to values
-;  top              an exact nonnegative integer: the address of the 
+;  top              an exact non-negative integer: the address of the
 ;                   next byte to be emitted
 ;  symbol-table     a symbol table abstract data type
 ;  extra            any value - a client-extension field
@@ -20735,7 +20735,7 @@
 
 ; Strings
 
-; RESULT must have nonnegative fixnum.
+; RESULT must have non-negative fixnum.
 ; RS2 must have character.
 
 (define-primop 'make-string
@@ -23056,7 +23056,7 @@
 ; A `decoded-instruction' is a list where the car is a mnemonic and
 ; the operands are appropriate for that mnemonic.
 ;
-; A `mnemonic' is an exact nonnegative integer.  It encodes the name of
+; A `mnemonic' is an exact non-negative integer.  It encodes the name of
 ; the instruction as well as its attributes (operand pattern and instruction
 ; type).  See below for specific operations on mnemonics.
 

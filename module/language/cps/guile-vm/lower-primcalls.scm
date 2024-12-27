@@ -279,19 +279,15 @@
   (define vtable-validated-mask #b11)
   (define vtable-validated-value #b11)
   (with-cps cps
-    (letv flags mask res)
+    (letv flags res)
     (letk ktest
           ($kargs ('res) (res)
             ($branch kf kt src
               'u64-imm-= vtable-validated-value (res))))
-    (letk kand
-          ($kargs ('mask) (mask)
-            ($continue ktest src
-              ($primcall 'ulogand #f (flags mask)))))
     (letk kflags
           ($kargs ('flags) (flags)
-            ($continue kand src
-              ($primcall 'load-u64 vtable-validated-mask ()))))
+            ($continue ktest src
+              ($primcall 'ulogand/immediate vtable-validated-mask (flags)))))
     (build-term
       ($continue kflags src
         ($primcall 'word-ref/immediate
@@ -351,18 +347,14 @@
   (define vtable-index-unboxed-fields 6) ; FIXME: pull from struct.h
   (define vtable-offset-unboxed-fields (1+ vtable-index-unboxed-fields))
   (with-cps cps
-    (letv ptr word bits mask res)
+    (letv ptr word bits res)
     (letk ktest
           ($kargs ('res) (res)
             ($branch kf kt src 'u64-imm-= 0 (res))))
-    (letk kand
-          ($kargs ('mask) (mask)
-            ($continue ktest src
-              ($primcall 'ulogand #f (mask bits)))))
     (letk kbits
           ($kargs ('bits) (bits)
-            ($continue kand src
-              ($primcall 'load-u64 (ash 1 (logand idx 31)) ()))))
+            ($continue ktest src
+              ($primcall 'ulogand/immediate (ash 1 (logand idx 31)) (bits)))))
     (letk kword
           ($kargs ('word) (word)
             ($continue kbits src
@@ -428,7 +420,7 @@
 (define-primcall-lowerer (string-ref cps k src #f (s uidx))
   (define stringbuf-f-wide #x400)
   (with-cps cps
-    (letv start upos buf ptr tag mask bits uwpos u32)
+    (letv start upos buf ptr tag bits uwpos u32)
     (letk kassume
           ($kargs ('u32) (u32)
             ($continue k src
@@ -448,14 +440,10 @@
     (letk kcmp
           ($kargs ('bits) (bits)
             ($branch kwide knarrow src 'u64-imm-= 0 (bits))))
-    (letk kmask
-          ($kargs ('mask) (mask)
-            ($continue kcmp src
-              ($primcall 'ulogand #f (tag mask)))))
     (letk ktag
           ($kargs ('tag) (tag)
-            ($continue kmask src
-              ($primcall 'load-u64 stringbuf-f-wide ()))))
+            ($continue kcmp src
+              ($primcall 'ulogand/immediate stringbuf-f-wide (tag)))))
     (letk kptr
           ($kargs ('ptr) (ptr)
             ($continue ktag src
@@ -475,6 +463,13 @@
     (build-term
       ($continue kadd src
         ($primcall 'word-ref/immediate '(string . 2) (s))))))
+
+;; precondition: sym is a symbol.
+(define-primcall-lowerer (symbol-hash cps k src #f (sym))
+  (with-cps cps
+    (build-term
+      ($continue k src
+        ($primcall 'word-ref/immediate '(symbol . 2) (sym))))))
 
 ;; precondition: none.
 (define-primcall-lowerer (make-atomic-box cps k src #f (val))

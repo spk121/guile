@@ -31,7 +31,7 @@ jobs:
           export LANG=C.UTF-8 TERM=dumb VERBOSE=true TZ=America/Los_Angeles
           mkdir `pwd`/app
           ./autogen.sh
-          ./configure CFLAGS="-g -O2 -Wall" --prefix=`pwd`/app
+          ./configure CFLAGS="-g -O2 -Wall -Wno-unused-function" --prefix=`pwd`/app
       shell: C:\cygwin\bin\bash.exe -o igncr '{0}'
     - name: Build
       run: make -j4 V=1

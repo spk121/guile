@@ -42,9 +42,14 @@ jobs:
         git config --global --add safe.directory /cygdrive/d/a/guile/guile
         make check V=1
       shell: C:\cygwin\bin\bash.exe -o igncr '{0}'
+    - name: Run More Unit Tests on Failure
+      if: ${{ failure() }}
+      run: |
+        ./check-guile
+      shell: C:\cygwin\bin\bash.exe -o igncr '{0}'      
     - name: Archive test logs
       if: ${{ success() || failure() }}
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: Test logs
         path: ./*.log

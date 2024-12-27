@@ -332,7 +332,21 @@
 	      (sleep 2)
 	      (system-async-mark aproc)
 	      (join-thread other-thread)))
-	  #t))
+	  #t)
+
+        (pass-if "do not throw exception if trying to join after timeout"
+          (let ((other-thread (begin-thread (pause))))
+            (dynamic-wind
+              (const #f)
+              (lambda ()
+                (join-thread other-thread 1)
+                ;; Up to 3.0.9, this second call would throw: "mutex
+                ;; already locked by thread".
+                ;; See <https://bugs.gnu.org/55356>.
+                (join-thread other-thread 1)
+                #t)
+              (lambda ()
+                (cancel-thread other-thread))))))
 
       ;;
       ;; thread cancellation

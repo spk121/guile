@@ -21,6 +21,8 @@
   #:use-module (ice-9 copy-tree)
   #:use-module (srfi srfi-1))
 
+(define list+-bad-arg-exception
+  '(wrong-type-arg . "^Argument not a proper or circular list"))
 
 (define (ref-delete x lst . proc)
   "Reference implemenation of srfi-1 `delete'."
@@ -463,10 +465,10 @@
     (pass-if-exception "too many args" exception:wrong-num-args
       (concatenate-proc '() '()))
 
-    (pass-if-exception "number" exception:wrong-type-arg
+    (pass-if-exception "number" '(wrong-type-arg . "Apply to non-list")
       (concatenate-proc 123))
 
-    (pass-if-exception "vector" exception:wrong-type-arg
+    (pass-if-exception "vector" '(wrong-type-arg . "Apply to non-list")
       (concatenate-proc #(1 2 3)))
     
     (pass-if "no lists"
@@ -1188,18 +1190,18 @@
     (pass-if-exception "proc arg count 4" exception:wrong-num-args
       (fold (lambda (x y z prev) x) 1 '(1 2 3) '(1 2 3)))
 
-    (pass-if-exception "improper first 1" exception:wrong-type-arg
+    (pass-if-exception "improper first 1" list+-bad-arg-exception
       (fold + 1 1 '(1 2 3)))
-    (pass-if-exception "improper first 2" exception:wrong-type-arg
+    (pass-if-exception "improper first 2" list+-bad-arg-exception
       (fold + 1 '(1 . 2) '(1 2 3)))
-    (pass-if-exception "improper first 3" exception:wrong-type-arg
+    (pass-if-exception "improper first 3" list+-bad-arg-exception
       (fold + 1 '(1 2 . 3) '(1 2 3)))
 
-    (pass-if-exception "improper second 1" exception:wrong-type-arg
+    (pass-if-exception "improper second 1" list+-bad-arg-exception
       (fold + 1 '(1 2 3) 1))
-    (pass-if-exception "improper second 2" exception:wrong-type-arg
+    (pass-if-exception "improper second 2" list+-bad-arg-exception
       (fold + 1 '(1 2 3) '(1 . 2)))
-    (pass-if-exception "improper second 3" exception:wrong-type-arg
+    (pass-if-exception "improper second 3" list+-bad-arg-exception
       (fold + 1 '(1 2 3) '(1 2 . 3)))
 
     (pass-if (= 6 (fold + 1 '(2) '(3))))
@@ -1330,9 +1332,9 @@
     (length+))
   (pass-if-exception "too many args" exception:wrong-num-args
     (length+ 123 456))
-  (pass-if-exception "not a pair" exception:wrong-type-arg
+  (pass-if-exception "not a pair" list+-bad-arg-exception
     (length+ 'x))
-  (pass-if-exception "improper list" exception:wrong-type-arg
+  (pass-if-exception "improper list" list+-bad-arg-exception
     (length+ '(x y . z)))
   (pass-if (= 0 (length+ '())))
   (pass-if (= 1 (length+ '(x))))
@@ -1449,7 +1451,14 @@
   (pass-if (equal? '(1 . 2)       (list-copy '(1 . 2))))
   (pass-if (equal? '(1 2 . 3)     (list-copy '(1 2 . 3))))
   (pass-if (equal? '(1 2 3 . 4)   (list-copy '(1 2 3 . 4))))
-  (pass-if (equal? '(1 2 3 4 . 5) (list-copy '(1 2 3 4 . 5)))))
+  (pass-if (equal? '(1 2 3 4 . 5) (list-copy '(1 2 3 4 . 5))))
+
+  (let ((src (list 1 2 3 4 5)))
+    (define (find-pair? p lst)
+      (let lp ((lst lst))
+        (and (pair? lst) (or (eq? p lst) (lp (cdr lst))))))
+    (pair-for-each (lambda (p) (pass-if (not (find-pair? p src))))
+                   (list-copy src))))
 
 ;;
 ;; list-index
@@ -1760,72 +1769,64 @@
     (equal? '(1 2) (lset-adjoin = '(2) 1 1))))
 
 ;;
-;; lset-difference
+;; lset-difference and lset-difference!
 ;;
 
-(with-test-prefix "lset-difference"
+(begin
+  (define (test-shared-behavior diff)
+    (pass-if-exception "proc - num" exception:wrong-type-arg
+      (diff 123 '(4)))
+    (pass-if-exception "proc - list" exception:wrong-type-arg
+      (diff (list 1 2 3) '(4)))
 
-  (pass-if "called arg order"
-    (let ((good #f))
-      (lset-difference (lambda (x y)
-			 (set! good (and (= x 1) (= y 2)))
-			 (= x y))
-		       '(1) '(2))
-      good)))  
+    (pass-if "called arg order"
+      (let ((good #f))
+        (diff (lambda (x y)
+			    (set! good (and (= x 1) (= y 2)))
+			    (= x y))
+			  (list 1) (list 2))
+        good))
 
-;;
-;; lset-difference!
-;;
+    (pass-if (equal? '() (diff = '())))
+    (pass-if (equal? '(1) (diff = (list 1))))
+    (pass-if (equal? '(1 2) (diff = (list 1 2))))
 
-(with-test-prefix "lset-difference!"
+    (pass-if (equal? '() (diff = (list ) '(3))))
+    (pass-if (equal? '() (diff = (list 3) '(3))))
+    (pass-if (equal? '(1) (diff = (list 1 3) '(3))))
+    (pass-if (equal? '(1) (diff = (list 3 1) '(3))))
+    (pass-if (equal? '(1) (diff = (list 1 3 3) '(3))))
+    (pass-if (equal? '(1) (diff = (list 3 1 3) '(3))))
+    (pass-if (equal? '(1) (diff = (list 3 3 1) '(3))))
 
-  (pass-if-exception "proc - num" exception:wrong-type-arg
-    (lset-difference! 123 '(4)))
-  (pass-if-exception "proc - list" exception:wrong-type-arg
-    (lset-difference! (list 1 2 3) '(4)))
+    (pass-if (equal? '(1) (diff = (list 1 2 3) '(2 3))))
+    (pass-if (equal? '(1) (diff = (list 1 2 3) '(3 2))))
+    (pass-if (equal? '(1) (diff = (list 1 2 3) '(3) '(2))))
+    (pass-if (equal? '(1) (diff = (list 1 2 3) '(2) '(3))))
+    (pass-if (equal? '(1) (diff = (list 1 2 3) '(2) '(2 3))))
+    (pass-if (equal? '(1) (diff = (list 1 2 3) '(2) '(3 2))))
 
-  (pass-if "called arg order"
-    (let ((good #f))
-      (lset-difference! (lambda (x y)
-			  (set! good (and (= x 1) (= y 2)))
-			  (= x y))
-			(list 1) (list 2))
-      good))
+    (pass-if (equal? '(1 2) (diff = (list 1 2 3) '(3) '(3))))
+    (pass-if (equal? '(1 2) (diff = (list 1 3 2) '(3) '(3))))
+    (pass-if (equal? '(1 2) (diff = (list 3 1 2) '(3) '(3))))
 
-  (pass-if (equal? '() (lset-difference! = '())))
-  (pass-if (equal? '(1) (lset-difference! = (list 1))))
-  (pass-if (equal? '(1 2) (lset-difference! = (list 1 2))))
+    (pass-if (equal? '(1 2 3) (diff = (list 1 2 3 4) '(4))))
+    (pass-if (equal? '(1 2 3) (diff = (list 1 2 4 3) '(4))))
+    (pass-if (equal? '(1 2 3) (diff = (list 1 4 2 3) '(4))))
+    (pass-if (equal? '(1 2 3) (diff = (list 4 1 2 3) '(4))))
 
-  (pass-if (equal? '() (lset-difference! = (list ) '(3))))
-  (pass-if (equal? '() (lset-difference! = (list 3) '(3))))
-  (pass-if (equal? '(1) (lset-difference! = (list 1 3) '(3))))
-  (pass-if (equal? '(1) (lset-difference! = (list 3 1) '(3))))
-  (pass-if (equal? '(1) (lset-difference! = (list 1 3 3) '(3))))
-  (pass-if (equal? '(1) (lset-difference! = (list 3 1 3) '(3))))
-  (pass-if (equal? '(1) (lset-difference! = (list 3 3 1) '(3))))
+    (pass-if (equal? '(1 2) (diff = (list 1 2 3 4) '(4) '(3))))
+    (pass-if (equal? '(1 2) (diff = (list 1 3 2 4) '(4) '(3))))
+    (pass-if (equal? '(1 2) (diff = (list 3 1 2 4) '(4) '(3))))
+    (pass-if (equal? '(1 2) (diff = (list 1 3 4 2) '(4) '(3))))
+    (pass-if (equal? '(1 2) (diff = (list 3 1 4 2) '(4) '(3))))
+    (pass-if (equal? '(1 2) (diff = (list 3 4 1 2) '(4) '(3)))))
 
-  (pass-if (equal? '(1) (lset-difference! = (list 1 2 3) '(2 3))))
-  (pass-if (equal? '(1) (lset-difference! = (list 1 2 3) '(3 2))))
-  (pass-if (equal? '(1) (lset-difference! = (list 1 2 3) '(3) '(2))))
-  (pass-if (equal? '(1) (lset-difference! = (list 1 2 3) '(2) '(3))))
-  (pass-if (equal? '(1) (lset-difference! = (list 1 2 3) '(2) '(2 3))))
-  (pass-if (equal? '(1) (lset-difference! = (list 1 2 3) '(2) '(3 2))))
+  (with-test-prefix "lset-difference"
+    (test-shared-behavior lset-difference))
 
-  (pass-if (equal? '(1 2) (lset-difference! = (list 1 2 3) '(3) '(3))))
-  (pass-if (equal? '(1 2) (lset-difference! = (list 1 3 2) '(3) '(3))))
-  (pass-if (equal? '(1 2) (lset-difference! = (list 3 1 2) '(3) '(3))))
-
-  (pass-if (equal? '(1 2 3) (lset-difference! = (list 1 2 3 4) '(4))))
-  (pass-if (equal? '(1 2 3) (lset-difference! = (list 1 2 4 3) '(4))))
-  (pass-if (equal? '(1 2 3) (lset-difference! = (list 1 4 2 3) '(4))))
-  (pass-if (equal? '(1 2 3) (lset-difference! = (list 4 1 2 3) '(4))))
-
-  (pass-if (equal? '(1 2) (lset-difference! = (list 1 2 3 4) '(4) '(3))))
-  (pass-if (equal? '(1 2) (lset-difference! = (list 1 3 2 4) '(4) '(3))))
-  (pass-if (equal? '(1 2) (lset-difference! = (list 3 1 2 4) '(4) '(3))))
-  (pass-if (equal? '(1 2) (lset-difference! = (list 1 3 4 2) '(4) '(3))))
-  (pass-if (equal? '(1 2) (lset-difference! = (list 3 1 4 2) '(4) '(3))))
-  (pass-if (equal? '(1 2) (lset-difference! = (list 3 4 1 2) '(4) '(3)))))
+  (with-test-prefix "lset-difference!"
+    (test-shared-behavior lset-difference!)))
 
 ;;
 ;; lset-diff+intersection

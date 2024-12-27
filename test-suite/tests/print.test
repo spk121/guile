@@ -127,7 +127,24 @@
               "        (1\n"
               "         (0\n"
               "          0))))))))))\n")
-             #:width 10)))
+             #:width 10))
+
+  (pass-if "prefix"
+    (prints? (9 (8 (7 (6 (5 (4 (3 (2 (1 (0 0))))))))))
+             (string-append
+              "> (9\n"
+              ">  (8\n"
+              ">   (7\n"
+              ">    (6\n"
+              ">     (5\n"
+              ">      (4\n"
+              ">       (3\n"
+              ">        (2\n"
+              ">         (1\n"
+              ">          (0\n"
+              ">           0))))))))))\n")
+             #:width 10
+             #:per-line-prefix "> ")))
 
 
 (with-test-prefix "truncated-print"

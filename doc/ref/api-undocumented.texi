@@ -171,7 +171,7 @@ Unmemoize the memoized expression @var{m},
 @deffnx {Scheme Procedure} doubly-weak-alist-vector? obj
 @deffnx {C Function} scm_weak_key_alist_vector_p (obj)
 Return @code{#t} if @var{obj} is the specified weak hash
-table. Note that a doubly weak hash table is neither a weak key
+table.  Note that a doubly weak hash table is neither a weak key
 nor a weak value hash table.
 @end deffn
 
@@ -179,7 +179,7 @@ nor a weak value hash table.
 @deffnx {Scheme Procedure} make-weak-value-alist-vector size
 @deffnx {Scheme Procedure} make-doubly-weak-alist-vector size
 @deffnx {C Function} scm_make_weak_key_alist_vector (size)
-Return a weak hash table with @var{size} buckets. As with any
+Return a weak hash table with @var{size} buckets.  As with any
 hash table, choosing a good size for the table requires some
 caution.
 
@@ -212,7 +212,7 @@ Return the obarray that is used for all new bindings before the module system is
 
 @deffn {Scheme Procedure} standard-interface-eval-closure module
 @deffnx {C Function} scm_standard_interface_eval_closure (module)
-Return a interface eval closure for the module @var{module}. Such a closure does not allow new bindings to be added.
+Return a interface eval closure for the module @var{module}.  Such a closure does not allow new bindings to be added.
 @end deffn
 
 @deffn {Scheme Procedure} env-module env
@@ -226,7 +226,7 @@ implemented by the C function "scm_single_thread_p"
 
 @deffn {Scheme Procedure} set-debug-cell-accesses! flag
 @deffnx {C Function} scm_set_debug_cell_accesses_x (flag)
-This function is used to turn on checking for a debug version of GUILE. This version does not support this functionality
+This function is used to turn on checking for a debug version of GUILE.  This version does not support this functionality
 
 @end deffn
 
@@ -237,12 +237,12 @@ Return an eval closure for the module @var{module}.
 
 @deffn {Scheme Procedure} mask-signals
 @deffnx {C Function} scm_mask_signals ()
-Mask signals. The returned value is not specified.
+Mask signals.  The returned value is not specified.
 @end deffn
 
 @deffn {Scheme Procedure} unmask-signals
 @deffnx {C Function} scm_unmask_signals ()
-Unmask signals. The returned value is not specified.
+Unmask signals.  The returned value is not specified.
 @end deffn
 
 @deffn {Scheme Procedure} noop . args

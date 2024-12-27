@@ -33,7 +33,8 @@
             constructor-primitive?
             singly-valued-primitive? equality-primitive?
             bailout-primitive?
-            negate-primitive))
+            negate-primitive
+            primitive-module))
 
 ;; When adding to this, be sure to update *multiply-valued-primitives*
 ;; if appropriate.
@@ -68,7 +69,7 @@
 
     integer->char char->integer number->string string->number
 
-    acons cons cons*
+    acons cons cons* append
 
     list vector
 
@@ -99,6 +100,8 @@
     throw error scm-error raise-exception
 
     string-length string-ref string-set!
+
+    string->utf8 string-utf8-length utf8->string
 
     make-struct/simple struct-vtable struct-ref struct-set!
 
@@ -144,7 +147,7 @@
 
 (define *primitive-constructors*
   ;; Primitives that return a fresh object.
-  '(acons cons cons* list vector make-vector
+  '(acons cons cons* append list vector make-vector
     make-struct/simple
     make-prompt-tag
     make-variable))
@@ -160,6 +163,7 @@
     memq memv
     struct-ref
     string-ref
+    string->utf8 string-utf8-length utf8->string
     bytevector-u8-ref bytevector-s8-ref
     bytevector-u16-ref bytevector-u16-native-ref
     bytevector-s16-ref bytevector-s16-native-ref
@@ -322,6 +326,53 @@
         (_ #f))
       x))
    x))
+
+
+
+(define (primitive-module name)
+  (case name
+    ((bytevector?
+      bytevector-length
+
+      bytevector-u8-ref bytevector-u8-set!
+      bytevector-s8-ref bytevector-s8-set!
+
+      bytevector-u16-ref bytevector-u16-set!
+      bytevector-u16-native-ref bytevector-u16-native-set!
+      bytevector-s16-ref bytevector-s16-set!
+      bytevector-s16-native-ref bytevector-s16-native-set!
+
+      bytevector-u32-ref bytevector-u32-set!
+      bytevector-u32-native-ref bytevector-u32-native-set!
+      bytevector-s32-ref bytevector-s32-set!
+      bytevector-s32-native-ref bytevector-s32-native-set!
+
+      bytevector-u64-ref bytevector-u64-set!
+      bytevector-u64-native-ref bytevector-u64-native-set!
+      bytevector-s64-ref bytevector-s64-set!
+      bytevector-s64-native-ref bytevector-s64-native-set!
+
+      bytevector-ieee-single-ref bytevector-ieee-single-set!
+      bytevector-ieee-single-native-ref bytevector-ieee-single-native-set!
+      bytevector-ieee-double-ref bytevector-ieee-double-set!
+      bytevector-ieee-double-native-ref bytevector-ieee-double-native-set!
+
+      string->utf8 utf8->string)
+     '(rnrs bytevectors))
+    ((atomic-box?
+      make-atomic-box atomic-box-ref atomic-box-set!
+      atomic-box-swap! atomic-box-compare-and-swap!)
+     '(ice-9 atomic))
+    ((current-thread) '(ice-9 threads))
+    ((class-of) '(oop goops))
+    ((u8vector-ref
+      u8vector-set! s8vector-ref s8vector-set!
+      u16vector-ref u16vector-set! s16vector-ref s16vector-set!
+      u32vector-ref u32vector-set! s32vector-ref s32vector-set!
+      u64vector-ref u64vector-set! s64vector-ref s64vector-set!
+      f32vector-ref f32vector-set! f64vector-ref f64vector-set!)
+     '(srfi srfi-4))
+    (else '(guile))))
 
 
 
@@ -512,6 +563,12 @@
   (x y) (cons x y)
   (x y . rest) (cons x (cons* y . rest)))
 
+(define-primitive-expander append
+  () '()
+  (x) (values x)
+  (x y) (append x y)
+  (x y . rest) (append x (append y . rest)))
+
 (define-primitive-expander acons (x y z)
   (cons (cons x y) z))
 
@@ -676,12 +733,9 @@
                src '() #f 'args #f '() (list args)
                (primcall apply handler (make-lexical-ref #f 'args args))
                #f)))
-            (primcall throw
-                      (const 'wrong-type-arg)
-                      (const "call-with-prompt")
-                      (const "Wrong type (expecting procedure): ~S")
-                      (primcall list handler)
-                      (primcall list handler))))))))
+            (primcall raise-type-error
+                      (const #("call-with-prompt" 3 "procedure"))
+                      handler)))))))
    (else #f)))
 
 (define-primitive-expander! 'abort-to-prompt*

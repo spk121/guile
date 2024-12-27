@@ -1,4 +1,4 @@
-/* Copyright 1995-2014, 2016-2019, 2021-2023
+/* Copyright 1995-2014, 2016-2019, 2021-2024
      Free Software Foundation, Inc.
    Copyright 2021 Maxime Devos <maximedevos@telenet.be>
 
@@ -282,8 +282,7 @@ SCM_DEFINE (scm_pipe2, "pipe", 0, 1, 0,
     /* 'pipe2' cannot be emulated on systems that lack it: calling
        'fnctl' afterwards to set the relevant flags is not equivalent
        because it's not atomic.  */
-    rv = ENOSYS;
-    errno = ENOSYS;
+    rv = -1, errno = ENOSYS;
   }
 #endif
 
@@ -391,7 +390,7 @@ SCM_DEFINE (scm_setgroups, "setgroups", 1, 0, 0,
 SCM_DEFINE (scm_getpwuid, "getpw", 0, 1, 0,
             (SCM user),
 	    "Look up an entry in the user database.  @var{user} can be an\n"
-	    "integer, a string, or omitted, giving the behaviour of\n"
+	    "integer, a string, or omitted, giving the behavior of\n"
 	    "@code{getpwuid}, @code{getpwnam} or @code{getpwent}\n"
 	    "respectively.")
 #define FUNC_NAME s_scm_getpwuid
@@ -461,7 +460,7 @@ SCM_DEFINE (scm_setpwent, "setpw", 0, 1, 0,
 SCM_DEFINE (scm_getgrgid, "getgr", 0, 1, 0,
             (SCM name),
 	    "Look up an entry in the group database.  @var{name} can be an\n"
-	    "integer, a string, or omitted, giving the behaviour of\n"
+	    "integer, a string, or omitted, giving the behavior of\n"
 	    "@code{getgrgid}, @code{getgrnam} or @code{getgrent}\n"
 	    "respectively.")
 #define FUNC_NAME s_scm_getgrgid
@@ -727,7 +726,7 @@ SCM_DEFINE (scm_waitpid, "waitpid", 1, 1, 0,
 	    "has terminated or (optionally) stopped.  Normally it will\n"
 	    "suspend the calling process until this can be done.  If more than one\n"
 	    "child process is eligible then one will be chosen by the operating system.\n\n"
-	    "The value of @var{pid} determines the behaviour:\n\n"
+	    "The value of @var{pid} determines the behavior:\n\n"
 	    "@table @r\n"
 	    "@item @var{pid} greater than 0\n"
 	    "Request status information from the specified child process.\n"
@@ -1297,7 +1296,10 @@ SCM_DEFINE (scm_fork, "primitive-fork", 0, 0, 0,
 #define FUNC_NAME s_scm_fork
 {
   int pid;
+
   scm_i_finalizer_pre_fork ();
+  scm_i_signals_pre_fork ();
+
   if (scm_ilength (scm_all_threads ()) != 1)
     /* Other threads may be holding on to resources that Guile needs --
        it is not safe to permit one thread to fork while others are
@@ -1319,6 +1321,9 @@ SCM_DEFINE (scm_fork, "primitive-fork", 0, 0, 0,
 
   if (pid == -1)
     SCM_SYSERROR;
+
+  scm_i_signals_post_fork ();
+
   return scm_from_int (pid);
 }
 #undef FUNC_NAME
@@ -1652,27 +1657,6 @@ scm_piped_process (SCM prog, SCM args, SCM from, SCM to)
 }
 #undef FUNC_NAME
 
-static void
-restore_sigaction (SCM pair)
-{
-  SCM sig, handler, flags;
-  sig = scm_car (pair);
-  handler = scm_cadr (pair);
-  flags = scm_cddr (pair);
-  scm_sigaction (sig, handler, flags);
-}
-
-static void
-scm_dynwind_sigaction (int sig, SCM handler, SCM flags)
-{
-  SCM old, scm_sig;
-  scm_sig = scm_from_int (sig);
-  old = scm_sigaction (scm_sig, handler, flags);
-  scm_dynwind_unwind_handler_with_scm (restore_sigaction,
-                                       scm_cons (scm_sig, old),
-                                       SCM_F_WIND_EXPLICITLY);
-}
-
 SCM_DEFINE (scm_system_star, "system*", 0, 0, 1,
            (SCM args),
 "Execute the command indicated by @var{args}.  The first element must\n"
@@ -1702,17 +1686,8 @@ SCM_DEFINE (scm_system_star, "system*", 0, 0, 1,
   prog = scm_car (args);
   args = scm_cdr (args);
 
-  scm_dynwind_begin (0);
-  /* Make sure the child can't kill us (as per normal system call).  */
-  scm_dynwind_sigaction (SIGINT,
-                         scm_from_uintptr_t ((uintptr_t) SIG_IGN),
-                         SCM_UNDEFINED);
-#ifdef SIGQUIT
-  scm_dynwind_sigaction (SIGQUIT,
-                         scm_from_uintptr_t ((uintptr_t) SIG_IGN),
-                         SCM_UNDEFINED);
-#endif
-
+  /* Note: under the hood 'posix_spawn' takes care of blocking signals
+     around the call to fork and resetting handlers in the child.  */
   err = piped_process (&pid, prog, args,
                        SCM_UNDEFINED, SCM_UNDEFINED);
   if (err != 0)
@@ -1727,8 +1702,6 @@ SCM_DEFINE (scm_system_star, "system*", 0, 0, 1,
       if (wait_result == -1)
         SCM_SYSERROR;
     }
-
-  scm_dynwind_end ();
 
   return scm_from_int (status);
 }

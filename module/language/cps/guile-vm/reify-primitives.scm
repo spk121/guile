@@ -26,6 +26,8 @@
 
 (define-module (language cps guile-vm reify-primitives)
   #:use-module (ice-9 match)
+  #:use-module ((language tree-il primitives)
+                #:select ((primitive-module . tree-il:primitive-module)))
   #:use-module (language cps)
   #:use-module (language cps utils)
   #:use-module (language cps with-cps)
@@ -36,47 +38,7 @@
   #:export (reify-primitives))
 
 (define (primitive-module name)
-  (case name
-    ((bytevector?
-      bytevector-length
-
-      bytevector-u8-ref bytevector-u8-set!
-      bytevector-s8-ref bytevector-s8-set!
-
-      bytevector-u16-ref bytevector-u16-set!
-      bytevector-u16-native-ref bytevector-u16-native-set!
-      bytevector-s16-ref bytevector-s16-set!
-      bytevector-s16-native-ref bytevector-s16-native-set!
-
-      bytevector-u32-ref bytevector-u32-set!
-      bytevector-u32-native-ref bytevector-u32-native-set!
-      bytevector-s32-ref bytevector-s32-set!
-      bytevector-s32-native-ref bytevector-s32-native-set!
-
-      bytevector-u64-ref bytevector-u64-set!
-      bytevector-u64-native-ref bytevector-u64-native-set!
-      bytevector-s64-ref bytevector-s64-set!
-      bytevector-s64-native-ref bytevector-s64-native-set!
-
-      bytevector-ieee-single-ref bytevector-ieee-single-set!
-      bytevector-ieee-single-native-ref bytevector-ieee-single-native-set!
-      bytevector-ieee-double-ref bytevector-ieee-double-set!
-      bytevector-ieee-double-native-ref bytevector-ieee-double-native-set!)
-     '(rnrs bytevectors))
-    ((atomic-box?
-      make-atomic-box atomic-box-ref atomic-box-set!
-      atomic-box-swap! atomic-box-compare-and-swap!)
-     '(ice-9 atomic))
-    ((current-thread) '(ice-9 threads))
-    ((class-of) '(oop goops))
-    ((u8vector-ref
-      u8vector-set! s8vector-ref s8vector-set!
-      u16vector-ref u16vector-set! s16vector-ref s16vector-set!
-      u32vector-ref u32vector-set! s32vector-ref s32vector-set!
-      u64vector-ref u64vector-set! s64vector-ref s64vector-set!
-      f32vector-ref f32vector-set! f64vector-ref f64vector-set!)
-     '(srfi srfi-4))
-    (else '(guile))))
+  (tree-il:primitive-module name))
 
 (define (primitive-ref cps name k src)
   (with-cps cps
@@ -293,6 +255,22 @@
            ($continue ktest src
              ($primcall 'cache-ref cache-key ()))))))))
 
+(define-ephemeral (mul/immediate cps k src param a)
+  (with-cps cps
+    (letv imm)
+    (letk kop ($kargs ('imm) (imm)
+                ($continue k src ($primcall 'mul #f (a imm)))))
+    (build-term
+      ($continue kop src ($const param)))))
+
+(define-ephemeral (logand/immediate cps k src param a)
+  (with-cps cps
+    (letv imm)
+    (letk kop ($kargs ('imm) (imm)
+                ($continue k src ($primcall 'logand #f (a imm)))))
+    (build-term
+      ($continue kop src ($const param)))))
+
 ;; FIXME: Instead of having to check this, instead every primcall that's
 ;; not ephemeral should be handled by compile-bytecode.
 (define (compute-known-primitives)
@@ -338,6 +316,7 @@
       string->symbol
       symbol->keyword
       symbol->string
+      string-utf8-length string->utf8 utf8->string
       class-of
       scm->f64
       s64->u64 s64->scm scm->s64
@@ -378,6 +357,55 @@
        (with-cps cps
          (let$ clause (reify-clause))
          (setk label ($kfun src meta self tail clause))))
+      (($ $kargs names vars ($ $throw src op param args))
+       (match op
+         ('raise-type-error
+          (match (cons param args)
+            ((#(proc-name pos what) val)
+             (define msg
+               (format #f
+                       "Wrong type argument in position ~a (expecting ~a): ~~S"
+                       pos what))
+             (with-cps cps
+               (setk label
+                     ($kargs names vars
+                       ($throw src 'throw/value+data
+                               (vector 'wrong-type-arg proc-name msg)
+                               (val))))))))
+         ('raise-range-error
+          (match (cons param args)
+            ((#(proc-name pos) val)
+             (define msg
+               (format #f "Argument ~a out of range: ~~S" pos))
+             (with-cps cps
+               (setk label
+                     ($kargs names vars
+                       ($throw src 'throw/value+data
+                               (vector 'out-of-range proc-name msg)
+                               (val))))))))
+         ('raise-arity-error
+          (match (cons param args)
+            ((#(proc-name) val)
+             (define msg "Wrong number of arguments to ~A")
+             (with-cps cps
+               (setk label
+                     ($kargs names vars
+                       ($throw src 'throw/value
+                               (vector 'wrong-number-of-args proc-name msg)
+                               (val))))))))
+         ('raise-exception
+          (match (cons param args)
+            ((#f exn)
+             (with-cps cps
+               (letv ignored prim)
+               (letk kdie ($kargs (#f) (ignored)
+                                    ($throw src 'unreachable #f ())))
+               (letk kret ($kreceive '() 'rest kdie))
+               (letk kcall ($kargs ('raise-exception) (prim)
+                             ($continue kret src ($call prim (exn)))))
+               (let$ body (resolve-prim 'raise-exception kcall src))
+               (setk label ($kargs names vars ,body))))))
+         ((or 'unreachable 'throw 'throw/value 'throw/value+data) cps)))
       (($ $kargs names vars ($ $continue k src ($ $prim name)))
        (with-cps cps
          (let$ body (resolve-prim name k src))
@@ -405,14 +433,6 @@
           ($ $continue k src ($ $primcall 'load-const/unlikely val ())))
        (with-cps cps
          (setk label ($kargs names vars ($continue k src ($const val))))))
-      (($ $kargs names vars
-          ($ $continue k src ($ $primcall 'mul/immediate b (a))))
-       (with-cps cps
-         (letv b*)
-         (letk kb ($kargs ('b) (b*)
-                    ($continue k src ($primcall 'mul #f (a b*)))))
-         (setk label ($kargs names vars
-                       ($continue kb src ($const b))))))
       (($ $kargs names vars
           ($ $continue k src
              ($ $primcall (or 'assume-u64 'assume-s64) (lo . hi) (val))))
@@ -470,6 +490,7 @@
               ;; ((ursh/immediate (u6? y) x) (ursh x y))
               ;; ((srsh/immediate (u6? y) x) (srsh x y))
               ;; ((ulsh/immediate (u6? y) x) (ulsh x y))
+              ((ulogand/immediate (u8? y) x) (ulogand x y))
               (_
                (match (cons name args)
                  (((or 'allocate-words/immediate

@@ -52,7 +52,7 @@ jobs:
       shell: msys2 -o igncr '{0}'
     - name: Archive test logs
       if: ${{ success() || failure() }}
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: Test logs
         path: ./*.log

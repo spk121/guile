@@ -28,17 +28,26 @@
 ;; the nonterminals defined in the PEG parser written with
 ;; S-expressions.
 (define grammar-mapping
-  '((grammar peg-grammar)
-    (pattern peg-pattern)
-    (alternative peg-alternative)
-    (suffix peg-suffix)
-    (primary peg-primary)
-    (literal peg-literal)
-    (charclass peg-charclass)
-    (CCrange charclass-range)
-    (CCsingle charclass-single)
-    (nonterminal peg-nonterminal)
-    (sp peg-sp)))
+  '((Grammar Grammar)
+    (Definition Definition)
+    (Expression Expression)
+    (Sequence Sequence)
+    (Prefix Prefix)
+    (Suffix Suffix)
+    (Primary Primary)
+    (Identifier Identifier)
+    (Literal Literal)
+    (Class Class)
+    (NotInClass NotInClass)
+    (Range Range)
+    (Char Char)
+    (LEFTARROW LEFTARROW)
+    (AND AND)
+    (NOT NOT)
+    (QUESTION QUESTION)
+    (STAR STAR)
+    (PLUS PLUS)
+    (DOT DOT)))
 
 ;; Transforms the nonterminals defined in the PEG parser written as a PEG to the nonterminals defined in the PEG parser written with S-expressions.
 (define (grammar-transform x)
@@ -69,7 +78,7 @@
     (peg:tree (match-pattern (@@ (ice-9 peg) peg-grammar) (@@ (ice-9 peg) peg-as-peg)))
     (tree-map
      grammar-transform
-     (peg:tree (match-pattern grammar (@@ (ice-9 peg) peg-as-peg)))))))
+     (peg:tree (match-pattern Grammar (@@ (ice-9 peg) peg-as-peg)))))))
 
 ;; A grammar for pascal-style comments from Wikipedia.
 (define comment-grammar
@@ -276,3 +285,115 @@ number <-- [0-9]+")
    (equal? (eq-parse "1+1/2*3+(1+1)/2")
 	   '(+ (+ 1 (* (/ 1 2) 3)) (/ (+ 1 1) 2)))))
 
+
+(define html-grammar
+"
+# Based on code from https://github.com/Fantom-Factory/afHtmlParser
+# 2014-2023 Steve Eynon. This code was originally released under the following
+# terms:
+#
+#      Permission to use, copy, modify, and/or distribute this software for any
+#      purpose with or without fee is hereby granted, provided that the above
+#      copyright notice and this permission notice appear in all copies.
+#
+#      THE SOFTWARE IS PROVIDED \"AS IS\" AND THE AUTHOR DISCLAIMS ALL
+#      WARRANTIES WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES
+#      OF MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE
+#      FOR ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY
+#      DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER
+#      IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING
+#      OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+
+# PEG Rules for parsing well formed HTML 5 documents
+# https://html.spec.whatwg.org/multipage/syntax.html
+
+html        <-- bom? blurb* doctype? blurb* xmlProlog? blurb* elem blurb*
+bom         <-- \"\\uFEFF\"
+xmlProlog   <-- \"<?xml\" (!\"?>\" .)+ \"?>\"
+
+# ---- Doctype ----
+
+doctype           <-- \"<!DOCTYPE\" [ \\t\\n\\f\\r]+ [a-zA-Z0-9]+ (doctypePublicId / doctypeSystemId)* [ \\t\\n\\f\\r]* \">\"
+doctypePublicId   <-- [ \\t\\n\\f\\r]+  \"PUBLIC\" [ \\t\\n\\f\\r]+   ((\"\\\"\" [^\"]* \"\\\"\") / (\"'\" [^']* \"'\"))
+doctypeSystemId   <-- [ \\t\\n\\f\\r]+ (\"SYSTEM\" [ \\t\\n\\f\\r]+)? ((\"\\\"\" [^\"]* \"\\\"\") / (\"'\" [^']* \"'\"))
+
+# ---- Elems ----
+
+elem              <-- voidElem / rawTextElem / escRawTextElem / selfClosingElem / normalElem
+voidElem          <-- \"<\"  voidElemName       attributes  \">\"
+rawTextElem       <-- \"<\"  rawTextElemName    attributes  \">\" rawTextContent endElem
+escRawTextElem    <-- \"<\"  escRawTextElemName attributes  \">\" escRawTextContent endElem
+selfClosingElem   <-- \"<\"  elemName           attributes \"/>\"
+normalElem        <-- \"<\"  elemName           attributes  \">\" normalContent? endElem?
+endElem           <-- \"</\" elemName                       \">\"
+
+elemName            <-- [a-zA-Z] [^\\t\\n\\f />]*
+voidElemName        <-- \"area\" / \"base\" / \"br\" / \"col\" / \"embed\" /
+                      \"hr\" / \"img\" / \"input\" / \"keygen\" / \"link\" /
+                      \"meta\" / \"param\" / \"source\" / \"track\" / \"wbr\"
+rawTextElemName     <-- \"script\" / \"style\"
+escRawTextElemName  <-- \"textarea\" / \"title\"
+
+rawTextContent      <-- (!(\"</script>\" / \"</style>\") .)+
+escRawTextContent   <-- ((!(\"</textarea>\" / \"</title>\" / \"&\") .)+ / charRef)*
+normalContent       <-- !\"</\" (([^<&]+ / charRef) / comment / cdata / elem)*
+
+# ---- Attributes ----
+
+attributes        <-- (&[^/>] ([ \\t]+ / doubleQuoteAttr / singleQuoteAttr / unquotedAttr / emptyAttr))*
+attrName          <-- [^ \\t\\n\\r\\f\"'>/=]+
+emptyAttr         <-- attrName+
+unquotedAttr      <-- attrName [ \\t]* \"=\" [ \\t]*      (charRef / [^ \\t\\n\\r\\f\"'=<>`&]+)+
+singleQuoteAttr   <-- attrName [ \\t]* \"=\" [ \\t]* \"'\"  (charRef / [^'&]+)* \"'\"
+doubleQuoteAttr   <-- attrName [ \\t]* \"=\" [ \\t]* \"\\\"\" (charRef / [^\"&]+)* \"\\\"\"
+
+# ---- Character References ----
+
+charRef         <-- &\"&\" (decNumCharRef / hexNumCharRef / namedCharRef / borkedRef)
+namedCharRef    <-- \"&\"   [^;>]+ \";\"
+decNumCharRef   <-- \"&#\"  [0-9]+ \";\"
+hexNumCharRef   <-- \"&#x\" [a-fA-F0-9]+ \";\"
+borkedRef       <-- \"&\"  &[ \\t]
+
+# ---- Misc ----
+
+cdata       <-- \"<![CDATA[\" (!\"]]>\" .)+ \"]]>\"
+comment     <-- \"<!--\" (!\"--\" .)+ \"-->\"
+blurb       <-- [ \\t\\n\\f\\r]+ / comment")
+
+(define html-example "
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Example Domain</title>
+    <meta charset=\"utf-8\" />
+    <meta http-equiv=\"Content-type\" content=\"text/html; charset=utf-8\" />
+    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\" />
+    <style type=\"text/css\">
+    body {
+        background-color: #f0f0f2;
+        margin: 0;
+        padding: 0;
+    }
+    </style>
+</head>
+
+<body>
+<div>
+    <h1>Example Domain</h1>
+    <p>This domain is for use in illustrative examples in documents. You may
+    use this domain in literature without prior coordination or asking for
+    permission.</p> <p><a href=\"https://www.iana.org/domains/example\">More
+    information...</a></p>
+</div>
+</body>
+</html>
+")
+
+(with-test-prefix "parsing with complex grammars"
+  (eeval `(define-peg-string-patterns ,html-grammar))
+  (pass-if
+    "HTML parsing"
+    (equal?
+      (peg:tree (match-pattern html html-example))
+      '(html (blurb "\n") (doctype "<!DOCTYPE html>") (blurb "\n") (elem (normalElem "<" (elemName "html") attributes ">" (normalContent "\n" (elem (normalElem "<" (elemName "head") attributes ">" (normalContent "\n    " (elem (escRawTextElem "<" (escRawTextElemName "title") attributes ">" (escRawTextContent "Example Domain") (endElem "</" (elemName "title") ">"))) "\n    " (elem (selfClosingElem "<" (elemName "meta") (attributes " " (doubleQuoteAttr (attrName "charset") "=\"utf-8\"") " ") "/>")) "\n    " (elem (selfClosingElem "<" (elemName "meta") (attributes " " (doubleQuoteAttr (attrName "http-equiv") "=\"Content-type\"") " " (doubleQuoteAttr (attrName "content") "=\"text/html; charset=utf-8\"") " ") "/>")) "\n    " (elem (selfClosingElem "<" (elemName "meta") (attributes " " (doubleQuoteAttr (attrName "name") "=\"viewport\"") " " (doubleQuoteAttr (attrName "content") "=\"width=device-width, initial-scale=1\"") " ") "/>")) "\n    " (elem (rawTextElem "<" (rawTextElemName "style") (attributes " " (doubleQuoteAttr (attrName "type") "=\"text/css\"")) ">" (rawTextContent "\n    body {\n        background-color: #f0f0f2;\n        margin: 0;\n        padding: 0;\n    }\n    ") (endElem "</" (elemName "style") ">"))) "\n") (endElem "</" (elemName "head") ">"))) "\n\n" (elem (normalElem "<" (elemName "body") attributes ">" (normalContent "\n" (elem (normalElem "<" (elemName "div") attributes ">" (normalContent "\n    " (elem (normalElem "<" (elemName "h1") attributes ">" (normalContent "Example Domain") (endElem "</" (elemName "h1") ">"))) "\n    " (elem (normalElem "<" (elemName "p") attributes ">" (normalContent "This domain is for use in illustrative examples in documents. You may\n    use this domain in literature without prior coordination or asking for\n    permission.") (endElem "</" (elemName "p") ">"))) " " (elem (normalElem "<" (elemName "p") attributes ">" (normalContent (elem (normalElem "<" (elemName "a") (attributes " " (doubleQuoteAttr (attrName "href") "=\"https://www.iana.org/domains/example\"")) ">" (normalContent "More\n    information...") (endElem "</" (elemName "a") ">")))) (endElem "</" (elemName "p") ">"))) "\n") (endElem "</" (elemName "div") ">"))) "\n") (endElem "</" (elemName "body") ">"))) "\n") (endElem "</" (elemName "html") ">"))) (blurb "\n")))))

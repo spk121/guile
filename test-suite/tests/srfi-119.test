@@ -1,0 +1,1040 @@
+;;;; srfi-119.test --- Test suite for Guile's SRFI-119 reader. -*- scheme -*-
+;;;;
+;;;; Copyright (C) 2023 Free Software Foundation, Inc.
+;;;;
+;;;; This library is free software; you can redistribute it and/or
+;;;; modify it under the terms of the GNU Lesser General Public
+;;;; License as published by the Free Software Foundation; either
+;;;; version 3 of the License, or (at your option) any later version.
+;;;;
+;;;; This library is distributed in the hope that it will be useful,
+;;;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;;;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+;;;; Lesser General Public License for more details.
+;;;;
+;;;; You should have received a copy of the GNU Lesser General Public
+;;;; License along with this library; if not, write to the Free Software
+;;;; Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
+
+(define-module (test-srfi-119)
+  #:use-module (test-suite lib)
+  #:use-module (srfi srfi-1)
+  #:use-module (srfi srfi-26) ;; cut
+  #:use-module (language wisp))
+
+(define (read-string s)
+  (with-input-from-string s read))
+
+(define (with-read-options opts thunk)
+  (let ((saved-options (read-options)))
+    (dynamic-wind
+      (lambda ()
+        (read-options opts))
+      thunk
+      (lambda ()
+        (read-options saved-options)))))
+
+(define (wisp->list str)
+  (wisp-scheme-read-string str))
+
+(define (scheme->list str)
+  (with-input-from-string str
+    (λ ()
+      (let loop ((result '()))
+        (if (eof-object? (peek-char))
+            (reverse! result)
+            (loop (cons (read) result)))))))
+
+(with-test-prefix "wisp-read-simple"
+  (pass-if-equal '((<= n 5))
+      (wisp->list "<= n 5"))
+  (pass-if-equal '(5)
+    (wisp->list ". 5"))
+  (pass-if-equal '((+ 1 (* 2 3)))
+      (wisp->list "+ 1 : * 2 3")))
+(with-test-prefix "wisp-read-complex"
+  (pass-if-equal '(
+     (a b c d e
+        f g h
+        i j k)
+
+     (concat "I want "
+             (getwish from me)
+             " - " username)) (wisp->list "
+a b c d e
+  . f g h
+  . i j k
+
+concat \"I want \"
+    getwish from me
+    . \" - \" username
+"))
+
+  (pass-if-equal
+      '(
+        (define (a b c)
+          (d e
+             (f)
+             (g h)
+             i))
+
+        (define (_)
+          (display "hello\n"))
+
+        (_)) (wisp->list "
+define : a b c
+_ d e
+___ f
+___ g h
+__  . i
+
+define : _
+_  display \"hello\n\"
+
+\\_"))
+
+  ;; nesting with pairs
+  (pass-if-equal '((1 . 2)(3 4 (5 . 6)))
+      (wisp->list "1 . 2\n3 4\n   5 . 6")))
+
+(with-test-prefix "wisp-source-properties"
+  ;; has properties
+  (pass-if (every pair? (map source-properties (wisp->list "1 . 2\n3 4\n   5 . 6"))))
+  (pass-if (every pair? (map source-properties (wisp->list "1 2\n3 4\n   5 6"))))
+  ;; has the same properties
+  (pass-if-equal
+      (map source-properties (scheme->list "(1 . 2)\n(3 4\n   (5 . 6))\n(1 4)\n\n(7 8)"))
+      (map (cut cons '(filename . #f) <>)
+           (map source-properties (wisp->list "1 . 2\n3 4\n   5 . 6\n1 4\n\n7 8")))))
+
+(with-test-prefix "btest"
+  (pass-if-equal '((display "b")
+(newline)
+
+
+) (wisp->list "
+display \"b\"
+newline
+")))
+
+(with-test-prefix "continuation"
+  (pass-if-equal '((a b c d e
+  f g h
+  i j k)
+
+(concat "I want "
+    (getwish from me)
+    " - " username)
+
+
+
+) (wisp->list "
+a b c d e
+  . f g h
+  . i j k
+
+concat \"I want \"
+    getwish from me
+    . \" - \" username
+
+")))
+
+(with-test-prefix "dotted-pair"
+  (pass-if-equal '((use-modules ((ice-9 popen) #:select ((open-input-pipe . oip))))
+
+
+                   ) (wisp->list "
+use-modules : (ice-9 popen) #:select ((open-input-pipe . oip))
+")))
+
+(with-test-prefix "example"
+  (pass-if-equal '((defun a (b c)
+  (let
+    (
+      (d "i am a string
+do not break me!")
+      (
+  ; comment: 0
+        (f)
+; comment : 1
+        `(g )); comment " : " 2
+      (
+        (h (I am in brackets:
+           do not : change "me"))
+        i)))
+  ,('j k)
+
+  l
+
+; comment
+
+  (a c))
+
+(defun b (:n o)
+  "second defun : with a docstring!"
+  (message "I am here")
+  t)
+
+(defun c (e f)
+  ((g))
+  (
+    (h
+      (i))
+    (j))
+  '(())
+  (k)
+  l
+  (m))
+
+(defun _ (:)
+
+   :)
+
+(_ b)
+
+(defun d ()
+      (let
+          ((a b)
+            (c d))))
+
+(a (((c))))
+
+(let
+    ((a b)
+      (c)))
+
+(let ((a b)))
+
+a
+
+
+
+) (wisp->list "
+defun a (b c)
+  let
+    :
+      d \"i am a string
+do not break me!\"
+      :
+  ; comment: 0
+        f
+; comment : 1
+        ` g ; comment \" : \" 2
+      :
+        h (I am in brackets:
+           do not : change \"me\")
+        . i
+  , 'j k
+
+  . l
+
+; comment
+
+  a c
+
+defun b : :n o
+  . \"second defun : with a docstring!\"
+  message \"I am here\"
+  . t
+
+defun c : e f
+  : g
+  :
+    h
+      i
+    j
+  ' :
+  k
+  . l
+  . : m
+
+defun _ : \\:
+__
+__ . \\:
+
+\\_ b
+
+defun d :
+      let
+          : a b
+            c d
+
+a : : : c
+
+let
+    : a b
+      c
+
+let : : a b
+
+. a
+
+")))
+
+(with-test-prefix "factorial"
+  (pass-if-equal '(;; short version
+; note: once you use one inline colon, all the following forms on that
+; line will get closed at the end of the line
+
+(define (factorial n)
+  (if (zero? n)
+    1
+    (* n (factorial (- n 1)))))
+
+(display (factorial 5 ))
+
+
+;; more vertical space, less colons
+(define (factorial n)
+  (if (zero? n)
+    1
+    (* n
+      (factorial
+        (- n 1)))))
+
+(display (factorial 5 ))
+
+
+
+) (wisp->list "
+;; short version
+; note: once you use one inline colon, all the following forms on that
+; line will get closed at the end of the line
+
+define : factorial n
+  if : zero? n
+    . 1
+    * n : factorial : - n 1
+
+display : factorial 5
+
+
+;; more vertical space, less colons
+define : factorial n
+  if : zero? n
+    . 1
+    * n
+      factorial
+        - n 1
+
+display : factorial 5
+
+")))
+
+(with-test-prefix "fast-sum"
+  (pass-if-equal '((use-modules (srfi srfi-1))
+
+; only for the nice test
+#!curly-infix
+
+(define-syntax fast-sum
+  (syntax-rules (iota)
+    ((fast-sum (iota count start))
+     (+ 1
+        (apply -
+          (map (lambda (x) (/ {x * {x + 1} } 2))
+                (list {count + {start - 1}} start)))))
+    ((fast-sum e)
+     (apply + e))))
+
+
+) (wisp->list "
+use-modules : srfi srfi-1
+
+; only for the nice test
+. #!curly-infix
+
+define-syntax fast-sum
+  syntax-rules : iota
+    : fast-sum : iota count start
+      + 1
+        apply -
+          map : lambda (x) : / {x * {x + 1} } 2
+                list {count + {start - 1}} start
+    : fast-sum e
+      apply + e
+")))
+
+(with-test-prefix "flexible-parameter-list"
+  (pass-if-equal '(; Test using a . as first parameter on a line by prefixing it with a second .
+(define
+  (a i
+    . b)
+  (unless (>= i (length b))
+    (display (number->string (length b )))
+    (display (list-ref b i))
+    (newline)
+    (apply a ( + i 1 ) b)))
+
+
+(a 0 "123" "345" "567")
+
+
+) (wisp->list "
+; Test using a . as first parameter on a line by prefixing it with a second .
+define
+  a i
+    . . b
+  unless : >= i : length b
+    display : number->string : length b
+    display : list-ref b i
+    newline
+    apply a ( + i 1 ) b
+
+
+a 0 \"123\" \"345\" \"567\"
+")))
+
+(with-test-prefix "hello"
+  (pass-if-equal '((define (hello who)
+  ;; include the newline
+  (format #t "~A ~A!\n"
+          "Hello" who))
+(hello "Wisp")
+
+) (wisp->list "
+define : hello who
+  ;; include the newline
+  format #t \"~A ~A!\\n\"
+          . \"Hello\" who
+hello \"Wisp\"
+")))
+
+(with-test-prefix "mtest"
+  (pass-if-equal '(#!/home/arne/wisp/wisp-multiline.sh  !#
+
+(display 1)
+
+
+) (wisp->list "
+#!/home/arne/wisp/wisp-multiline.sh  !#
+
+display 1
+")))
+
+(with-test-prefix "multiline-string"
+  (pass-if-equal '((display "
+  This is a
+  \"multi-line\"
+  string.
+  ")
+
+                   ) (wisp->list "
+display \"
+  This is a
+  \\\"multi-line\\\"
+  string.
+  \"
+")))
+
+(with-test-prefix "namedlet"
+  (pass-if-equal '(#!/home/arne/wisp/wisp-multiline.sh
+; !#
+(define (hello who)
+  (display who))
+
+(let hello
+  ((who 0))
+  (if (= who 5)
+    (display who)
+    (hello (+ 1 who))))
+
+
+) (wisp->list "
+#!/home/arne/wisp/wisp-multiline.sh
+; !#
+define : hello who
+  display who
+
+let hello
+  : who 0
+  if : = who 5
+    display who
+    hello : + 1 who
+")))
+
+;; the following is no error, but produces a warning because indentation is inconsistent.
+(with-test-prefix "partial-indent"
+  (pass-if-equal '((write
+ (list
+    (+ 1 2)
+   (+ 2 3)))
+(newline)
+
+(write
+ (list
+    (+ 1 2
+      (+ 3 4))
+   (+ 2 3)))
+(newline)
+
+
+) (wisp->list "
+write
+ list
+    + 1 2
+   + 2 3
+newline
+
+write
+ list
+    + 1 2
+      + 3 4
+   + 2 3
+newline
+")))
+
+(with-test-prefix "quotecolon"
+  (pass-if-equal '(#!/home/arne/wisp/wisp-multiline.sh
+; !#
+(define a 1 ); test whether ' : correctly gets turned into '(
+; and whether brackets in commments are treated correctly.
+
+(define a '(1 2 3))
+
+(define
+  (a b)
+  (c))
+
+(define a (quasiquote ,(+ 2 2)))
+) (wisp->list "
+#!/home/arne/wisp/wisp-multiline.sh
+; !#
+define a 1 ; test whether ' : correctly gets turned into '(
+; and whether brackets in commments are treated correctly.
+
+define a ' : 1 2 3
+
+define
+  a b
+  c
+
+define a : quasiquote , : + 2 2
+")))
+
+(with-test-prefix "range"
+  (pass-if-equal '((import (rnrs))
+
+(define range
+ (case-lambda
+   ((n ); one-argument syntax
+     (range 0 n 1))
+   ((n0 n ); two-argument syntax
+     (range n0 n 1))
+   ((n0 n s ); three-argument syntax
+     (assert
+         (and
+             (for-all number? (list n0 n s))
+             (not (zero? s))))
+     (let ((cmp (if (positive? s) >= <= )))
+       (let loop
+           ((i n0 )
+             (acc '()))
+           (if
+             (cmp i n )
+             (reverse acc)
+             (loop (+ i s) (cons i acc))))))))
+
+(display (apply string-append "" (map number->string (range 5))))
+(newline)
+
+) (wisp->list "
+import : rnrs
+
+define range
+ case-lambda
+   : n ; one-argument syntax
+     range 0 n 1
+   : n0 n ; two-argument syntax
+     range n0 n 1
+   : n0 n s ; three-argument syntax
+     assert
+         and
+             for-all number? : list n0 n s
+             not : zero? s
+     let : : cmp : if (positive? s) >= <=
+       let loop
+           : i n0
+             acc '()
+           if
+             cmp i n
+             reverse acc
+             loop (+ i s) (cons i acc)
+
+display : apply string-append \"\" : map number->string : range 5
+newline")))
+
+(with-test-prefix "readable-tests"
+  (pass-if-equal '((define (fibfast n)
+      (if (< n 2))
+      n
+      (fibup n 2 1 0 ))
+
+(define (fibup maxnum count n-1 n-2)
+       (if (= maxnum count)
+         (+ n-1  n-2)
+         (fibup maxnum
+               (+ count 1 )
+               (+ n-1 n-2 )
+               n-1)))
+
+(define (factorial n)
+       (if (<= n 1)
+         1
+         (* n
+           (factorial (- n 1)))))
+
+(define (gcd x y)
+       (if (= y 0))
+       x
+       (gcd y
+         (rem x y)))
+
+(define (add-if-all-numbers lst)
+       (call/cc
+         (lambda (exit)
+                (let loop
+                  (
+                    (lst lst )
+                    (sum 0))
+                  (if (null? lst)
+                     sum
+                     (if (not (number? (car lst)))
+                        (exit #f)
+                        (+ (car lst)
+                          (loop (cdr lst)))))))))
+
+) (wisp->list "
+define : fibfast n
+      if : < n 2
+      . n
+      fibup n 2 1 0
+
+define : fibup maxnum count n-1 n-2
+       if : = maxnum count
+         + n-1  n-2
+         fibup maxnum
+               + count 1
+               + n-1 n-2
+               . n-1
+
+define : factorial n
+       if : <= n 1
+         . 1
+         * n
+           factorial : - n 1
+
+define (gcd x y)
+       if (= y 0)
+       . x
+       gcd y
+         rem x y
+
+define : add-if-all-numbers lst
+       call/cc
+         lambda : exit
+                let loop
+                  :
+                    lst lst
+                    sum 0
+                  if : null? lst
+                     . sum
+                     if : not : number? : car lst
+                        exit #f
+                        + : car lst
+                          loop : cdr lst")))
+
+(with-test-prefix "receive"
+  (pass-if-equal '((import (ice-9 receive) (srfi srfi-1))
+(write
+    (receive (car cdr)
+        (car+cdr '(car . cdr))
+      car))
+) (wisp->list "
+import (ice-9 receive) (srfi srfi-1)
+write
+    receive : car cdr
+              car+cdr '(car . cdr)
+              . car
+")))
+
+(with-test-prefix "self-referencial"
+  (pass-if-equal '(; http://stackoverflow.com/questions/23167464/scheme-self-reference-lambda-macro
+; because this is as cool as things get
+(define-syntax slambda
+  (lambda (x)
+    (syntax-case x ()
+      ((slambda formals body0 body1 ...)
+        (with-syntax
+                    ((self (datum->syntax #'slambda 'self)))
+                    #'(letrec ((self (lambda formals body0 body1 ...)))
+                       self))))))
+
+
+
+(
+  (slambda (x) (+ x 1))
+  10)
+
+((slambda () self))
+
+
+
+) (wisp->list "
+; http://stackoverflow.com/questions/23167464/scheme-self-reference-lambda-macro
+; because this is as cool as things get
+define-syntax slambda
+  lambda : x
+    syntax-case x :
+      : slambda formals body0 body1 ...
+        with-syntax
+                    : self : datum->syntax #'slambda 'self
+                    #' letrec : : self : lambda formals body0 body1 ...
+                       . self
+
+
+
+:
+  slambda (x) : + x 1
+  . 10
+
+: slambda () self
+
+")))
+
+(with-test-prefix "shebang"
+  (pass-if-equal '(#!/usr/bin/wisp.py # !#
+; This tests shebang lines
+
+
+                                        ) (wisp->list "
+#!/usr/bin/wisp.py # !#
+; This tests shebang lines
+")))
+
+(with-test-prefix "strangecomments"
+  (pass-if-equal '((use-modules (wisp-scheme))
+; works
+(display
+  (call-with-input-string  "foo ; bar\n  ; nop \n\n; nup\n; nup \n  \n\n\n  foo : moo \"\n\" \n___ . goo . hoo" wisp-scheme-read-chunk))
+(newline)
+(display
+  (call-with-input-string  "foo \n___ . goo . hoo" wisp-scheme-read-chunk))
+(newline)
+
+) (wisp->list "
+use-modules : wisp-scheme
+; works
+display
+  call-with-input-string  \"foo ; bar\\n  ; nop \\n\\n; nup\\n; nup \\n  \\n\\n\\n  foo : moo \\\"\\n\\\" \\n___ . goo . hoo\" wisp-scheme-read-chunk
+newline
+display
+  call-with-input-string  \"foo \\n___ . goo . hoo\" wisp-scheme-read-chunk
+newline
+")))
+
+(with-test-prefix "sublist"
+(pass-if-equal '(; sublists allow to start single line function calls with a colon ( : ).
+
+(defun a (b c)
+  (let ((e . f))
+        g))
+
+
+) (wisp->list "
+; sublists allow to start single line function calls with a colon ( : ).
+;
+defun a : b c
+  let : : e . f
+        . g
+        ")))
+
+(with-test-prefix "sxml"
+(pass-if-equal '((use-modules (sxml simple))
+(use-modules (ice-9 match))
+
+; define a template
+(define template
+   (quote
+     (html
+         (head (title "test"))
+         (body
+             (h1 "test")
+             (message "the header")
+             (p "it " (em "works!")
+               (br)
+               (" it actually works!"))))))
+
+; transform it
+(define template2
+ (let loop
+  ((l template))
+  (match l
+    (('message a ...)
+      `(p (@ (style "margin-left: 2em"))
+            (strong ,(map loop a))))
+    ((a ...)
+      (map loop a ))
+    (a
+      a))))
+
+; write xml to the output port
+(sxml->xml template2)
+
+(newline)
+
+
+) (wisp->list "
+      use-modules : sxml simple
+use-modules : ice-9 match
+
+; define a template
+define template
+   quote
+     html
+         head : title \"test\"
+         body
+             h1 \"test\"
+             message \"the header\"
+             p \"it \" : em \"works!\"
+               br
+               \" it actually works!\"
+
+; transform it
+define template2
+ let loop
+  : l template
+  match l
+    : 'message a ...
+      ` p : @ : style \"margin-left: 2em\"
+            strong ,(map loop a)
+    : a ...
+      map loop a
+    a
+      . a
+
+; write xml to the output port
+sxml->xml template2
+
+newline
+")))
+
+(with-test-prefix "syntax-colon"
+(pass-if-equal '((let
+  (
+    (a 1)
+    (b 2))
+  (let
+    (
+      (
+        c 3))
+    (format #t "a: ~A, b: ~A, c: ~A"
+                 a      b      c)))
+
+((a))
+
+(define (hello)
+  (display "hello\n"))
+
+(let
+  ((a 1)
+    (b 2))
+  (format #t "a: ~A, b: ~A"
+               a      b))
+
+(let ((a '())))
+
+(let
+  (    ; foo
+    (a
+      '())))
+
+(
+  (a))
+
+(define (:)
+  (hello))
+
+(:)
+
+
+) (wisp->list "
+let
+  :
+    a 1
+    b 2
+  let
+    :
+      :
+        . c 3
+    format #t \"a: ~A, b: ~A, c: ~A\"
+              .    a      b      c
+
+: a
+
+define : hello
+  display \"hello\\n\"
+
+let
+  : a 1
+    b 2
+  format #t \"a: ~A, b: ~A\"
+            .    a      b
+
+let : : a ' :
+
+let
+  :    ; foo
+    a
+      '
+
+:
+  a
+
+define : \\:
+  hello
+
+\\:
+")))
+
+(with-test-prefix "syntax-dot"
+(pass-if-equal '((define (foo)
+  "bar")
+
+(define (bar)
+  '(1
+    . 2 )); pair
+
+(display (foo))
+(newline)
+(display (bar))
+(newline)
+
+
+) (wisp->list "
+define : foo
+  . \"bar\"
+
+define : bar
+  ' 1
+    . . 2 ; pair
+
+display : foo
+newline
+display : bar
+newline
+")))
+
+(with-test-prefix "syntax-empty"
+(pass-if-equal '() (wisp->list "
+")))
+
+(with-test-prefix "syntax-indent"
+(pass-if-equal '((define
+  (hello who)
+  (format #t "Hello ~A\n" who))
+
+(define
+    (let
+      (
+        (a 1)
+        (b 2)
+        (c 3))
+      (format #t "a: ~A, b: ~A, c: ~A"
+                   (+ a 2)
+                          b      c)))
+
+
+
+) (wisp->list "define
+  hello who
+  format #t \"Hello ~A\\n\" who
+
+define
+    let
+      :
+        a 1
+        b 2
+        c 3
+      format #t \"a: ~A, b: ~A, c: ~A\"
+                   + a 2
+                   .        b      c
+
+                   ")))
+
+(with-test-prefix "syntax-strings-parens"
+(pass-if-equal '(; Test linebreaks in strings and brackets
+
+"flubbub
+
+flabbab"
+
+(hrug (nadda
+madda gadda "shoktom
+ mee"  " sep
+ka"
+  hadda)
+    (gom))
+
+(flu)
+
+(sum [foo
+bar] barz {1 + [* 2 2]})
+
+(mara {
+li
++
+lo - (mabba)
+})
+) (wisp->list "
+; Test linebreaks in strings and brackets
+
+. \"flubbub
+
+flabbab\"
+
+hrug (nadda
+madda gadda \"shoktom
+ mee\"  \" sep
+ka\"
+  hadda)
+    gom
+
+flu
+
+sum [foo
+bar] barz {1 + [* 2 2]}
+
+mara {
+li
++
+lo - (mabba)
+}
+")))
+
+(with-test-prefix "syntax-underscore"
+(pass-if-equal '((define (a b c)
+  (d e
+    (f)
+    (g h)
+    i))
+
+(define (_)
+   (display "hello\n"))
+
+(_)
+
+
+) (wisp->list "
+define : a b c
+_ d e
+___ f
+___ g h
+__  . i
+
+define : _
+_  display \"hello\\n\"
+
+\\_
+")))
+

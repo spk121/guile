@@ -1,4 +1,4 @@
-;;; Copyright © 2023 Free Software Foundation, Inc.
+;;; Copyright © 2023-2024 Free Software Foundation, Inc.
 ;;;
 ;;; This file is part of GNU Guile.
 ;;;
@@ -20,6 +20,7 @@
 
 (use-modules (guix)
              (guix profiles)
+             (guix utils)
              (guile-package))
 
 (define* (package->manifest-entry* package system
@@ -58,11 +59,23 @@ TARGET."
                             guile-debug
                             guile-strict-typing))))))
 
+(define (out-of-source-tree p)
+  "Return P built out of its source tree."
+  (package
+    (inherit p)
+    (arguments (substitute-keyword-arguments (package-arguments p)
+                 ((#:out-of-source? _ #f) #t)))))
+
 (define cross-builds
   (manifest
    (map (lambda (target)
-          (package->manifest-entry* guile "x86_64-linux"
-                                    #:target target))
+          ;; For testing purposes, build one of them out-of-tree.
+          (let ((transform (if (string-prefix? "aarch64" target)
+                               out-of-source-tree
+                               identity)))
+            (package->manifest-entry* (transform guile)
+                                      "x86_64-linux"
+                                      #:target target)))
         '("i586-pc-gnu"
           ;; "arm-linux-gnueabihf"
           "aarch64-linux-gnu"

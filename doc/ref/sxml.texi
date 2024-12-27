@@ -91,7 +91,8 @@ All namespaces in the XML document must be declared, via @code{xmlns}
 attributes.  SXML elements built from non-default namespaces will have
 their tags prefixed with their URI.  Users can specify custom prefixes
 for certain namespaces with the @code{#:namespaces} keyword argument to
-@code{xml->sxml}.
+@code{xml->sxml}.  A namespace can be removed by using a @code{#f} custom
+prefix.
 
 @example
 (xml->sxml "<foo xmlns=\"http://example.org/ns1\">text</foo>")
@@ -107,7 +108,7 @@ for certain namespaces with the @code{#:namespaces} keyword argument to
 By default, namespaces passed to @code{xml->sxml} are treated as if they
 were declared on the root element.  Passing a false
 @code{#:declare-namespaces?} argument will disable this behavior,
-requiring in-document declarations of namespaces before use..
+requiring in-document declarations of namespaces before use.
 
 @example
 (xml->sxml "<foo><ns2:baz/></foo>"
@@ -202,6 +203,21 @@ Serialize the SXML tree @var{tree} as XML. The output will be written to
 the current output port, unless the optional argument @var{port} is
 present.
 @end deffn
+
+Output is automatically escaped as expected for a serializer.
+
+@example
+(sxml->xml `(code "<i>Some example</i>"))
+@result{} <code>&lt;i&gt;Some example&lt;/i&gt;</code>
+@end example
+
+In order to avoid some string from being escaped, it must be wrapped in a
+procedure that writes the string to the @code{(current-output-port)}.
+
+@example
+(sxml->xml `(code ,(lambda () (display "<i>Some example</i>"))))
+@result{} <code><i>Some example</i></code>
+@end example
 
 @deffn {Scheme Procedure} sxml->string sxml
 Detag an sxml tree @var{sxml} into a string. Does not perform any

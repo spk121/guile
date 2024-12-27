@@ -131,6 +131,9 @@
 
 (define-cps-primitive class-of 1 1)
 
+(define-cps-primitive string-utf8-length 1 1)
+(define-cps-primitive utf8->string 1 1)
+(define-cps-primitive string->utf8 1 1)
 (define-cps-primitive (bytevector-length bv-length) 1 1)
 (define-cps-primitive (bytevector-u8-ref bv-u8-ref) 2 1)
 (define-cps-primitive (bytevector-u16-native-ref bv-u16-ref) 2 1)

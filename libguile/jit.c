@@ -1,4 +1,4 @@
-/* Copyright 2018-2021, 2023
+/* Copyright 2018-2021, 2023-2024
      Free Software Foundation, Inc.
 
    This file is part of Guile.
@@ -370,7 +370,7 @@ set_register_state (scm_jit_state *j, uint32_t state)
 }
 
 static uint32_t
-unreachable (scm_jit_state *j)
+is_unreachable (scm_jit_state *j)
 {
   return j->register_state & UNREACHABLE;
 }
@@ -382,7 +382,7 @@ has_register_state (scm_jit_state *j, uint32_t state)
 }
 
 #define ASSERT_HAS_REGISTER_STATE(state) \
-  ASSERT (unreachable (j) || has_register_state (j, state));
+  ASSERT (is_unreachable (j) || has_register_state (j, state));
 
 static void
 record_gpr_clobber (scm_jit_state *j, jit_gpr_t r)
@@ -3526,6 +3526,25 @@ compile_ulogand (scm_jit_state *j, uint32_t dst, uint32_t a, uint32_t b)
 }
 static void
 compile_ulogand_slow (scm_jit_state *j, uint32_t dst, uint32_t a, uint32_t b)
+{
+}
+
+static void
+compile_ulogand_immediate (scm_jit_state *j, uint32_t dst, uint32_t a, uint32_t b)
+{
+#if SIZEOF_UINTPTR_T >= 8
+  emit_sp_ref_u64 (j, T0, a);
+  emit_andi (j, T0, T0, b);
+  emit_sp_set_u64 (j, dst, T0);
+#else
+  emit_sp_ref_u64 (j, T0, T1, a);
+  emit_andi (j, T0, T0, b);
+  emit_andi (j, T1, T1, 0);
+  emit_sp_set_u64 (j, dst, T0, T1);
+#endif
+}
+static void
+compile_ulogand_immediate_slow (scm_jit_state *j, uint32_t dst, uint32_t a, uint32_t b)
 {
 }
 

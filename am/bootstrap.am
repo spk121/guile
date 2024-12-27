@@ -1,4 +1,4 @@
-##  	Copyright (C) 2009-2023 Free Software Foundation, Inc.
+##  	Copyright (C) 2009-2024 Free Software Foundation, Inc.
 ##
 ##   This file is part of GNU Guile.
 ##
@@ -54,7 +54,6 @@ COMPILE = $(AM_V_GUILEC)					\
 
 ice-9/boot-9.go: ice-9/boot-9.scm ice-9/quasisyntax.scm ice-9/r6rs-libraries.scm ice-9/r7rs-libraries.scm ice-9/read.scm
 ice-9/match.go: ice-9/match.scm ice-9/match.upstream.scm
-srfi/srfi-64.go: srfi/srfi-64.scm srfi/srfi-64/testing.scm
 
 # Keep this rule in sync with that in `am/guilec'.
 ice-9/psyntax-pp.go: ice-9/psyntax.scm ice-9/psyntax-pp.scm
@@ -73,6 +72,7 @@ SOURCES =					\
   language/tree-il/compile-cps.scm		\
   language/tree-il/cps-primitives.scm		\
   language/tree-il/debug.scm			\
+  language/tree-il/demux-lambda.scm		\
   language/tree-il/effects.scm			\
   language/tree-il/eta-expand.scm		\
   language/tree-il/fix-letrec.scm		\
@@ -271,6 +271,7 @@ SOURCES =					\
   oop/goops/stklos.scm				\
   oop/goops/accessors.scm			\
   oop/goops/simple.scm				\
+  oop/goops/keyword-formals.scm			\
 						\
   scheme/base.scm				\
   scheme/case-lambda.scm			\
@@ -395,6 +396,9 @@ SOURCES =					\
 						\
   system/syntax.scm				\
 						\
+  language/wisp.scm				\
+  language/wisp/spec.scm			\
+						\
   system/xref.scm				\
 						\
   sxml/apply-templates.scm			\
@@ -434,7 +438,6 @@ NOCOMP_SOURCES =				\
   ice-9/r7rs-libraries.scm			\
   ice-9/quasisyntax.scm				\
   srfi/srfi-42/ec.scm				\
-  srfi/srfi-64/testing.scm			\
   srfi/srfi-67/compare.scm			\
   system/base/lalr.upstream.scm			\
   system/repl/describe.scm			\

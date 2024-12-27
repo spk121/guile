@@ -44,14 +44,11 @@ exec guile -q -s "$0" "$@"
                     acc
                     (cons (in-vicinity dir new) acc)))))))
 
-(define (directory-files-matching dir pattern)
-  (let ((file-name-regexp (make-regexp pattern)))
-    (filter (lambda (fn)
-	      (regexp-exec file-name-regexp fn))
-	    (directory-files dir))))
-
-(let loop ((file-names (directory-files-matching "../../libguile"
-						 "\\.[ch]$")))
+(let loop ((file-names (filter (lambda (fn)
+                                 (and (or (string-suffix? ".h" fn)
+                                          (string-suffix? ".c" fn))
+                                      (not (string-prefix? "." (basename fn)))))
+                               (directory-files "../../libguile"))))
   (or (null? file-names)
       (begin
 	(with-input-from-file (car file-names)

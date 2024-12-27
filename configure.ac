@@ -33,16 +33,14 @@ AC_CONFIG_SRCDIR(GUILE-VERSION)
 
 AC_CANONICAL_TARGET
 
-dnl Use `serial-tests' so the output `check-guile' is not hidden
-dnl (`parallel-tests' is the default in Automake 1.13.)
-dnl `serial-tests' was introduced in Automake 1.12.
 AM_INIT_AUTOMAKE([1.12 gnu no-define -Wall -Wno-override \
-  serial-tests color-tests dist-lzip dist-xz])
+  color-tests dist-lzip dist-xz])
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])], [AC_SUBST([AM_DEFAULT_VERBOSITY],1)])
 
 AC_COPYRIGHT(GUILE_CONFIGURE_COPYRIGHT)
 AC_CONFIG_SRCDIR([GUILE-VERSION])
 
+AC_SUBST([CONFIG_STATUS_DEPENDENCIES], ['$(top_srcdir)/GUILE-VERSION'])
 . $srcdir/GUILE-VERSION
 GUILE_VERSION="$PACKAGE_VERSION"
 
@@ -63,6 +61,30 @@ AC_CANONICAL_HOST
 AC_PROG_INSTALL
 AC_PROG_CC
 gl_EARLY
+
+AC_MSG_CHECKING([whether the compiler supports -fexcess-precision=standard])
+old_CFLAGS="$CFLAGS"
+CFLAGS="$CFLAGS -fexcess-precision=standard"
+fexcess_precision=''
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([int foo;], [])], [fexcess_precision=1]])
+CFLAGS="$old_CFLAGS"
+if test -n "$fexcess_precision"; then
+  AC_MSG_RESULT([yes])
+else
+  AC_MSG_RESULT([no])
+fi
+AC_MSG_CHECKING([whether we want -fexcess-precision=standard for $target_cpu])
+case "$target_cpu" in
+    i[[3456]]86)
+        AC_MSG_RESULT([yes])
+        if test -n "$fexcess_precision"; then
+          CFLAGS="$CFLAGS -fexcess-precision=standard"
+        else
+          AC_MSG_WARN([floating-point precision may exceed C99 rules])
+        fi
+        ;;
+    *) AC_MSG_RESULT([no]) ;;
+esac
 
 AC_MSG_CHECKING([whether the compiler supports -flto])
 old_CFLAGS="$CFLAGS"
@@ -160,6 +182,7 @@ AC_SEARCH_LIBS([dlopen], [dl])
 AC_CHECK_PROG(have_makeinfo, makeinfo, yes, no)
 AM_CONDITIONAL(HAVE_MAKEINFO, test "$have_makeinfo" = yes)
 
+PKG_INSTALLDIR
 AM_PATH_LISPDIR
 
 AC_DEFINE_UNQUOTED([HOST_TYPE], ["$host"],
@@ -459,6 +482,7 @@ AC_SUBST([SCM_I_GSC_HAVE_STRUCT_DIRENT64])
 #   sys/sendfile.h - non-POSIX, found in glibc
 #
 AC_CHECK_HEADERS([complex.h fenv.h io.h memory.h process.h \
+linux/fs.h \
 sys/dir.h sys/ioctl.h sys/select.h \
 sys/time.h sys/timeb.h sys/times.h sys/stdtypes.h sys/types.h \
 sys/utime.h unistd.h utime.h pwd.h grp.h sys/utsname.h \
@@ -576,7 +600,7 @@ AC_CHECK_FUNCS([DINFINITY DQNAN cexp chsize clog clog10 ctermid         \
   fstatat futimens openat						\
   sched_getaffinity sched_setaffinity sendfile pipe2			\
   posix_spawn_file_actions_addclosefrom_np                              \
-  clearenv])
+  clearenv freadlink])
 
 # The newlib C library uses _NL_ prefixed locale langinfo constants.
 AC_CHECK_DECLS([_NL_NUMERIC_GROUPING], [], [], [[#include <langinfo.h>]])

@@ -1,7 +1,7 @@
 ;;;; syntax.test --- test suite for Guile's syntactic forms    -*- scheme -*-
 ;;;;
 ;;;; Copyright (C) 2001, 2003, 2004, 2005, 2006, 2009, 2010,
-;;;;   2011, 2012, 2013, 2014, 2021 Free Software Foundation, Inc.
+;;;;   2011, 2012, 2013, 2014, 2021, 2024 Free Software Foundation, Inc.
 ;;;;
 ;;;; This library is free software; you can redistribute it and/or
 ;;;; modify it under the terms of the GNU Lesser General Public
@@ -1695,6 +1695,32 @@
           ;;   unknown location: unexpected syntax in form ()
           ((_ x) (when (eq? x #nil) 42))))
       (foo #nil))))
+
+(with-test-prefix "duplicate top-level introduced definitions"
+  (pass-if-equal '(42 69)
+      (primitive-eval
+       (macroexpand
+        '(begin
+           (define-syntax-rule (defconst f val)
+             (begin
+               ;; The zeros cause a hash collision.
+               (define t (begin 0 0 0 0 0 0 0 0 0 val))
+               (define (f) t)))
+           (defconst a 42)
+           (defconst b 69)
+           (list (a) (b)))))))
+
+(pass-if-exception "macro-introduced cross-module unbound identifiers"
+    exception:unbound-var
+  (eval
+   '(begin
+      (define-module (foo) #:export (introduce-unbound))
+      (define-syntax-rule (introduce-unbound)
+        variable-bound-in-bar)
+      (define-module (bar) #:use-module (foo))
+      (define variable-bound-in-bar 42)
+      (introduce-unbound))
+   (interaction-environment)))
 
 ;;; Local Variables:
 ;;; eval: (put 'pass-if-syntax-error 'scheme-indent-function 1)

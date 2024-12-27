@@ -1,4 +1,4 @@
-/* Copyright 1995-1998,2000-2014,2018-2019,2023
+/* Copyright 1995-1998,2000-2014,2018-2019,2023-2024
      Free Software Foundation, Inc.
 
    This file is part of Guile.
@@ -492,9 +492,8 @@ on_thread_exit (void *v)
   t->handle = SCM_PACK (0);
 
   /* If there's only one other thread, it could be the signal delivery
-     thread, so we need to notify it to shut down by closing its read pipe.
-     If it's not the signal delivery thread, then closing the read pipe isn't
-     going to hurt.  */
+     thread, in which case we should shut it down also by closing its
+     read pipe.  */
   if (thread_count <= 1)
     scm_i_close_signal_pipe ();
 
@@ -902,7 +901,7 @@ enum scm_mutex_kind {
   /* An unowned mutex is like a standard mutex, except that it can be
      unlocked by any thread.  A corrolary of this behavior is that a
      thread's attempt to lock a mutex that it already owns will block
-     instead of signalling an error, as it could be that some other
+     instead of signaling an error, as it could be that some other
      thread unlocks the mutex, allowing the owner thread to proceed.
      This kind of mutex is a bit strange and is here for use by
      SRFI-18.  */
@@ -1398,9 +1397,10 @@ SCM_DEFINE (scm_timed_wait_condition_variable, "wait-condition-variable", 2, 1, 
 "it specifies a point in time where the waiting should be aborted.  It "
 "can be either a integer as returned by @code{current-time} or a pair "
 "as returned by @code{gettimeofday}.  When the waiting is aborted the "
-"mutex is locked and @code{#f} is returned.  When the condition "
-"variable is in fact signaled, the mutex is also locked and @code{#t} "
-"is returned. ")
+"mutex is locked and @code{#f} is returned.  After the condition "
+"variable is signaled, the mutex is locked and @code{#t} is returned.  "
+"@code{#t} may also be returned spuriously, so any relevant conditions "
+"should be re-checked.")
 #define FUNC_NAME s_scm_timed_wait_condition_variable
 {
   scm_t_timespec waittime_val, *waittime = NULL;
@@ -1681,18 +1681,17 @@ SCM_DEFINE (scm_all_threads, "all-threads", 0, 0, 0,
 	    "Return a list of all threads.")
 #define FUNC_NAME s_scm_all_threads
 {
-  /* We can not allocate while holding the thread_admin_mutex because
-     of the way GC is done.
-  */
-  int n = thread_count;
   scm_thread *t;
-  SCM list = scm_c_make_list (n, SCM_UNSPECIFIED), *l;
 
   scm_i_pthread_mutex_lock (&thread_admin_mutex);
-  l = &list;
+
+  int n = thread_count;
+  SCM list = scm_c_make_list (n, SCM_UNSPECIFIED);
+  SCM *l = &list;
+
   for (t = all_threads; t && n > 0; t = t->next_thread)
     {
-      if (t != scm_i_signal_delivery_thread)
+      if (!t->exited && !scm_i_is_signal_delivery_thread (t))
 	{
 	  SCM_SETCAR (*l, t->handle);
 	  l = SCM_CDRLOC (*l);
@@ -1700,7 +1699,9 @@ SCM_DEFINE (scm_all_threads, "all-threads", 0, 0, 0,
       n--;
     }
   *l = SCM_EOL;
+
   scm_i_pthread_mutex_unlock (&thread_admin_mutex);
+
   return list;
 }
 #undef FUNC_NAME

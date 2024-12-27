@@ -1,6 +1,6 @@
 ;;; Compilation targets
 
-;; Copyright (C) 2011-2014,2017-2018,2023 Free Software Foundation, Inc.
+;; Copyright (C) 2011-2014,2017-2018,2023-2024 Free Software Foundation, Inc.
 
 ;; This library is free software; you can redistribute it and/or
 ;; modify it under the terms of the GNU Lesser General Public
@@ -44,8 +44,16 @@
 ;;; Target types
 ;;;
 
-(define %native-word-size
-  ((@ (system foreign) sizeof) '*))
+;; Hacky way to get native pointer size without having to load (system
+;; foreign).
+(define-syntax %native-word-size
+  (lambda (stx)
+    (syntax-case stx ()
+      (id (identifier? #'id)
+          (cond
+           ((< most-positive-fixnum (ash 1 32)) 4)
+           ((< most-positive-fixnum (ash 1 64)) 8)
+           (else (error "unexpected!" most-positive-fixnum)))))))
 
 (define %target-type (make-fluid %host-type))
 (define %target-endianness (make-fluid (native-endianness)))

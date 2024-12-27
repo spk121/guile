@@ -1,5 +1,5 @@
 ;;; binary-ports.scm --- Binary IO on ports
-;;; Copyright (C) 2009-2011,2013,2016,2019,2021,2023 Free Software Foundation, Inc.
+;;; Copyright (C) 2009-2011,2013,2016,2019,2021,2023,2024 Free Software Foundation, Inc.
 ;;;
 ;;; This library is free software: you can redistribute it and/or modify
 ;;; it under the terms of the GNU Lesser General Public License as
@@ -27,6 +27,7 @@
 
 (define-module (ice-9 binary-ports)
   #:use-module (rnrs bytevectors)
+  #:autoload   (rnrs bytevectors gnu) (bytevector-slice)
   #:use-module (ice-9 match)
   #:use-module (ice-9 custom-ports)
   #:export (eof-object
@@ -180,3 +181,29 @@ bytevector composed of the bytes written into the port is returned."
                     ;; FIXME: Instead default to current encoding, if
                     ;; someone reads text from this port.
                     #:encoding 'ISO-8859-1 #:conversion-strategy 'error))
+
+
+;;;
+;;; Binary input.
+;;;
+
+(define (get-bytevector-all port)
+  "Read from @var{port}, blocking as necessary, until
+the end-of-file is reached.  Return either a new bytevector containing
+the data read or the end-of-file object (if no data were available)."
+  (define initial-capacity 4096)
+
+  (let loop ((bv (make-bytevector initial-capacity))
+             (capacity initial-capacity)
+             (size 0))
+    (match (get-bytevector-n! port bv size (- capacity size))
+      ((? eof-object?)
+       (bytevector-slice bv 0 size))
+      (read
+       (let ((size (+ read size)))
+         (if (= capacity size)
+             (let* ((capacity (* capacity 2))
+                    (new (make-bytevector capacity)))
+               (bytevector-copy! bv 0 new 0 size)
+               (loop new capacity size))
+             (loop bv capacity size)))))))

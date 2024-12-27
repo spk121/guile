@@ -162,7 +162,7 @@ environment, setting the revealed count is not required provided the
 port is kept open (i.e., is pointed to by a live Scheme binding) while
 the file descriptor is in use.
 
-To correspond with traditional Unix behaviour, three file descriptors
+To correspond with traditional Unix behavior, three file descriptors
 (0, 1, and 2) are automatically imported when a program starts up and
 assigned to the initial values of the current/standard input, output,
 and error ports, respectively.  The revealed count for each is
@@ -414,7 +414,7 @@ descriptor underlying @var{port}, with mode string @var{modes}
 as for @ref{File Ports, open-file}.  The two ports
 will share a file position and file status flags.
 
-Unexpected behaviour can result if both ports are subsequently used
+Unexpected behavior can result if both ports are subsequently used
 and the original and/or duplicate ports are buffered.
 The mode string can include @code{0} to obtain an unbuffered duplicate
 port.
@@ -432,7 +432,7 @@ and file status flags.
 
 The return value is unspecified.
 
-Unexpected behaviour can result if both ports are subsequently used
+Unexpected behavior can result if both ports are subsequently used
 and the original and/or duplicate ports are buffered.
 
 This procedure does not have any side effects on other ports or
@@ -896,10 +896,17 @@ of @code{delete-file}.  Why doesn't POSIX have a @code{rmdirat} function
 for this instead?  No idea!
 @end deffn
 
-@deffn {Scheme Procedure} copy-file oldfile newfile
+@deffn {Scheme Procedure} copy-file @var{oldfile} @var{newfile} @
+       [#:copy-on-write='auto]
 @deffnx {C Function} scm_copy_file (oldfile, newfile)
 Copy the file specified by @var{oldfile} to @var{newfile}.
 The return value is unspecified.
+
+@code{#:copy-on-write} keyword argument determines whether copy-on-write
+copy should be attempted and the behavior in case of failure.  Possible
+values are @code{'always} (attempt the copy-on-write, return error if it
+fails), @code{'auto} (attempt the copy-on-write, fallback to regular
+copy if it fails) and @code{'never} (perform the regular copy).
 @end deffn
 
 @deffn {Scheme Procedure} sendfile out in count [offset]
@@ -1286,7 +1293,7 @@ stream.  Otherwise, close the stream.  The @code{setpwent} and
 @deffn {Scheme Procedure} getpw [user]
 @deffnx {C Function} scm_getpwuid (user)
 Look up an entry in the user database.  @var{user} can be an integer,
-a string, or omitted, giving the behaviour of getpwuid, getpwnam
+a string, or omitted, giving the behavior of getpwuid, getpwnam
 or getpwent respectively.
 @end deffn
 
@@ -1341,7 +1348,7 @@ stream.  Otherwise, close the stream.  The @code{setgrent} and
 @deffn {Scheme Procedure} getgr [group]
 @deffnx {C Function} scm_getgrgid (group)
 Look up an entry in the group database.  @var{group} can be an integer,
-a string, or omitted, giving the behaviour of getgrgid, getgrnam
+a string, or omitted, giving the behavior of getgrgid, getgrnam
 or getgrent respectively.
 @end deffn
 
@@ -1855,7 +1862,7 @@ has terminated or (optionally) stopped.  Normally it will
 suspend the calling process until this can be done.  If more than one
 child process is eligible then one will be chosen by the operating system.
 
-The value of @var{pid} determines the behaviour:
+The value of @var{pid} determines the behavior:
 
 @table @asis
 @item @var{pid} greater than 0

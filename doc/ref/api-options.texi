@@ -18,12 +18,12 @@ installation directories, configuration flags that control pieces of
 functionality being included or left out, etc.
 
 @item
-differences in dynamically loaded code --- behaviour and features
+differences in dynamically loaded code --- behavior and features
 provided by modules that can be dynamically loaded into a running Guile
 
 @item
 different runtime options --- some of the options that are provided for
-controlling Guile's behaviour may be set differently.
+controlling Guile's behavior may be set differently.
 @end itemize
 
 Guile provides ``introspective'' variables and procedures to query all
@@ -34,7 +34,7 @@ documentation on what the options mean.
 @menu
 * Build Config::                Build and installation configuration.
 * Feature Tracking::            Available features in the Guile process.
-* Runtime Options::             Controlling Guile's runtime behaviour.
+* Runtime Options::             Controlling Guile's runtime behavior.
 @end menu
 
 
@@ -349,7 +349,7 @@ and friends (@pxref{Records}).
 
 Although these tables may seem exhaustive, it is probably unwise in
 practice to rely on them, as the correspondences between feature symbols
-and available procedures/behaviour are not strictly defined.  If you are
+and available procedures/behavior are not strictly defined.  If you are
 writing code that needs to check for the existence of some procedure, it
 is probably safer to do so directly using the @code{defined?} procedure
 than to test for the corresponding feature using @code{provided?}.
@@ -358,7 +358,7 @@ than to test for the corresponding feature using @code{provided?}.
 @node Runtime Options
 @subsection Runtime Options
 
-There are a number of runtime options available for paramaterizing
+There are a number of runtime options available for parameterizing
 built-in procedures, like @code{read}, and built-in behavior, like what
 happens on an uncaught error.
 

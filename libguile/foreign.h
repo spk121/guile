@@ -1,7 +1,7 @@
 #ifndef SCM_FOREIGN_H
 #define SCM_FOREIGN_H
 
-/* Copyright 2010-2013,2016,2018
+/* Copyright 2010-2013,2016,2018,2024
      Free Software Foundation, Inc.
 
    This file is part of Guile.
@@ -43,13 +43,9 @@ enum scm_t_foreign_type
     SCM_FOREIGN_TYPE_INT32,
     SCM_FOREIGN_TYPE_UINT64,
     SCM_FOREIGN_TYPE_INT64,
-#ifdef FFI_TARGET_HAS_COMPLEX_TYPE
     SCM_FOREIGN_TYPE_COMPLEX_FLOAT,
     SCM_FOREIGN_TYPE_COMPLEX_DOUBLE,
     SCM_FOREIGN_TYPE_LAST = SCM_FOREIGN_TYPE_COMPLEX_DOUBLE
-#else
-    SCM_FOREIGN_TYPE_LAST = SCM_FOREIGN_TYPE_INT64
-#endif
   };
 
 typedef enum scm_t_foreign_type scm_t_foreign_type;

@@ -120,6 +120,9 @@ incomplete numerical tower implementation.)"
   (pass-if "string->date works"
 	   (begin (string->date "2001-06-01@14:00" "~Y-~m-~d@~H:~M")
 		  #t))
+  (pass-if "string->date accepts ISO 8601 zones with a colon"
+	   (begin (string->date "2024-12-31T23:59:59+01:00" "~Y-~m-~dT~H:~M:~S~z")
+		  #t))
   ;; check for code paths where reals were passed to quotient, which
   ;; doesn't work in Guile (and is unspecified in R5RS)
   (test-time->date time-utc->date date->time-utc)

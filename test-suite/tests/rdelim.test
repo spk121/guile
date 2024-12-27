@@ -20,7 +20,8 @@
 (define-module (test-suite test-rdelim)
   #:use-module (ice-9 rdelim)
   #:use-module ((rnrs io ports) #:select (open-bytevector-input-port get-u8))
-  #:use-module (test-suite lib))
+  #:use-module (test-suite lib)
+  #:use-module (test-suite guile-test))
 
 (with-test-prefix "read-line"
 
@@ -268,6 +269,37 @@
            (= (read-string! buf p) 0)
            (string=? (substring buf 0 len) s)
            (string=? (substring buf len) ".")))))
+
+
+(with-test-prefix "for-line-in-file"
+
+  (define (test-file)
+    (data-file-name "ports-test.tmp"))
+
+  (let ((lst '())
+        (lines '())
+        (string "line1\nline2\nline3")
+        (filename (test-file)))
+    (call-with-input-string
+        "A\0B\0C"
+      (lambda (port)
+        (pass-if "for-delimited-from-port parses stream correctly"
+          (for-delimited-from-port port
+                                   (lambda (entry)
+                                     (set! lst (cons entry lst)))
+                                   #:delims "\0")
+          (equal? lst '("C" "B" "A")))))
+    (let ((port (open-output-file filename)))
+      (display string port)
+      (close-port port))
+    (pass-if "for-line-in-file parses file correctly"
+      (for-line-in-file filename
+                        (lambda (line)
+                          (set! lines (cons line lines))))
+      (equal? lines '("line3" "line2" "line1"))))
+
+  (delete-file (test-file))
+  )
 
 ;;; Local Variables:
 ;;; eval: (put 'with-test-prefix 'scheme-indent-function 1)

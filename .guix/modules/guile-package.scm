@@ -1,4 +1,4 @@
-;;; Copyright © 2023 Free Software Foundation, Inc.
+;;; Copyright © 2023-2024 Free Software Foundation, Inc.
 ;;;
 ;;; This file is part of GNU Guile.
 ;;;
@@ -112,7 +112,7 @@
                      gnu-gettext
                      flex
                      texinfo
-                     texlive-base                 ;for "make pdf"
+                     texlive-scheme-basic         ;for "make pdf"
                      texlive-epsf
                      gperf
                      git

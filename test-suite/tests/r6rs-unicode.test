@@ -1,4 +1,4 @@
-;;; r6rs-unicode.test --- Test suite for R6RS (rnrs unicode)
+;;; r6rs-unicode.test --- Test suite for R6RS (rnrs unicode) -*-scheme-*-
 
 ;;      Copyright (C) 2010 Free Software Foundation, Inc.
 ;;

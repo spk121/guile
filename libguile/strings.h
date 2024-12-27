@@ -185,7 +185,7 @@ SCM_API SCM scm_makfromstrs (int argc, char **argv);
 
 #ifdef SCM_SUPPORT_STATIC_ALLOCATION
 #define SCM_IMMUTABLE_STRINGBUF(c_name, contents)	\
-  static SCM_UNUSED const				\
+  static SCM_UNUSED SCM_ALIGNED(8) const		\
   struct						\
   {							\
     scm_t_bits word_0;					\

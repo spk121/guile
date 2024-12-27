@@ -1,4 +1,4 @@
-/* Copyright 2010-2016,2018
+/* Copyright 2010-2016,2018,2024
      Free Software Foundation, Inc.
 
    This file is part of Guile.
@@ -29,7 +29,7 @@
 
 #include <ffi.h>
 
-#ifdef FFI_TARGET_HAS_COMPLEX_TYPE
+#ifdef HAVE_COMPLEX_H
 #include <complex.h>
 #endif
 
@@ -67,10 +67,8 @@
 SCM_SYMBOL (sym_void, "void");
 SCM_SYMBOL (sym_float, "float");
 SCM_SYMBOL (sym_double, "double");
-#ifdef FFI_TARGET_HAS_COMPLEX_TYPE
 SCM_SYMBOL (sym_complex_float, "complex-float");
 SCM_SYMBOL (sym_complex_double, "complex-double");
-#endif
 SCM_SYMBOL (sym_uint8, "uint8");
 SCM_SYMBOL (sym_int8, "int8");
 SCM_SYMBOL (sym_uint16, "uint16");
@@ -478,11 +476,17 @@ SCM_DEFINE (scm_alignof, "alignof", 1, 0, 0, (SCM type),
           return scm_from_size_t (alignof_type (float));
         case SCM_FOREIGN_TYPE_DOUBLE:
           return scm_from_size_t (alignof_type (double));
-#ifdef FFI_TARGET_HAS_COMPLEX_TYPE
         case SCM_FOREIGN_TYPE_COMPLEX_FLOAT:
+#ifdef FFI_TARGET_HAS_COMPLEX_TYPE
           return scm_from_size_t (alignof_type (float _Complex));
+#else
+          return scm_from_size_t (alignof_type (float));
+#endif
         case SCM_FOREIGN_TYPE_COMPLEX_DOUBLE:
+#ifdef FFI_TARGET_HAS_COMPLEX_TYPE
           return scm_from_size_t (alignof_type (double _Complex));
+#else
+          return scm_from_size_t (alignof_type (double));
 #endif
         case SCM_FOREIGN_TYPE_UINT8:
           return scm_from_size_t (alignof_type (uint8_t));
@@ -548,11 +552,17 @@ SCM_DEFINE (scm_sizeof, "sizeof", 1, 0, 0, (SCM type),
           return scm_from_size_t (sizeof (float));
         case SCM_FOREIGN_TYPE_DOUBLE:
           return scm_from_size_t (sizeof (double));
-#ifdef FFI_TARGET_HAS_COMPLEX_TYPE
         case SCM_FOREIGN_TYPE_COMPLEX_FLOAT:
+#ifdef FFI_TARGET_HAS_COMPLEX_TYPE
           return scm_from_size_t (sizeof (float _Complex));
+#else
+          return scm_from_size_t (2 * sizeof (float));
+#endif
         case SCM_FOREIGN_TYPE_COMPLEX_DOUBLE:
+#ifdef FFI_TARGET_HAS_COMPLEX_TYPE
           return scm_from_size_t (sizeof (double _Complex));
+#else
+          return scm_from_size_t (2 * sizeof (double));
 #endif
         case SCM_FOREIGN_TYPE_UINT8:
           return scm_from_size_t (sizeof (uint8_t));
@@ -607,6 +617,14 @@ parse_ffi_type (SCM type, int return_p, long *n_structs, long *n_struct_elts)
         return 0;
       else if (SCM_I_INUM (type) == SCM_FOREIGN_TYPE_VOID && !return_p)
         return 0;
+#ifndef FFI_TARGET_HAS_COMPLEX_TYPE
+      /* The complex types are always defined so they can be used when
+         accessing data, but some targets don't support them as
+         arguments or return values.  */
+      else if (SCM_I_INUM (type) == SCM_FOREIGN_TYPE_COMPLEX_FLOAT
+               || SCM_I_INUM (type) == SCM_FOREIGN_TYPE_COMPLEX_DOUBLE)
+        return 0;
+#endif
       else
         return 1;
     }
@@ -1239,10 +1257,8 @@ scm_init_foreign (void)
   scm_define (sym_void, scm_from_uint8 (SCM_FOREIGN_TYPE_VOID));
   scm_define (sym_float, scm_from_uint8 (SCM_FOREIGN_TYPE_FLOAT));
   scm_define (sym_double, scm_from_uint8 (SCM_FOREIGN_TYPE_DOUBLE));
-#ifdef FFI_TARGET_HAS_COMPLEX_TYPE
   scm_define (sym_complex_float, scm_from_uint8 (SCM_FOREIGN_TYPE_COMPLEX_FLOAT));
   scm_define (sym_complex_double, scm_from_uint8 (SCM_FOREIGN_TYPE_COMPLEX_DOUBLE));
-#endif
   scm_define (sym_uint8, scm_from_uint8 (SCM_FOREIGN_TYPE_UINT8));
   scm_define (sym_int8, scm_from_uint8 (SCM_FOREIGN_TYPE_INT8));
   scm_define (sym_uint16, scm_from_uint8 (SCM_FOREIGN_TYPE_UINT16));

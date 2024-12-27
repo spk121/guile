@@ -12,7 +12,7 @@ Guile's @dfn{deprecation} is a mechanism that can help you cope with
 this.
 
 When you use a feature that is deprecated, you will likely get a warning
-message at run-time. Also, if you have a new enough toolchain, using a
+message at run-time.  Also, if you have a new enough toolchain, using a
 deprecated function from @code{libguile} will cause a link-time warning.
 
 The primary source for information about just what interfaces are

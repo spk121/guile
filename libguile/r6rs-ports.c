@@ -1,4 +1,4 @@
-/* Copyright 2009-2011,2013-2015,2018-2019,2023
+/* Copyright 2009-2011,2013-2015,2018-2019,2023,2024
      Free Software Foundation, Inc.
 
    This file is part of Guile.
@@ -393,58 +393,23 @@ SCM_DEFINE (scm_get_bytevector_some_x, "get-bytevector-some!", 4, 0, 0,
 }
 #undef FUNC_NAME
 
-SCM_DEFINE (scm_get_bytevector_all, "get-bytevector-all", 1, 0, 0,
-	    (SCM port),
-	    "Read from @var{port}, blocking as necessary, until "
-	    "the end-of-file is reached.  Return either "
-	    "a new bytevector containing the data read or the "
-	    "end-of-file object (if no data were available).")
-#define FUNC_NAME s_scm_get_bytevector_all
+static SCM get_bytevector_all_var;
+
+static void
+init_bytevector_io_vars (void)
 {
-  SCM result;
-  size_t c_len, c_count;
-  size_t c_read, c_total;
-
-  SCM_VALIDATE_BINARY_INPUT_PORT (1, port);
-
-  c_len = c_count = 4096;
-  result = scm_c_make_bytevector (c_count);
-  c_total = c_read = 0;
-
-  do
-    {
-      if (c_read > c_len - c_total)
-	{
-	  /* Grow the bytevector.  */
-          SCM prev = result;
-
-          if (INT_ADD_OVERFLOW (c_len, c_len))
-            scm_num_overflow (FUNC_NAME);
-
-          result = scm_c_make_bytevector (c_len * 2);
-          memcpy (SCM_BYTEVECTOR_CONTENTS (result),
-                  SCM_BYTEVECTOR_CONTENTS (prev),
-                  c_total);
-	  c_count = c_len;
-	  c_len *= 2;
-	}
-
-      /* `scm_c_read ()' blocks until C_COUNT bytes are available or EOF is
-	 reached.  */
-      c_read = scm_c_read_bytes (port, result, c_total, c_count);
-      c_total += c_read, c_count -= c_read;
-    }
-  while (c_count == 0);
-
-  if (c_total == 0)
-    return SCM_EOF_VAL;
-
-  if (c_len > c_total)
-    return scm_c_shrink_bytevector (result, c_total);
-
-  return result;
+  get_bytevector_all_var =
+    scm_c_public_lookup ("ice-9 binary-port", "get-bytevector-all");
 }
-#undef FUNC_NAME
+
+SCM
+scm_get_bytevector_all (SCM port)
+{
+  static scm_i_pthread_once_t once = SCM_I_PTHREAD_ONCE_INIT;
+  scm_i_pthread_once (&once, init_bytevector_io_vars);
+
+  return scm_call_1 (scm_variable_ref (get_bytevector_all_var), port);
+}
 
 
 

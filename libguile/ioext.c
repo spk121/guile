@@ -77,7 +77,7 @@ SCM_DEFINE (scm_redirect_port, "redirect-port", 2, 0, 0,
 	    "After the redirection the two ports will share a file position\n"
 	    "and file status flags.\n\n"
 	    "The return value is unspecified.\n\n"
-	    "Unexpected behaviour can result if both ports are subsequently used\n"
+	    "Unexpected behavior can result if both ports are subsequently used\n"
 	    "and the original and/or duplicate ports are buffered.\n\n"
 	    "This procedure does not have any side effects on other ports or\n"
 	    "revealed counts.")

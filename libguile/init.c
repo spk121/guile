@@ -129,7 +129,6 @@
 #include "socket.h"
 #include "sort.h"
 #include "srcprop.h"
-#include "srfi-1.h"
 #include "srfi-13.h"
 #include "srfi-14.h"
 #include "srfi-4.h"
@@ -202,6 +201,7 @@ scm_init_standard_ports ()
   scm_set_current_error_port
     (scm_standard_stream_to_port (2, isatty (2) ? "w0" : "w"));
   scm_set_current_warning_port (scm_current_error_port ());
+  scm_set_current_info_port (scm_current_error_port ());
 }
 
 
@@ -316,6 +316,7 @@ static char *get_self_path(char *exec_file)
 
   return s;
 }
+
 #else
 static char *get_self_path(char *exec_file)
 {
@@ -477,7 +478,11 @@ scm_i_init_guile (void *base)
     return;
 
   if (scm_i_self_path == NULL)
-    scm_i_self_path = get_cwd ();
+    {
+      char p[1024];
+      getcwd (p, 1024);
+      scm_i_self_path = strdup (p);
+    }
 
   scm_storage_prehistory ();
   scm_threads_prehistory (base);  /* requires storage_prehistory */
@@ -499,7 +504,6 @@ scm_i_init_guile (void *base)
   scm_register_fdes_finalizers ();
   scm_register_foreign ();
   scm_register_foreign_object ();
-  scm_register_srfi_1 ();
   scm_register_srfi_60 ();
   scm_register_poll ();
 

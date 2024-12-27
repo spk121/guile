@@ -482,7 +482,7 @@ message strings (@pxref{Introduction,,, gettext, GNU @code{gettext}
 utilities}).
 
 Messages are collected in domains, so different libraries and programs
-maintain different message catalogues.  The @var{domain} parameter in
+maintain different message catalogs.  The @var{domain} parameter in
 the functions below is a string (it becomes part of the message
 catalog filename).
 
@@ -500,7 +500,7 @@ below.  @var{category} is optional and defaults to @code{LC_MESSAGES}
 
 Normal usage is for @var{msg} to be a literal string.
 @command{xgettext} can extract those from the source to form a message
-catalogue ready for translators (@pxref{xgettext Invocation,, Invoking
+catalog ready for translators (@pxref{xgettext Invocation,, Invoking
 the @command{xgettext} Program, gettext, GNU @code{gettext}
 utilities}).
 
@@ -539,12 +539,12 @@ with a plural form chosen appropriately for the number @var{n}.
 
 @var{msg} is the singular form, and @var{msgplural} the plural.  When
 no translation is available, @var{msg} is used if @math{@var{n} = 1},
-or @var{msgplural} otherwise.  When translated, the message catalogue
+or @var{msgplural} otherwise.  When translated, the message catalog
 can have a different rule, and can have more than two possible forms.
 
 As per @code{gettext} above, normal usage is for @var{msg} and
 @var{msgplural} to be literal strings, since @command{xgettext} can
-extract them from the source to build a message catalogue.  For
+extract them from the source to build a message catalog.  For
 example,
 
 @example
@@ -593,7 +593,7 @@ For example,
 When using Autoconf/Automake, an application should arrange for the
 configured @code{localedir} to get into the program (by substituting,
 or by generating a config file) and set that for its domain.  This
-ensures the catalogue can be found even when installed in a
+ensures the catalog can be found even when installed in a
 non-standard location.
 @end deffn
 
@@ -622,7 +622,7 @@ without any recoding.  For that reason source message strings are best
 as plain ASCII.
 
 Currently Guile has no understanding of multi-byte characters, and
-string functions won't recognise character boundaries in multi-byte
+string functions won't recognize character boundaries in multi-byte
 strings.  An application will at least be able to pass such strings
 through to some output though.  Perhaps this will change in the
 future.

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013-2020  Free Software Foundation, Inc.
+ * Copyright (C) 2013-2020, 2024  Free Software Foundation, Inc.
  *
  * This file is part of GNU lightning.
  *
@@ -19,6 +19,8 @@
 
 /* libgcc */
 extern void __clear_cache(void *, void *);
+
+static int has_lse_atomics;
 
 
 static inline int32_t
@@ -163,11 +165,39 @@ struct abi_arg_iterator
 };
 
 static size_t page_size;
+static int has_lse_atomics;
+
+# define HWCAP_ATOMICS	(1 << 8)
+
+#ifdef __gnu_linux__
+// See
+// https://github.com/gcc-mirror/gcc/blob/master/libgcc/config/aarch64/lse-init.c.
+# define AT_HWCAP	16
+unsigned long __getauxval (unsigned long int);
+static unsigned long get_hwcap(void)
+{
+  return __getauxval (AT_HWCAP);
+}
+#elif defined(DARWIN)
+static unsigned long get_hwcap(void)
+{
+  // All Mac machines have LSE atomics.  Most iOS have it too but generally JIT
+  // isn't allowed there, so assume that it's OK to say we always have LSE.
+  return HWCAP_ATOMICS;
+}
+#else
+static unsigned long get_hwcap(void)
+{
+  return 0;
+}
+#endif
 
 jit_bool_t
 jit_get_cpu(void)
 {
   page_size = sysconf(_SC_PAGE_SIZE);
+  unsigned long hwcap = get_hwcap();
+  has_lse_atomics = (hwcap & HWCAP_ATOMICS) != 0;
   return 1;
 }
 

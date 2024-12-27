@@ -7,10 +7,12 @@ before_script:
   - apt-get update -qq
   - apt-get install -y
       libc6-dev:amd64 gcc make
-      qemu binfmt-support qemu-user-static
+      binfmt-support qemu-user-static
       gcc-i686-linux-gnu libc6-dev-i386-cross libc6:i386
       gcc-aarch64-linux-gnu libc6-dev-arm64-cross libc6:arm64
       gcc-arm-linux-gnueabihf libc6-dev-armhf-cross libc6:armhf
+  - update-binfmts --enable qemu-aarch64
+  - update-binfmts --enable qemu-arm
 
 x86-64:
   stage: test

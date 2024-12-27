@@ -741,11 +741,11 @@ compiled_is_fresh (SCM full_filename, SCM compiled_filename,
   else
     {
       compiled_is_newer = 0;
-      scm_puts (";;; note: source file ", scm_current_warning_port ());
-      scm_display (full_filename, scm_current_warning_port ());
-      scm_puts ("\n;;;       newer than compiled ", scm_current_warning_port ());
-      scm_display (compiled_filename, scm_current_warning_port ());
-      scm_puts ("\n", scm_current_warning_port ());
+      scm_puts (";;; note: source file ", scm_current_info_port ());
+      scm_display (full_filename, scm_current_info_port ());
+      scm_puts ("\n;;;       newer than compiled ", scm_current_info_port ());
+      scm_display (compiled_filename, scm_current_info_port ());
+      scm_puts ("\n", scm_current_info_port ());
     }
 
   return compiled_is_newer;
@@ -940,9 +940,9 @@ load_thunk_from_path (SCM filename, SCM source_file_name,
               if (found_stale_file && *found_stale_file)
                 {
                   scm_puts (";;; found fresh compiled file at ",
-                                     scm_current_warning_port ());
-                  scm_display (found, scm_current_warning_port ());
-                  scm_newline (scm_current_warning_port ());
+                                     scm_current_info_port ());
+                  scm_display (found, scm_current_info_port ());
+                  scm_newline (scm_current_info_port ());
                 }
 
 	      goto end;
@@ -1187,9 +1187,9 @@ do_try_auto_compile (void *data)
   SCM source = SCM_PACK_POINTER (data);
   SCM comp_mod, compile_file;
 
-  scm_puts (";;; compiling ", scm_current_warning_port ());
-  scm_display (source, scm_current_warning_port ());
-  scm_newline (scm_current_warning_port ());
+  scm_puts (";;; compiling ", scm_current_info_port ());
+  scm_display (source, scm_current_info_port ());
+  scm_newline (scm_current_info_port ());
 
   comp_mod = scm_c_resolve_module ("system base compile");
   compile_file = scm_module_variable (comp_mod, sym_compile_file);
@@ -1216,17 +1216,17 @@ do_try_auto_compile (void *data)
       /* Assume `*current-warning-prefix*' has an appropriate value.  */
       res = scm_call_n (scm_variable_ref (compile_file), args, 5);
 
-      scm_puts (";;; compiled ", scm_current_warning_port ());
-      scm_display (res, scm_current_warning_port ());
-      scm_newline (scm_current_warning_port ());
+      scm_puts (";;; compiled ", scm_current_info_port ());
+      scm_display (res, scm_current_info_port ());
+      scm_newline (scm_current_info_port ());
       return res;
     }
   else
     {
-      scm_puts (";;; it seems ", scm_current_warning_port ());
-      scm_display (source, scm_current_warning_port ());
+      scm_puts (";;; it seems ", scm_current_info_port ());
+      scm_display (source, scm_current_info_port ());
       scm_puts ("\n;;; is part of the compiler; skipping auto-compilation\n",
-                scm_current_warning_port ());
+                scm_current_info_port ());
       return SCM_BOOL_F;
     }
 }
@@ -1269,7 +1269,7 @@ SCM_DEFINE (scm_sys_warn_auto_compilation_enabled, "%warn-auto-compilation-enabl
     {
       scm_puts (";;; note: auto-compilation is enabled, set GUILE_AUTO_COMPILE=0\n"
                 ";;;       or pass the --no-auto-compile argument to disable.\n",
-                scm_current_warning_port ());
+                scm_current_info_port ());
       message_shown = 1;
     }
 
@@ -1402,9 +1402,9 @@ SCM_DEFINE (scm_primitive_load_path, "primitive-load-path", 0, 0, 1,
           if (found_stale_compiled_file)
             {
               scm_puts (";;; found fresh local cache at ",
-                                 scm_current_warning_port ());
-              scm_display (fallback, scm_current_warning_port ());
-              scm_newline (scm_current_warning_port ());
+                                 scm_current_info_port ());
+              scm_display (fallback, scm_current_info_port ());
+              scm_newline (scm_current_info_port ());
             }
           compiled_thunk = try_load_thunk_from_file (fallback);
         }

@@ -3489,7 +3489,22 @@ VM_NAME (scm_thread *thread)
       abort (); /* never reached */
     }
 
-  VM_DEFINE_OP (168, unused_168, NULL, NOP)
+  /* ulogand/immediate dst:8 src:8 imm:8
+   *
+   * Place the bitwise AND of the u64 value SRC with the immediate IMM
+   * into DST.
+   */
+  VM_DEFINE_OP (168, ulogand_immediate, "ulogand/immediate", DOP1 (X8_S8_S8_C8))
+    {
+      uint8_t dst, src, imm;
+      uint64_t x;
+
+      UNPACK_8_8_8 (op, dst, src, imm);
+      x = SP_REF_U64 (src);
+      SP_SET_U64 (dst, x & (uint64_t) imm);
+      NEXT (1);
+    }
+
   VM_DEFINE_OP (169, unused_169, NULL, NOP)
   VM_DEFINE_OP (170, unused_170, NULL, NOP)
   VM_DEFINE_OP (171, unused_171, NULL, NOP)

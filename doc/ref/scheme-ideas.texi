@@ -260,7 +260,7 @@ value to the more convenient name @code{call/cc}.
 Let's understand exactly how this works.  The definition creates a new
 variable @code{call/cc}, and then sets its value to the value of the
 variable @code{call-with-current-continuation}; the latter value is a
-procedure that implements the behaviour that R5RS specifies under the
+procedure that implements the behavior that R5RS specifies under the
 name ``call-with-current-continuation''.  So @code{call/cc} ends up
 holding this value as well.
 
@@ -293,7 +293,7 @@ value is a procedure.  Most commonly, however, @var{procedure} is simply
 the name of a variable whose value is a procedure.
 
 For example, @code{string-append} is a standard Scheme procedure whose
-behaviour is to concatenate together all the arguments, which are
+behavior is to concatenate together all the arguments, which are
 expected to be strings, that it is given.  So the expression
 
 @lisp
@@ -359,7 +359,7 @@ For example, the value of the following Scheme expression
 
 @noindent
 is a newly created procedure that takes two arguments:  @code{name} and
-@code{address}.  The behaviour of the new procedure is determined by the
+@code{address}.  The behavior of the new procedure is determined by the
 sequence of expressions and definitions in the @var{body} of the
 procedure definition.  (Typically, @var{body} would use the arguments in
 some way, or else there wouldn't be any point in giving them to the
@@ -511,7 +511,7 @@ program as a whole.
 This section clarifies what we mean by an expression's value, by
 introducing the idea of @dfn{evaluation}.  It discusses the side effects
 that evaluation can have, explains how each of the various types of
-Scheme expression is evaluated, and describes the behaviour and use of
+Scheme expression is evaluated, and describes the behavior and use of
 the Guile REPL as a mechanism for exploring evaluation.  The section
 concludes with a very brief summary of Scheme's common syntactic
 expressions.
@@ -549,7 +549,7 @@ values, or side effects, or both.
 It is tempting to try to define more intuitively what we mean by
 ``value'' and ``side effects'', and what the difference between them is.
 In general, though, this is extremely difficult.  It is also
-unnecessary; instead, we can quite happily define the behaviour of a
+unnecessary; instead, we can quite happily define the behavior of a
 Scheme program by specifying how Scheme executes a program as a whole,
 and then by describing the value and side effects of evaluation for each
 type of expression individually.
@@ -718,7 +718,7 @@ In the outermost expression, @var{procedure} is @code{string-length} and
 @itemize @bullet
 @item
 Evaluation of @code{string-length}, which is a variable, gives a
-procedure value that implements the expected behaviour for
+procedure value that implements the expected behavior for
 ``string-length''.
 
 @item
@@ -728,7 +728,7 @@ another procedure invocation expression, means evaluating each of
 @itemize @bullet
 @item
 @code{string-append}, which gives a procedure value that implements the
-expected behaviour for ``string-append''
+expected behavior for ``string-append''
 
 @item
 @code{"/home"}, which gives the string value @code{"/home"}
@@ -920,7 +920,7 @@ execute, Guile enters its standard Read Evaluate Print Loop --- or
 Scheme expression that the user types, evaluates it, and prints the
 resulting value.
 
-The REPL is a useful mechanism for exploring the evaluation behaviour
+The REPL is a useful mechanism for exploring the evaluation behavior
 described in the previous subsection.  If you type @code{string-append},
 for example, the REPL replies @code{#<primitive-procedure
 string-append>}, illustrating the relationship between the variable
@@ -1220,7 +1220,7 @@ of the code that calls @code{currency-string} rebinds the name
 ``currency-abbreviation'' in the meanwhile.
 
 The second function @code{french-currency-string} works precisely by
-taking advantage of this behaviour.  It creates a new binding for the
+taking advantage of this behavior.  It creates a new binding for the
 name ``currency-abbreviation'' which overrides the one established by
 the @code{defvar} form.
 
@@ -1267,7 +1267,7 @@ the name ``currency-abbreviation'' at all, the binding is pointless.
 "USD33.44"
 @end lisp
 
-This begs the question of how the Emacs Lisp behaviour can be
+This begs the question of how the Emacs Lisp behavior can be
 implemented in Scheme.  In general, this is a design question whose
 answer depends upon the problem that is being addressed.  In this case,
 the best answer may be that @code{currency-string} should be

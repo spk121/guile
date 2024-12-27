@@ -311,37 +311,75 @@ the LABELS that are clobbered by the effects of LABEL."
                  clobbered-labels
                  (intset-remove clobbered-labels clobbered-label)))))
         clobbered-labels clobbered-labels))))
-  (let ((clobbered-by-write (make-hash-table)))
-    (intmap-fold
-     (lambda (label fx)
-       ;; Unless an expression causes a read, it isn't clobbered by
-       ;; anything.
-       (when (causes-effect? fx &read)
-         (let ((me (intset label)))
-           (define (add! kind field)
-             (let* ((k (logior (ash field &memory-kind-bits) kind))
-                    (clobber (hashv-ref clobbered-by-write k empty-intset)))
-               (hashv-set! clobbered-by-write k (intset-union me clobber))))
-           ;; Clobbered by write to specific field of this memory
-           ;; kind, write to any field of this memory kind, or
-           ;; write to any field of unknown memory kinds.
-           (let* ((loc (ash fx (- &effect-kind-bits)))
-                  (kind (logand loc &memory-kind-mask))
-                  (field (ash loc (- &memory-kind-bits))))
-             (add! kind field)
-             (add! kind -1)
-             (add! &unknown-memory-kinds -1))))
-       (values))
-     effects)
-    (intmap-map (lambda (label fx)
-                  (if (causes-effect? fx &write)
-                      (filter-may-alias
-                       label
-                       (hashv-ref clobbered-by-write
-                                  (ash fx (- &effect-kind-bits))
-                                  empty-intset))
-                      empty-intset))
-                effects)))
+
+  (define (make-clobber-vector) (make-vector &memory-kind-mask empty-intset))
+
+  (define clobbered-by-write-to-unknown empty-intset)
+  (define clobbered-by-write-to-any-field (make-clobber-vector))
+  (define clobbered-by-write-to-all-fields (make-clobber-vector))
+  (define clobbered-by-write-to-specific-field (make-hash-table))
+
+  (define (adjoin-to-clobber-vector! v k id)
+    (vector-set! v k (intset-union (vector-ref v k) (intset id))))
+  (define (add-clobbered-by-write-to-any-field! kind label)
+    (adjoin-to-clobber-vector! clobbered-by-write-to-any-field kind label))
+  (define (add-clobbered-by-write-to-all-fields! kind label)
+    (adjoin-to-clobber-vector! clobbered-by-write-to-all-fields kind label))
+  (define (adjoin-to-clobber-hash! h k id)
+    (hashv-set! h k (intset-union (hashv-ref h k empty-intset) (intset id))))
+  (define (add-clobbered-by-write-to-specific-field! kind+field label)
+    (adjoin-to-clobber-hash! clobbered-by-write-to-specific-field
+                             kind+field label))
+
+  (intmap-fold
+   (lambda (label fx)
+     ;; Unless an expression causes a read, it isn't clobbered by
+     ;; anything.
+     (when (causes-effect? fx &read)
+       (define kind+field (ash fx (- &effect-kind-bits)))
+       (define kind (logand &memory-kind-mask kind+field))
+       (define field (ash kind+field (- &memory-kind-bits)))
+       (cond
+        ((eqv? field -1)
+         ;; A read of the whole object is clobbered by a write to any
+         ;; field.
+         (add-clobbered-by-write-to-all-fields! kind label)
+         (add-clobbered-by-write-to-any-field! kind label))
+        ((negative? field) (error "unexpected field"))
+        (else
+         ;; A read of a specific field is clobbered by a write to that
+         ;; specific field, or a write to all fields.
+         (add-clobbered-by-write-to-all-fields! kind label)
+         (add-clobbered-by-write-to-specific-field! kind+field label)))           
+
+       ;; Also clobbered by write to any field of unknown memory kinds.
+       (add-clobbered-by-write-to-any-field! &unknown-memory-kinds label))
+     (values))
+   effects)
+  (define (lookup-clobbers fx)
+    (define kind+field (ash fx (- &effect-kind-bits)))
+    (define kind (logand &memory-kind-mask kind+field))
+    (define field (ash kind+field (- &memory-kind-bits)))
+    (cond
+     ((eqv? field -1)
+      ;; A write to the whole object.
+      (intset-union
+       (vector-ref clobbered-by-write-to-any-field kind)
+       (vector-ref clobbered-by-write-to-all-fields kind)))
+     ((negative? field) (error "unexpected field"))
+     (else
+      ;; A write to a specific field.  In addition to clobbering reads
+      ;; of this specific field, we clobber reads of the whole object,
+      ;; for example the ones that correspond to the synthesized "car"
+      ;; and "cdr" definitions that are associated with a "cons" expr.
+      (intset-union
+       (vector-ref clobbered-by-write-to-any-field kind)
+       (hashv-ref clobbered-by-write-to-specific-field kind+field)))))
+  (intmap-map (lambda (label fx)
+                (if (causes-effect? fx &write)
+                    (filter-may-alias label (lookup-clobbers fx))
+                    empty-intset))
+              effects))
 
 (define *primitive-effects* (make-hash-table))
 
@@ -411,7 +449,10 @@ the LABELS that are clobbered by the effects of LABEL."
   ((symbol->string x))             ;; CPS lowering includes symbol? type check.
   ((symbol->keyword))              ;; Same.
   ((keyword->symbol))              ;; Same, for keyword?.
-  ((string->symbol)                (&read-object &string)      &type-check))
+  ((string->symbol)                (&read-object &string)      &type-check)
+  ((string->utf8)                  (&read-object &string))
+  ((utf8->string)                  (&read-object &bytevector)  &type-check)
+  ((string-utf8-length)            (&read-object &string)))
 
 ;; Threads.  Calls cause &all-effects, which reflects the fact that any
 ;; call can capture a partial continuation and reinstate it on another
@@ -493,6 +534,8 @@ the LABELS that are clobbered by the effects of LABEL."
   ((string-length str))
   ((string-ref str idx)            (&read-object &string))
   ((string-set! str idx cp)        (&write-object &string))
+
+  ((symbol-hash))
 
   ((make-closure code)             (&allocate &closure))
   ((closure-ref code)              (match param
@@ -689,11 +732,13 @@ the LABELS that are clobbered by the effects of LABEL."
   ((rsh/immediate n)               &type-check)
   ((lsh/immediate n)               &type-check)
   ((logand . _)                    &type-check)
+  ((logand/immediate . _)          &type-check)
   ((logior . _)                    &type-check)
   ((logxor . _)                    &type-check)
   ((logsub . _)                    &type-check)
   ((lognot . _)                    &type-check)
   ((ulogand . _))
+  ((ulogand/immediate . _))
   ((ulogior . _))
   ((ulogxor . _))
   ((ulogsub . _))

@@ -395,11 +395,13 @@ by a label, respectively."
       ulogand ulogior ulogxor ulogsub ursh ulsh
       uadd/immediate usub/immediate umul/immediate
       ursh/immediate ulsh/immediate
+      ulogand/immediate
       u8-ref u16-ref u32-ref u64-ref
       word-ref word-ref/immediate
       untag-char
       vector-length vtable-size bv-length
-      string-length string-ref)
+      string-length string-ref
+      symbol-hash)
      '(u64))
     ((untag-fixnum
       assume-s64

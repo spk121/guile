@@ -25,6 +25,10 @@
   #:use-module (srfi srfi-26)
   #:use-module (test-suite lib))
 
+(define (skip-on-darwin)
+  (when (string-ci=? "darwin" (utsname:sysname (uname)))
+    (throw 'untested)))
+
 
 
 ;;;
@@ -148,7 +152,7 @@
       (pass-if "IPPROTO_TCP TCP_NODELAY"
 	(let ((sock (socket AF_INET SOCK_STREAM 0)))
           (setsockopt sock IPPROTO_TCP TCP_NODELAY 1)
-          (eqv? 1 (getsockopt sock IPPROTO_TCP TCP_NODELAY))))))
+          (not (eqv? 0 (getsockopt sock IPPROTO_TCP TCP_NODELAY)))))))
 
 
 ;;;
@@ -340,6 +344,7 @@
         (set! path (string-append "\x00" path))
 
 	(pass-if "bind abstract"
+          (skip-on-darwin)
           (when (or (string-contains %host-type "cygwin")
                     (string-contains %host-type "msys"))
             ;; See https://cygwin.com/pipermail/cygwin/2023-June/253785.html
@@ -356,6 +361,7 @@
 		    (apply throw args))))))
 
 	(pass-if "listen abstract"
+          (skip-on-darwin)
 	  (if (not server-bound?)
 	      (throw 'unresolved)
 	      (begin
@@ -383,6 +389,7 @@
 	       #t))))
 
 	(pass-if "connect abstract"
+          (skip-on-darwin)
 	  (if (not server-pid)
 	      (throw 'unresolved)
 	      (let ((s (socket AF_UNIX SOCK_STREAM 0)))
@@ -391,6 +398,7 @@
 		#t)))
 
 	(pass-if "accept abstract"
+          (skip-on-darwin)
 	  (if (not server-pid)
 	      (throw 'unresolved)
               (begin

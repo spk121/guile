@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013-2017, 2019  Free Software Foundation, Inc.
+ * Copyright (C) 2013-2017, 2019, 2024  Free Software Foundation, Inc.
  *
  * This file is part of GNU lightning.
  *
@@ -274,6 +274,10 @@ oxxrs(jit_state_t *_jit, int32_t Op,
 #define A64_MOVZ                      0x52800000
 #define A64_MOVK                      0x72800000
 #define A64_BRK                       0xd4200000
+
+/* ARMv8.1 */
+#define A64_SWPAL                     0xf8e08000
+#define A64_CASAL                     0xc8e0fc00
 
 static void
 SBFM(jit_state_t *_jit, int32_t Rd, int32_t Rn, int32_t ImmR, int32_t ImmS) 
@@ -673,6 +677,18 @@ static void
 STLXR(jit_state_t *_jit, int32_t Rt, int32_t Rn, int32_t Rm)
 {
   return oxxx(_jit, A64_STLXR, Rt, Rn, Rm);
+}
+
+static void
+SWPAL(jit_state_t *_jit, int32_t Rt, int32_t Rn, int32_t Rs)
+{
+  return oxxx(_jit, A64_SWPAL, Rt, Rn, Rs);
+}
+
+static void
+CASAL(jit_state_t *_jit, int32_t Rt, int32_t Rn, int32_t Rs)
+{
+  return oxxx(_jit, A64_CASAL, Rt, Rn, Rs);
 }
 
 static void
@@ -2532,36 +2548,50 @@ str_atomic(jit_state_t *_jit, int32_t loc, int32_t val)
 static void
 swap_atomic(jit_state_t *_jit, int32_t dst, int32_t loc, int32_t val)
 {
-  void *retry = jit_address(_jit);
-  int32_t result = jit_gpr_regno(get_temp_gpr(_jit));
-  int32_t val_or_tmp = dst == val ? jit_gpr_regno(get_temp_gpr(_jit)) : val;
-  movr(_jit, val_or_tmp, val);
-  LDAXR(_jit, dst, loc);
-  STLXR(_jit, val_or_tmp, loc, result);
-  jit_patch_there(_jit, bnei(_jit, result, 0), retry);
-  if (dst == val) unget_temp_gpr(_jit);
-  unget_temp_gpr(_jit);
+  if (has_lse_atomics) {
+    SWPAL(_jit, dst, loc, val);
+  } else {
+    int32_t result = jit_gpr_regno(get_temp_gpr(_jit));
+    int32_t val_or_tmp = dst == val ? jit_gpr_regno(get_temp_gpr(_jit)) : val;
+    movr(_jit, val_or_tmp, val);
+    void *retry = jit_address(_jit);
+    LDAXR(_jit, dst, loc);
+    STLXR(_jit, val_or_tmp, loc, result);
+    jit_patch_there(_jit, bnei(_jit, result, 0), retry);
+    if (dst == val) unget_temp_gpr(_jit);
+    unget_temp_gpr(_jit);
+  }
 }
 
 static void
 cas_atomic(jit_state_t *_jit, int32_t dst, int32_t loc, int32_t expected,
            int32_t desired)
 {
-  int32_t dst_or_tmp;
-  if (dst == loc || dst == expected || dst == expected)
-    dst_or_tmp = jit_gpr_regno(get_temp_gpr(_jit));
-  else
-    dst_or_tmp = dst;
-  void *retry = jit_address(_jit);
-  LDAXR(_jit, dst_or_tmp, loc);
-  jit_reloc_t bad = bner(_jit, dst_or_tmp, expected);
-  int result = jit_gpr_regno(get_temp_gpr(_jit));
-  STLXR(_jit, desired, loc, result);
-  jit_patch_there(_jit, bnei(_jit, result, 0), retry);
-  unget_temp_gpr(_jit);
-  jit_patch_here(_jit, bad);
-  movr(_jit, dst, dst_or_tmp);
-  unget_temp_gpr(_jit);
+  if (has_lse_atomics) {
+    int32_t expected_or_tmp = expected;
+    if (expected == loc || expected == desired)
+      expected_or_tmp = jit_gpr_regno(get_temp_gpr(_jit));
+    movr(_jit, expected_or_tmp, expected);
+    CASAL(_jit, desired, loc, expected_or_tmp);
+    movr(_jit, dst, expected_or_tmp);
+    if (expected != expected_or_tmp) unget_temp_gpr(_jit);
+  } else {
+    int32_t dst_or_tmp;
+    if (dst == loc || dst == expected || dst == expected)
+      dst_or_tmp = jit_gpr_regno(get_temp_gpr(_jit));
+    else
+      dst_or_tmp = dst;
+    void *retry = jit_address(_jit);
+    LDAXR(_jit, dst_or_tmp, loc);
+    jit_reloc_t bad = bner(_jit, dst_or_tmp, expected);
+    int result = jit_gpr_regno(get_temp_gpr(_jit));
+    STLXR(_jit, desired, loc, result);
+    jit_patch_there(_jit, bnei(_jit, result, 0), retry);
+    unget_temp_gpr(_jit);
+    jit_patch_here(_jit, bad);
+    movr(_jit, dst, dst_or_tmp);
+    unget_temp_gpr(_jit);
+  }
 }
 
 static void

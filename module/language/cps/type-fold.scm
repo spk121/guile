@@ -692,13 +692,9 @@
    ((and (eqv? type1 &fixnum) (eqv? min1 max1) (power-of-two? min1)
          (<= 0 min0))
     (with-cps cps
-      (letv mask)
-      (letk kmask
-            ($kargs ('mask) (mask)
-              ($continue k src
-                ($primcall 'logand #f (arg0 mask)))))
       (build-term
-        ($continue kmask src ($const (1- min1))))))
+        ($continue k src
+          ($primcall 'logand/immediate (1- min1) (arg0))))))
    (else
     (with-cps cps #f))))
 
@@ -710,13 +706,9 @@
     (with-cps cps #f))
    ((and (eqv? type1 &fixnum) (eqv? min1 max1) (power-of-two? min1))
     (with-cps cps
-      (letv mask)
-      (letk kmask
-            ($kargs ('mask) (mask)
-              ($continue k src
-                ($primcall 'logand #f (arg0 mask)))))
       (build-term
-        ($continue kmask src ($const (1- min1))))))
+        ($continue k src
+          ($primcall 'logand/immediate (1- min1) (arg0))))))
    (else
     (with-cps cps #f))))
 

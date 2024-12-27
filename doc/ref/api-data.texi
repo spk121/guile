@@ -33,7 +33,7 @@ complex.
 * Structures::                  Low-level record representation.
 * Dictionary Types::            About dictionary types in general.
 * Association Lists::           List-based dictionaries.
-* VHashes::                     VList-based dictionaries.   
+* VHashes::                     VList-based dictionaries.
 * Hash Tables::                 Table-based dictionaries.
 * Other Types::                 Other sections describe data types too.
 @end menu
@@ -190,17 +190,17 @@ Whole numbers, positive or negative; e.g.@: --5, 0, 18.
 @item rationals
 The set of numbers that can be expressed as @math{@var{p}/@var{q}}
 where @var{p} and @var{q} are integers; e.g.@: @math{9/16} works, but
-pi (an irrational number) doesn't. These include integers
+pi (an irrational number) doesn't.  These include integers
 (@math{@var{n}/1}).
 
 @item real numbers
 The set of numbers that describes all possible positions along a
-one-dimensional line. This includes rationals as well as irrational
+one-dimensional line.  This includes rationals as well as irrational
 numbers.
 
 @item complex numbers
 The set of numbers that describes all possible positions in a two
-dimensional space. This includes real as well as imaginary numbers
+dimensional space.  This includes real as well as imaginary numbers
 (@math{@var{a}+@var{b}i}, where @var{a} is the @dfn{real part},
 @var{b} is the @dfn{imaginary part}, and @math{i} is the square root of
 @minus{}1.)
@@ -543,8 +543,8 @@ by 100000000000000000.  In Guile's current incarnation, therefore, the
 numbers.
 
 
-Dividing by an exact zero leads to a error message, as one might expect.
-However, dividing by an inexact zero does not produce an error.
+Dividing by an exact zero leads to an error message, as one might
+expect.  However, dividing by an inexact zero does not produce an error.
 Instead, the result of the division is either plus or minus infinity,
 depending on the sign of the divided number and the sign of the zero
 divisor (some platforms support signed zeroes @samp{-0.0} and
@@ -595,7 +595,7 @@ rational numbers, i.e.@: the predicate will also be fulfilled if
 @deffn {Scheme Procedure} rationalize x eps
 @deffnx {C Function} scm_rationalize (x, eps)
 Returns the @emph{simplest} rational number differing
-from @var{x} by no more than @var{eps}.  
+from @var{x} by no more than @var{eps}.
 
 As required by @acronym{R5RS}, @code{rationalize} only returns an
 exact result when both its arguments are exact.  Thus, you might need
@@ -767,7 +767,7 @@ otherwise.
 Return a @code{1} if the number @var{z} is exact, and @code{0}
 otherwise.  This is equivalent to @code{scm_is_true (scm_exact_p (z))}.
 
-An alternate approch to testing the exactness of a number is to 
+An alternate approach to testing the exactness of a number is to
 use @code{scm_is_signed_integer} or @code{scm_is_unsigned_integer}.
 @end deftypefn
 
@@ -800,7 +800,7 @@ number that has been marked exact with the ``#e'' prefix, Guile is
 able to represent it correctly.
 
 @lisp
-(inexact->exact 1.2)  
+(inexact->exact 1.2)
 @result{} 5404319552844595/4503599627370496
 
 #e1.2
@@ -1831,7 +1831,7 @@ Return a number in [0, @var{n}).
 
 Accepts a positive integer or real n and returns a
 number of the same type between zero (inclusive) and
-@var{n} (exclusive). The values returned have a uniform
+@var{n} (exclusive).  The values returned have a uniform
 distribution.
 @end deffn
 
@@ -1943,7 +1943,7 @@ applications, do this during initialization of your program:
 @subsection Characters
 @tpindex Characters
 
-In Scheme, there is a data type to describe a single character.  
+In Scheme, there is a data type to describe a single character.
 
 Defining what exactly a character @emph{is} can be more complicated
 than it seems.  Guile follows the advice of R6RS and uses The Unicode
@@ -1985,7 +1985,7 @@ this convenient notation is not valid code.  Guile does not interpret
 In Scheme, a character literal is written as @code{#\@var{name}} where
 @var{name} is the name of the character that you want.  Printable
 characters have their usual single character name; for example,
-@code{#\a} is a lower case @code{a}.  
+@code{#\a} is a lower case @code{a}.
 
 Some of the code points are 'combining characters' that are not meant
 to be printed by themselves but are instead meant to modify the
@@ -2202,8 +2202,8 @@ Return @code{#t} if @var{chr} is either uppercase or lowercase, else
 
 @deffn {Scheme Procedure} char-general-category chr
 @deffnx {C Function} scm_char_general_category (chr)
-Return a symbol giving the two-letter name of the Unicode general 
-category assigned to @var{chr} or @code{#f} if no named category is 
+Return a symbol giving the two-letter name of the Unicode general
+category assigned to @var{chr} or @code{#f} if no named category is
 assigned.  The following table provides a list of category names along
 with their meanings.
 
@@ -2305,12 +2305,12 @@ Return the lowercase character version of @var{chr}.
 @deffn {Scheme Procedure} char-titlecase chr
 @deffnx {C Function} scm_char_titlecase (chr)
 Return the titlecase character version of @var{chr} if one exists;
-otherwise return the uppercase version.  
+otherwise return the uppercase version.
 
-For most characters these will be the same, but the Unicode Standard 
+For most characters these will be the same, but the Unicode Standard
 includes certain digraph compatibility characters, such as @code{U+01F3}
-``dz'', for which the uppercase and titlecase characters are different 
-(@code{U+01F1} ``DZ'' and @code{U+01F2} ``Dz'' in this case, 
+``dz'', for which the uppercase and titlecase characters are different
+(@code{U+01F1} ``DZ'' and @code{U+01F2} ``Dz'' in this case,
 respectively).
 @end deffn
 
@@ -2452,7 +2452,7 @@ from the initial seed: @var{seed}, (@var{g} @var{seed}),
 (@var{g}^2 @var{seed}), (@var{g}^3 @var{seed}), @dots{}
 @item @var{p} tells us when to stop -- when it returns true
 when applied to one of the seed values.
-@item @var{f} maps each seed value to a character. These
+@item @var{f} maps each seed value to a character.  These
 characters are added to the base character set @var{base_cs} to
 form the result; @var{base_cs} defaults to the empty set.
 @end itemize
@@ -2467,7 +2467,7 @@ from the initial seed: @var{seed}, (@var{g} @var{seed}),
 (@var{g}^2 @var{seed}), (@var{g}^3 @var{seed}), @dots{}
 @item @var{p} tells us when to stop -- when it returns true
 when applied to one of the seed values.
-@item @var{f} maps each seed value to a character. These
+@item @var{f} maps each seed value to a character.  These
 characters are added to the base character set @var{base_cs} to
 form the result; @var{base_cs} defaults to the empty set.
 @end itemize
@@ -2580,7 +2580,7 @@ returned.
 @deffn {Scheme Procedure} ->char-set x
 @deffnx {C Function} scm_to_char_set (x)
 Coerces x into a char-set. @var{x} may be a string, character or
-char-set. A string is converted to the set of its constituent
+char-set.  A string is converted to the set of its constituent
 characters; a character is converted to a singleton set; a char-set is
 returned as-is.
 @end deffn
@@ -2595,7 +2595,7 @@ procedures.
 
 @deffn {Scheme Procedure} %char-set-dump cs
 Returns an association list containing debugging information
-for @var{cs}. The association list has the following entries.
+for @var{cs}.  The association list has the following entries.
 @table @code
 @item char-set
 The char-set itself
@@ -2768,7 +2768,7 @@ useful, several predefined character set variables exist.
 
 These character sets are locale independent and are not recomputed
 upon a @code{setlocale} call.  They contain characters from the whole
-range of Unicode code points. For instance, @code{char-set:letter}
+range of Unicode code points.  For instance, @code{char-set:letter}
 contains about 100,000 characters.
 
 @defvr {Scheme Variable} char-set:lower-case
@@ -3578,7 +3578,7 @@ mismatch index, depending upon whether @var{s1} is less than,
 equal to, or greater than @var{s2}.  The mismatch index is the
 largest index @var{i} such that for every 0 <= @var{j} <
 @var{i}, @var{s1}[@var{j}] = @var{s2}[@var{j}] -- that is,
-@var{i} is the first position where the lowercased letters 
+@var{i} is the first position where the lowercased letters
 do not match.
 
 @end deffn
@@ -3663,32 +3663,36 @@ case-insensitively.
 
 @deffn {Scheme Procedure} string-hash s [bound [start [end]]]
 @deffnx {C Function} scm_substring_hash (s, bound, start, end)
-Compute a hash value for @var{s}.  The optional argument @var{bound} is a non-negative exact integer specifying the range of the hash function. A positive value restricts the return value to the range [0,bound).
+Compute a hash value for @var{s}.  The optional argument @var{bound} is
+a non-negative exact integer specifying the range of the hash function.
+A positive value restricts the return value to the range [0,bound).
 @end deffn
 
 @deffn {Scheme Procedure} string-hash-ci s [bound [start [end]]]
 @deffnx {C Function} scm_substring_hash_ci (s, bound, start, end)
-Compute a hash value for @var{s}.  The optional argument @var{bound} is a non-negative exact integer specifying the range of the hash function. A positive value restricts the return value to the range [0,bound).
+Compute a hash value for @var{s}.  The optional argument @var{bound} is
+a non-negative exact integer specifying the range of the hash function.
+A positive value restricts the return value to the range [0,bound).
 @end deffn
 
-Because the same visual appearance of an abstract Unicode character can 
-be obtained via multiple sequences of Unicode characters, even the 
+Because the same visual appearance of an abstract Unicode character can
+be obtained via multiple sequences of Unicode characters, even the
 case-insensitive string comparison functions described above may return
-@code{#f} when presented with strings containing different 
-representations of the same character.  For example, the Unicode 
-character ``LATIN SMALL LETTER S WITH DOT BELOW AND DOT ABOVE'' can be 
+@code{#f} when presented with strings containing different
+representations of the same character.  For example, the Unicode
+character ``LATIN SMALL LETTER S WITH DOT BELOW AND DOT ABOVE'' can be
 represented with a single character (U+1E69) or by the character ``LATIN
-SMALL LETTER S'' (U+0073) followed by the combining marks ``COMBINING 
+SMALL LETTER S'' (U+0073) followed by the combining marks ``COMBINING
 DOT BELOW'' (U+0323) and ``COMBINING DOT ABOVE'' (U+0307).
 
 For this reason, it is often desirable to ensure that the strings
-to be compared are using a mutually consistent representation for every 
+to be compared are using a mutually consistent representation for every
 character.  The Unicode standard defines two methods of normalizing the
-contents of strings: Decomposition, which breaks composite characters 
+contents of strings: Decomposition, which breaks composite characters
 into a set of constituent characters with an ordering defined by the
 Unicode Standard; and composition, which performs the converse.
 
-There are two decomposition operations.  ``Canonical decomposition'' 
+There are two decomposition operations.  ``Canonical decomposition''
 produces character sequences that share the same visual appearance as
 the original characters, while ``compatibility decomposition'' produces
 ones whose visual appearances may differ from the originals but which
@@ -4229,7 +4233,8 @@ a predicate, if it is a character, it is tested for equality and if it
 is a character set, it is tested for membership.
 @end deffn
 
-The following additional functions are available in the module @code{(ice-9 string-fun)}. They can be used with:
+The following additional functions are available in the module
+@code{(ice-9 string-fun)}.  They can be used with:
 
 @example
 (use-modules (ice-9 string-fun))
@@ -4237,7 +4242,7 @@ The following additional functions are available in the module @code{(ice-9 stri
 
 @deffn {Scheme Procedure} string-replace-substring str substring replacement
 Return a new string where every instance of @var{substring} in string
-@var{str} has been replaced by @var{replacement}. For example:
+@var{str} has been replaced by @var{replacement}.  For example:
 
 @lisp
 (string-replace-substring "a ring of strings" "ring" "rut")
@@ -4248,7 +4253,7 @@ Return a new string where every instance of @var{substring} in string
 @node Representing Strings as Bytes
 @subsubsection Representing Strings as Bytes
 
-Out in the cold world outside of Guile, not all strings are treated in
+In the cold world outside of Guile, not all strings are treated in
 the same way.  Out there there are only bytes, and there are many ways
 of representing a strings (sequences of characters) as binary data
 (sequences of bytes).
@@ -4552,7 +4557,7 @@ Return the number of bytes used to encode a Unicode code point in string
 @deffn {Scheme Procedure} %string-dump str
 @deffnx {C Function} scm_sys_string_dump (str)
 Returns an association list containing debugging information for
-@var{str}. The association list has the following entries.
+@var{str}.  The association list has the following entries.
 @table @code
 
 @item string
@@ -4670,15 +4675,15 @@ themselves to @code{eq?} comparison.  But symbols are more descriptive
 than numbers, because a symbol's name can be used directly to describe
 the concept for which that symbol stands.
 
-For example, imagine that you need to represent some colours in a
+For example, imagine that you need to represent some colors in a
 computer program.  Using numbers, you would have to choose arbitrarily
-some mapping between numbers and colours, and then take care to use that
+some mapping between numbers and colors, and then take care to use that
 mapping consistently:
 
 @lisp
 ;; 1=red, 2=green, 3=purple
 
-(if (eq? (colour-of vehicle) 1)
+(if (eq? (color-of vehicle) 1)
     ...)
 @end lisp
 
@@ -4691,16 +4696,16 @@ defining constants:
 (define green 2)
 (define purple 3)
 
-(if (eq? (colour-of vehicle) red)
+(if (eq? (color-of vehicle) red)
     ...)
 @end lisp
 
 @noindent
 But the simplest and clearest approach is not to use numbers at all, but
-symbols whose names specify the colours that they refer to:
+symbols whose names specify the colors that they refer to:
 
 @lisp
-(if (eq? (colour-of vehicle) 'red)
+(if (eq? (color-of vehicle) 'red)
     ...)
 @end lisp
 
@@ -4754,7 +4759,7 @@ mixing all the properties up together in a flat list, we could use an
 association list like this:
 
 @lisp
-(define car1-properties '((colour . red)
+(define car1-properties '((color . red)
                           (transmission . manual)
                           (fuel . unleaded)
                           (steering . power-assisted)))
@@ -4767,11 +4772,11 @@ It also allows further properties to use the same symbols among their
 possible values without becoming ambiguous:
 
 @lisp
-(define car1-properties '((colour . red)
+(define car1-properties '((color . red)
                           (transmission . manual)
                           (fuel . unleaded)
                           (steering . power-assisted)
-                          (seat-colour . red)
+                          (seat-color . red)
                           (locking . manual)))
 @end lisp
 
@@ -4783,13 +4788,13 @@ extract or change individual pieces of information:
 (assq-ref car1-properties 'fuel) @result{} unleaded
 (assq-ref car1-properties 'transmission) @result{} manual
 
-(assq-set! car1-properties 'seat-colour 'black)
+(assq-set! car1-properties 'seat-color 'black)
 @result{}
-((colour . red)
+((color . red)
  (transmission . manual)
  (fuel . unleaded)
  (steering . power-assisted)
- (seat-colour . black)
+ (seat-color . black)
  (locking . manual)))
 @end lisp
 
@@ -4927,11 +4932,11 @@ reading symbols case-insensitively, @var{str} is converted to lowercase
 before the returned symbol is looked up or created.
 @end deffn
 
-The following examples illustrate Guile's detailed behaviour as regards
+The following examples illustrate Guile's detailed behavior as regards
 the case-sensitivity of symbols:
 
 @lisp
-(read-enable 'case-insensitive)   ; R5RS compliant behaviour
+(read-enable 'case-insensitive)   ; R5RS compliant behavior
 
 (symbol->string 'flying-fish)    @result{} "flying-fish"
 (symbol->string 'Martin)         @result{} "martin"
@@ -4947,7 +4952,7 @@ the case-sensitivity of symbols:
   (symbol->string
     (string->symbol "K. Harper, M.D."))) @result{} #t
 
-(read-disable 'case-insensitive)   ; Guile default behaviour
+(read-disable 'case-insensitive)   ; Guile default behavior
 
 (symbol->string 'flying-fish)    @result{} "flying-fish"
 (symbol->string 'Martin)         @result{} "Martin"
@@ -5708,7 +5713,7 @@ or a pair which has a list in its cdr.
 @c FIXME::martin: What is a proper, what an improper list?
 @c What is a circular list?
 
-@c FIXME::martin: Maybe steal some graphics from the Elisp reference 
+@c FIXME::martin: Maybe steal some graphics from the Elisp reference
 @c manual?
 
 @menu
@@ -5752,7 +5757,7 @@ up a list.  An example will clear that up:
 
 This example also shows that lists have to be quoted when written
 (@pxref{Expression Syntax}), because they would otherwise be
-mistakingly taken as procedure applications (@pxref{Simple
+mistakenly taken as procedure applications (@pxref{Simple
 Invocation}).
 
 
@@ -5863,7 +5868,7 @@ Return the number of elements in list @var{lst}.
 
 @deffn {Scheme Procedure} last-pair lst
 @deffnx {C Function} scm_last_pair (lst)
-Return the last pair in @var{lst}, signalling an error if
+Return the last pair in @var{lst}, signaling an error if
 @var{lst} is circular.
 @end deffn
 
@@ -6333,7 +6338,7 @@ Copy the block of elements from vector @var{src} in the range
 to the length of @var{src}.
 
 It is an error for @var{dst} to have a length less than @var{at} +
-(@var{end} - @var{start}).  
+(@var{end} - @var{start}).
 
 The order in which elements are copied is unspecified, except that if the
 source and destination overlap, copying takes place as if the source is
@@ -7285,11 +7290,11 @@ numeric vectors, bytevectors, bit vectors and ordinary vectors as one
 dimensional arrays.
 
 @menu
-* Array Syntax::                
-* Array Procedures::            
-* Shared Arrays::               
+* Array Syntax::
+* Array Procedures::
+* Shared Arrays::
 * Arrays as arrays of arrays::
-* Accessing Arrays from C::     
+* Accessing Arrays from C::
 @end menu
 
 @node Array Syntax
@@ -7333,7 +7338,7 @@ As a special case, an array of rank 0 is printed as
 @code{#0<vectag>(<scalar>)}, where @code{<scalar>} is the result of
 printing the single element of the array.
 
-Thus, 
+Thus,
 
 @table @code
 @item #(1 2 3)
@@ -7660,7 +7665,7 @@ An additional array function is available in the module
 
 @deffn {Scheme Procedure} array-copy src
 Return a new array with the same elements, type and shape as
-@var{src}. However, the array increments may not be the same as those of
+@var{src}. However, the array increments may be different from those of
 @var{src}. In the current implementation, the returned array will be in
 row-major order, but that might change in the future. Use
 @code{array-copy!} on an array of known order if that is a concern.
@@ -7840,16 +7845,16 @@ themselves arrays (`cells').
 
 We speak of the first @math{n-k} dimensions of the array as the
 @math{n-k}-`frame' of the array, while the last @math{k} dimensions are
-the dimensions of the @math{k}-`cells'. For example, a 3-array can be
+the dimensions of the @math{k}-`cells'.  For example, a 3-array can be
 seen as a 2-array of vectors (1-arrays) or as a 1-array of matrices
-(2-arrays). In each case, the vectors or matrices are the 1-cells or
-2-cells of the array. This terminology originates in the J language.
+(2-arrays).  In each case, the vectors or matrices are the 1-cells or
+2-cells of the array.  This terminology originates in the J language.
 
 @cindex array slice
 @cindex prefix slice
 
 The more vague concept of a `slice' refers to a subset of the array
-where some indices are fixed and others are left free. As a Guile data
+where some indices are fixed and others are left free.  As a Guile data
 object, a cell is the same as a `prefix slice' (the first @math{n-k}
 indices into the original array are fixed), except that a 0-cell is not
 a shared array of the original array, but a 0-slice (where all the
@@ -7858,23 +7863,24 @@ indices into the original array are fixed) is.
 @cindex enclosed array
 
 Before @w{version 2.0}, Guile had a feature called `enclosed arrays' to
-create special `array of arrays' objects. The functions in this section
-do not need special types; instead, the frame rank is stated in each
-function call, either implicitly or explicitly.
+create special `array of arrays' objects.  The functions in this section
+do not need special types; instead, the frame rank is given in the
+arguments, either implicitly (through the number of indices) or
+explicitly.
 
 @deffn {Scheme Procedure} array-cell-ref array idx @dots{}
 @deffnx {C Function} scm_array_cell_ref (array, idxlist)
 If the length of @var{idxlist} equals the rank @math{n} of @var{array},
 return the element at @code{(idx @dots{})}, just like @code{(array-ref
-array idx @dots{})}. If, however, the length @math{k} of @var{idxlist}
+array idx @dots{})}.  If, however, the length @math{k} of @var{idxlist}
 is smaller than @math{n}, then return the @math{(n-k)}-cell of
 @var{array} given by @var{idxlist}, as a shared array.
 
 For example:
 
 @lisp
-(array-cell-ref #2((a b) (c d)) 0) @result{} #(a b)
-(array-cell-ref #2((a b) (c d)) 1) @result{} #(c d)
+(array-cell-ref #2((a b) (c d)) 0) @result{} #1(a b)
+(array-cell-ref #2((a b) (c d)) 1) @result{} #1(c d)
 (array-cell-ref #2((a b) (c d)) 1 1) @result{} d
 (array-cell-ref #2((a b) (c d))) @result{} #2((a b) (c d))
 @end lisp
@@ -7896,7 +7902,7 @@ For example:
 @deffnx {C Function} scm_array_slice (array, idxlist)
 Like @code{(array-cell-ref array idx @dots{})}, but return a 0-rank
 shared array into @var{ARRAY} if the length of @var{idxlist} matches the
-rank of @var{array}. This can be useful when using @var{ARRAY} as a
+rank of @var{array}.  This can be useful when using @var{ARRAY} as a
 place to write to.
 
 Compare:
@@ -7936,13 +7942,13 @@ This function returns the modified @var{array}.
 For example:
 
 @lisp
-(array-cell-set! (make-array 'a 2 2) b 1 1)
+(array-cell-set! (make-array 'a 2 2) 'b 1 1)
   @result{} #2((a a) (a b))
 (array-cell-set! (make-array 'a 2 2) #(x y) 1)
   @result{} #2((a a) (x y))
 @end lisp
 
-Note that @code{array-cell-set!} will expect elements, not arrays, when
+Note that @code{array-cell-set!} expects elements, not arrays, when
 the destination has rank 0. Use @code{array-slice} for the opposite
 behavior.
 
@@ -7981,7 +7987,7 @@ manually. The slices passed to @var{op} are always shared arrays of
 
 This function returns an unspecified value.
 
-For example, to sort the rows of rank-2 array @code{a}:
+For example, to sort each row of rank-2 array @code{a}:
 
 @lisp
 (array-slice-for-each 1 (lambda (x) (sort! x <)) a)
@@ -9158,7 +9164,7 @@ scheme@@(guile-user)> (struct-ref $3 vtable-index-layout)
 $6 = pwuhuhpwphuhuhpwpwpw
 scheme@@(guile-user)> (struct-ref $4 vtable-index-layout)
 $7 = pwuhuhpwphuhuh
-scheme@@(guile-user)> standard-vtable-fields 
+scheme@@(guile-user)> standard-vtable-fields
 $8 = "pwuhuhpwphuhuh"
 scheme@@(guile-user)> (struct-ref $2 vtable-offset-user)
 $9 = module
@@ -9228,7 +9234,7 @@ class fields.
   (let* ((fields (compute-fields parent fields))
          (layout (compute-layout fields)))
     (make-struct/no-tail <class>
-      layout 
+      layout
       (lambda (x port)
         (print-instance x port))
       name
@@ -9382,7 +9388,7 @@ procedures for manipulating them.
 @subsubsection Alist Key Equality
 
 All of Guile's dedicated association list procedures, apart from
-@code{acons}, come in three flavours, depending on the level of equality
+@code{acons}, come in three flavors, depending on the level of equality
 that is required to decide whether an existing key in the association
 list is the same as the key that the procedure call uses to identify the
 required entry.
@@ -9504,9 +9510,11 @@ difference to you.
 If you need to keep the old value of an association list in a form
 independent from the list that results from modification by
 @code{acons}, @code{assq-set!}, @code{assv-set!} or @code{assoc-set!},
-use @code{list-copy} to copy the old association list before modifying
+use @code{alist-copy} to copy the old association list before modifying
 it.
 
+@rnindex acons
+@anchor{x-acons}
 @deffn {Scheme Procedure} acons key value alist
 @deffnx {C Function} scm_acons (key, value, alist)
 Add a new key-value pair to @var{alist}.  A new pair is
@@ -9713,13 +9721,34 @@ Recommended only for use in Guile internals.
 @node Alist Example
 @subsubsection Alist Example
 
-Here is a longer example of how alists may be used in practice.
+The following example shows how alists may be used in practice.
 
 @lisp
-(define capitals '(("New York" . "Albany")
-                   ("Oregon"   . "Salem")
-                   ("Florida"  . "Miami")))
+(define capitals (list (cons "New York" "Albany")
+                       (cons "Oregon"   "Salem")
+                       (cons "Florida"  "Miami")))
+@end lisp
 
+Other ways to create an alist are
+@lisp
+(define capitals (@ref{x-acons,@code{acons}} "New York" "Albany"
+                        (acons "Oregon" "Salem"
+                               (acons "Florida"  "Miami" '()))))
+@end lisp
+or
+@lisp
+(use-modules (srfi srfi-1)) ; for alist-copy
+(define capitals (@ref{x-alist-copy,@code{alist-copy}}
+                   '(("New York" . "Albany")
+                     ("Oregon"   . "Salem")
+                     ("Florida"  . "Miami"))))
+@end lisp
+
+Here @code{alist-copy} is necessary if we intend to modify the alist, because a literal like @code{'(("New York" . "Albany") ...)} cannot be modified.
+
+We can now operate on the alist.
+
+@lisp
 ;; What's the capital of Oregon?
 (assoc "Oregon" capitals)       @result{} ("Oregon" . "Salem")
 (assoc-ref capitals "Oregon")   @result{} "Salem"

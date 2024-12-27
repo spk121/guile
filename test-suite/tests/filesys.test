@@ -34,6 +34,10 @@
 (define (test-directory2)
   (data-file-name "filesys-test-dir2.tmp"))
 
+(define (skip-on-darwin)
+  (when (string-ci=? "darwin" (utsname:sysname (uname)))
+    (throw 'untested)))
+
 (define (%delete-file file)
   ;; lstat finds files and links. stat finds just files.
   (when (false-if-exception (lstat file))
@@ -324,7 +328,15 @@
 
   (pass-if-equal "/" "/" (basename "/"))
   (pass-if-equal "//" "/" (basename "//"))
-  (pass-if-equal "a/b/c" "c" (basename "a/b/c")))
+  (pass-if-equal "a/b/c" "c" (basename "a/b/c"))
+
+  (pass-if-equal "a.b" (basename "a.b" "a.b"))
+  (pass-if-equal "a.b" (basename "/a.b" "a.b"))
+  (pass-if-equal "a" (basename "a.b" ".b"))
+  (pass-if-equal "a" (basename "/a.b" ".b"))
+
+  ;; https://debbugs.gnu.org/69437
+  (pass-if-equal "bar" (basename "foo/bar" "o/bar")))
 
 (%delete-file (test-file))
 (%delete-file (test-symlink))
@@ -349,6 +361,8 @@
            (= (string-length name) 8)))))
 
   (pass-if-exception "invalid template" exception:system-error
+    ;; MacOS accepts any template and just does no replacements.
+    (skip-on-darwin)
     (if (not (defined? 'mkdtemp))
         (throw 'unresolved)
         (mkdtemp "T-AAAAAA")))
@@ -425,19 +439,20 @@
   (define file (search-path %load-path "ice-9/boot-9.scm"))
 
 
-  (pass-if-equal "test directory" (dirname file)
+  ;; canonicalize-path is used to not stumble over differences due to links
+  (pass-if-equal "test directory" (canonicalize-path (dirname file))
     (let ((olddir (getcwd))
           (dir #f))
-      (chdir (dirname file))
+      (chdir (canonicalize-path (dirname file)))
       (set! dir (getcwd))
       (chdir olddir)
       dir))
 
-  (pass-if-equal "test directory, via port" (dirname file)
+  (pass-if-equal "test directory, via port" (canonicalize-path (dirname file))
     (unless (provided? 'chdir-port)
       (throw 'unresolved))
     (let ((olddir (getcwd))
-          (port (open (dirname file) O_RDONLY))
+          (port (open (canonicalize-path (dirname file)) O_RDONLY))
           (dir #f))
       (chdir port)
       (set! dir (getcwd))

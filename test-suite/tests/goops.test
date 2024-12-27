@@ -765,3 +765,50 @@
               #:metaclass <redefinable-meta>)))
       (pass-if-equal 123 (get-the-bar (make <foo>)))
       (pass-if-equal 123 (get-the-bar (make <redefinable-foo>))))))
+
+(with-test-prefix "keyword formals"
+
+  (define-class <A> ())
+  (define-class <B> (<A>))
+
+  (define a (make <A>))
+  (define b (make <B>))
+
+  (define-method* (test-opt (x <A>) #:optional y)
+    (list 'A x y))
+
+  (define-method* (test-opt (x <B>) #:optional y)
+    (append (list 'B x y)
+            (next-method)))
+
+  (pass-if-equal "optional without arg" `(B ,b #f A ,b #f) (test-opt b))
+  (pass-if-equal "optional with arg" `(B ,b 17 A ,b 17) (test-opt b 17))
+
+  (define-method* (test-key (x <A>) #:key (y 3))
+    (list 'A x y))
+
+  (define-method* (test-key (rest <B>) #:key y) ;`rest' checks impl hygiene
+    (append (list 'B rest y)
+            (next-method)))
+
+  (pass-if-equal "keyword without arg" `(B ,b #f A ,b 3) (test-key b))
+  (pass-if-equal "keyword with arg" `(B ,b 17 A ,b 17) (test-key b #:y 17))
+
+  (define-method* (test-rest (x <A>) #:optional class #:rest y) ;`class' -"-
+    (list 'A x class y))
+
+  (define-method* (test-rest (x <B>) . y)
+    (append (list 'B x y)
+            (next-method)))
+
+  (pass-if-equal "rest arg" `(B ,b (1 2 3) A ,b 1 (2 3)) (test-rest b 1 2 3))
+
+  (define-method* (test-next (x <A>) #:optional y)
+    (list 'A y))
+
+  (define-method* (test-next (x <B>) #:optional y)
+    (append (list 'B y)
+            (next-method x 2)))
+
+  (pass-if-equal "next-method arg" `(B 1 A 2) (test-next b 1))
+  )

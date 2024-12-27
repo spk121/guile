@@ -36,11 +36,11 @@ automatically as needed.
 @deftypefn {C Function} SCM scm_gc_protect_object (SCM @var{obj})
 Protects @var{obj} from being freed by the garbage collector, when it
 otherwise might be.  When you are done with the object, call
-@code{scm_gc_unprotect_object} on the object. Calls to
+@code{scm_gc_unprotect_object} on the object.  Calls to
 @code{scm_gc_protect_object}/@code{scm_gc_unprotect_object} can be nested, and
 the object remains protected until it has been unprotected as many times
-as it was protected. It is an error to unprotect an object more times
-than it has been protected. Returns the SCM object it was passed.
+as it was protected.  It is an error to unprotect an object more times
+than it has been protected.  Returns the SCM object it was passed.
 
 Note that storing @var{obj} in a C global variable has the same
 effect@footnote{In Guile up to version 1.8, C global variables were not
@@ -52,7 +52,7 @@ object from being freed.}.
 @deftypefn {C Function} SCM scm_gc_unprotect_object (SCM @var{obj})
 
 Unprotects an object from the garbage collector which was protected by
-@code{scm_gc_unprotect_object}. Returns the SCM object it was passed.
+@code{scm_gc_unprotect_object}.  Returns the SCM object it was passed.
 @end deftypefn
 
 @deftypefn {C Function} SCM scm_permanent_object (SCM @var{obj})
@@ -60,8 +60,8 @@ Unprotects an object from the garbage collector which was protected by
 Similar to @code{scm_gc_protect_object} in that it causes the
 collector to always mark the object, except that it should not be
 nested (only call @code{scm_permanent_object} on an object once), and
-it has no corresponding unpermanent function. Once an object is
-declared permanent, it will never be freed. Returns the SCM object it
+it has no corresponding unpermanent function.  Once an object is
+declared permanent, it will never be freed.  Returns the SCM object it
 was passed.
 @end deftypefn
 
@@ -261,14 +261,14 @@ preprocessor macro was defined when Guile was compiled.
 @subsection Weak References
 
 [FIXME: This chapter is based on Mikael Djurfeldt's answer to a
-question by Michael Livshin. Any mistakes are not theirs, of course. ]
+question by Michael Livshin.  Any mistakes are not theirs, of course. ]
 
 Weak references let you attach bookkeeping information to data so that
 the additional information automatically disappears when the original
-data is no longer in use and gets garbage collected. In a weak key hash,
+data is no longer in use and gets garbage collected.  In a weak key hash,
 the hash entry for that key disappears as soon as the key is no longer
-referenced from anywhere else. For weak value hashes, the same happens
-as soon as the value is no longer in use. Entries in a doubly weak hash
+referenced from anywhere else.  For weak value hashes, the same happens
+as soon as the value is no longer in use.  Entries in a doubly weak hash
 disappear when either the key or the value are not used anywhere else
 anymore.
 
@@ -311,7 +311,7 @@ they constitute a doubly-weak table has to be used.
 @deffnx {C Function} scm_make_weak_key_hash_table (size)
 @deffnx {C Function} scm_make_weak_value_hash_table (size)
 @deffnx {C Function} scm_make_doubly_weak_hash_table (size)
-Return a weak hash table with @var{size} buckets. As with any
+Return a weak hash table with @var{size} buckets.  As with any
 hash table, choosing a good size for the table requires some
 caution.
 
@@ -334,7 +334,7 @@ leak.  The reverse is true for weak value tables.
 @deffnx {C Function} scm_weak_value_hash_table_p (obj)
 @deffnx {C Function} scm_doubly_weak_hash_table_p (obj)
 Return @code{#t} if @var{obj} is the specified weak hash
-table. Note that a doubly weak hash table is neither a weak key
+table.  Note that a doubly weak hash table is neither a weak key
 nor a weak value hash table.
 @end deffn
 
@@ -343,9 +343,9 @@ nor a weak value hash table.
 
 @deffn {Scheme Procedure} make-weak-vector size [fill]
 @deffnx {C Function} scm_make_weak_vector (size, fill)
-Return a weak vector with @var{size} elements. If the optional
+Return a weak vector with @var{size} elements.  If the optional
 argument @var{fill} is given, all entries in the vector will be
-set to @var{fill}. The default value for @var{fill} is the
+set to @var{fill}.  The default value for @var{fill} is the
 empty list.
 @end deffn
 
@@ -419,7 +419,7 @@ keys, or a value in a hash table with weak values does not prevent an
 object from being returned by a guardian.  But as long as an object
 can be returned from a guardian it will not be removed from such a
 weak vector or hash table.  In other words, a weak link does not
-prevent an object from being considered collectable, but being inside
+prevent an object from being considered collectible, but being inside
 a guardian prevents a weak link from being broken.
 
 A key in a weak key hash table can be thought of as having a strong

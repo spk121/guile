@@ -171,6 +171,10 @@ detailed backtrace upon error.  The only difference with
 @option{--debug} is lack of support for VM hooks and the facilities that
 build upon it (see above).
 
+@item -I
+Do not report diagnostic messages (e.g., from compiling source files).
+This sets @code{current-info-port} to a void-port.
+
 @item -q
 @cindex init file, not loading
 @cindex @file{.guile} file, not loading

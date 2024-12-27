@@ -1,0 +1,85 @@
+#!/bin/sh
+exec guile -q -s "$0" "$@"
+!#
+;;; test-sigaction-fork --- Signal thread vs. fork, again.
+;;;
+;;; Copyright (C) 2024 Free Software Foundation, Inc.
+;;;
+;;; This library is free software; you can redistribute it and/or
+;;; modify it under the terms of the GNU Lesser General Public
+;;; License as published by the Free Software Foundation; either
+;;; version 3 of the License, or (at your option) any later version.
+;;;
+;;; This library is distributed in the hope that it will be useful,
+;;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+;;; Lesser General Public License for more details.
+;;;
+;;; You should have received a copy of the GNU Lesser General Public
+;;; License along with this library; if not, write to the Free Software
+;;; Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
+
+;;; Test the bug described at <https://bugs.gnu.org/68087>: the signal
+;;; thread would not be restarted after a call to 'primitive-fork',
+;;; leading signals to be silently ignored.
+
+(use-modules (ice-9 match))
+
+(define signals-handled
+  ;; List of signals handled.
+  '())
+
+(define parent
+  ;; PID of the parent process.
+  (getpid))
+
+(unless (provided? 'fork)
+  (exit 77))
+
+;; This call spawns the signal delivery thread as a side effect.
+(sigaction SIGALRM
+  (lambda (signal)
+    (call-with-blocked-asyncs
+     (lambda ()
+       (set! signals-handled
+             (cons `(first-handler . ,(getpid))
+                   signals-handled))))))
+
+(kill (getpid) SIGALRM)
+(while (null? signals-handled)                    ;let the async run
+  (sleep 1))
+
+(match (primitive-fork)
+  (0
+   (pk 'child (getpid) signals-handled)
+   (kill (getpid) SIGALRM)                        ;first handler
+   (sleep 1)                                      ;let the async run
+   (sigaction SIGALRM
+     (lambda (signal)
+       (call-with-blocked-asyncs
+        (lambda ()
+          (set! signals-handled
+                (cons `(second-handler . ,(getpid))
+                      signals-handled))))))
+   (kill (getpid) SIGALRM)           ;second handler
+   (sleep 1)                         ;give asyncs one more chance to run
+   (format (current-error-port) "signals handled by the child + parent: ~s~%"
+           signals-handled)
+   (exit (equal? signals-handled
+                 `((second-handler . ,(getpid))
+                   (first-handler . ,(getpid))
+                   (first-handler . ,parent)))))
+
+  (child
+   (kill (getpid) SIGALRM)           ;first handler
+   (sleep 1)                         ;give asyncs one more chance to run
+   (format (current-error-port) "signals handled by the parent: ~s~%"
+           signals-handled)
+   (exit (and (equal? signals-handled
+                      `((first-handler . ,parent)
+                        (first-handler . ,parent)))
+              (zero? (cdr (waitpid child)))))))
+
+;;; Local Variables:
+;;; mode: scheme
+;;; End:

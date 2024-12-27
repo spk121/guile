@@ -1,0 +1,58 @@
+#!/bin/sh
+
+set -ue
+
+script_home="$(cd "$(dirname "$0")" && pwd)"
+
+usage()
+{
+    cat <<-EOF
+	Usage: driver [OPTION ...] -- TEST [ARG ...]
+          This is a test
+	  Options:
+	    --log-file PATH
+	    --trs-file PATH
+	    --color-tests (yes|no)           currently ignored
+	    --expect-failure (yes|no)        currently ignored
+	    --enable-hard-errors (yes|no)    currently ignored
+	    --test-name NAME                 currently ignored
+
+	  This command provides an Automake parallel test harness
+	  compatible driver for running TEST with Guile.  This is
+	  essentially an adapter for check-guile and it currently
+	  assumes that check-guile is in the parent directory.
+
+	EOF
+}
+
+misuse() { usage 1>&2; exit 2; }
+
+test_name=''
+log_file=''
+trs_file=''
+
+while test $# -gt 0; do
+    case "$1" in
+        --test-name) test $# -gt 1 || misuse; test_name="$2"; shift 2 ;;
+        --log-file) test $# -gt 1 || misuse; log_file="$2"; shift 2 ;;
+        --trs-file) test $# -gt 1 || misuse; trs_file="$2"; shift 2 ;;
+        --color-tests|--expect-failure|--enable-hard-errors) shift 2 ;;
+        --) shift; break ;;
+        *) break ;;
+    esac
+done
+
+test "$test_name" || misuse
+test "$log_file" || misuse
+test "$trs_file" || misuse
+
+test $# -gt 0 || misuse
+program="$1"
+shift
+
+cd ..
+
+exec ./check-guile \
+    --log-file "test-suite/$log_file" \
+    --trs-file "test-suite/$trs_file" \
+    "$(basename "$program")"

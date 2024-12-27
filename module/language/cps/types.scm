@@ -1,5 +1,5 @@
 ;;; Type analysis on CPS
-;;; Copyright (C) 2014-2021, 2023 Free Software Foundation, Inc.
+;;; Copyright (C) 2014-2021,2023-2024 Free Software Foundation, Inc.
 ;;;
 ;;; This library is free software: you can redistribute it and/or modify
 ;;; it under the terms of the GNU Lesser General Public License as
@@ -807,6 +807,9 @@ minimum, and maximum."
 (define-type-inferrer (string-ref str idx result)
   (define! result &u64 0 *max-codepoint*))
 
+(define-type-inferrer (symbol-hash sym result)
+  (define! result &u64 0 &u64-max))
+
 (define-type-inferrer/param (make-closure param code result)
   (define nfree param)
   (define! result &procedure nfree nfree))
@@ -937,13 +940,15 @@ minimum, and maximum."
   ((symbol->keyword &symbol) &keyword)
   ((keyword->symbol &keyword) &symbol)
   ((symbol->string &symbol) &string)
-  ((string->symbol &string) &symbol))
+  ((string->symbol &string) &symbol)
+  ((string-utf8-length &string) &u64)
+  ((utf8->string &bytevector) &string))
 
 
 
 
 ;;;
-;;; Threads.  We don't currently track threads as an object type.
+;;;  We don't currently track threads as an object type.
 ;;;
 
 (define-simple-types
@@ -1003,10 +1008,12 @@ minimum, and maximum."
   (define! result &u64 param param))
 
 (define-type-checker (scm->u64/truncate scm)
-  (check-type scm &exact-integer &range-min &range-max))
+  (check-type scm &exact-integer -inf.0 +inf.0))
 (define-type-inferrer (scm->u64/truncate scm result)
-  (restrict! scm &exact-integer &range-min &range-max)
-  (define! result &u64 0 &u64-max))
+  (restrict! scm &exact-integer -inf.0 +inf.0)
+  (if (<= 0 (&min scm) (&max scm) &u64-max)
+      (define! result &u64 (&min scm) (&max scm))
+      (define! result &u64 0 &u64-max)))
 
 (define-type-checker (u64->scm u64)
   #t)
@@ -1639,10 +1646,21 @@ where (A0 <= A <= A1) and (B0 <= B <= B1)."
     (lambda (min max)
       (define-exact-integer! result min max))))
 
+(define-simple-type-checker (logand/immediate &exact-integer))
+(define-type-inferrer/param (logand/immediate param a result)
+  (restrict! a &exact-integer -inf.0 +inf.0)
+  (call-with-values (lambda ()
+                      (logand-bounds (&min a) (&max a) param param))
+    (lambda (min max)
+      (define-exact-integer! result min max))))
+
 (define-type-inferrer (ulogand a b result)
-  (restrict! a &u64 0 &u64-max)
-  (restrict! b &u64 0 &u64-max)
   (define! result &u64 0 (min (&max/u64 a) (&max/u64 b))))
+(define-type-inferrer/param (ulogand/immediate param a result)
+  (call-with-values (lambda ()
+                      (logand-bounds (&min a) (&max a) param param))
+    (lambda (min max)
+      (define! result &u64 min max))))
 
 (define (logsub-bounds a0 a1 b0 b1)
   "Return two values: lower and upper bounds for (logsub A B),
@@ -1663,8 +1681,6 @@ i.e. (logand A (lognot B)), where (A0 <= A <= A1) and (B0 <= B <= B1)."
       (define-exact-integer! result min max))))
 
 (define-type-inferrer (ulogsub a b result)
-  (restrict! a &u64 0 &u64-max)
-  (restrict! b &u64 0 &u64-max)
   (define! result &u64 0 (&max/u64 a)))
 
 (define (logior-bounds a0 a1 b0 b1)
@@ -1710,8 +1726,6 @@ where (A0 <= A <= A1) and (B0 <= B <= B1)."
       (define-exact-integer! result min max))))
 
 (define-type-inferrer (ulogior a b result)
-  (restrict! a &u64 0 &u64-max)
-  (restrict! b &u64 0 &u64-max)
   (define! result &u64
     (max (&min/0 a) (&min/0 b))
     (saturate+ (&max/u64 a) (&max/u64 b))))
@@ -1767,8 +1781,6 @@ where (A0 <= A <= A1) and (B0 <= B <= B1)."
       (define! result &exact-integer min max))))
 
 (define-type-inferrer (ulogxor a b result)
-  (restrict! a &u64 0 &u64-max)
-  (restrict! b &u64 0 &u64-max)
   (define! result &u64 0 (saturate+ (&max/u64 a) (&max/u64 b))))
 
 (define-simple-type-checker (lognot &exact-integer))

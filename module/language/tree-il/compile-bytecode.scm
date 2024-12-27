@@ -29,6 +29,7 @@
   #:use-module (ice-9 match)
   #:use-module (language bytecode)
   #:use-module (language tree-il)
+  #:use-module ((language tree-il primitives) #:select (primitive-module))
   #:use-module ((srfi srfi-1) #:select (filter-map
                                         fold
                                         lset-adjoin lset-union lset-difference))
@@ -348,49 +349,6 @@
 (visit-immediate-tags define-immediate-type-predicate)
 (visit-heap-tags define-heap-type-predicate)
 
-(define (primitive-module name)
-  (case name
-    ((bytevector?
-      bytevector-length
-
-      bytevector-u8-ref bytevector-u8-set!
-      bytevector-s8-ref bytevector-s8-set!
-
-      bytevector-u16-ref bytevector-u16-set!
-      bytevector-u16-native-ref bytevector-u16-native-set!
-      bytevector-s16-ref bytevector-s16-set!
-      bytevector-s16-native-ref bytevector-s16-native-set!
-
-      bytevector-u32-ref bytevector-u32-set!
-      bytevector-u32-native-ref bytevector-u32-native-set!
-      bytevector-s32-ref bytevector-s32-set!
-      bytevector-s32-native-ref bytevector-s32-native-set!
-
-      bytevector-u64-ref bytevector-u64-set!
-      bytevector-u64-native-ref bytevector-u64-native-set!
-      bytevector-s64-ref bytevector-s64-set!
-      bytevector-s64-native-ref bytevector-s64-native-set!
-
-      bytevector-ieee-single-ref bytevector-ieee-single-set!
-      bytevector-ieee-single-native-ref bytevector-ieee-single-native-set!
-      bytevector-ieee-double-ref bytevector-ieee-double-set!
-      bytevector-ieee-double-native-ref bytevector-ieee-double-native-set!)
-     '(rnrs bytevectors))
-    ((atomic-box?
-      make-atomic-box atomic-box-ref atomic-box-set!
-      atomic-box-swap! atomic-box-compare-and-swap!)
-     '(ice-9 atomic))
-    ((current-thread) '(ice-9 threads))
-    ((class-of) '(oop goops))
-    ((u8vector-ref
-      u8vector-set! s8vector-ref s8vector-set!
-      u16vector-ref u16vector-set! s16vector-ref s16vector-set!
-      u32vector-ref u32vector-set! s32vector-ref s32vector-set!
-      u64vector-ref u64vector-set! s64vector-ref s64vector-set!
-      f32vector-ref f32vector-set! f64vector-ref f64vector-set!)
-     '(srfi srfi-4))
-    (else '(guile))))
-
 (define (canonicalize exp)
   (define (reify-primref src name)
     ;; some are builtin-ref
@@ -487,6 +445,13 @@
        (($ <primcall> src 'throw (key . args))
         (make-primcall src 'throw
                        (list key (make-primcall #f 'list args))))
+
+       (($ <primcall> src 'raise-type-error (($ <const> _ #(subr pos what)) x))
+        (define msg
+          (format #f "Wrong type argument in position ~a (expecting ~a): ~~S"
+                  pos what))
+        (make-primcall src 'throw/value+data
+                       (list x (make-const #f `#(wrong-type-arg ,subr ,msg)))))
 
        ;; Now that we handled special cases, ensure remaining primcalls
        ;; are understood by the code generator, and if not, reify them
@@ -1159,7 +1124,7 @@ in the frame with for the lambda-case clause @var{clause}."
               (0 
                (emit-load-static-procedure asm dst label))
               (nfree
-               ;; Stage closure in 0 to avoid stompling captured free
+               ;; Stage closure in 0 to avoid stomping captured free
                ;; vars.
                (emit-allocate-closure asm 0 nfree label 1)
                (init-free-vars 0 free-vars env 1 2)
@@ -1183,7 +1148,7 @@ in the frame with for the lambda-case clause @var{clause}."
                          frame-size)))
 
         (($ <primcall> src (? variadic-constructor? name) args)
-         ;; Stage result in 0 to avoid stompling args.
+         ;; Stage result in 0 to avoid stomping args.
          (let ((args (for-args args env)))
            (maybe-emit-source src)
            (match name

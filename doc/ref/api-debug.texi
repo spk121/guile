@@ -1,26 +1,124 @@
 @c -*-texinfo-*-
 @c This is part of the GNU Guile Reference Manual.
-@c Copyright (C)  1996, 1997, 2000, 2001, 2002, 2003, 2004, 2007, 2010, 2011, 2012, 2013, 2014, 2018, 2021
+@c Copyright (C)  1996-1997, 2000-2004, 2007, 2010-2014, 2018, 2021, 2024
 @c   Free Software Foundation, Inc.
 @c See the file guile.texi for copying conditions.
 
 @node Debugging
 @section Debugging Infrastructure
 
-@cindex Debugging
-In order to understand Guile's debugging facilities, you first need to
-understand a little about how Guile represents the Scheme control stack.
-With that in place we explain the low level trap calls that the virtual
-machine can be configured to make, and the trap and breakpoint
-infrastructure that builds on top of those calls.
+@cindex debugging
+Guile provides facilities for simple print-based debugging as well as
+more advanced debugging features. In order to understand Guile's
+advanced debugging facilities, one first must understand a little about
+how Guile represents the Scheme control stack. With that in place, we
+can explain the low level trap calls that the virtual machine can be
+configured to make, and the trap and breakpoint infrastructure that
+builds on top of those calls.
 
 @menu
-* Evaluation Model::            Evaluation and the Scheme stack.
-* Source Properties::           From expressions to source locations.
+* Simple Debugging::             Print-based debugging.
+* Evaluation Model::             Evaluation and the Scheme stack.
+* Source Properties::            From expressions to source locations.
 * Programmatic Error Handling::  Debugging when an error occurs.
-* Traps::                       Breakpoints, tracepoints, oh my!
-* GDB Support::                 C-level debugging with GDB.
+* Traps::                        Breakpoints, tracepoints, oh my!
+* GDB Support::                  C-level debugging with GDB.
 @end menu
+
+
+@node Simple Debugging
+@subsection Simple Debugging
+
+Guile offers powerful tools for introspection and debugging at the REPL,
+covered in the rest of this section and elsewhere in this manual
+(@pxref{Interactive Debugging}).  Here we deal with a more primitive
+approach, commonly called ``print debugging,'' which is a quick way to
+diagnose simple errors by printing values during a program's execution.
+Guile provides the @code{peek} procedure, more commonly known as
+@code{pk} (pronounced by naming the letters), as a convenient and
+powerful tool for this kind of debugging.
+
+@deffn {Scheme Procedure} peek stuff @dots{}
+@deffnx {Scheme Procedure} pk stuff @dots{}
+Print @var{stuff} to the current output port using @code{write}.  Return
+the last argument.
+@end deffn
+
+@code{pk} improves on using @code{write} directly because it enables
+inspection of the state of code as it runs without breaking the normal
+code flow.  It is also sometimes more practical than a full debugger
+because it does not require the program to be stopped for inspection.
+Here is a basic example:
+
+@lisp
+(define fire 'burns)
+
+(pk fire)
+@result{}
+
+;;; (burns)
+burns
+@end lisp
+
+Here is an example of inspecting a value in the midst of code flow:
+
+@lisp
+(map (lambda (v)
+       (if (number? v)
+           (pk 'number->string (number->string v))
+           v))
+     '(1 "2" "3" 4))
+@result{}
+
+;;; ("1")
+
+;;; ("4")
+("1" "2" "3" "4")
+@end lisp
+
+A common technique when using @code{pk} is to label values with symbols
+to keep track of where they're coming from.  There's no reason these
+labels need to be symbols; symbols are just convenient.  Here's a
+slightly more complex example demonstrating that pattern:
+
+@lisp
+(define (pk-identity x)
+  (pk 'arg-to-identity x))
+
+(pk-identity 42)
+@result{}
+
+;;; (arg-to-identity 42)
+42
+@end lisp
+
+@code{pk} has one small quirk of note.  Currently, it only returns the
+first value returned from any multi-value returns.  So for example:
+
+@lisp
+(pk 'vals (values 1 2 3))
+@result{}
+
+;;; (vals 1)
+1
+@end lisp
+
+The way to get around this limitation is to bind such multi-value
+returns then inspect the results.  Still, @code{pk} can only return a
+single value:
+
+@lisp
+(use-modules (srfi srfi-11))
+
+(let-values (((x y z)
+              (values 1 2 3)))
+  (pk 'vals x y z))
+@result{}
+
+;;; (vals 1 2 3)
+3
+@end lisp
+
 
 @node Evaluation Model
 @subsection Evaluation and the Scheme Stack
@@ -36,19 +134,19 @@ A Scheme stack always exists implicitly, and can be summoned into
 concrete existence as a first-class Scheme value by the
 @code{make-stack} call, so that an introspective Scheme program -- such
 as a debugger -- can present it in some way and allow the user to query
-its details. The first thing to understand, therefore, is how Guile's
+its details.  The first thing to understand, therefore, is how Guile's
 function call convention creates the stack.
 
-Broadly speaking, Guile represents all control flow on a stack. Calling
+Broadly speaking, Guile represents all control flow on a stack.  Calling
 a function involves pushing an empty frame on the stack, then evaluating
 the procedure and its arguments, then fixing up the new frame so that it
-points to the old one. Frames on the stack are thus linked together. A
+points to the old one.  Frames on the stack are thus linked together.  A
 tail call is the same, except it reuses the existing frame instead of
 pushing on a new one.
 
 In this way, the only frames that are on the stack are ``active''
 frames, frames which need to do some work before the computation is
-complete. On the other hand, a function that has tail-called another
+complete.  On the other hand, a function that has tail-called another
 function will not be on the stack, as it has no work left to do.
 
 Therefore, when an error occurs in a running program, or the program
@@ -83,7 +181,7 @@ Use @code{start-stack} to limit the stack extent captured by future
 
 @deffn {Scheme Procedure} make-stack obj arg @dots{}
 @deffnx {C Function} scm_make_stack (obj, args)
-Create a new stack. If @var{obj} is @code{#t}, the current
+Create a new stack.  If @var{obj} is @code{#t}, the current
 evaluation stack is used for creating the stack frames,
 otherwise the frames are taken from @var{obj} (which must be
 a continuation or a frame object).
@@ -239,7 +337,7 @@ output.
 Additionally, the @code{(system vm frame)} module defines a number of
 higher-level introspective procedures, for example to retrieve the names
 of local variables, and the source location to correspond to a
-frame. See its source code for more details.
+frame.  See its source code for more details.
 
 
 @node Source Properties
@@ -341,7 +439,7 @@ with the new pair.
 @subsection Programmatic Error Handling
 
 For better or for worse, all programs have bugs, and dealing with bugs
-is part of programming. This section deals with that class of bugs that
+is part of programming.  This section deals with that class of bugs that
 causes an exception to be raised -- from your own code, from within a
 library, or from Guile itself.
 
@@ -733,7 +831,7 @@ warn-deprecated no      Warn when deprecated features are used.
 @end smallexample
 
 The boolean options may be toggled with @code{debug-enable} and
-@code{debug-disable}. The non-boolean options must be set using
+@code{debug-disable}.  The non-boolean options must be set using
 @code{debug-set!}.
 
 @deffn {Scheme Procedure} debug-enable option-name
@@ -766,16 +864,16 @@ it chooses for examining the evaluation stack as program execution
 proceeds, and for suspending execution to be resumed later.
 
 VM hooks are very low-level, though, and so Guile also has a library of
-higher-level @dfn{traps} on top of the VM hooks. A trap is an execution
-condition that, when fulfilled, will fire a handler. For example, Guile
+higher-level @dfn{traps} on top of the VM hooks.  A trap is an execution
+condition that, when fulfilled, will fire a handler.  For example, Guile
 defines a trap that fires when control reaches a certain source
 location.
 
 Finally, Guile also defines a third level of abstractions: per-thread
-@dfn{trap states}. A trap state exists to give names to traps, and to
+@dfn{trap states}.  A trap state exists to give names to traps, and to
 hold on to the set of traps so that they can be enabled, disabled, or
-removed. The trap state infrastructure defines the most useful
-abstractions for most cases. For example, Guile's REPL uses trap state
+removed.  The trap state infrastructure defines the most useful
+abstractions for most cases.  For example, Guile's REPL uses trap state
 functions to set breakpoints and tracepoints.
 
 The following subsections describe all this in detail, for both the
@@ -789,7 +887,7 @@ understanding how the interface hangs together.
 * Low-Level Traps::         The various kinds of low-level traps.
 * Tracing Traps::           Traps to trace procedure calls and returns.
 * Trap States::             One state (per thread) to bind them.
-* High-Level Traps::        The highest-level trap interface. Use this.
+* High-Level Traps::        The highest-level trap interface.  Use this.
 @end menu
 
 
@@ -800,8 +898,8 @@ Everything that runs in Guile runs on its virtual machine, a C program
 that defines a number of operations that Scheme programs can
 perform.
 
-Note that there are multiple VM ``engines'' for Guile. Only some of them
-have support for hooks compiled in. Normally the deal is that you get
+Note that there are multiple VM ``engines'' for Guile.  Only some of them
+have support for hooks compiled in.  Normally the deal is that you get
 hooks if you are running interactively, and otherwise they are disabled,
 as they do have some overhead (about 10 or 20 percent).
 
@@ -821,7 +919,7 @@ does a terrible thing: it allocates the frames on the C stack instead of
 the garbage-collected heap.
 
 The upshot here is that the frames are only valid within the dynamic
-extent of the call to the hook. If a hook procedure keeps a reference to
+extent of the call to the hook.  If a hook procedure keeps a reference to
 the frame outside the extent of the hook, bad things will happen.
 
 The interface to hooks is provided by the @code{(system vm vm)} module:
@@ -875,10 +973,10 @@ Remove @var{f} from the corresponding VM hook for the current thread.
 @end deffn
 
 @cindex VM trace level
-These hooks do impose a performance penalty, if they are on. Obviously,
-the @code{vm-next-hook} has quite an impact, performance-wise. Therefore
+These hooks do impose a performance penalty, if they are on.  Obviously,
+the @code{vm-next-hook} has quite an impact, performance-wise.  Therefore
 Guile exposes a single, heavy-handed knob to turn hooks on or off, the
-@dfn{VM trace level}. If the trace level is positive, hooks run;
+@dfn{VM trace level}.  If the trace level is positive, hooks run;
 otherwise they don't.
 
 For convenience, when the VM fires a hook, it does so with the trap
@@ -887,8 +985,8 @@ handling a hook.  The trace level is restored to whatever it was once the hook
 procedure finishes.
 
 @deffn {Scheme Procedure} vm-trace-level
-Retrieve the ``trace level'' of the VM. If positive, the trace hooks
-associated with @var{vm} will be run. The initial trace level is 0.
+Retrieve the ``trace level'' of the VM.  If positive, the trace hooks
+associated with @var{vm} will be run.  The initial trace level is 0.
 @end deffn
 
 @deffn {Scheme Procedure} set-vm-trace-level! level
@@ -907,7 +1005,7 @@ correspond to what users want to do.
 For example, if a user wants to break when and if control reaches a
 certain source location, how do you do it?  If you install a ``next''
 hook, you get unacceptable overhead for the execution of the entire
-program. It would be possible to install an ``apply'' hook, then if the
+program.  It would be possible to install an ``apply'' hook, then if the
 procedure encompasses those source locations, install a ``next'' hook,
 but already you're talking about one concept that might be implemented
 by a varying number of lower-level concepts.
@@ -916,27 +1014,27 @@ It's best to be clear about things and define one abstraction for all
 such conditions: the @dfn{trap}.
 
 Considering the myriad capabilities offered by the hooks though, there
-is only a minimum of functionality shared by all traps. Guile's current
+is only a minimum of functionality shared by all traps.  Guile's current
 take is to reduce this to the absolute minimum, and have the only
 standard interface of a trap be ``turn yourself on'' or ``turn yourself
 off''.
 
 This interface sounds a bit strange, but it is useful to procedurally
-compose higher-level traps from lower-level building blocks. For
+compose higher-level traps from lower-level building blocks.  For
 example, Guile defines a trap that calls one handler when control enters
-a procedure, and another when control leaves the procedure. Given that
+a procedure, and another when control leaves the procedure.  Given that
 trap, one can define a trap that adds to the next-hook only when within
-a given procedure. Building further, one can define a trap that fires
+a given procedure.  Building further, one can define a trap that fires
 when control reaches particular instructions within a procedure.
 
-Or of course you can stop at any of these intermediate levels. For
-example, one might only be interested in calls to a given procedure. But
+Or of course you can stop at any of these intermediate levels.  For
+example, one might only be interested in calls to a given procedure.  But
 the point is that a simple enable/disable interface is all the
 commonality that exists between the various kinds of traps, and
 furthermore that such an interface serves to allow ``higher-level''
 traps to be composed from more primitive ones.
 
-Specifically, a trap, in Guile, is a procedure. When a trap is created,
+Specifically, a trap, in Guile, is a procedure.  When a trap is created,
 by convention the trap is enabled; therefore, the procedure that is the
 trap will, when called, disable the trap, and return a procedure that
 will enable the trap, and so on.
@@ -945,10 +1043,10 @@ Trap procedures take one optional argument: the current frame. (A trap
 may want to add to different sets of hooks depending on the frame that
 is current at enable-time.)
 
-If this all sounds very complicated, it's because it is. Some of it is
-essential, but probably most of it is not. The advantage of using this
+If this all sounds very complicated, it's because it is.  Some of it is
+essential, but probably most of it is not.  The advantage of using this
 minimal interface is that composability is more lexically apparent than
-when, for example, using a stateful interface based on GOOPS. But
+when, for example, using a stateful interface based on GOOPS.  But
 perhaps this reflects the cognitive limitations of the programmer who
 made the current interface more than anything else.
 
@@ -958,20 +1056,20 @@ made the current interface more than anything else.
 To summarize the last sections, traps are enabled or disabled, and when
 they are enabled, they add to various VM hooks.
 
-Note, however, that @emph{traps do not increase the VM trace level}. So
+Note, however, that @emph{traps do not increase the VM trace level}.  So
 if you create a trap, it will be enabled, but unless something else
 increases the VM's trace level (@pxref{VM Hooks}), the trap will not
 fire.  It turns out that getting the VM trace level right is tricky
 without a global view of what traps are enabled.  @xref{Trap States},
 for Guile's answer to this problem.
 
-Traps are created by calling procedures. Most of these procedures share
+Traps are created by calling procedures.  Most of these procedures share
 a set of common keyword arguments, so rather than document them
 separately, we discuss them all together here:
 
 @table @code
 @item #:vm
-The VM to instrument. Defaults to the current thread's VM.
+The VM to instrument.  Defaults to the current thread's VM.
 @item #:current-frame
 For traps that enable more hooks depending on their dynamic context,
 this argument gives the current frame that the trap is running in.
@@ -1028,7 +1126,7 @@ A trap that calls @var{next-handler} for every instruction executed in
        handler [#:current-frame] [#:vm]
 A trap that calls @var{handler} when execution enters a range of
 instructions in @var{proc}. @var{range} is a simple of pairs,
-@code{((@var{start} . @var{end}) ...)}. The @var{start} addresses are
+@code{((@var{start} . @var{end}) ...)}.  The @var{start} addresses are
 inclusive, and @var{end} addresses are exclusive.
 @end deffn
 
@@ -1146,13 +1244,13 @@ options:
 
 @table @code
 @item #:width
-The maximum width of trace output. Trace printouts will try not to
+The maximum width of trace output.  Trace printouts will try not to
 exceed this column, but for highly nested procedure calls, it may be
-unavoidable. Defaults to 80.
+unavoidable.  Defaults to 80.
 @item #:vm
-The VM on which to add the traps. Defaults to the current thread's VM.
+The VM on which to add the traps.  Defaults to the current thread's VM.
 @item #:prefix
-A string to print out before each trace line. As seen above in the
+A string to print out before each trace line.  As seen above in the
 examples, defaults to @code{"trace: "}.
 @end table
 

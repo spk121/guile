@@ -1,7 +1,7 @@
 #ifndef SCM_SCMSIGS_H
 #define SCM_SCMSIGS_H
 
-/* Copyright 1995-1998,2000,2002,2006-2008,2018
+/* Copyright 1995-1998,2000,2002,2006-2008,2018,2023-2024
      Free Software Foundation, Inc.
 
    This file is part of Guile.
@@ -43,7 +43,10 @@ SCM_INTERNAL void scm_init_scmsigs (void);
 
 SCM_INTERNAL void scm_i_close_signal_pipe (void);
 SCM_INTERNAL void scm_i_ensure_signal_delivery_thread (void);
+SCM_INTERNAL void scm_i_signals_pre_fork (void);
+SCM_INTERNAL void scm_i_signals_post_fork (void);
 
-SCM_INTERNAL scm_thread *scm_i_signal_delivery_thread;
+struct scm_thread;
+SCM_INTERNAL int scm_i_is_signal_delivery_thread (struct scm_thread *t);
 
 #endif  /* SCM_SCMSIGS_H */

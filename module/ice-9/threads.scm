@@ -204,7 +204,9 @@ terminates, unless the target @var{thread} has already terminated."
              (wait-condition-variable cv mutex timeout)
              (wait-condition-variable cv mutex))
          (lp))
-        (else timeoutval))))))
+        (else
+         (unlock-mutex mutex)
+         timeoutval))))))
 
 (define* (try-mutex mutex)
   "Try to lock @var{mutex}.  If the mutex is already locked, return

@@ -192,10 +192,10 @@ understood by whatever methods get applied when the @code{initialize}
 generic function is applied to the newly allocated instance.
 
 In practice, specialized @code{initialize} methods would normally call
-@code{(next-method)}, and so eventually the standard GOOPS
-@code{initialize} methods are applied.  These methods expect
-@var{initargs} to be a list with an even number of elements, where
-even-numbered elements (counting from zero) are keywords and
+@code{(next-method)} (@pxref{Next-method}), and so eventually the
+standard GOOPS @code{initialize} methods are applied.  These methods
+expect @var{initargs} to be a list with an even number of elements,
+where even-numbered elements (counting from zero) are keywords and
 odd-numbered elements are the corresponding values.
 
 GOOPS processes initialization argument keywords automatically for slots
@@ -727,7 +727,8 @@ have two parameters where the first parameter is an instance of the
 * Accessors::
 * Extending Primitives::
 * Merging Generics::
-* Next-method::                 
+* Next-method::
+* method* and define-method*::           Advanced argument handling
 * Generic Function and Method Examples::                     
 * Handling Invocation Errors::
 @end menu
@@ -856,6 +857,7 @@ to that descendant's ancestors too.
 @node Next-method
 @subsection Next-method
 
+@fnindex next-method
 When you call a generic function, with a particular set of arguments,
 GOOPS builds a list of all the methods that are applicable to those
 arguments and orders them by how closely the method definitions match
@@ -864,44 +866,262 @@ list.  If the selected method's code wants to call on to the next method
 in this list, it can do so by using @code{next-method}.
 
 @lisp
-(define-method (Test (a <integer>)) (cons 'integer (next-method)))
-(define-method (Test (a <number>))  (cons 'number  (next-method)))
-(define-method (Test a)             (list 'top))
+(define-method (test (a <integer>)) (cons 'integer (next-method)))
+(define-method (test (a <number>))  (cons 'number  (next-method)))
+(define-method (test a)             (list 'top))
 @end lisp
 
 With these definitions,
 
 @lisp
-(Test 1)   @result{} (integer number top)
-(Test 1.0) @result{} (number top)
-(Test #t)  @result{} (top)
+(test 1)   @result{} (integer number top)
+(test 1.0) @result{} (number top)
+(test #t)  @result{} (top)
 @end lisp
 
-@code{next-method} is always called as just @code{(next-method)}.  The
-arguments for the next method call are always implicit, and always the
-same as for the original method call.
+@code{next-method} can be called as just @code{(next-method)}.  The
+arguments for the next method call are then implicit, and the same as
+for the original method call.
 
 If you want to call on to a method with the same name but with a
 different set of arguments (as you might with overloaded methods in C++,
-for example), you do not use @code{next-method}, but instead simply
-write the new call as usual:
+for example), you can pass custom arguments to @code{next-method}:
 
 @lisp
-(define-method (Test (a <number>) min max)
+(define-method (test (a <number>) min max)
   (if (and (>= a min) (<= a max))
       (display "Number is in range\n"))
-  (Test a))
+  (next-method a))
 
-(Test 2 1 10)
+(test 2 1 10)
 @print{}
 Number is in range
 @result{}
 (integer number top)
 @end lisp
 
-(You should be careful in this case that the @code{Test} calls do not
-lead to an infinite recursion, but this consideration is just the same
-as in Scheme code in general.)
+@node method* and define-method*
+@subsection method* and define-method*
+
+@code{method*} and @code{define-method*} are the GOOPS versions of
+@code{lambda*} and @code{define*}.
+
+@deffn {syntax} method* ([param@dots{}] @* @
+                [#:optional vardef@dots{}] @* @
+                [#:key  vardef@dots{} [#:allow-other-keys]] @* @
+                [#:rest var | . var]) @* @
+                body1 body2 @dots{}
+@sp 1
+Create a method which takes optional and/or keyword arguments specified
+with @code{#:optional} and @code{#:key}. @xref{lambda* and define*}.
+@var{param@dots{}} are ordinary method parameters as for @code{method}
+and @code{define-method}, i.e.@: either @var{var} or (@var{var}
+@var{typespec}).
+
+@fnindex define-method*
+@code{define-method*} is syntactic sugar for defining methods using
+@code{method*}. For example,
+
+@lisp
+(define-method* (foo (a <integer>) b #:optional c
+                     #:key (d 2) e
+                     #:rest f)
+  (list a b c d e f))
+@end lisp
+
+is a method with fixed arguments @var{a} of type @code{<integer>} and
+@var{b} of type @code{<top>}, optional argument @var{c}, keyword
+arguments @var{d}, with default value 2, and @var{e}, and rest argument
+@var{f}. A call
+
+@lisp
+(foo 1 'x #:d 3 'y)
+@end lisp
+
+will return
+
+@lisp
+(1 x #f 3 #f (#:d 3 y))
+@end lisp
+
+The values for @var{c} and @var{e} are @code{#f} since they have not
+been given in the call. The given keyword argument(s) are included in
+the rest argument, as for @code{define*}.
+@end deffn
+
+@menu
+* Advanced argument handling in method and define-method::
+* Type dispatch and redefinition for advanced argument handling::
+* next-method call in method*::
+* Advanced argument handling design choices::
+@end menu
+
+@node Advanced argument handling in method and define-method
+@subsubsection Advanced argument handling in method and define-method
+
+Some users may find it more natural not to have to choose between
+@code{define-method} and @code{define-method*} in their code.
+
+It turns out that @code{method*} and @code{define-method*} can do just
+fine also for ordinary methods without keyword formals. They take
+marginally longer to compile but result in the same code as
+@code{method} and @code{define-method} if keyword formals are absent.
+
+For this reason, we provide a module (oop goops keyword-formals) which
+replaces the standard @code{method} and @code{define-method} bindings
+with their keyword formal counterparts. It can be used like this:
+
+@lisp
+(use-modules (oop goops) (oop goops keyword-formals))
+@end lisp
+
+or
+
+@lisp
+(define-module (foo)
+  #:use-module (oop goops)
+  #:use-module (oop goops keyword-formals))
+@end lisp
+
+@node Type dispatch and redefinition for advanced argument handling
+@subsubsection Type dispatch and redefinition for advanced argument handling
+
+As in CLOS, GOOPS only does type dispatch on required arguments, also
+for method*. For a @code{method*} with keyword formals, the list of
+specializers becomes the same as for a corresponding @code{method} with
+the same number of required arguments and a tail/rest argument. For
+example, the list of specializers for
+
+@lisp
+(define-method* (foo (a <integer>) b #:optional c #:key d)
+  ...)
+@end lisp
+
+becomes
+
+@lisp
+(<integer> <top> . <top>)
+@end lisp
+
+This means that @code{(method (a <integer>) b) ...)} is more specialized
+than @code{(method (a <integer>) b #:optional c #:key d) ...)} and will
+come before the latter in the list of applicable methods.
+
+Two methods of the same generic function can't have the same
+specializers list. This means that if we do
+
+@lisp
+(define-method* (foo (a <integer>) b #:optional c)
+ ...)
+(define-method* (foo (a <integer>) b . rest)
+ ...)
+@end lisp
+
+the second @code{define-method*} will cause a redefinition such that the
+second method will replace the first.
+
+@node next-method call in method*
+@subsubsection next-method call in method*
+
+A @code{(next-method)} call in a @code{method*} will pass on all
+required, optional and rest arguments in the list of formals to the next
+less specialized method in the list of applicable methods, as well as
+any actual keyword arguments passed in the call to the @code{method*}.
+
+This has the following consequences for default values:
+
+@enumerate
+@item
+A an optional argument will shadow default values for optional arguments
+in the same position in less specialized methods. For example if
+@var{<B>} is a subclass of @var{<A>} and @var{b} an instance of
+@var{<B>},
+
+@lisp
+(define-method* (foo (obj <A>) #:optional (c 1)) c)
+(define-method* (foo (obj <B>) #:optional c)) (next-method))
+(foo b) @result{} #f
+@end lisp
+
+The reason for this is that @var{c} will obtain the value @code{#f}
+already in the call to the second (most specialized, called first)
+method, and this value will be passed on by the @code{(next-method)}
+call.
+
+@item
+A keyword argument will not shadow a default value for the same keyword
+argument in less specialized methods. Example:
+
+@lisp
+(define-method* (foo (obj <A>) #:key (c 1)) c)
+(define-method* (foo (obj <B>) #:key c)) (next-method))
+(foo b) @result{} 1
+@end lisp
+
+The reason for this is that the first (less specialized, called last)
+method will not be passed any keyword arguments from the call. In
+particular, it won't be passed @code{#:c VAL}, and it will therefore use
+its default value.
+@end enumerate
+
+The user can pass arguments to @code{next-method} to customize the
+behavior. In particular, if the current method uses advanced argument
+handling in such a way that it has keywords in its list of formals and
+the next, less specialized, method is an ordinary @code{method}, it will
+be necessary to pass arguments explicitly to @code{next-method} to
+``filter out'' any keywords.
+
+@node Advanced argument handling design choices
+@subsubsection Advanced argument handling design choices
+
+There are two design choices with regard to advanced argument handling
+in GOOPS methods which are worth explaining.
+
+First, there was the choice whether to add this functionality to
+@code{method} and @code{define-method} proper or to introduce new syntax
+@code{method*} and @code{define-method*}.
+
+There are several reasons why it could be better not to introduce new
+syntax. It would give a simpler API, with less cognitive load for the
+user, and a slightly simpler implementation (compared to providing the
+new syntax as well). It would align with the CLOS design choice where
+@code{defmethod} does support advanced argument handling.
+
+Eventually, we decided to introduce new syntax instead of extending the
+old for the following reasons:
+
+@enumerate
+@item
+It aligns with @code{lambda*} and @code{define*}.
+@item
+It is somewhat better at protecting backward compatibility.
+@item
+It preserves the conceptual simplicity of @code{method} and
+@code{define-method}.
+@item
+It makes it easier for other implementations (like guile-hoot) to choose
+to only provide the simpler functionality (through @code{method} and
+@code{define-method}).
+@end enumerate
+
+However, note that users who prefer to only use @code{define-method} can
+do so. @xref{Advanced argument handling in method and define-method}.
+
+Second, we have chosen not to do type dispatch on optional or keyword
+arguments. Reasons include:
+
+@enumerate
+@item
+It strikes a reasonable balance with regards to the complexity of
+implementation (and cognitive load for the user).
+@item
+It aligns with the CLOS implementation which also likely had good
+reasons for this choice.
+@item
+Currently, we don't have clear ideas about a conceptual framework of
+rules governing type dispatch for advanced argument handling or how this
+would be implemented.
+@end enumerate
 
 @node Generic Function and Method Examples
 @subsection Generic Function and Method Examples
@@ -1136,6 +1356,7 @@ The ordering of the returned slots is not significant.
 @menu
 * Class Precedence List::
 * Sorting Methods::
+* Inheritance and accessors::
 @end menu
 
 
@@ -1250,6 +1471,38 @@ a class C1 is more specific than another class C2, for an object of
 actual class C, if C1 comes before C2 in C's class precedence list.
 @end itemize
 
+@node Inheritance and accessors
+@subsection Inheritance and accessors
+
+When a class @var{<A>} defines a getter, setter or accessor for one of
+its slots @var{x}, an @emph{accessor method} specialized to class
+@var{<A>} is created. Accessor methods are special in that they always
+refer to a concrete class. When you subclass @var{<A>}, a new accessor
+method for @var{x} is created automatically, specialized to the
+subclass:
+
+@lisp
+(define-class <A> () (x #:accessor x))
+(define-class <B> (<A>))
+(generic-function-methods x)
+@result{}
+(#<<accessor-method> (<B>) 7faa66b5b1c0>
+ #<<accessor-method> (<A>) 7faa66b5b240>)
+@end lisp
+
+Note, in particular, that the @var{x} accessor method specialized to
+@var{<A>} is @emph{not} applicable to objects of class @var{B}:
+
+@lisp
+(define o (make <B>))
+(compute-applicable-methods x (list o))
+@result{}
+(#<<accessor-method> (<B>) 7faa66b5b1c0>)
+@end lisp
+
+As a consequence, an accessor doesn't have a next-method. The fact that
+accessor methods always apply to concrete classes allows for extensive
+optimization.
 
 @node Introspection
 @section Introspection
@@ -1801,7 +2054,7 @@ instances of an application-defined class --- and an understanding of
 the MOP makes it much easier to explain such customizations in a precise
 way.  And at a deeper level, understanding the MOP is a key part of
 understanding GOOPS, and of taking full advantage of GOOPS' power, by
-customizing the behaviour of GOOPS itself.
+customizing the behavior of GOOPS itself.
 
 @menu
 * Metaobjects and the Metaobject Protocol::
@@ -1833,18 +2086,18 @@ Of these entities, GOOPS represents classes, generic functions and
 methods as ``metaobjects''.  In other words, the values in a GOOPS
 program that describe classes, generic functions and methods, are
 themselves instances (or ``objects'') of special GOOPS classes that
-encapsulate the behaviour, respectively, of classes, generic functions,
+encapsulate the behavior, respectively, of classes, generic functions,
 and methods.
 
 (The other two entities are slot definitions and instances.  Slot
 definitions are not strictly instances, but every slot definition is
-associated with a GOOPS class that specifies the behaviour of the slot
+associated with a GOOPS class that specifies the behavior of the slot
 as regards accessibility and protection from garbage collection.
 Instances are of course objects in the usual sense, and there is no
 benefit from thinking of them as metaobjects.)
 
 The ``metaobject protocol'' (or ``MOP'') is the specification of the
-generic functions which determine the behaviour of these metaobjects and
+generic functions which determine the behavior of these metaobjects and
 the circumstances in which these generic functions are invoked.
 
 For a concrete example of what this means, consider how GOOPS calculates
@@ -1880,7 +2133,7 @@ performs the slot calculation.
 @end itemize
 
 In other words, rather than being hardcoded in @code{define-class}, the
-default behaviour of class definition is encapsulated by generic
+default behavior of class definition is encapsulated by generic
 function methods that are specialized for the class @code{<class>}.
 
 It is possible to create a new class that inherits from @code{<class>},
@@ -1894,7 +2147,7 @@ with the new @code{initialize} method.  Thus the default slot
 calculation, as well as any other aspect of the new class's relationship
 with its superclasses, can be modified or overridden.
 
-In a similar way, the behaviour of generic functions can be modified or
+In a similar way, the behavior of generic functions can be modified or
 overridden by creating a new class that inherits from the standard
 generic function class @code{<generic>}, writing appropriate methods
 that are specialized to the new class, and creating new generic
@@ -1907,7 +2160,7 @@ of that class.
 
 Such is the power of the MOP.  Note that @code{initialize} is just one
 of a large number of generic functions that can be customized to modify
-the behaviour of application objects and classes and of GOOPS itself.
+the behavior of application objects and classes and of GOOPS itself.
 Each following section covers a particular area of GOOPS functionality,
 and describes the generic functions that are relevant for customization
 of that area.
@@ -2419,7 +2672,7 @@ If the metaclass of the new class is something more specialized than the
 default @code{<class>}, then the type of @var{class} in the calls above
 is more specialized than @code{<class>}, and hence it becomes possible
 to define generic function methods, specialized for the new class's
-metaclass, that can modify or override the default behaviour of
+metaclass, that can modify or override the default behavior of
 @code{initialize}, @code{compute-cpl} or @code{compute-get-n-set}.
 
 @code{compute-cpl} computes the class precedence list (``CPL'') for the
@@ -2508,9 +2761,9 @@ standard @code{initialize} method for classes whose metaclass is
 @code{<class>}.  But @code{initialize} itself can also be modified, by
 defining an @code{initialize} method specialized to the new class's
 metaclass.  Such a method could complete override the standard
-behaviour, by not calling @code{(next-method)} at all, but more
+behavior, by not calling @code{(next-method)} at all, but more
 typically it would perform additional class initialization steps before
-and/or after calling @code{(next-method)} for the standard behaviour.
+and/or after calling @code{(next-method)} for the standard behavior.
 
 
 @node Method Definition
@@ -2759,7 +3012,7 @@ make}).  What then happens if @code{<my-class>} is redefined by calling
 
 @menu
 * Redefinable Classes::
-* Default Class Redefinition Behaviour::
+* Default Class Redefinition Behavior::
 * Customizing Class Redefinition::
 @end menu
 
@@ -2794,8 +3047,8 @@ theory.  In practice, attempting to, for example, redefine
 Still, redefinition is an interesting capability when building
 long-lived resilient systems, so GOOPS does offer this facility.
 
-@node Default Class Redefinition Behaviour
-@subsection Default Class Redefinition Behaviour
+@node Default Class Redefinition Behavior
+@subsection Default Class Redefinition Behavior
 
 When a class is defined using @code{define-class} and the class name was
 previously defined, by default the new binding just replaces the old
@@ -2849,11 +3102,11 @@ updated when a class is redefined.)
 @end itemize
 
 If this class redefinition strategy strikes you as rather counter-intuitive,
-bear in mind that it is derived from similar behaviour in other object
+bear in mind that it is derived from similar behavior in other object
 systems such as CLOS, and that experience in those systems has shown it to be
 very useful in practice.
 
-Also bear in mind that, like most of GOOPS' default behaviour, it can
+Also bear in mind that, like most of GOOPS' default behavior, it can
 be customized@dots{}
 
 @node Customizing Class Redefinition
@@ -2864,7 +3117,7 @@ constructs the new class metaobject as usual, then invokes the
 @code{class-redefinition} generic function with the old and new classes
 as arguments.  Therefore, if the old or new classes have metaclasses
 other than the default @code{<redefinable-class>}, class redefinition
-behaviour can be customized by defining a @code{class-redefinition}
+behavior can be customized by defining a @code{class-redefinition}
 method that is specialized for the relevant metaclasses.
 
 @deffn generic class-redefinition
@@ -2880,8 +3133,8 @@ classes.  @xref{Redefinable Classes}.  This default method just returns
 @end deffn
 
 @deffn method class-redefinition (old <redefinable-class>) (new <redefinable-class>)
-This method implements GOOPS' default class redefinition behaviour, as
-described in @ref{Default Class Redefinition Behaviour}.  Returns the
+This method implements GOOPS' default class redefinition behavior, as
+described in @ref{Default Class Redefinition Behavior}.  Returns the
 metaobject for the new class definition.
 @end deffn
 
@@ -2980,6 +3233,6 @@ instance whose class has just been changed.  The default
 @code{update-instance-for-different-class} method does nothing.
 @end deffn
 
-Customized change of class behaviour can be implemented by defining
+Customized change of class behavior can be implemented by defining
 @code{change-class} methods that are specialized either by the class
 of the instances to be modified or by the metaclass of the new class.

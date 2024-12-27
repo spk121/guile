@@ -81,7 +81,7 @@
           (if line
               (set-port-line! port line))
           (if column
-              (set-port-column! port line))
+              (set-port-column! port column))
 
           (if (or compile? (not (language-evaluator lang)))
               ((load-thunk-from-memory

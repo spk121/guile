@@ -1,13 +1,150 @@
 Guile NEWS --- history of user-visible changes.
-Copyright (C) 1996-2023 Free Software Foundation, Inc.
+Copyright (C) 1996-2024 Free Software Foundation, Inc.
 See the end for copying conditions.
 
 Please send Guile bug reports to bug-guile@gnu.org.
 
 
-Changes in 3.0.10 (since 3.0.9)
+Changes in 3.0.11 (since 3.0.10)
+
+* Notable changes
+
+** R7RS `cond-expand` now supports `else` (<https://debbugs.gnu.org/71304>)
+
+** The SRFI-64 module for test suites has been rewritten
+
+A new, backward-compatible implementation of (srfi srfi-64) has been
+contributed by Tomas Volf.  The reference implementation, which was used
+so far, had a number of issues on Guile that made some of its interface
+downright unusable (e.g., <https://bugs.gnu.org/72378>), non-conforming
+(e.g., <https://bugs.gnu.org/72383>), or buggy (e.g.,
+<https://bugs.gnu.org/72372>).
 
 * New interfaces and functionality
+
+** PEG parser
+
+PEG grammar parser in (ice-9 peg string-peg) has been rewritten to cover
+all the functionality defined in <https://bford.info/pub/lang/peg.pdf>.
+
+The 'not-in-range' pattern was also added to (ice-9 peg); it is
+available from PEG strings via '[^...]'.
+
+** GOOPS: Introduce new forms method* and define-method*
+
+The module (oop goops) now exports method* and define-method* which are
+the counterparts of lambda* and define* in they provide support for
+advanced argument handling such as optional and keyword arguments. The
+implementation fully supports (next-method) calls, also for keyword
+arguments. The new syntax is documented in the Guile Reference manual.
+
+** New line or field iteration procedures in (ice-9 rdelim)
+
+(ice-9 rdelim) has three new procedures: for-rdelim-from-port,
+for-delimited-from-port and for-line-in-file. Of these, for-line-in-file
+is helpful in the common situation where you want a procedure applied to
+every line in a file.
+
+* Changes to the distribution
+
+* Bug fixes
+
+** `basename` now checks the suffix against the base name, not the full path
+   (<https://bugs.gnu.org/69437>)
+** test-hashing should now work on 32-bit systems
+** GUILE-VERSION changes should propagate to .version and relevant Makefiles
+   (<https://bugs.gnu.org/72084>)
+** Compiler no longer crashes when building Guile on 32-bit platforms
+   (<https://bugs.gnu.org/71891>)
+** Compiler no longer crashes when inlining 3.0.9 procedure with kw args
+   (<https://bugs.gnu.org/72936>)
+** Guile is compiled with -fexcess-precision=standard for i[3456]86 when possible
+   (<https://bugs.gnu.org/43262>)
+** Fix setjmp/longjmp-related crashes on Windows
+   (<https://bugs.gnu.org/73167>)
+** Fix portability issues for macOS
+   (<https://bugs.gnu.org/72547>)
+** Fix compilation with GCC 14 and musl on 32-bit systems
+   (<https://bugs.gnu.org/73835>)
+** Immutable stringbufs are now 8-byte aligned on all systems
+   Previously they could end up with an alignment that violated the type
+   tag for their type (e.g. ending up tagged as immediates SCM_IMP()).
+
+
+Changes in 3.0.10 (since 3.0.9)
+
+* Notable changes
+
+** Beginnings of support for alternate back-ends
+
+A number of adaptations and additions of as-yet unstable interfaces have
+been made to allow third-party projects such as the Hoot
+Guile-to-WebAssembly whole-program compiler
+(https://spritely.institute/hoot/) to use the Guile front-end and
+optimizer.  Depending on how Hoot development goes, we may consider
+adding first-class support for WebAssembly as a compilation target;
+discussion is welcome on the guile-devel mailing list.
+
+** `define` in all bodies
+
+`define` adds a definition to the body in which it appears, as if each
+non-tail definition or expression in that body were a binding in a
+surrounding `letrec*` clause.  However, in some places, using `define`
+would result in the annoying error "definition in expression context,
+where definitions are not allowed", which could be fixed by explicitly
+adding a surrounding binding contour, for example an empty `let`.  This
+was because there was no implicit surrounding lexical binding contour
+for the body of `when` and `unless`, for `cond` clauses, `case` clauses,
+`and-let*` bodies, and `with-fluids`.  But no more; now these contexts
+now create a binding contour, allowing the use of `define`.
+
+** Two bug fixes of note regarding scoping of top-level variables
+
+Previously, a reference to a top-level variable in a module other than
+the current module would be silently rewritten to reference the current
+module, if the variable was unbound in its original module.  This was a
+hack from the early days of when we extended psyntax to know about the
+module system, and is now fixed to properly use the scope of the
+introduced binding instead of the scope of the macro use site.
+
+Also, embarrassingly, sometimes macro-introduced top-level variables
+would use the same generated name.  This is because of the strategy
+discussed in the manual, "Hygiene and the Top-Level"; sometimes the
+hashes would collide, for example if two definitions were the same in
+the beginning and only differed long into the end.  This has been fixed
+to ensure name uniqueness.
+
+* New interfaces and functionality
+
+** R6RS custom textual ports
+
+Guile finally supports this venerable R6RS interface; see "Custom Ports"
+in the manual for more.  These ports are suspendable (see "Non-Blocking
+I/O").  Also new in this release, custom binary ports are now
+suspendable as well.
+
+** New "soft port" interface
+
+Instead of using R6RS custom textual ports, we recommend the new "soft
+ports" facility, because it is easier to use while also being more
+expressive.  See "Soft Ports" in the manual for more details.
+
+Soft ports are implemented by the new module `(ice-9 soft-ports)`.
+There is a legacy "soft ports" facility exported by `(guile)` which will
+be deprecated at some point.
+
+** New "custom port" facility: (ice-9 custom-ports)
+
+Custom ports are like R6RS custom binary ports, but lower-level, having
+access to all of Guile's internal port API.  See "Custom Ports" in the
+manual.
+
+** New surface syntax: Wisp (SRFI-119)
+
+Guile now includes SRFI-119, commonly referred to as Wisp (for
+"Whitespace for Lisp"), a Pythonesque surface syntax for Scheme where
+parentheses are replaced by equivalent indentation.  See SRFI-119 in the
+manual.
 
 ** New warning: unused-module
 
@@ -21,7 +158,72 @@ definitely unused---this is notably the case for modules that are only
 used at macro-expansion time, such as (srfi srfi-26).  In those cases,
 the compiler reports it as "possibly unused".
 
-** Improve 'load-foreign-library' handling of DLLs
+** New documentation on inline procedure property declarations
+
+Did you know that you can annotate procedures with properties?  It goes
+like this:
+
+  (define (frobnicate)
+    #((fruits . (apple banana)))
+    (whatever))
+  (procedure-property frobnicate 'fruits) => (apple banana)
+
+Now you know, and now it is documented in "Procedure Properties" in the
+manual.  It has been this way since at Guile 2.0, but was never
+documented before.
+
+** New procedure annotation: maybe-unused
+
+The utility of the `-Wunused-toplevel` warning, enabled at `-W2`, has
+historically been somewhat limited, especially when a macro generates a
+number of bindings, not all of which may be used.  To produce more
+useful results, we now allow procedures to set the `maybe-unused`
+property, which if true will not result in unused-toplevel warnings.
+This property is set by `define-inlinable`, in case an inline binding
+never needs the procedure-as-value definition.
+
+** New exports from `(system foreign)`: read-c-struct, write-c-struct
+
+See "Foreign Structs" in the manual.  These macros are like the older
+`parse-c-struct` / `make-c-struct` procedures, but they are more
+efficient because they inline the field accesses and don't deal in
+lists.
+
+** Wider backtraces when not writing to a terminal
+
+When writing a backtrace, if the output port is not a terminal, Guile
+truncates the lines at 500 characters instead of 80.  Override this
+width via the `default-frame-width` parameter exported by the `(system
+repl debug)` module.
+
+** copy-file now supports copy-on-write
+
+The copy-file procedure now takes an additional keyword argument,
+#:copy-on-write, specifying whether copy-on-write should be done, if the
+underlying file-system supports it.  Possible values are 'always, 'auto
+and 'never, with 'auto being the default.
+
+This speeds up copying large files a lot while saving the disk space.
+
+** 'seek' can now navigate holes in sparse files
+
+On systems that support it, such as GNU/Linux, the new SEEK_DATA and
+SEEK_HOLE values can now be passed to the 'seek' procedure to change
+file offset to the next piece of data or to the next hole in sparse
+files.  See "Random Access" in the manual for details.
+
+** ((scm foreign-object) make-foreign-object-type) now supports #:super
+
+A list of superclasses can now be provided via #:super.
+
+** 'get-bytevector-all' is now written in Scheme and is thus suspendable
+
+The 'get-bytevector-all' procedure from (rnrs io ports) and (ice-9
+binary-port) used to be implemented in C, making it non-suspendable--a
+bummer for programs using suspendable ports and Fibers.  It has been
+rewritten in Scheme, addressing this limitation.
+
+** improve 'load-foreign-library' handling of DLLs
 
 The non-libltdl load-foreign-library introduced in 3.0.6 does not handle
 some common cases with libtool-generated DLLs.  It has been updated
@@ -30,11 +232,43 @@ by libtool, such as libfoo-1.dll.
 
 Also, it has been updated to do library renaming for MSYS.  On Cygwin,
 when the #:rename-on-cygwin? option is #t, it already had the capability
-to search for "libfo[[Oo" as "cygfoo.dll".  It has been updated to add the
+to search for "libfoo" as "cygfoo.dll".  It has been updated to add the
 capability to search for "libfoo" as "msys-foo.dll" on MSYS.
 
 The load-foreign-library option #:rename-on-cygwin? has been changed to
 #:host-type-rename?, and handles both Cygwin and MSYS.
+
+* Performance improvements
+
+** Better compilation of calls to procedures with keyword arguments
+
+Calls to keyword-arg functions can now be inlined.  Even when not
+inlined, sometimes now we can compute default values for missing
+keywords at the callee instead of in the caller.
+
+** Better compilation of append with more than 2 arguments
+** Better compilation logand with one immediate argument
+** Better type inference for result of symbol-hash
+** Elide effect-free primitive calls when called for effect
+** Constant folding for string->utf8
+** JIT improvements for rarely-used push/pop/drop
+** Better type inference for numeric tower predicates
+** Better compilation for calls to raise-exception
+** Smaller disk usage via sparse binary files
+
+* New deprecations
+
+** (ice-9 lineio)
+
+Use read-line together with unread-string instead.
+
+* Changes to the distribution
+
+** Parallel test driver for Guile unit tests
+
+Guile's internal unit test harness is now compatible with Automake's
+parallel test driver, allowing `make check -j20` to use 20 cores, if you
+have them.  Send any bug reports to bug-guile@gnu.org.
 
 ** Make piped-process and system* available on systems without fork
 
@@ -97,6 +331,8 @@ text files.
 
 * Bug fixes
 
+** Fix incorrect comparison between exact and inexact numbers
+   (<https://debbugs.gnu.org/69725>)
 ** (ice-9 suspendable-ports) incorrect UTF-8 decoding
    (<https://bugs.gnu.org/62290>)
 ** Fix invalid use of 'posix_spawn' on non-glibc systems
@@ -105,23 +341,51 @@ text files.
    (<https://bugs.gnu.org/62501>)
 ** Fix 'system*' with non-file input/output/error port
    (<https://bugs.gnu.org/63024>)
+** 'spawn' errors out instead of crashing when passed non-file ports
+   (<https://bugs.gnu.org/61073>)
+** Support signal handling child processes after 'primitive-fork'
+   (<https://bugs.gnu.org/68087>)
 ** Fix possible deadlock in 'sigaction' (aka. 'scm_sigaction_for_thread')
    (<https://bugs.gnu.org/64666>)
 ** Avoid module resolution in 'call-with-new-thread', which could deadlock
    (<https://bugs.gnu.org/62691>)
+** Fix deadlock in 'join-thread' when timeout is hit
+   (<https://bugs.gnu.org/55356>)
 ** 'read-u8' in (scheme base) now defaults to (current-input-port)
    (<https://bugs.gnu.org/62690>)
+** Second argument of 'unread-string' is now optional, as previously documented
+   (<https://bugs.gnu.org/67063>)
+** 'ftw' now correctly deals with directory permissions
+   (<https://bugs.gnu.org/55344>)
+** 'make-custom-port' now honors its #:conversion-strategy argument
+** 'eval-string' respects #:column (previously it was set to the #:line)
+** 'string->date' now allows a colon in the ISO 8601 zone offset
+** 'system*' no longer fiddles with the process' signal handlers
+   (<https://bugs.gnu.org/70144>)
+** Fix bug with JIT of atomic swap on AArch64
+   (https://github.com/wingo/fibers/issues/83)
+** Fix exception dispatch for exceptions thrown within pre-unwind
+   handlers
+** Fix error computing backtrace when call-with-values on stack
+** Fix r7rs string-for-each to stop when any string runs out of chars
 ** Hashing of UTF-8 symbols with non-ASCII characters avoids corruption
    (<https://bugs.gnu.org/56413>)
 
-This issue could cause `scm_from_utf8_symbol' and
-`scm_from_utf8_symboln` to incorrectly conclude that the symbol hadn't
-already been interned, and then create a new one, which of course
-wouldn't be `eq?' to the other(s).  The incorrect hash was the result of
-a buffer overrun, and so might vary.  This problem affected a number of
-other operations, given the internal use of those functions.
-
+   This issue could cause `scm_from_utf8_symbol' and
+   `scm_from_utf8_symboln` to incorrectly conclude that the symbol hadn't
+   already been interned, and then create a new one, which of course
+   wouldn't be `eq?' to the other(s).  The incorrect hash was the result of
+   a buffer overrun, and so might vary.  This problem affected a number of
+   other operations, given the internal use of those functions.
 ** In MinGW, fix tmpnam returning names in root directory
+
+Hearty thanks to Arne Babenhauserheide, Arsen Arsenović, Bruno Victal,
+Christopher Baines, Daniel Llorens, Denis 'GNUtoo' Carikli, Ekaitz
+Zarraga, Jonas Hahnfeld, Jorge Gomez, Josselin Poiret, Juliana Sims,
+Linus Bjornstam, Luke Nihlen, Maxim Cournoyer, Michael Gran, Michael
+Käppler, Mikael Djurfeldt, Morgan Smith, Nikita Domnitskii, Olivier
+Dion, Rob Browning, Taylan Kammer, Timothy Sample, Tomas Volf, Tony
+Garnock-Jones, and 無無for their patches and bug reports.
 
 
 Changes in 3.0.9 (since 3.0.8)
@@ -9595,7 +9859,7 @@ Use scm_object_to_string instead.
 
 ** Deprecated function:  scm_wta
 
-Use scm_wrong_type_arg, or another appropriate error signalling function
+Use scm_wrong_type_arg, or another appropriate error signaling function
 instead.
 
 ** Explicit support for obarrays has been deprecated.

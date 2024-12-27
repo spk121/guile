@@ -103,11 +103,14 @@ and Scheme}, for some examples.
 (use-modules (system foreign-object))
 @end example
 
-@deffn {Scheme Procedure} make-foreign-object-type name slots [#:finalizer=#f]
+@deffn {Scheme Procedure} make-foreign-object-type name slots [#:finalizer=#f] [#:supers='()]
+
 Make a new foreign object type.  See the above documentation for
 @code{scm_make_foreign_object_type}; these functions are exactly
 equivalent, except for the way in which the finalizer gets attached to
-instances (an internal detail).
+instances (an internal detail), and the fact that this function accepts
+an optional list of superclasses, which will be paseed to
+@code{make-class}.
 
 The resulting value is a GOOPS class.  @xref{GOOPS}, for more on classes
 in Guile.

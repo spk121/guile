@@ -1,7 +1,8 @@
 @c -*-texinfo-*-
 @c This is part of the GNU Guile Reference Manual.
-@c Copyright (C) 1996, 1997, 2000-2004, 2006, 2007-2014, 2017, 2018, 2019, 2020
+@c Copyright (C) 1996-1997, 2000-2004, 2006-2014, 2017-2020, 2023
 @c   Free Software Foundation, Inc.
+@c Copyright (C) 2005-2006 Per Bothner
 @c See the file guile.texi for copying conditions.
 
 @node SRFI Support
@@ -55,7 +56,7 @@ get the relevant SRFI documents from the SRFI home page
 * SRFI-60::                     Integers as bits.
 * SRFI-61::                     A more general `cond' clause
 * SRFI-62::                     S-expression comments.
-* SRFI-64::                     A Scheme API for test suites.
+* SRFI-64::                     Writing test suites.
 * SRFI-67::                     Compare procedures
 * SRFI-69::                     Basic hash tables.
 * SRFI-71::                     Extended let-syntax for multiple values.
@@ -64,6 +65,7 @@ get the relevant SRFI documents from the SRFI home page
 * SRFI-98::                     Accessing environment variables.
 * SRFI-105::                    Curly-infix expressions.
 * SRFI-111::                    Boxes.
+* SRFI-119::                    Wisp: simpler indentation-sensitive Scheme.
 * SRFI-171::                    Transducers
 @end menu
 
@@ -1037,6 +1039,8 @@ return the result.  This is equivalent to
 core does the same thing.
 @end deffn
 
+@rnindex alist-copy
+@anchor{x-alist-copy}
 @deffn {Scheme Procedure} alist-copy alist
 Return a newly allocated copy of @var{alist}, that means that the
 spine of the list as well as the pairs are copied.
@@ -2135,21 +2139,21 @@ a SRFI-18 mutex, and a Guile thread is not a SRFI-18 thread, and so on.
 Guile provides a set of primitives and SRFI-18 is one of the systems built in terms of those primitives.
 
 @menu
-* SRFI-18 Threads::             Executing code 
+* SRFI-18 Threads::             Executing code
 * SRFI-18 Mutexes::             Mutual exclusion devices
 * SRFI-18 Condition variables:: Synchronizing of groups of threads
 * SRFI-18 Time::                Representation of times and durations
-* SRFI-18 Exceptions::          Signalling and handling errors
+* SRFI-18 Exceptions::          Signaling and handling errors
 @end menu
 
 @node SRFI-18 Threads
 @subsubsection SRFI-18 Threads
 
-Threads created by SRFI-18 differ in two ways from threads created by 
+Threads created by SRFI-18 differ in two ways from threads created by
 Guile's built-in thread functions.  First, a thread created by SRFI-18
-@code{make-thread} begins in a blocked state and will not start 
+@code{make-thread} begins in a blocked state and will not start
 execution until @code{thread-start!} is called on it.  Second, SRFI-18
-threads are constructed with a top-level exception handler that 
+threads are constructed with a top-level exception handler that
 captures any exceptions that are thrown on thread exit.
 
 SRFI-18 threads are disjoint from Guile's primitive threads.
@@ -2163,7 +2167,7 @@ procedure as the same-named built-in procedure @code{current-thread}
 
 @defun thread? obj
 Returns @code{#t} if @var{obj} is a thread, @code{#f} otherwise.  This
-is the same procedure as the same-named built-in procedure 
+is the same procedure as the same-named built-in procedure
 @code{thread?} (@pxref{Threads}).
 @end defun
 
@@ -2172,9 +2176,9 @@ Call @code{thunk} in a new thread and with a new dynamic state,
 returning the new thread and optionally assigning it the object name
 @var{name}, which may be any Scheme object.
 
-Note that the name @code{make-thread} conflicts with the 
-@code{(ice-9 threads)} function @code{make-thread}.  Applications 
-wanting to use both of these functions will need to refer to them by 
+Note that the name @code{make-thread} conflicts with the
+@code{(ice-9 threads)} function @code{make-thread}.  Applications
+wanting to use both of these functions will need to refer to them by
 different names.
 @end defun
 
@@ -2196,49 +2200,49 @@ done so already.
 @end defun
 
 @defun thread-yield!
-If one or more threads are waiting to execute, calling 
+If one or more threads are waiting to execute, calling
 @code{thread-yield!} forces an immediate context switch to one of them.
-Otherwise, @code{thread-yield!} has no effect.  @code{thread-yield!} 
+Otherwise, @code{thread-yield!} has no effect.  @code{thread-yield!}
 behaves identically to the Guile built-in function @code{yield}.
 @end defun
 
 @defun thread-sleep! timeout
 The current thread waits until the point specified by the time object
-@var{timeout} is reached (@pxref{SRFI-18 Time}).  This blocks the 
-thread only if @var{timeout} represents a point in the future.  it is 
+@var{timeout} is reached (@pxref{SRFI-18 Time}).  This blocks the
+thread only if @var{timeout} represents a point in the future.  it is
 an error for @var{timeout} to be @code{#f}.
 @end defun
 
 @defun thread-terminate! thread
 Causes an abnormal termination of @var{thread}.  If @var{thread} is
 not already terminated, all mutexes owned by @var{thread} become
-unlocked/abandoned.  If @var{thread} is the current thread, 
-@code{thread-terminate!} does not return.  Otherwise 
+unlocked/abandoned.  If @var{thread} is the current thread,
+@code{thread-terminate!} does not return.  Otherwise
 @code{thread-terminate!} returns an unspecified value; the termination
-of @var{thread} will occur before @code{thread-terminate!} returns.  
-Subsequent attempts to join on @var{thread} will cause a ``terminated 
+of @var{thread} will occur before @code{thread-terminate!} returns.
+Subsequent attempts to join on @var{thread} will cause a ``terminated
 thread exception'' to be raised.
 
 @code{thread-terminate!} is compatible with the thread cancellation
-procedures in the core threads API (@pxref{Threads}) in that if a 
-cleanup handler has been installed for the target thread, it will be 
+procedures in the core threads API (@pxref{Threads}) in that if a
+cleanup handler has been installed for the target thread, it will be
 called before the thread exits and its return value (or exception, if
-any) will be stored for later retrieval via a call to 
+any) will be stored for later retrieval via a call to
 @code{thread-join!}.
 @end defun
 
 @defun thread-join! thread [timeout [timeout-val]]
-Wait for @var{thread} to terminate and return its exit value.  When a 
+Wait for @var{thread} to terminate and return its exit value.  When a
 time value @var{timeout} is given, it specifies a point in time where
-the waiting should be aborted.  When the waiting is aborted, 
+the waiting should be aborted.  When the waiting is aborted,
 @var{timeout-val} is returned if it is specified; otherwise, a
-@code{join-timeout-exception} exception is raised 
-(@pxref{SRFI-18 Exceptions}).  Exceptions may also be raised if the 
-thread was terminated by a call to @code{thread-terminate!} 
-(@code{terminated-thread-exception} will be raised) or if the thread 
-exited by raising an exception that was handled by the top-level 
-exception handler (@code{uncaught-exception} will be raised; the 
-original exception can be retrieved using 
+@code{join-timeout-exception} exception is raised
+(@pxref{SRFI-18 Exceptions}).  Exceptions may also be raised if the
+thread was terminated by a call to @code{thread-terminate!}
+(@code{terminated-thread-exception} will be raised) or if the thread
+exited by raising an exception that was handled by the top-level
+exception handler (@code{uncaught-exception} will be raised; the
+original exception can be retrieved using
 @code{uncaught-exception-reason}).
 @end defun
 
@@ -2271,19 +2275,19 @@ Set the ``object-specific'' property of @var{mutex}.
 @end defun
 
 @defun mutex-state mutex
-Returns information about the state of @var{mutex}.  Possible values 
+Returns information about the state of @var{mutex}.  Possible values
 are:
 @itemize @bullet
 @item
 thread @var{t}: the mutex is in the locked/owned state and thread
 @var{t} is the owner of the mutex
-@item 
+@item
 symbol @code{not-owned}: the mutex is in the locked/not-owned state
 @item
 symbol @code{abandoned}: the mutex is in the unlocked/abandoned state
 @item
-symbol @code{not-abandoned}: the mutex is in the 
-unlocked/not-abandoned state 
+symbol @code{not-abandoned}: the mutex is in the
+unlocked/not-abandoned state
 @end itemize
 @end defun
 
@@ -2347,14 +2351,14 @@ for it, in the case of @code{condition-variable-broadcast!}.
 @node SRFI-18 Time
 @subsubsection SRFI-18 Time
 
-The SRFI-18 time functions manipulate time in two formats: a 
-``time object'' type that represents an absolute point in time in some 
-implementation-specific way; and the number of seconds since some 
+The SRFI-18 time functions manipulate time in two formats: a
+``time object'' type that represents an absolute point in time in some
+implementation-specific way; and the number of seconds since some
 unspecified ``epoch''.  In Guile's implementation, the epoch is the
 Unix epoch, 00:00:00 UTC, January 1, 1970.
 
 @defun current-time
-Return the current time as a time object.  This procedure replaces 
+Return the current time as a time object.  This procedure replaces
 the procedure of the same name in the core library, which returns the
 current time in seconds since the epoch.
 @end defun
@@ -2366,10 +2370,10 @@ Returns @code{#t} if @var{obj} is a time object, @code{#f} otherwise.
 @defun time->seconds time
 @defunx seconds->time seconds
 Convert between time objects and numerical values representing the
-number of seconds since the epoch.  When converting from a time object 
-to seconds, the return value is the number of seconds between 
-@var{time} and the epoch.  When converting from seconds to a time 
-object, the return value is a time object that represents a time 
+number of seconds since the epoch.  When converting from a time object
+to seconds, the return value is the number of seconds between
+@var{time} and the epoch.  When converting from seconds to a time
+object, the return value is a time object that represents a time
 @var{seconds} seconds after the epoch.
 @end defun
 
@@ -2377,8 +2381,8 @@ object, the return value is a time object that represents a time
 @node SRFI-18 Exceptions
 @subsubsection SRFI-18 Exceptions
 
-SRFI-18 exceptions are identical to the exceptions provided by 
-Guile's implementation of SRFI-34.  The behavior of exception 
+SRFI-18 exceptions are identical to the exceptions provided by
+Guile's implementation of SRFI-34.  The behavior of exception
 handlers invoked to handle exceptions thrown from SRFI-18 functions,
 however, differs from the conventional behavior of SRFI-34 in that
 the continuation of the handler is the same as that of the call to
@@ -2391,9 +2395,9 @@ Returns the current exception handler.
 
 @defun with-exception-handler handler thunk
 Installs @var{handler} as the current exception handler and calls the
-procedure @var{thunk} with no arguments, returning its value as the 
+procedure @var{thunk} with no arguments, returning its value as the
 value of the exception.  @var{handler} must be a procedure that accepts
-a single argument. The current exception handler at the time this 
+a single argument. The current exception handler at the time this
 procedure is called will be restored after the call returns.
 @end defun
 
@@ -2403,7 +2407,7 @@ same-named procedure defined in SRFI 34.
 @end defun
 
 @defun join-timeout-exception? obj
-Returns @code{#t} if @var{obj} is an exception raised as the result of 
+Returns @code{#t} if @var{obj} is an exception raised as the result of
 performing a timed join on a thread that does not exit within the
 specified timeout, @code{#f} otherwise.
 @end defun
@@ -2415,23 +2419,23 @@ attempting to lock a mutex that has been abandoned by its owner thread,
 @end defun
 
 @defun terminated-thread-exception? obj
-Returns @code{#t} if @var{obj} is an exception raised as the result of 
+Returns @code{#t} if @var{obj} is an exception raised as the result of
 joining on a thread that exited as the result of a call to
 @code{thread-terminate!}.
 @end defun
 
 @defun uncaught-exception? obj
 @defunx uncaught-exception-reason exc
-@code{uncaught-exception?} returns @code{#t} if @var{obj} is an 
+@code{uncaught-exception?} returns @code{#t} if @var{obj} is an
 exception thrown as the result of joining a thread that exited by
 raising an exception that was handled by the top-level exception
-handler installed by @code{make-thread}.  When this occurs, the 
+handler installed by @code{make-thread}.  When this occurs, the
 original exception is preserved as part of the exception thrown by
-@code{thread-join!} and can be accessed by calling 
+@code{thread-join!} and can be accessed by calling
 @code{uncaught-exception-reason} on that exception.  Note that
 because this exception-preservation mechanism is a side-effect of
 @code{make-thread}, joining on threads that exited as described above
-but were created by other means will not raise this 
+but were created by other means will not raise this
 @code{uncaught-exception} error.
 @end defun
 
@@ -2450,12 +2454,12 @@ functions and variables described here are provided by
 @end example
 
 @menu
-* SRFI-19 Introduction::        
-* SRFI-19 Time::                
-* SRFI-19 Date::                
-* SRFI-19 Time/Date conversions::  
-* SRFI-19 Date to string::      
-* SRFI-19 String to date::      
+* SRFI-19 Introduction::
+* SRFI-19 Time::
+* SRFI-19 Date::
+* SRFI-19 Time/Date conversions::
+* SRFI-19 Date to string::
+* SRFI-19 String to date::
 @end menu
 
 @node SRFI-19 Introduction
@@ -2589,7 +2593,7 @@ Return the current time of the given @var{type}.  The default
 
 Note that the name @code{current-time} conflicts with the Guile core
 @code{current-time} function (@pxref{Time}) as well as the SRFI-18
-@code{current-time} function (@pxref{SRFI-18 Time}).  Applications 
+@code{current-time} function (@pxref{SRFI-18 Time}).  Applications
 wanting to use more than one of these functions will need to refer to
 them by different names.
 @end defun
@@ -2658,7 +2662,7 @@ each context, and apply non-SRFI-19 facilities to convert where necessary.
 Return @code{#t} if @var{obj} is a date object, or @code{#f} if not.
 @end defun
 
-@defun make-date nsecs seconds minutes hours date month year zone-offset
+@defun make-date nsecs seconds minutes hours day month year zone-offset
 Create a new date object.
 @c
 @c  FIXME: What can we say about the ranges of the values.  The
@@ -3065,7 +3069,7 @@ specialization of @code{write}, sending output to
 The special symbol @code{<>} indicates a slot to be filled by an
 argument to the new procedure.  @code{my-output-port} on the other
 hand is an expression to be evaluated and passed, ie.@: it specializes
-the behaviour of @code{write}.
+the behavior of @code{write}.
 
 @table @nicode
 @item <>
@@ -3129,9 +3133,9 @@ functional programming style or just with @code{map}, @code{for-each}
 or similar is typical.
 
 @example
-(map (cut * 2 <>) '(1 2 3 4))         
+(map (cut * 2 <>) '(1 2 3 4))
 
-(for-each (cut write <> my-port) my-list)  
+(for-each (cut write <> my-port) my-list)
 @end example
 @end deffn
 
@@ -3261,7 +3265,7 @@ random source @var{source}, a call to any of these generators advances
 the state of @var{source}.  Hence, the generators do not produce the
 same sequence of random integers each but rather share a state. This
 also holds for all other types of generators derived from a fixed random
-sources.  
+sources.
 
 While the SRFI text specifies that ``Implementations that support
 concurrency make sure that the state of a generator is properly
@@ -3710,7 +3714,7 @@ external representation for data written and read with @code{write} and
 production
 
 @example
-<datum> --> <simple datum> | <compound datum> 
+<datum> --> <simple datum> | <compound datum>
 @end example
 
 is replaced by the following five productions:
@@ -3719,7 +3723,7 @@ is replaced by the following five productions:
 <datum> --> <defining datum> | <nondefining datum> | <defined datum>
 <defining datum> -->  #<indexnum>=<nondefining datum>
 <defined datum> --> #<indexnum>#
-<nondefining datum> --> <simple datum> | <compound datum> 
+<nondefining datum> --> <simple datum> | <compound datum>
 <indexnum> --> <digit 10>+
 @end example
 
@@ -5084,7 +5088,7 @@ In other words, we
 @itemize @bullet
 @item
 wrap all constructors (e.g., @code{'()}, @code{cons}) with @code{delay},
-@item 
+@item
 apply @code{force} to arguments of deconstructors (e.g., @code{car},
 @code{cdr} and @code{null?}),
 @item
@@ -5257,7 +5261,7 @@ and the first list element is the most significant of those bits.  If
 (integer->list 1 4) @result{} (#f #f #f #t)
 @end example
 @end defun
-   
+
 @defun list->integer lst
 @defunx booleans->integer bool@dots{}
 Return an integer formed bitwise from the given @var{lst} list of
@@ -5289,12 +5293,828 @@ needed to get SRFI-61 itself.  Extended @code{cond} is documented in
 Starting from version 2.0, Guile's @code{read} supports SRFI-62/R7RS
 S-expression comments by default.
 
+@c This SRFI 64 documentation was "snarfed" from upstream specification
+@c HTML document using the 'snarfi' script.
 @node SRFI-64
-@subsection SRFI-64 - A Scheme API for test suites.
-@cindex SRFI-64
+@subsection SRFI-64: A Scheme API for Test Suites
+@cindex SRFI-64, test suites
+@cindex test suites, SRFI-64
 
-See @uref{http://srfi.schemers.org/srfi-64/srfi-64.html, the
-specification of SRFI-64}.
+@menu
+* SRFI-64 Abstract::
+* SRFI-64 Rationale::
+* SRFI-64 Writing Basic Test Suites::
+* SRFI-64 Conditonal Test Suites and Other Advanced Features::
+* SRFI-64 Test Runner::
+* SRFI-64 Test Results::
+* SRFI-64 Writing a New Test Runner::
+@end menu
+
+@node SRFI-64 Abstract
+@subsubsection SRFI-64 Abstract
+
+This defines an API for writing @dfn{test suites}, to make it easy to
+portably test Scheme APIs, libraries, applications, and implementations.
+A test suite is a collection of @dfn{test cases} that execute in the
+context of a @dfn{test-runner}.  This specification also supports
+writing new test-runners, to allow customization of reporting and
+processing the result of running test suites.
+
+@node SRFI-64 Rationale
+@subsubsection SRFI-64 Rationale
+
+The Scheme community needs a standard for writing test suites.  Every
+SRFI or other library should come with a test suite.  Such a test suite
+must be portable, without requiring any non-standard features, such as
+modules.  The test suite implementation or "runner" need not be
+portable, but it is desirable that it be possible to write a portable
+basic implementation.
+
+There are other testing frameworks written in Scheme, including
+@url{https://docs.racket-lang.org/rackunit/, RackUnit}.  However
+RackUnit is not portable.  It is also a bit on the verbose side.  It
+would be useful to have a bridge between this framework and RackUnit so
+RackUnit tests could run under this framework and vice versa.  There
+exists also at least one Scheme wrapper providing a Scheme interface to
+the ``standard'' @url{https://www.junit.org/, JUnit} API for Java.  It
+would be useful to have a bridge so that tests written using this
+framework can run under a JUnit runner.  Neither of these features are
+part of this specification.
+
+This API makes use of implicit dynamic state, including an implicit
+``test runner''.  This makes the API convenient and terse to use, but it
+may be a little less elegant and ``compositional'' than using explicit
+test objects, such as JUnit-style frameworks.  It is not claimed to
+follow either object-oriented or functional design principles, but I
+hope it is useful and convenient to use and extend.
+
+This proposal allows converting a Scheme source file to a
+test suite by just adding a few macros.  You don't have to
+write the entire file in a new form, thus you don't have to
+re-indent it.
+
+All names defined by the API start with the prefix @samp{test-}.  All
+function-like forms are defined as syntax.  They may be implemented as
+functions or macros or built-ins.  The reason for specifying them as
+syntax is to allow specific tests to be skipped without evaluating
+sub-expressions, or for implementations to add features such as printing
+line numbers or catching exceptions.
+
+@node SRFI-64 Writing Basic Test Suites
+@subsubsection SRFI-64 Writing Basic Test Suites
+
+Let's start with a simple example.  This is a complete self-contained
+test-suite.
+
+@lisp
+;; Initialize and give a name to a simple testsuite.
+(test-begin "vec-test")
+(define v (make-vector 5 99))
+;; Require that an expression evaluate to true.
+(test-assert (vector? v))
+;; Test that an expression is eqv? to some other expression.
+(test-eqv 99 (vector-ref v 2))
+(vector-set! v 2 7)
+(test-eqv 7 (vector-ref v 2))
+;; Finish the testsuite, and report results.
+(test-end "vec-test")
+@end lisp
+
+This testsuite could be saved in its own source file.  Nothing else is
+needed: We do not require any top-level forms, so it is easy to wrap an
+existing program or test to this form, without adding indentation.  It
+is also easy to add new tests, without having to name individual tests
+(though that is optional).
+
+Test cases are executed in the context of a @dfn{test runner}, which is
+a object that accumulates and reports test results.  This specification
+defines how to create and use custom test runners, but implementations
+should also provide a default test runner.  It is suggested (but not
+required) that loading the above file in a top-level environment will
+cause the tests to be executed using an implementation-specified default
+test runner, and @code{test-end} will cause a summary to be displayed in
+an implementation-specified manner.
+
+@subsubheading Simple test-cases
+
+Primitive test cases test that a given condition is true.  They may have
+a name.  The core test case form is @code{test-assert}:
+
+@deffn {Scheme Syntax} test-assert [test-name] expression
+
+This evaluates the @var{expression}.  The test passes if the result is
+true; if the result is false, a test failure is reported.  The test also
+fails if an exception is raised, assuming the implementation has a way
+to catch exceptions.  How the failure is reported depends on the test
+runner environment.  The @var{test-name} is a string that names the test
+case.  (Though the @var{test-name} is a string literal in the examples,
+it is an expression.  It is evaluated only once.)  It is used when
+reporting errors, and also when skipping tests, as described below.  It
+is an error to invoke @code{test-assert}if there is no current test
+runner.
+@end deffn
+
+The following forms may be more convenient than using @code{test-assert}
+directly:
+
+@deffn {Scheme Syntax} test-eqv [test-name] expected test-expr
+
+This is equivalent to:
+
+@lisp
+(test-assert [@var{test-name}] (eqv? @var{expected} @var{test-expr}))
+@end lisp
+
+@end deffn
+
+Similarly @code{test-equal} and @code{test-eq} are shorthand for
+@code{test-assert} combined with @code{equal?} or @code{eq?},
+respectively:
+
+@deffn {Scheme Syntax} test-equal [test-name] expected test-expr
+@deffnx {Scheme Syntax} test-eq [test-name] expected test-expr
+
+Here is a simple example:
+
+@lisp
+(define (mean x y) (/ (+ x y) 2.0))
+(test-eqv 4 (mean 3 5))
+@end lisp
+@end deffn
+
+For testing approximate equality of inexact reals
+we can use @code{test-approximate}:
+
+@deffn {Scheme Syntax} test-approximate [test-name] expected test-expr error
+
+This is equivalent to (except that each argument is only evaluated
+once):
+
+@lisp
+(test-assert [test-name]
+  (and (>= test-expr (- expected error))
+       (<= test-expr (+ expected error))))
+@end lisp
+@end deffn
+
+@subsubheading Tests for catching errors
+
+We need a way to specify that evaluation @emph{should} fail.  This
+verifies that errors are detected when required.
+
+@deffn {Scheme Syntax} test-error [[test-name] error-type] test-expr
+
+Evaluating @var{test-expr} is expected to signal an error.  The kind of
+error is indicated by @var{error-type}.
+
+If the @var{error-type} is left out, or it is @code{#t}, it means "some
+kind of unspecified error should be signaled".  For example:
+
+@lisp
+(test-error #t (vector-ref '#(1 2) 9))
+@end lisp
+
+This specification leaves it implementation-defined (or for a future
+specification) what form @var{test-error} may take, though all
+implementations must allow @code{#t}.  Some implementations may support
+@url{https://srfi.schemers.org/srfi-35/srfi-35.html, SRFI-35's
+conditions}, but these are only standardized for
+@url{https://srfi.schemers.org/srfi-36/srfi-36.html, SRFI-36's I/O
+conditions}, which are seldom useful in test suites.  An implementation
+may also allow implementation-specific ``exception types''.  For example
+Java-based implementations may allow the names of Java exception
+classes:
+
+@lisp
+;; Kawa-specific example
+(test-error <java.lang.IndexOutOfBoundsException> (vector-ref '#(1 2) 9))
+@end lisp
+
+An implementation that cannot catch exceptions should skip
+@code{test-error} forms.
+@end deffn
+
+@subsubheading Testing syntax
+
+Testing syntax is tricky, especially if we want to check that invalid
+syntax is causing an error.  The following utility function can help:
+
+@deffn {Scheme Procedure} test-read-eval-string string
+
+This function parses @var{string} (using @code{read}) and evaluates the
+result.  The result of evaluation is returned from
+@code{test-read-eval-string}.  An error is signalled if there are unread
+characters after the @code{read} is done.  For example:
+@code{(test-read-eval-string "(+ 3 4)")} @i{evaluates to} @code{7}.
+@code{(test-read-eval-string "(+ 3 4")} @i{signals an error}.
+@code{(test-read-eval-string "(+ 3 4) ")} @i{signals an error}, because
+there is extra ``junk'' (@i{i.e.} a space) after the list is read.
+
+The @code{test-read-eval-string} used in tests:
+
+@lisp
+(test-equal 7 (test-read-eval-string "(+ 3 4)"))
+(test-error (test-read-eval-string "(+ 3"))
+(test-equal #\newline (test-read-eval-string "#\\newline"))
+(test-error (test-read-eval-string "#\\newlin"))
+;; Skip the next 2 tests unless srfi-62 is available.
+(test-skip (cond-expand (srfi-62 0) (else 2)))
+(test-equal 5 (test-read-eval-string "(+ 1 #;(* 2 3) 4)"))
+(test-equal '(x z) (test-read-string "(list 'x #;'y 'z)"))
+@end lisp
+@end deffn
+
+@subsubheading Test groups and paths
+
+A @dfn{test group} is a named sequence of forms containing testcases,
+expressions, and definitions.  Entering a group sets the @dfn{test group
+name}; leaving a group restores the previous group name.  These are
+dynamic (run-time) operations, and a group has no other effect or
+identity.  Test groups are informal groupings: they are neither Scheme
+values, nor are they syntactic forms.
+@c (More formal <q>test suite</q> values are introduced below.)
+A test group may contain nested inner test groups.
+The @dfn{test group path} is a list of the currently-active
+(entered) test group names, oldest (outermost) first.
+
+@deffn {Scheme Syntax} test-begin suite-name [count]
+
+A @code{test-begin} enters a new test group.  The @var{suite-name}
+becomes the current test group name, and is added to the end of the test
+group path.  Portable test suites should use a string literal for
+@var{suite-name}; the effect of expressions or other kinds of literals
+is unspecified.
+
+@emph{Rationale:} In some ways using symbols would be preferable.
+However, we want human-readable names, and standard Scheme does not
+provide a way to include spaces or mixed-case text in literal symbols.
+
+The optional @var{count} must match the number of test-cases executed by
+this group.  (Nested test groups count as a single test case for this
+count.)  This extra test may be useful to catch cases where a test
+doesn't get executed because of some unexpected error.
+
+Additionally, if there is no currently executing test runner,
+one is installed in an implementation-defined manner.
+@end deffn
+
+@deffn {Scheme Syntax} test-end [suite-name]
+
+A @code{test-end} leaves the current test group.
+An error is reported if the @var{suite-name} does not
+match the current test group name.
+@c If it does match an earlier name in the test group path, intervening
+@c groups are left.
+
+Additionally, if the matching @code{test-begin}installed a new
+test-runner, then the @code{test-end} will uninstall it, after reporting
+the accumulated test results in an implementation-defined manner.
+@end deffn
+
+@deffn {Scheme Syntax} test-group suite-name decl-or-expr @dots{}
+
+Equivalent to:
+
+@lisp
+(if (not (test-to-skip% (var suite-name)))
+  (dynamic-wind
+    (lambda () (test-begin (var suite-name)))
+    (lambda () (var decl-or-expr) ...)
+    (lambda () (test-end (var suite-name)))))
+@end lisp
+
+This is usually equivalent to executing the @var{decl-or-expr}s
+within the named test group.  However, the entire group is skipped
+if it matched an active @code{test-skip} (see later).
+Also, the @code{test-end} is executed in case of an exception.
+@end deffn
+
+@subsubheading Handling set-up and cleanup
+
+@deffn {Scheme Syntax} test-group-with-cleanup suite-name decl-or-expr @dots{} cleanup-form
+
+Execute each of the @var{decl-or-expr} forms in order (as in a
+@var{<body>}), and then execute the @var{cleanup-form}.  The latter
+should be executed even if one of a @var{decl-or-expr} forms raises an
+exception (assuming the implementation has a way to catch exceptions).
+
+For example:
+
+@lisp
+(let ((f (open-output-file "log")))
+  (test-group-with-cleanup "test-file"
+    (do-a-bunch-of-tests f)
+    (close-output-port f)))
+@end lisp
+@end deffn
+
+@node SRFI-64 Conditonal Test Suites and Other Advanced Features
+@subsubsection SRFI-64 Conditonal Test Suites and Other Advanced Features
+
+The following describes features for controlling which tests to execute,
+or specifying that some tests are @emph{expected} to fail.
+
+@subsubheading Test specifiers
+
+Sometimes we want to only run certain tests, or we know that certain
+tests are expected to fail.  A @dfn{test specifier} is one-argument
+function that takes a test-runner and returns a boolean.  The specifier
+may be run before a test is performed, and the result may control
+whether the test is executed.  For convenience, a specifier may also be
+a non-procedure value, which is coerced to a specifier procedure, as
+described below for @var{count} and @var{name}.
+
+A simple example is:
+
+@lisp
+(if (var some-condition)  (test-skip 2)) ;; skip next 2 tests
+@end lisp
+
+@deffn {Scheme Procedure} test-match-name name
+
+The resulting specifier matches if the current test name (as returned by
+@code{test-runner-test-name}) is @code{equal?} to @var{name}.
+@end deffn
+
+@deffn {Scheme Syntax} test-match-nth n [count]
+
+This evaluates to a @emph{stateful} predicate: A counter keeps track of
+how many times it has been called.  The predicate matches the @var{n}'th
+time it is called (where @code{1} is the first time), and the next
+@samp{(- @var{count} 1)} times, where @var{count} defaults to @code{1}.
+@end deffn
+
+@deffn {Scheme Syntax} test-match-any specifier @dots{}
+
+The resulting specifier matches if any @var{specifier} matches.  Each
+@var{specifier} is applied, in order, so side-effects from a later
+@var{specifier} happen even if an earlier @var{specifier} is true.
+@end deffn
+
+@deffn {Scheme Syntax} test-match-all specifier @dots{}
+
+The resulting specifier matches if each @var{specifier} matches.  Each
+@var{specifier} is applied, in order, so side-effects from a later
+@var{specifier} happen even if an earlier @var{specifier} is false.
+@end deffn
+
+@var{count} @i{(i.e. an integer)}
+Convenience short-hand for: @samp{(test-match-nth 1 @var{count})}.
+
+@var{name} @i{(i.e. a string)}
+Convenience short-hand for @samp{(test-match-name @var{name})}.
+
+@subsubheading Skipping selected tests
+
+In some cases you may want to skip a test.
+
+@deffn {Scheme Syntax} test-skip specifier
+
+Evaluating @code{test-skip} adds the resulting @var{specifier} to the
+set of currently active skip-specifiers.  Before each test (or
+@code{test-group}) the set of active skip-specifiers are applied to the
+active test-runner.  If any specifier matches, then the test is skipped.
+
+For convenience, if the @var{specifier} is a string that is syntactic
+sugar for @code{(test-match-name @var{specifier})}.  For example:
+
+@lisp
+(test-skip "test-b")
+(test-assert "test-a")   ;; executed
+(test-assert "test-b")   ;; skipped
+@end lisp
+
+Any skip specifiers introduced by a @code{test-skip} are removed by a
+following non-nested @code{test-end}.
+
+@lisp
+(test-begin "group1")
+(test-skip "test-a")
+(test-assert "test-a")   ;; skipped
+(test-end "group1")      ;; Undoes the prior test-skip
+(test-assert "test-a")   ;; executed
+@end lisp
+@end deffn
+
+@subsubheading Expected failures
+
+Sometimes you know a test case will fail, but you don't have time to or
+can't fix it.  Maybe a certain feature only works on certain platforms.
+However, you want the test-case to be there to remind you to fix it.
+You want to note that such tests are expected to fail.
+
+@deffn {Scheme Syntax} test-expect-fail specifier
+
+Matching tests (where matching is defined as in @code{test-skip})
+are expected to fail.  This only affects test reporting,
+not test execution.  For example:
+
+@lisp
+(test-expect-fail 2)
+(test-eqv ...) ;; expected to fail
+(test-eqv ...) ;; expected to fail
+(test-eqv ...) ;; expected to pass
+@end lisp
+@end deffn
+
+@node SRFI-64 Test Runner
+@subsubsection SRFI-64 Test Runner
+
+A @dfn{test-runner} is an object that runs a test-suite, and manages the
+state.  The test group path, and the sets skip and expected-fail
+specifiers are part of the test-runner.  A test-runner will also
+typically accumulate statistics about executed tests,
+
+@deffn {Scheme Procedure} test-runner? value
+
+True if and only if @var{value} is a test-runner object.
+@end deffn
+
+@deffn {Scheme Parameter} test-runner-current
+@deffnx {Scheme Parameter} test-runner-current runner
+
+Get or set the current test-runner.
+@end deffn
+
+@deffn {Scheme Procedure} test-runner-get
+
+Same as @code{(test-runner-current)}, but throws an exception if there
+is no current test-runner.
+@end deffn
+
+@deffn {Scheme Procedure} test-runner-simple
+
+Creates a new simple test-runner, that prints errors and a summary on
+the standard output port.
+@end deffn
+
+@deffn {Scheme Procedure} test-runner-null
+
+Creates a new test-runner, that does nothing with the test results.
+This is mainly meant for extending when writing a custom runner.
+@end deffn
+
+@deffn {Scheme Procedure} test-runner-create
+
+Create a new test-runner.  Equivalent to @samp{((test-runner-factory))}.
+@end deffn
+
+@deffn {Scheme Parameter} test-runner-factory
+@deffnx {Scheme Parameter} test-runner-factory factory
+
+Get or set the current test-runner factory.  A factory is a
+zero-argument function that creates a new test-runner.  The default
+value is @code{test-runner-simple}.
+@end deffn
+
+@subsubheading Running specific tests with a specified runner
+
+@deffn {Scheme Procedure} test-apply [runner] specifier @dots{} procedure
+
+Calls @var{procedure} with no arguments using the specified @var{runner}
+as the current test-runner.  If @var{runner} is omitted, then
+@code{(test-runner-current)} is used.  (If there is no current runner,
+one is created as in @code{test-begin}.)  If one or more
+@var{specifier}s are listed then only tests matching the
+@var{specifier}s are executed.  A @var{specifier} has the same form as
+one used for @code{test-skip}.  A test is executed if it matches any of
+the @var{specifier}s in the @code{test-apply} @emph{and} does not match
+any active @code{test-skip} specifiers.
+@end deffn
+
+@deffn {Scheme Syntax} test-with-runner runner decl-or-expr @dots{}
+
+Executes each @var{decl-or-expr} in order in a context where the current
+test-runner is @var{runner}.
+@end deffn
+
+@node SRFI-64 Test Results
+@subsubsection SRFI-64 Test Results
+
+Running a test sets various status properties in the current test-runner.
+This can be examined by a custom test-runner,
+or (more rarely) in a test-suite.
+
+@subsubheading Result Kind
+
+Running a test may yield one of the following
+status symbols:
+
+@table @asis
+@item @code{'pass}
+The test passed, as expected.
+
+@item @code{'fail}
+The test failed (and was not expected to).
+
+@item @code{'xfail}
+The test failed and was expected to.
+
+@item @code{'xpass}
+The test passed, but was expected to fail.
+
+@item @code{'skip}
+The test was skipped.
+@end table
+
+@deffn {Scheme Procedure} test-result-kind [runner]
+
+Returns one of the above result codes from the most recent tests.
+Returns @code{#f} if no tests have been run yet.  If we've started on a
+new test, but don't have a result yet, then the result kind is
+@code{'xfail} if the test is expected to fail, @code{'skip} if the test
+is supposed to be skipped, or @code{#f} otherwise.
+@end deffn
+
+@deffn {Scheme Procedure} test-passed? [runner]
+
+True if the value of @samp{(test-result-kind [@var{runner}])} is one of
+@code{'pass} or @code{'xpass}.  This is a convenient shorthand that
+might be useful in a test suite to only run certain tests if the
+previous test passed.
+@end deffn
+
+@subsubheading Test result properties
+
+A test runner also maintains a set of more detailed
+``result@tie{}properties'' associated with the current or most recent
+test.  (I.e. the properties of the most recent test are available as
+long as a new test hasn't started.)  Each property has a name (a symbol)
+and a value (any value).  Some properties are standard or set by the
+implementation; implementations can add more.
+
+@deffn {Scheme Procedure} test-result-ref runner pname [default]
+
+Returns the property value associated with the @var{pname} property name
+(a symbol).  If there is no value associated with @var{pname} return
+@var{default}, or @code{#f} if @var{default} isn't specified.
+@end deffn
+
+@deffn {Scheme Syntax} test-result-set! runner pname value
+
+Sets the property value associated with the @var{pname} property name to
+@var{value}.  Usually implementation code should call this function, but
+it may be useful for a custom test-runner to add extra properties.
+@end deffn
+
+@deffn {Scheme Procedure} test-result-remove runner pname
+
+Remove the property with the name @var{pname}.
+@end deffn
+
+@deffn {Scheme Procedure} test-result-clear runner
+
+Remove all result properties.  The implementation automatically calls
+@code{test-result-clear} at the start of a @code{test-assert} and
+similar procedures.
+@end deffn
+
+@deffn {Scheme Procedure} test-result-alist runner
+
+Returns an association list of the current result properties.  It is
+unspecified if the result shares state with the test-runner.  The result
+should not be modified; on the other hand, the result may be implicitly
+modified by future @code{test-result-set!} or @code{test-result-remove}
+calls.  However, a @code{test-result-clear} does not modify the returned
+alist.  Thus you can ``archive'' result objects from previous runs.
+@end deffn
+
+@subsubheading Standard result properties
+
+The set of available result properties is implementation-specific.
+However, it is suggested that the following might be provided:
+@table @asis
+
+@item @code{'result-kind}
+The result kind, as defined previously.
+This is the only mandatory result property.
+@code{(test-result-kind @var{runner})} is equivalent to:
+@code{(test-result-ref  @var{runner} 'result-kind)}
+
+@item @code{'source-file}
+@itemx @code{'source-line}
+If known, the location of test statements (such as @code{test-assert})
+in test suite source code.
+
+@item @code{'source-form}
+The source form, if meaningful and known.
+
+@item @code{'expected-value}
+The expected non-error result, if meaningful and known.
+
+@item @code{'expected-error}
+The @var{error-type}specified in a @code{test-error}, if it meaningful and known.
+
+@item @code{'actual-value}
+The actual non-error result value, if meaningful and known.
+
+@item @code{'actual-error}
+The error value, if an error was signalled and it is known.
+The actual error value is implementation-defined.
+@end table
+
+@node SRFI-64 Writing a New Test Runner
+@subsubsection SRFI-64 Writing a New Test Runner
+
+This section specifies how to write a test-runner.  It can be ignored if
+you just want to write test-cases.
+
+@subsubheading Call-back Functions
+
+These call-back functions are ``methods'' (in the object-oriented sense)
+of a test-runner.  A method @code{test-runner-on-@var{event}} is called
+by the implementation when @var{event} happens.
+
+To define (set) the callback function for @var{event} use the following
+expression.  (This is normally done when initializing a test-runner.)
+
+@code{(test-runner-on-@var{event}! @var{runner} @var{event-function})}
+
+An @var{event-function} takes a test-runner argument, and possibly other
+arguments, depending on the @var{event}.
+
+To extract (get) the callback function for @var{event} do this:
+@code{(test-runner-on-@var{event} @var{runner})}
+
+To extract call the callback function for @var{event} use the following
+expression.  (This is normally done by the implementation core.)
+@samp{((test-runner-on-@var{event} @var{runner}) @var{runner}
+@var{other-args} @dots{})}.
+
+The following call-back hooks are available.
+
+@deffn {Scheme Procedure} test-runner-on-test-begin runner
+@deffnx {Scheme Procedure} test-runner-on-test-begin! runner on-test-begin-function
+@deffnx {Scheme Procedure} on-test-begin-function runner
+
+The @var{on-test-begin-function} is called at the start of an
+individual testcase, before the test expression (and expected value) are
+evaluated.
+
+@end deffn
+
+@deffn {Scheme Procedure} test-runner-on-test-end runner
+@deffnx {Scheme Procedure} test-runner-on-test-end! runner on-test-end-function
+@deffnx {Scheme Procedure} on-test-end-function runner
+
+The @var{on-test-end-function} is called at the end of an
+individual testcase, when the result of the test is available.
+@end deffn
+
+@deffn {Scheme Procedure} test-runner-on-group-begin runner
+@deffnx {Scheme Procedure} test-runner-on-group-begin! runner on-group-begin-function
+@deffnx {Scheme Procedure} on-group-begin-function runner suite-name count
+
+The @var{on-group-begin-function} is called by a @code{test-begin},
+including at the start of a @code{test-group}.  The @var{suite-name} is
+a Scheme string, and @var{count} is an integer or @code{#f}.
+@end deffn
+
+@deffn {Scheme Procedure} test-runner-on-group-end runner
+@deffnx {Scheme Procedure} test-runner-on-group-end! runner on-group-end-function
+@deffnx {Scheme Procedure} on-group-end-function runner
+
+The @var{on-group-end-function} is called by a @code{test-end},
+including at the end of a @code{test-group}.
+@end deffn
+
+@deffn {Scheme Procedure} test-runner-on-bad-count runner
+@deffnx {Scheme Procedure} test-runner-on-bad-count! runner on-bad-count-function
+@deffnx {Scheme Procedure} on-bad-count-function runner actual-count expected-count
+
+Called from @code{test-end} (before the @var{on-group-end-function} is
+called) if an @var{expected-count} was specified by the matching
+@code{test-begin} and the @var{expected-count} does not match the
+@var{actual-count} of tests actually executed or skipped.
+@end deffn
+
+@deffn {Scheme Procedure} test-runner-on-bad-end-name runner
+@deffnx {Scheme Procedure} test-runner-on-bad-end-name! runner on-bad-end-name-function
+@deffnx {Scheme Procedure} on-bad-end-name-function runner begin-name end-name
+
+Called from @code{test-end} (before the @var{on-group-end-function} is
+called) if a @var{suite-name} was specified, and it did not that the
+name in the matching @code{test-begin}.
+@end deffn
+
+@deffn {Scheme Procedure} test-runner-on-final runner
+@deffnx {Scheme Procedure} test-runner-on-final! runner on-final-function
+@deffnx {Scheme Procedure} on-final-function runner
+
+The @var{on-final-function} takes one parameter (a test-runner) and
+typically displays a summary (count) of the tests.  The
+@var{on-final-function} is called after called the
+@var{on-group-end-function} correspondiong to the outermost
+@code{test-end}.  The default value is @code{test-on-final-simple} which
+writes to the standard output port the number of tests of the various
+kinds.
+@end deffn
+
+The default test-runner returned by @code{test-runner-simple} uses the
+following call-back functions:
+
+@deffn {Scheme Procedure} test-on-test-begin-simple runner
+@deffnx {Scheme Procedure} test-on-test-end-simple runner
+@deffnx {Scheme Procedure} test-on-group-begin-simple runner suite-name count
+@deffnx {Scheme Procedure} test-on-group-end-simple runner
+@deffnx {Scheme Procedure} test-on-bad-count-simple runner actual-count expected-count
+@deffnx {Scheme Procedure} test-on-bad-end-name-simple runner begin-name end-name
+
+You can call those if you want to write your own test-runner.
+@end deffn
+
+@subsubheading Test-runner components
+
+The following functions are for accessing the other components of a
+test-runner.  They would normally only be used to write a new
+test-runner or a match-predicate.
+
+@deffn {Scheme Procedure} test-runner-pass-count runner
+
+Returns the number of tests that passed, and were expected to pass.
+@end deffn
+
+@deffn {Scheme Procedure} test-runner-fail-count runner
+
+Returns the number of tests that failed, but were expected to pass.
+@end deffn
+
+@deffn {Scheme Procedure} test-runner-xpass-count runner
+
+Returns the number of tests that passed, but were expected to fail.
+@end deffn
+
+@deffn {Scheme Procedure} test-runner-xfail-count runner
+
+Returns the number of tests that failed, and were expected to pass.
+@end deffn
+
+@deffn {Scheme Procedure} test-runner-skip-count runner
+
+Returns the number of tests or test groups that were skipped.
+@end deffn
+
+@deffn {Scheme Procedure} test-runner-test-name runner
+
+Returns the name of the current test or test group, as a string.  During
+execution of @code{test-begin} this is the name of the test group;
+during the execution of an actual test, this is the name of the
+test-case.  If no name was specified, the name is the empty string.
+@end deffn
+
+@deffn {Scheme Procedure} test-runner-group-path runner
+
+A list of names of groups we're nested in, with the outermost group
+first.
+@end deffn
+
+@deffn {Scheme Procedure} test-runner-group-stack runner
+
+A list of names of groups we're nested in, with the outermost group
+last.  (This is more efficient than @code{test-runner-group-path}, since
+it doesn't require any copying.)
+@end deffn
+
+@deffn {Scheme Procedure} test-runner-aux-value runner
+@deffnx {Scheme Procedure} test-runner-aux-value! runner on-test
+
+Get or set the @code{aux-value} field of a test-runner.  This field is
+not used by this API or the @code{test-runner-simple} test-runner, but
+may be used by custom test-runners to store extra state.
+@end deffn
+
+@deffn {Scheme Procedure} test-runner-reset runner
+
+Resets the state of the @var{runner} to its initial state.
+@end deffn
+
+@subsubheading Example
+
+This is an example of a simple custom test-runner.
+Loading this program before running a test-suite will install
+it as the default test runner.
+
+@lisp
+(define (my-simple-runner filename)
+  (let ((runner (test-runner-null))
+	(port (open-output-file filename))
+        (num-passed 0)
+        (num-failed 0))
+    (test-runner-on-test-end! runner
+      (lambda (runner)
+        (case (test-result-kind runner)
+          ((pass xpass) (set! num-passed (+ num-passed 1)))
+          ((fail xfail) (set! num-failed (+ num-failed 1)))
+          (else #t))))
+    (test-runner-on-final! runner
+       (lambda (runner)
+          (format port "Passing tests: ~d.~%Failing tests: ~d.~%"
+                  num-passed num-failed)
+	  (close-output-port port)))
+    runner))
+(test-runner-factory
+ (lambda () (my-simple-runner "/tmp/my-test.log")))
+@end lisp
 
 @node SRFI-67
 @subsection SRFI-67 - Compare procedures
@@ -5322,10 +6142,10 @@ Access it with:
 @end lisp
 
 @menu
-* SRFI-69 Creating hash tables::  
-* SRFI-69 Accessing table items::  
-* SRFI-69 Table properties::    
-* SRFI-69 Hash table algorithms::  
+* SRFI-69 Creating hash tables::
+* SRFI-69 Accessing table items::
+* SRFI-69 Table properties::
+* SRFI-69 Hash table algorithms::
 @end menu
 
 @node SRFI-69 Creating hash tables
@@ -5573,13 +6393,13 @@ Return the keyword object whose name is @var{str}.
 @cindex SRFI-98
 @cindex environment variables
 
-This is a portable wrapper around Guile's built-in support for 
+This is a portable wrapper around Guile's built-in support for
 interacting with the current environment, @xref{Runtime Environment}.
 
 @deffn {Scheme Procedure} get-environment-variable name
-Returns a string containing the value of the environment variable 
-given by the string @code{name}, or @code{#f} if the named 
-environment variable is not found.  This is equivalent to 
+Returns a string containing the value of the environment variable
+given by the string @code{name}, or @code{#f} if the named
+environment variable is not found.  This is equivalent to
 @code{(getenv name)}.
 @end deffn
 
@@ -5662,6 +6482,35 @@ Return the current contents of @var{box}.
 Set the contents of @var{box} to @var{value}.
 @end deffn
 
+@node SRFI-119
+@subsection SRFI-119 Wisp: simpler indentation-sensitive Scheme.
+@cindex SRFI-119
+@cindex wisp
+
+The languages shipped in Guile include SRFI-119, also referred to as
+@dfn{Wisp} (for ``Whitespace to Lisp''), an encoding of Scheme that
+allows replacing parentheses with equivalent indentation and inline
+colons.  See
+@uref{http://srfi.schemers.org/srfi-119/srfi-119.html, the specification
+of SRFI-119}.  Some examples:
+
+@example
+display "Hello World!"         @result{}  (display "Hello World!")
+@end example
+
+@example
+define : factorial n           @result{}  (define (factorial n)
+    if : zero? n               @result{}      (if (zero? n)
+       . 1                     @result{}          1
+       * n : factorial @{n - 1@} @result{}    (* n (factorial @{n - 1@}))))
+@end example
+
+To execute a file with Wisp code, select the language and filename
+extension @code{.w} vie @code{guile --language=wisp -x .w}.
+
+In files using Wisp, @xref{SRFI-105} (Curly Infix) is always activated.
+
+
 @node SRFI-171
 @subsection Transducers
 @cindex SRFI-171
@@ -5704,6 +6553,7 @@ left-to-right, due to how transducers are initiated.
 * SRFI-171 Transducers::              Transducers specified by the SRFI
 * SRFI-171 Helpers::                  Utilities for writing your own transducers
 @end menu
+
 
 @node SRFI-171 General Discussion
 @subsubsection SRFI-171 General Discussion
@@ -5748,7 +6598,7 @@ reducer with result-so-far and the maybe-transformed input.
 A simple example is as following:
 
 @example
-(list-transduce (tfilter odd?) + '(1 2 3 4 5)).
+(list-transduce (tfilter odd?) + '(1 2 3 4 5))
 @end example
 
 This first returns a transducer filtering all odd
@@ -6094,7 +6944,7 @@ These functions are in the @code{(srfi srfi-171 meta)} module and are only
 usable when you want to write your own transducers.
 
 @deffn {Scheme Procedure} reduced value
-Wraps a value in a @code{<reduced>} container, signalling that the
+Wraps a value in a @code{<reduced>} container, signaling that the
 reduction should stop.
 @end deffn
 

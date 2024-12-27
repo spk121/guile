@@ -1268,6 +1268,8 @@
               (set! offset (+ offset (* (char->int ch)
                                         60 60))))
             (let ((ch (read-char port)))
+              (if (eqv? ch #\:)
+                  (set! ch (read-char port)))
               (if (eof-object? ch)
                   (time-error 'string->date 'bad-date-template-string
                               (list "Invalid time zone number" ch)))

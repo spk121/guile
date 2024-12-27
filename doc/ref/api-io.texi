@@ -18,7 +18,7 @@
 * Line/Delimited::              Read and write lines or delimited text.
 * Default Ports::               Defaults for input, output and errors.
 * Port Types::                  Types of port and how to make them.
-* Venerable Port Interfaces::   Procedures from the last millenium.
+* Venerable Port Interfaces::   Procedures from the last millennium.
 * Using Ports from C::          Nice interfaces for C.
 * Non-Blocking I/O::            How Guile deals with EWOULDBLOCK.
 * BOM Handling::                Handling of Unicode byte order marks.
@@ -89,6 +89,7 @@ on interfaces to control port buffering.
 @deffn {Scheme Procedure} port? x
 @deffnx {C Function} scm_port_p (x)
 Return a boolean indicating whether @var{x} is a port.
+Equivalent to @code{(or (input-port? @var{x}) (output-port? @var{x}))}.
 @end deffn
 
 @rnindex input-port?
@@ -511,7 +512,7 @@ or until an end of file is reached.
 
 If a complete character is available before the next end of file,
 @code{get-char} returns that character and updates the input port to
-point past the character. If an end of file is reached before any
+point past the character.  If an end of file is reached before any
 character is read, @code{get-char} returns the end-of-file object.
 @end deffn
 
@@ -548,10 +549,10 @@ integer, representing the number of characters to be read.
 
 If @var{count} characters are available before end of file,
 @code{get-string-n} returns a string consisting of those @var{count}
-characters. If fewer characters are available before an end of file, but
+characters.  If fewer characters are available before an end of file, but
 one or more characters can be read, @code{get-string-n} returns a string
-containing those characters. In either case, the input port is updated
-to point just past the characters read. If no characters can be read
+containing those characters.  In either case, the input port is updated
+to point just past the characters read.  If no characters can be read
 before an end of file, the end-of-file object is returned.
 @end deffn
 
@@ -564,10 +565,10 @@ least $@var{start} + @var{count}$ characters.
 
 If @var{count} characters are available before an end of file, they are
 written into @var{string} starting at index @var{start}, and @var{count}
-is returned. If fewer characters are available before an end of file,
+is returned.  If fewer characters are available before an end of file,
 but one or more can be read, those characters are written into
 @var{string} starting at index @var{start} and the number of characters
-actually read is returned as an exact integer object. If no characters
+actually read is returned as an exact integer object.  If no characters
 can be read before an end of file, the end-of-file object is returned.
 @end deffn
 
@@ -576,7 +577,7 @@ Reads from @var{input-port} until an end of file, decoding characters in
 the same manner as @code{get-string-n} and @code{get-string-n!}.
 
 If characters are available before the end of file, a string containing
-all the characters decoded from that data are returned. If no character
+all the characters decoded from that data are returned.  If no character
 precedes the end of file, the end-of-file object is returned.
 @end deffn
 
@@ -587,10 +588,10 @@ character or end of file, decoding characters in the same manner as
 
 If a linefeed character is read, a string containing all of the text up
 to (but not including) the linefeed character is returned, and the port
-is updated to point just past the linefeed character. If an end of file
+is updated to point just past the linefeed character.  If an end of file
 is encountered before any linefeed character is read, but some
 characters have been read and decoded as characters, a string containing
-those characters is returned. If an end of file is encountered before
+those characters is returned.  If an end of file is encountered before
 any characters are read, the end-of-file object is returned.
 @end deffn
 
@@ -598,7 +599,7 @@ Finally, there are just two core procedures to write characters to a
 port.
 
 @deffn {Scheme Procedure} put-char port char
-Writes @var{char} to the port. The @code{put-char} procedure returns
+Writes @var{char} to the port.  The @code{put-char} procedure returns
 an unspecified value.
 @end deffn
 
@@ -633,7 +634,7 @@ Return the current column number or line number of @var{port}.
 @end deffn
 
 Port lines and positions are represented as 0-origin integers, which is
-to say that the the first character of the first line is line 0, column
+to say that the first character of the first line is line 0, column
 0.  However, when you display a line number, for example in an error
 message, we recommend you add 1 to get 1-origin integers.  This is
 because lines numbers traditionally start with 1, and that is what
@@ -754,7 +755,7 @@ line-buffered ports, respectively.  @xref{File Ports}, for more.
 
 Any buffered output data will be written out when the port is closed.
 To make sure to flush it at specific points in your program, use
-@code{force-otput}.
+@code{force-output}.
 
 @findex fflush
 @deffn {Scheme Procedure} force-output [port]
@@ -823,8 +824,26 @@ Seek from the current position.
 @defvar SEEK_END
 Seek from the end of the file.
 @end defvar
-If @var{fd_port} is a file descriptor, the underlying system
-call is @code{lseek}.  @var{port} may be a string port.
+
+On systems that support it, such as GNU/Linux, the following
+constants can be used for @var{whence} to navigate ``holes'' in
+sparse files:
+@defvar SEEK_DATA
+Seek to the next location in the file greater than or equal to
+@var{offset} containing data.  If @var{offset} points to data,
+then the file offset is set to @var{offset}.
+@end defvar
+@defvar SEEK_HOLE
+Seek to the next hole in the file greater than or equal to the
+@var{offset}.  If @var{offset} points into the middle of a hole,
+then the file offset is set to @var{offset}.  If there is no hole
+past @var{offset}, then the file offset is adjusted to the end of
+the file---i.e., there is an implicit hole at the end of any file.
+@end defvar
+
+If @var{fd_port} is a file descriptor, the underlying system call
+is @code{lseek} (@pxref{File Position Primitive,,, libc, The GNU C
+Library Reference Manual}).  @var{port} may be a string port.
 
 The value returned is the new position in @var{fd_port}.  This means
 that the current position of a port can be obtained using:
@@ -967,6 +986,28 @@ used.  This procedure is equivalent to:
 @end lisp
 @end deffn
 
+@deffn {Scheme Procedure} for-rdelim-from-port port proc rdelim-proc @
+        [#:stop-pred=eof-object?]
+For every unit provided by @code{(rdelim-proc port)}, provide
+this unit(rdelim) to @var{proc} to be processed. This will continue throughout
+@var{port} until @var{stop-pred} returns @code{#t}.
+@var{stop-pred} is @code{eof-object?} by default.
+@var{rdelim-proc} has to advance through @var{port} with every call made to it.
+@end deffn
+
+@deffn {Scheme Procedure} for-delimited-from-port port proc @
+        [#:delims=''\n''] [#:handle-delim='trim]
+Call @var{proc} for every line delimited by @var{delims} from @var{port}.
+@end deffn
+
+@deffn {Scheme Procedure} for-line-in-file file proc @
+        [#:encoding=#f] [#:guess-encoding=#f]
+Call @var{proc} for every line in @var{file}.
+@var{file} must be a filename string.
+
+The line provided to @var{proc} is guaranteed to be a string.
+@end deffn
+
 @node Default Ports
 @subsection Default Ports for Input, Output and Errors
 @cindex Default ports
@@ -980,15 +1021,15 @@ Return the current input port.  This is the default port used
 by many input procedures.
 
 Initially this is the @dfn{standard input} in Unix and C terminology.
-When the standard input is a tty the port is unbuffered, otherwise
+When the standard input is a TTY the port is unbuffered, otherwise
 it's fully buffered.
 
 Unbuffered input is good if an application runs an interactive
 subprocess, since any type-ahead input won't go into Guile's buffer
 and be unavailable to the subprocess.
 
-Note that Guile buffering is completely separate from the tty ``line
-discipline''.  In the usual cooked mode on a tty Guile only sees a
+Note that Guile buffering is completely separate from the TTY ``line
+discipline''.  In the usual cooked mode on a TTY Guile only sees a
 line of input once the user presses @key{Return}.
 @end deffn
 
@@ -1000,10 +1041,10 @@ Return the current output port.  This is the default port used
 by many output procedures.
 
 Initially this is the @dfn{standard output} in Unix and C terminology.
-When the standard output is a tty this port is unbuffered, otherwise
+When the standard output is a TTY this port is unbuffered, otherwise
 it's fully buffered.
 
-Unbuffered output to a tty is good for ensuring progress output or a
+Unbuffered output to a TTY is good for ensuring progress output or a
 prompt is seen.  But an application which always prints whole lines
 could change to line buffered, or an application with a lot of output
 could go fully buffered and perhaps make explicit @code{force-output}
@@ -1016,7 +1057,7 @@ calls (@pxref{Buffering}) at selected points.
 Return the port to which errors and warnings should be sent.
 
 Initially this is the @dfn{standard error} in Unix and C terminology.
-When the standard error is a tty this port is unbuffered, otherwise
+When the standard error is a TTY this port is unbuffered, otherwise
 it's fully buffered.
 @end deffn
 
@@ -1079,7 +1120,7 @@ See also @ref{Ports and File Descriptors, open}, for an interface
 to the Unix @code{open} system call.
 
 All file access uses the ``LFS'' large file support functions when
-available, so files bigger than 2 Gbytes (@math{2^31} bytes) can be
+available, so files bigger than 2 gibibytes (@math{2^31} bytes) can be
 read and written on a 32-bit system.
 
 Most systems have limits on how many files can be open, so it's
@@ -1356,7 +1397,7 @@ port set temporarily to a string port opened on the specified
 @deffn {Scheme Procedure} open-input-string str
 @deffnx {C Function} scm_open_input_string (str)
 Take a string and return an input port that delivers characters
-from the string. The port can be closed by
+from the string.  The port can be closed by
 @code{close-input-port}, though its storage will be reclaimed
 by the garbage collector if it becomes inaccessible.
 @end deffn
@@ -1364,7 +1405,7 @@ by the garbage collector if it becomes inaccessible.
 @deffn {Scheme Procedure} open-output-string
 @deffnx {C Function} scm_open_output_string ()
 Return an output port that will accumulate characters for
-retrieval by @code{get-output-string}. The port can be closed
+retrieval by @code{get-output-string}.  The port can be closed
 by the procedure @code{close-output-port}, though its storage
 will be reclaimed by the garbage collector if it becomes
 inaccessible.
@@ -1719,7 +1760,7 @@ in-depth discussion.
 These methods must be implemented if the @code{#:read} or @code{#:write}
 method can return @code{#f}, and should return a non-negative integer
 file descriptor.  However they may be called explicitly by a user, for
-example to determine if a port may eventually be readable or writeable.
+example to determine if a port may eventually be readable or writable.
 If there is no associated file descriptor with the port, they should
 return @code{#f}.  The default implementation returns @code{#f}.
 @end deffn
@@ -1921,7 +1962,7 @@ together.  We document that set of primitives, design our internal
 interfaces around them, and recommend them to users.  As the R6RS I/O
 system is the most capable standard that Scheme has yet produced in this
 domain, we mostly recommend that; @code{(ice-9 binary-ports)} and
-@code{(ice-9 textual-ports)} are wholly modelled on @code{(rnrs io
+@code{(ice-9 textual-ports)} are wholly modeled on @code{(rnrs io
 ports)}.  Guile does not wholly copy R6RS, however; @xref{R6RS
 Incompatibilities}.
 
@@ -1983,7 +2024,7 @@ The same as @code{unget-char}, except that @var{port} defaults to the
 current input port, and the arguments are swapped.  @xref{Textual I/O}.
 @end deffn
 
-@deffn {Scheme Procedure} unread-string str port
+@deffn {Scheme Procedure} unread-string str [port]
 @deffnx {C Function} scm_unread_string (str, port)
 The same as @code{unget-string}, except that @var{port} defaults to the
 current input port, and the arguments are swapped.  @xref{Textual I/O}.

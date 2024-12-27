@@ -1,6 +1,6 @@
 @c -*-texinfo-*-
 @c This is part of the GNU Guile Reference Manual.
-@c Copyright (C)  1996-1997,2000-2004,2006,2008-2011,2013,2019
+@c Copyright (C)  1996-1997,2000-2004,2006,2008-2011,2013,2019,2024
 @c   Free Software Foundation, Inc.
 @c See the file guile.texi for copying conditions.
 
@@ -19,8 +19,7 @@ Revised^n
 @end ifnottex
 Reports on Scheme).
 
-Unlike, for example, Python or Perl, Scheme has no benevolent
-dictator.  There are many Scheme implementations, with different
+There are many Scheme implementations, with different
 characteristics and with communities and academic activities around
 them, and the language develops as a result of the interplay between
 these.  Guile's particular characteristics are that

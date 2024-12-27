@@ -476,7 +476,7 @@
     (call-with-stack-overflow-handler 2.0
       trigger-overflow trigger-overflow))
 
-  (pass-if-exception "limit should be nonnegative"
+  (pass-if-exception "limit should be non-negative"
       exception:out-of-range
     (call-with-stack-overflow-handler -1
       trigger-overflow trigger-overflow))
@@ -517,7 +517,7 @@
     (call-with-stack-overflow-handler 1000
       trigger-overflow
       (lambda () 2.0)))
-  (pass-if-exception "overflow handler should be nonnegative"
+  (pass-if-exception "overflow handler should be non-negative"
       exception:out-of-range
     (call-with-stack-overflow-handler 1000
       trigger-overflow

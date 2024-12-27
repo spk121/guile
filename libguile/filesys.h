@@ -74,6 +74,7 @@ SCM_API SCM scm_symlinkat (SCM dir, SCM oldpath, SCM newpath);
 SCM_API SCM scm_readlink (SCM path);
 SCM_API SCM scm_lstat (SCM str);
 SCM_API SCM scm_copy_file (SCM oldfile, SCM newfile);
+SCM_INTERNAL SCM scm_copy_file2 (SCM oldfile, SCM newfile, SCM rest);
 SCM_API SCM scm_mkstemp (SCM tmpl);
 SCM_API SCM scm_mkdtemp (SCM tmpl);
 SCM_API SCM scm_dirname (SCM filename);

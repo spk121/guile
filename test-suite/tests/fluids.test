@@ -140,7 +140,7 @@
     (gc)
     (fluid? (g))))
 
-(pass-if-exception "fluid-ref* depth must be nonnegative"
+(pass-if-exception "fluid-ref* depth must be non-negative"
     exception:out-of-range
   (fluid-ref* (make-fluid) -1))
 

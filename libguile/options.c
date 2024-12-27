@@ -55,7 +55,7 @@
  * Some definitions:
  *
  * Run time options in Guile are arranged in groups.  Each group
- * affects a certain aspect of the behaviour of the library.
+ * affects a certain aspect of the behavior of the library.
  *
  * An "options interface procedure" manages one group of options.  It
  * can be used to check or set options, or to get documentation for

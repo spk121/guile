@@ -53,7 +53,6 @@ install-exec-hook:
 endif
 
 
-pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = guile-$(GUILE_EFFECTIVE_VERSION).pc
 
 ## FIXME: in the future there will be direct automake support for

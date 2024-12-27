@@ -1,6 +1,6 @@
 ;;; Repl common routines
 
-;; Copyright (C) 2001, 2008-2016, 2019-2022  Free Software Foundation, Inc.
+;; Copyright (C) 2001, 2008-2016, 2019-2022, 2024  Free Software Foundation, Inc.
 
 ;;; This library is free software; you can redistribute it and/or
 ;;; modify it under the terms of the GNU Lesser General Public
@@ -33,12 +33,12 @@
             repl-expand repl-optimize repl-optimize-cps
             repl-parse repl-print repl-option-ref repl-option-set!
             repl-default-option-set! repl-default-prompt-set!
-            puts ->string user-error
+            puts ->string user-error flush-all-input
             *warranty* *copying* *version*))
 
 (define *version*
   (format #f "GNU Guile ~A
-Copyright (C) 1995-2023 Free Software Foundation, Inc.
+Copyright (C) 1995-2024 Free Software Foundation, Inc.
 
 Guile comes with ABSOLUTELY NO WARRANTY; for details type `,show w'.
 This program is free software, and you are welcome to redistribute it
@@ -142,7 +142,12 @@ See <http://www.gnu.org/licenses/lgpl.html>, for more details.")
          (lambda (x)
            (if (memq x vals)
                x
-               (error "Bad on-error value ~a; expected one of ~a" x vals))))))))
+               (error
+                 (format
+                   #f
+                   "Bad on-error value ~a; expected one of ~a"
+                   x
+                   vals)))))))))
 
 (define %make-repl make-repl)
 (define* (make-repl lang #:optional debug)
@@ -292,3 +297,10 @@ See <http://www.gnu.org/licenses/lgpl.html>, for more details.")
 
 (define (user-error msg . args)
   (throw 'user-error #f msg args #f))
+
+(define (flush-all-input)
+  (if (and (char-ready?)
+           (not (eof-object? (peek-char))))
+      (begin
+        (read-char)
+        (flush-all-input))))

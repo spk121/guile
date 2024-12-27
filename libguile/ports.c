@@ -1,4 +1,4 @@
-/* Copyright 1995-2001,2003-2004,2006-2019,2021
+/* Copyright 1995-2001,2003-2004,2006-2019,2021,2024
      Free Software Foundation, Inc.
 
    This file is part of Guile.
@@ -432,6 +432,7 @@ static SCM cur_inport_fluid = SCM_BOOL_F;
 static SCM cur_outport_fluid = SCM_BOOL_F;
 static SCM cur_errport_fluid = SCM_BOOL_F;
 static SCM cur_warnport_fluid = SCM_BOOL_F;
+static SCM cur_infoport_fluid = SCM_BOOL_F;
 static SCM cur_loadport_fluid = SCM_BOOL_F;
 
 SCM_DEFINE (scm_current_input_port, "current-input-port", 0, 0, 0,
@@ -488,6 +489,18 @@ SCM_DEFINE (scm_current_warning_port, "current-warning-port", 0, 0, 0,
 }
 #undef FUNC_NAME
 
+SCM_DEFINE (scm_current_info_port, "current-info-port", 0, 0, 0,
+            (void),
+	    "Return the port to which diagnostic information should be sent.")
+#define FUNC_NAME s_scm_current_info_port
+{
+  if (scm_is_true (cur_infoport_fluid))
+    return scm_fluid_ref (cur_infoport_fluid);
+  else
+    return SCM_BOOL_F;
+}
+#undef FUNC_NAME
+
 SCM_DEFINE (scm_current_load_port, "current-load-port", 0, 0, 0,
 	    (),
 	    "Return the current-load-port.\n"
@@ -511,7 +524,7 @@ scm_set_current_input_port (SCM port)
 
 SCM
 scm_set_current_output_port (SCM port)
-#define FUNC_NAME "scm-set-current-output-port"
+#define FUNC_NAME "set-current-output-port"
 {
   SCM ooutp = scm_fluid_ref (cur_outport_fluid);
   port = SCM_COERCE_OUTPORT (port);
@@ -542,6 +555,18 @@ scm_set_current_warning_port (SCM port)
   SCM_VALIDATE_OPOUTPORT (1, port);
   scm_fluid_set_x (cur_warnport_fluid, port);
   return owarnp;
+}
+#undef FUNC_NAME
+
+SCM
+scm_set_current_info_port (SCM port)
+#define FUNC_NAME "set-current-info-port"
+{
+  SCM oinfop = scm_fluid_ref (cur_infoport_fluid);
+  port = SCM_COERCE_OUTPORT (port);
+  SCM_VALIDATE_OPOUTPORT (1, port);
+  scm_fluid_set_x (cur_infoport_fluid, port);
+  return oinfop;
 }
 #undef FUNC_NAME
 
@@ -2228,7 +2253,7 @@ SCM_DEFINE (scm_unread_char, "unread-char", 1, 1, 0,
 }
 #undef FUNC_NAME
 
-SCM_DEFINE (scm_unread_string, "unread-string", 2, 0, 0,
+SCM_DEFINE (scm_unread_string, "unread-string", 1, 1, 0,
             (SCM str, SCM port),
 	    "Place the string @var{str} in @var{port} so that its characters will be\n"
 	    "read in subsequent read operations.  If called multiple times, the\n"
@@ -3713,9 +3738,26 @@ SCM_DEFINE (scm_seek, "seek", 3, 0, 0,
 	    "@defvar SEEK_END\n"
 	    "Seek from the end of the file.\n"
 	    "@end defvar\n"
-	    "If @var{fd_port} is a file descriptor, the underlying system\n"
-	    "call is @code{lseek}.  @var{port} may be a string port.\n"
-	    "\n"
+            "On systems that support it, such as GNU/Linux, the following\n"
+            "constants can be used for @var{whence} to navigate ``holes'' in\n"
+            "sparse files:\n"
+            "@defvar SEEK_DATA\n"
+            "Seek to the next location in the file greater than or equal to\n"
+            "@var{offset} containing data.  If @var{offset} points to data,\n"
+            "then the file offset is set to @var{offset}.\n"
+            "@end defvar\n"
+            "@defvar SEEK_HOLE\n"
+            "Seek to the next hole in the file greater than or equal to the\n"
+            "@var{offset}.  If @var{offset} points into the middle of a hole,\n"
+            "then the file offset is set to @var{offset}.  If there is no hole\n"
+            "past @var{offset}, then the file offset is adjusted to the end of\n"
+            "the file---i.e., there is an implicit hole at the end of any file.\n"
+            "@end defvar\n"
+            "\n"
+            "If @var{fd_port} is a file descriptor, the underlying system call\n"
+            "is @code{lseek} (@pxref{File Position Primitive,,, libc, The GNU C\n"
+            "Library Reference Manual}).  @var{port} may be a string port.\n"
+            "\n"
 	    "The value returned is the new position in the file.  This means\n"
 	    "that the current position of a port can be obtained using:\n"
 	    "@lisp\n"
@@ -3728,7 +3770,14 @@ SCM_DEFINE (scm_seek, "seek", 3, 0, 0,
   fd_port = SCM_COERCE_OUTPORT (fd_port);
 
   how = scm_to_int (whence);
-  if (how != SEEK_SET && how != SEEK_CUR && how != SEEK_END)
+  if (how != SEEK_SET && how != SEEK_CUR && how != SEEK_END
+#ifdef SEEK_DATA
+      && how != SEEK_DATA
+#endif
+#ifdef SEEK_HOLE
+      && how != SEEK_HOLE
+#endif
+      )
     SCM_OUT_OF_RANGE (3, whence);
 
   if (SCM_OPPORTP (fd_port))
@@ -4151,10 +4200,19 @@ scm_init_ice_9_ports (void)
   scm_c_define ("SEEK_CUR", scm_from_int (SEEK_CUR));
   scm_c_define ("SEEK_END", scm_from_int (SEEK_END));
 
+  /* Support for sparse files (glibc).  */
+#ifdef SEEK_DATA
+  scm_c_define ("SEEK_DATA", scm_from_int (SEEK_DATA));
+#endif
+#ifdef SEEK_HOLE
+  scm_c_define ("SEEK_HOLE", scm_from_int (SEEK_HOLE));
+#endif
+
   scm_c_define ("%current-input-port-fluid", cur_inport_fluid);
   scm_c_define ("%current-output-port-fluid", cur_outport_fluid);
   scm_c_define ("%current-error-port-fluid", cur_errport_fluid);
   scm_c_define ("%current-warning-port-fluid", cur_warnport_fluid);
+  scm_c_define ("%current-info-port-fluid", cur_infoport_fluid);
 }
 
 void
@@ -4189,6 +4247,7 @@ scm_init_ports (void)
   cur_outport_fluid = scm_make_fluid ();
   cur_errport_fluid = scm_make_fluid ();
   cur_warnport_fluid = scm_make_fluid ();
+  cur_infoport_fluid = scm_make_fluid ();
   cur_loadport_fluid = scm_make_fluid ();
 
   default_port_encoding_var =
@@ -4227,4 +4286,8 @@ scm_init_ports (void)
                       (scm_t_subr) scm_current_error_port);
   scm_c_define_gsubr (s_scm_current_warning_port, 0, 0, 0,
                       (scm_t_subr) scm_current_warning_port);
+
+  /* Used by welcome and compiler routines. */
+  scm_c_define_gsubr (s_scm_current_info_port, 0, 0, 0,
+                      (scm_t_subr) scm_current_info_port);
 }

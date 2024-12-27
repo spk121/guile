@@ -1,6 +1,6 @@
 ## Process this file with automake to produce Makefile.in.
 ##
-## Copyright 2001-2020, 2023 Software Foundation, Inc.
+## Copyright 2001-2020, 2023, 2024 Software Foundation, Inc.
 ##
 ## This file is part of GUILE.
 ##
@@ -77,9 +77,7 @@ SCM_TESTS = tests/00-initial-env.test		\
 	    tests/list.test			\
 	    tests/load.test			\
 	    tests/match.test			\
-	    tests/match.test.upstream		\
 	    tests/modules.test			\
-	    tests/multilingual.nottest		\
 	    tests/net-db.test			\
 	    tests/numbers.test			\
 	    tests/optargs.test			\
@@ -93,7 +91,6 @@ SCM_TESTS = tests/00-initial-env.test		\
 	    tests/procs.test			\
 	    tests/poe.test			\
 	    tests/popen.test			\
-	    tests/popen-child.scm		\
 	    tests/ports.test			\
 	    tests/posix.test			\
 	    tests/q.test			\
@@ -162,7 +159,8 @@ SCM_TESTS = tests/00-initial-env.test		\
 	    tests/srfi-98.test			\
 	    tests/srfi-105.test			\
 	    tests/srfi-111.test			\
-            tests/srfi-171.test                 \
+	    tests/srfi-119.test			\
+	    tests/srfi-171.test			\
 	    tests/srfi-4.test			\
 	    tests/srfi-9.test			\
 	    tests/statprof.test			\
@@ -205,7 +203,11 @@ SCM_TESTS = tests/00-initial-env.test		\
 EXTRA_DIST = \
 	guile-test \
 	test-suite/lib.scm \
+	test-suite/lib/automake.scm \
 	$(SCM_TESTS) \
+	tests/match.test.upstream \
+	tests/multilingual.nottest \
+	tests/popen-child.scm \
 	tests/rnrs-test-a.scm \
 	tests/srfi-64-test.scm \
 	ChangeLog-2008
@@ -248,9 +250,16 @@ LALR_EXTRA +=					\
   lalr/glr-test.scm				\
   lalr/run-guile-test.sh
 
-TESTS = $(LALR_TESTS)
-TESTS_ENVIRONMENT =				\
-  @LOCALCHARSET_TESTS_ENVIRONMENT@		\
-  $(top_builddir)/meta/guile --no-auto-compile
+TESTS = $(LALR_TESTS) $(SCM_TESTS)
+TEST_EXTENSIONS = .scm .test
+AM_TESTS_ENVIRONMENT = @LOCALCHARSET_TESTS_ENVIRONMENT@
 
-EXTRA_DIST += $(LALR_EXTRA) $(LALR_TESTS) tests/sxml-match-tests.ss
+# Run *.scm tests with meta/guile
+SCM_LOG_COMPILER = $(top_builddir)/meta/guile
+AM_SCM_LOG_FLAGS = --no-auto-compile
+
+# Use a custom driver for *.test (assume they use (test-suite lib)).
+# See the automake info pages regarding "Custom Test Drivers".
+TEST_LOG_DRIVER = $(srcdir)/driver
+
+EXTRA_DIST += $(LALR_EXTRA) $(LALR_TESTS) tests/sxml-match-tests.ss driver

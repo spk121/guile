@@ -1,6 +1,6 @@
 ;;; Parsing Guile's command-line
 
-;;; Copyright (C) 1994-1998, 2000-2023 Free Software Foundation, Inc.
+;;; Copyright (C) 1994-1998, 2000-2024 Free Software Foundation, Inc.
 
 ;;;; This library is free software; you can redistribute it and/or
 ;;;; modify it under the terms of the GNU Lesser General Public
@@ -66,7 +66,7 @@ There is NO WARRANTY, to the extent permitted by law."))
 (define* (version-etc package version #:key
                       (port (current-output-port))
                       ;; FIXME: authors
-                      (copyright-year 2023)
+                      (copyright-year 2024)
                       (copyright-holder "Free Software Foundation, Inc.")
                       (copyright (format #f "Copyright (C) ~a ~a"
                                          copyright-year copyright-holder))
@@ -135,6 +135,7 @@ If FILE begins with `-' the -s switch is mandatory.
                  files.
   --listen[=P]   listen on a local port or a path for REPL clients;
                  if P is not given, the default is local port 37146
+  -I             silence informative diagnostics
   -q             inhibit loading of user init file
   --use-srfi=LS  load SRFI modules for the SRFIs in LS,
                  which is a list of numbers like \"2,13,14\"
@@ -381,6 +382,9 @@ If FILE begins with `-' the -s switch is mandatory.
            ((string=? "--r7rs" arg)
             (parse args
                    (cons '(install-r7rs!) out)))
+
+           ((string=? arg "-I")   ; silence diagnostics
+            (parse args (cons `(current-info-port (%make-void-port "w")) out)))
 
            ((string=? arg "--listen")   ; start a repl server
             (parse args

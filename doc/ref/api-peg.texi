@@ -17,6 +17,10 @@ Wikipedia has a clear and concise introduction to PEGs if you want to
 familiarize yourself with the syntax:
 @url{http://en.wikipedia.org/wiki/Parsing_expression_grammar}.
 
+The paper that introduced PEG contains a more detailed description of how PEG
+works, and describes its syntax in detail:
+@url{https://bford.info/pub/lang/peg.pdf}
+
 The @code{(ice-9 peg)} module works by compiling PEGs down to lambda
 expressions.  These can either be stored in variables at compile-time by
 the define macros (@code{define-peg-pattern} and
@@ -143,6 +147,14 @@ Parses any character falling between @var{a} and @var{z}.
 @code{(range #\a #\z)}
 @end deftp
 
+@deftp {PEG Pattern} {inverse range of characters} a z
+Parses any character not falling between @var{a} and @var{z}.
+
+@code{"[^a-z]"}
+
+@code{(not-in-range #\a #\z)}
+@end deftp
+
 Example:
 
 @example
@@ -216,8 +228,8 @@ should propagate up the parse tree.  The normal @code{<-} propagates the
 matched text up the parse tree, @code{<--} propagates the matched text
 up the parse tree tagged with the name of the nonterminal, and @code{<}
 discards that matched text and propagates nothing up the parse tree.
-Also, nonterminals may consist of any alphanumeric character or a ``-''
-character (in normal PEGs nonterminals can only be alphabetic).
+Also, nonterminals may include ``-'' character, while in normal PEG it is not
+allowed.
 
 For example, if we:
 @lisp
@@ -312,7 +324,7 @@ You can use this nonterminal with all of the regular PEG functions:
 
 @lisp
 (match-pattern as "aaaaa") @result{}
-#<peg start: 0 end: 5 string: bbbbb tree: bbbbb>
+#<peg start: 0 end: 5 string: aaaaa tree: aaaaa>
 @end lisp
 
 @subsubheading Parsing & Matching Functions
@@ -716,7 +728,7 @@ This produces rather pretty parse trees:
 
 Notice that when there's no entry in a field (e.g. @code{nameORcomment}
 for messagebus) the symbol is inserted.  This is the ``don't throw away
-any information'' rule---we succesfully matched a @code{nameORcomment}
+any information'' rule---we successfully matched a @code{nameORcomment}
 of 0 characters (since we used @code{*} when defining it).  This is
 usually what you want, because it allows you to e.g. use @code{list-ref}
 to pull out elements (since they all have known offsets).
@@ -1013,19 +1025,19 @@ First, any string PEG is expanded into an s-expression PEG by the code
 in the @code{(ice-9 peg string-peg)} module.
 
 Then, the s-expression PEG that results is compiled into a parsing
-function by the @code{(ice-9 peg codegen)} module. In particular, the
-function @code{compile-peg-pattern} is called on the s-expression. It then
+function by the @code{(ice-9 peg codegen)} module.  In particular, the
+function @code{compile-peg-pattern} is called on the s-expression.  It then
 decides what to do based on the form it is passed.
 
 The PEG syntax can be expanded by providing @code{compile-peg-pattern} more
-options for what to do with its forms. The extended syntax will be
+options for what to do with its forms.  The extended syntax will be
 associated with a symbol, for instance @code{my-parsing-form}, and will
 be called on all PEG expressions of the form
 @lisp
 (my-parsing-form ...)
 @end lisp
 
-The parsing function should take two arguments. The first will be a
+The parsing function should take two arguments.  The first will be a
 syntax object containing a list with all of the arguments to the form
 (but not the form's name), and the second will be the
 @code{capture-type} argument that is passed to @code{define-peg-pattern}.
@@ -1033,5 +1045,5 @@ syntax object containing a list with all of the arguments to the form
 New functions can be registered by calling @code{(add-peg-compiler!
 symbol function)}, where @code{symbol} is the symbol that will indicate
 a form of this type and @code{function} is the code generating function
-described above. The function @code{add-peg-compiler!} is exported from
+described above.  The function @code{add-peg-compiler!} is exported from
 the @code{(ice-9 peg codegen)} module.

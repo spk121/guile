@@ -1,4 +1,4 @@
-/* Copyright 1995-2003,2006,2008-2014,2016-2018,2020
+/* Copyright 1995-2003,2006,2008-2014,2016-2018,2020,2024
      Free Software Foundation, Inc.
 
    This file is part of Guile.
@@ -582,7 +582,7 @@ void
 scm_gc_register_allocation (size_t size)
 {
   scm_i_pthread_mutex_lock (&bytes_until_gc_lock);
-  if (bytes_until_gc - size > bytes_until_gc)
+  if (size > bytes_until_gc)
     {
       bytes_until_gc = GC_get_heap_size ();
       scm_i_pthread_mutex_unlock (&bytes_until_gc_lock);

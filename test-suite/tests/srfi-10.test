@@ -17,7 +17,9 @@
 ;;;; License along with this library; if not, write to the Free Software
 ;;;; Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
-(use-modules (srfi srfi-10))
+(use-modules
+ (srfi srfi-10)
+ ((test-suite lib) #:select (pass-if with-test-prefix)))
 
 (define-reader-ctor 'rx make-regexp)
 

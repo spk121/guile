@@ -1,7 +1,7 @@
 ;;;; tree-il.test --- test suite for compiling tree-il   -*- scheme -*-
 ;;;; Andy Wingo <wingo@pobox.com> --- May 2009
 ;;;;
-;;;; 	Copyright (C) 2009-2014, 2017, 2020, 2022-2023 Free Software Foundation, Inc.
+;;;; 	Copyright (C) 2009-2014, 2017, 2020, 2022-2024 Free Software Foundation, Inc.
 ;;;;
 ;;;; This library is free software; you can redistribute it and/or
 ;;;; modify it under the terms of the GNU Lesser General Public
@@ -1144,7 +1144,7 @@
    (let (tmp tmp) (_ _) ((toplevel foo) (toplevel baz))
         (seq (seq (if (primcall thunk? (lexical tmp _))
                       (call (lexical tmp _))
-                      (primcall throw . _))
+                      (primcall raise-type-error . _))
                   (primcall wind (lexical tmp _) (lexical tmp _)))
              (let (tmp) (_) ((toplevel bar))
                   (seq (seq (primcall unwind)
@@ -1234,7 +1234,7 @@
                          (primcall apply
                                    (lexical handler _)
                                    (lexical args _))))))
-             (primcall throw . _))))
+             (primcall raise-type-error . _))))
 
   (pass-if-peval
    ;; `while' without `break' or `continue' has no prompts and gets its
@@ -1523,10 +1523,14 @@
    (const 0))
 
   ;; keyword cases survive
-  (pass-if (= 1 ((case-lambda* ((a b) 0) ((a #:key x) 1)) 0 #:x 1)))
-  (pass-if (= 0 ((case-lambda* ((a b c) 0) ((a #:key x) 1)) 0 #:x 1)))
-  (pass-if (= 0 ((case-lambda* ((a #:key x) 0) ((a b) 0)) 0 #:x 1)))
-  (pass-if (= 1 ((case-lambda* ((a #:key x) 0) ((a b c) 1)) 0 1 2))))
+  (pass-if-peval ((case-lambda* ((a b) 0) ((a #:key x) 1)) 0 #:x 1)
+    (const 1))
+  (pass-if-peval ((case-lambda* ((a b c) 0) ((a #:key x) 1)) 0 #:x 1)
+    (const 0))
+  (pass-if-peval ((case-lambda* ((a #:key x) 0) ((a b) 0)) 0 #:x 1)
+    (const 0))
+  (pass-if-peval ((case-lambda* ((a #:key x) 0) ((a b c) 1)) 0 1 2)
+    (const 1)))
 
 (with-test-prefix "eqv?"
   (pass-if-peval (eqv? x #f)
@@ -1583,3 +1587,31 @@
 
   (pass-if-peval (equal? x '(a . b))
     (primcall equal? (toplevel x) (const (a . b)))))
+
+(with-test-prefix "values"
+  (pass-if-peval (begin (cons 1 (values)) #f)
+    (seq (primcall values (primcall values))
+         (const #f)))
+
+  (pass-if-peval (begin 1 (values) #f)
+    (const #f)))
+
+(with-test-prefix "append"
+  (pass-if-peval (append '() 42)
+    (const 42))
+
+  (pass-if-peval (append '(1 2) 42)
+    (primcall cons (const 1)
+              (primcall cons (const 2) (const 42))))
+
+  (pass-if-peval (append (list 1 2) 42)
+    (primcall cons (const 1)
+              (primcall cons (const 2) (const 42))))
+
+  (pass-if-peval (append (cons* 1 2 '()) 42)
+    (primcall cons (const 1)
+              (primcall cons (const 2) (const 42))))
+
+  (pass-if-peval (append (cons 1 2) 42)
+    (primcall cons (const 1)
+              (primcall append (const 2) (const 42)))))

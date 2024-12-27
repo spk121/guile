@@ -1,6 +1,7 @@
 /* Copyright 1996-2002,2004,2006,2009-2019,2021
      Free Software Foundation, Inc.
    Copyright 2021 Maxime Devos <maximedevos@telenet.be>
+   Copyright 2024 Tomas Volf <~@wolfsden.cz>
 
    This file is part of Guile.
 
@@ -67,6 +68,11 @@
 # include <sys/sendfile.h>
 #endif
 
+#if defined(HAVE_SYS_IOCTL_H) && defined(HAVE_LINUX_FS_H)
+# include <linux/fs.h>
+# include <sys/ioctl.h>
+#endif
+
 #include "async.h"
 #include "boolean.h"
 #include "dynwind.h"
@@ -75,6 +81,7 @@
 #include "fports.h"
 #include "gsubr.h"
 #include "iselect.h"
+#include "keywords.h"
 #include "list.h"
 #include "load.h"	/* for scm_i_mirror_backslashes */
 #include "modules.h"
@@ -1185,14 +1192,23 @@ SCM_DEFINE (scm_symlinkat, "symlinkat", 3, 0, 0,
 #undef FUNC_NAME
 #endif /* HAVE_SYMLINKAT */
 
-/* Static helper function for choosing between readlink
+/* Static helper function for choosing between readlink, freadlink,
    and readlinkat. */
 static int
 do_readlink (int fd, const char *c_path, char *buf, size_t size)
 {
-#ifdef HAVE_READLINKAT
+/* Darwin does not accept empty c_path. */
+#if HAVE_READLINKAT && !__APPLE__
   if (fd != -1)
     return readlinkat (fd, c_path, buf, size);
+#elif HAVE_FREADLINK
+  /* There is no branch in s_scm_readlink that would lead to having both
+     FD and non-empty C_PATH.  Therefore if FD is set, we (on Darwin
+     only) use freadlink and ignore C_PATH.  On Linux this case is
+     already handled by readlinkat, but Darwin does not understand empty
+     C_PATH to mean "the fd itself" the way Linux does.  */
+  if (fd != -1)
+    return freadlink (fd, buf, size);
 #else
   (void) fd;
 #endif
@@ -1255,20 +1271,49 @@ SCM_DEFINE (scm_readlink, "readlink", 1, 0, 0,
 }
 #undef FUNC_NAME
 
-SCM_DEFINE (scm_copy_file, "copy-file", 2, 0, 0,
-            (SCM oldfile, SCM newfile),
+static int
+clone_file (int oldfd, int newfd)
+{
+#ifdef FICLONE
+  return ioctl (newfd, FICLONE, oldfd);
+#else
+  (void)oldfd;
+  (void)newfd;
+  errno = EOPNOTSUPP;
+  return -1;
+#endif
+}
+
+SCM_KEYWORD (k_copy_on_write, "copy-on-write");
+SCM_SYMBOL (sym_always, "always");
+SCM_SYMBOL (sym_auto, "auto");
+SCM_SYMBOL (sym_never, "never");
+
+SCM_DEFINE (scm_copy_file2, "copy-file", 2, 0, 1,
+            (SCM oldfile, SCM newfile, SCM rest),
 	    "Copy the file specified by @var{oldfile} to @var{newfile}.\n"
-	    "The return value is unspecified.")
-#define FUNC_NAME s_scm_copy_file
+	    "The return value is unspecified.\n"
+            "\n"
+            "@code{#:copy-on-write} keyword argument determines whether "
+            "copy-on-write copy should be attempted and the "
+            "behavior in case of failure.  Possible values are "
+            "@code{'always} (attempt the copy-on-write, return error if "
+            "it fails), @code{'auto} (attempt the copy-on-write, "
+            "fallback to regular copy if it fails) and @code{'never} "
+            "(perform the regular copy)."
+            )
+#define FUNC_NAME s_scm_copy_file2
 {
   char *c_oldfile, *c_newfile;
   int oldfd, newfd;
   int n, rv;
+  SCM cow = sym_auto;
+  int clone_res;
   char buf[BUFSIZ];
   struct stat_or_stat64 oldstat;
 
   scm_dynwind_begin (0);
-  
+
   c_oldfile = scm_to_locale_string (oldfile);
   scm_dynwind_free (c_oldfile);
   c_newfile = scm_to_locale_string (newfile);
@@ -1292,13 +1337,30 @@ SCM_DEFINE (scm_copy_file, "copy-file", 2, 0, 0,
       SCM_SYSERROR;
     }
 
-  while ((n = read (oldfd, buf, sizeof buf)) > 0)
-    if (write (newfd, buf, n) != n)
-      {
-	close (oldfd);
-	close (newfd);
-	SCM_SYSERROR;
-      }
+  scm_c_bind_keyword_arguments ("copy-file", rest, 0,
+                                k_copy_on_write, &cow,
+                                SCM_UNDEFINED);
+
+  if (scm_is_eq (cow, sym_always) || scm_is_eq (cow, sym_auto))
+    clone_res = clone_file(oldfd, newfd);
+  else if (scm_is_eq (cow, sym_never))
+    clone_res = -1;
+  else
+    scm_misc_error ("copy-file",
+                    "invalid value for #:copy-on-write: ~S",
+                    scm_list_1 (cow));
+
+  if (scm_is_eq (cow, sym_always) && clone_res)
+    scm_syserror ("copy-file: copy-on-write failed");
+
+  if (clone_res)
+    while ((n = read (oldfd, buf, sizeof buf)) > 0)
+      if (write (newfd, buf, n) != n)
+        {
+          close (oldfd);
+          close (newfd);
+          SCM_SYSERROR;
+        }
   close (oldfd);
   if (close (newfd) == -1)
     SCM_SYSERROR;
@@ -1307,6 +1369,12 @@ SCM_DEFINE (scm_copy_file, "copy-file", 2, 0, 0,
   return SCM_UNSPECIFIED;
 }
 #undef FUNC_NAME
+
+SCM
+scm_copy_file (SCM oldfile, SCM newfile)
+{
+  return scm_copy_file2 (oldfile, newfile, SCM_UNSPECIFIED);
+}
 
 SCM_DEFINE (scm_sendfile, "sendfile", 3, 1, 0,
 	    (SCM out, SCM in, SCM count, SCM offset),
@@ -1329,7 +1397,7 @@ SCM_DEFINE (scm_sendfile, "sendfile", 3, 1, 0,
 
   ssize_t result SCM_UNUSED;
   size_t c_count, total = 0;
-  scm_t_off c_offset;
+  off_t c_offset;
   int in_fd, out_fd;
 
   VALIDATE_FD_OR_PORT (out_fd, out, 1);
@@ -1978,13 +2046,13 @@ SCM_DEFINE (scm_dirname, "dirname", 1, 0, 0,
 
 SCM_DEFINE (scm_basename, "basename", 1, 1, 0, 
             (SCM filename, SCM suffix),
-	    "Return the base name of the file name @var{filename}. The\n"
-	    "base name is the file name without any directory components.\n"
-	    "If @var{suffix} is provided, and is equal to the end of\n"
-	    "@var{filename}, it is removed also.")
+            "Return the base name of @var{filename}. The base name is the\n"
+            "@var{filename} without any directory components.\n"
+            "If the @var{suffix} matches the end of the base name and is\n"
+            "shorter, then it is removed from the result.\n")
 #define FUNC_NAME s_scm_basename
 {
-  char *c_filename, *c_last_component;
+  char *c_filename;
   SCM res;
 
   scm_dynwind_begin (0);
@@ -1999,20 +2067,26 @@ SCM_DEFINE (scm_basename, "basename", 1, 1, 0,
     res = scm_from_utf8_string ("/");
   else
     {
-      c_last_component = last_component (c_filename);
-      if (!c_last_component)
-        res = filename;
+      char *last = last_component (c_filename);
+      if (SCM_UNBNDP (suffix))
+        res = scm_from_utf8_string (last);
       else
-        res = scm_from_utf8_string (c_last_component);
+        {
+          char * const c_suffix = scm_to_utf8_string (suffix);
+          scm_dynwind_free (c_suffix);
+          const size_t res_n = strlen (last);
+          const size_t suf_n = strlen (c_suffix);
+          if (suf_n < res_n)
+            {
+              const size_t prefix_n = res_n - suf_n;
+              if (strcmp (last + prefix_n, c_suffix) == 0)
+                last[prefix_n] = '\0';
+            }
+          res = scm_from_utf8_string (last);
+        }
     }
-  scm_dynwind_end ();
 
-  if (!SCM_UNBNDP (suffix) &&
-      scm_is_true (scm_string_suffix_p (suffix, filename,
-                                        SCM_UNDEFINED, SCM_UNDEFINED,
-                                        SCM_UNDEFINED, SCM_UNDEFINED)))
-    res = scm_c_substring
-      (res, 0, scm_c_string_length (res) - scm_c_string_length (suffix));
+  scm_dynwind_end ();
 
   return res;
 }

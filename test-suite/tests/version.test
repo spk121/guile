@@ -26,7 +26,7 @@
       (and (string? (major-version))
 	   (string? (minor-version))
 	   (string? (micro-version))
-	   (string-contains (version)
-                            (string-append (major-version) "."
-                                           (minor-version) "."
-                                           (micro-version))))))
+	   (zero? (string-contains (version)
+                                (string-append (major-version) "."
+                                               (minor-version) "."
+                                               (micro-version)))))))

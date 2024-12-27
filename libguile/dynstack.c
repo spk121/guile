@@ -25,7 +25,12 @@
 #endif
 
 #include <assert.h>
+
+#ifndef _WIN64
 #include <setjmp.h>
+#else
+#include "setjump-win.h"
+#endif
 
 #include "control.h"
 #include "eval.h"

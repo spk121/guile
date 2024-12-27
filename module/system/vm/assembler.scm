@@ -259,6 +259,9 @@
             emit-define!
             emit-current-module
             emit-symbol->string
+            emit-string-utf8-length
+            emit-string->utf8
+            emit-utf8->string
 
             ;; Intrinsics for use by the baseline compiler.
             emit-$car
@@ -316,6 +319,7 @@
             emit-usub/immediate
             emit-umul/immediate
             emit-ulogand
+            emit-ulogand/immediate
             emit-ulogior
             emit-ulogxor
             emit-ulogsub
@@ -1574,6 +1578,9 @@ returned instead."
 (define-scm<-scm-scm-intrinsic define!)
 (define-scm<-thread-intrinsic current-module)
 (define-scm<-scm-intrinsic symbol->string)
+(define-scm<-scm-intrinsic string->utf8)
+(define-scm<-scm-intrinsic utf8->string)
+(define-u64<-scm-intrinsic string-utf8-length)
 
 (define-scm<-scm-intrinsic $car)
 (define-scm<-scm-intrinsic $cdr)
@@ -2315,7 +2322,7 @@ needed."
 
 ;; FIXME: Define these somewhere central, shared with C.
 (define *bytecode-major-version* #x0300)
-(define *bytecode-minor-version* 6)
+(define *bytecode-minor-version* 7)
 
 (define (link-dynamic-section asm text rw rw-init frame-maps)
   "Link the dynamic section for an ELF image with bytecode @var{text},

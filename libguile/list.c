@@ -308,7 +308,7 @@ SCM_DEFINE (scm_append_x, "append!", 0, 0, 1,
 
 SCM_DEFINE (scm_last_pair, "last-pair", 1, 0, 0, 
            (SCM lst),
-	    "Return the last pair in @var{lst}, signalling an error if\n"
+	    "Return the last pair in @var{lst}, signaling an error if\n"
 	    "@var{lst} is circular.")
 #define FUNC_NAME s_scm_last_pair
 {

@@ -59,7 +59,7 @@ x @result{} 123
 @end example
 
 @item (@var{proc} @var{args}@dots{})
-A parenthesised expression is a function call.  @var{proc} and each
+A parenthesized expression is a function call.  @var{proc} and each
 argument are evaluated, then the function (which @var{proc} evaluated
 to) is called with those arguments.
 
@@ -73,7 +73,7 @@ unspecified, so be careful when using expressions with side effects.
 ((get-some-proc) 1 2 3) @result{} 1
 @end example
 
-The same sort of parenthesised form is used for a macro invocation,
+The same sort of parenthesized form is used for a macro invocation,
 but in that case the arguments are not evaluated.  See the
 descriptions of macros for more on this (@pxref{Macros}, and
 @pxref{Syntax Rules}).
@@ -318,7 +318,7 @@ the current input port if @var{port} is not specified.
 Any whitespace before the next token is discarded.
 @end deffn
 
-The behaviour of Guile's Scheme reader can be modified by manipulating
+The behavior of Guile's Scheme reader can be modified by manipulating
 its read options.
 
 @cindex options - read
@@ -359,7 +359,7 @@ unsets @code{square-brackets} on the port (@pxref{SRFI-105}).  There is
 currently no other way to access or set the per-port read options.
 
 The boolean options may be toggled with @code{read-enable} and
-@code{read-disable}. The non-boolean @code{keywords} option must be set
+@code{read-disable}.  The non-boolean @code{keywords} option must be set
 using @code{read-set!}.
 
 @deffn {Scheme Procedure} read-enable option-name
@@ -392,7 +392,7 @@ For more information on the @code{r7rs-symbols} option, see
 
 When something goes wrong with a Scheme program, the user will want to
 know how to fix it.  This starts with identifying where the error
-occured: we want to associate a source location with each component part
+occurred: we want to associate a source location with each component part
 of source code, and propagate that source location information through
 to the compiler or interpreter.
 
@@ -441,7 +441,7 @@ information.
 @node Scheme Write
 @subsection Writing Scheme Values
 
-Any scheme value may be written to a port. Not all values may be read
+Any scheme value may be written to a port.  Not all values may be read
 back in (@pxref{Scheme Read}), however.
 
 @rnindex write
@@ -475,7 +475,7 @@ affect the behavior of the Scheme printer.
 @deffn {Scheme Procedure} print-options [setting]
 Display the current settings of the read options.  If @var{setting} is
 omitted, only a short form of the current read options is
-printed. Otherwise if @var{setting} is the symbol @code{help}, a
+printed.  Otherwise if @var{setting} is the symbol @code{help}, a
 complete options description is displayed.
 @end deffn
 
@@ -1044,7 +1044,7 @@ manipulation.
 @deffn {Scheme Procedure} parse-path path [tail]
 @deffnx {C Function} scm_parse_path (path, tail)
 Parse @var{path}, which is expected to be a colon-separated string, into
-a list and return the resulting list with @var{tail} appended. If
+a list and return the resulting list with @var{tail} appended.  If
 @var{path} is @code{#f}, @var{tail} is returned.
 @end deffn
 
@@ -1060,7 +1060,7 @@ returned.
 @deffn {Scheme Procedure} search-path path filename [extensions [require-exts?]]
 @deffnx {C Function} scm_search_path (path, filename, rest)
 Search @var{path} for a directory containing a file named
-@var{filename}. The file must be readable, and not a directory.  If we
+@var{filename}.  The file must be readable, and not a directory.  If we
 find one, return its full filename; otherwise, return @code{#f}.  If
 @var{filename} is absolute, return it unchanged.  If given,
 @var{extensions} is a list of strings; for each directory in @var{path},
@@ -1136,7 +1136,7 @@ accomplish this in three steps.  First, the character encoding of the
 port should be set to ISO-8859-1 using @code{set-port-encoding!}.
 Then, the procedure @code{file-encoding}, described below, is used to
 scan for a coding declaration when reading from the port.  As a side
-effect, it rewinds the port after its scan is complete. After that,
+effect, it rewinds the port after its scan is complete.  After that,
 the port's character encoding should be set to the encoding returned
 by @code{file-encoding}, if any, again by using
 @code{set-port-encoding!}.  Then the code can be read as normal.
@@ -1339,14 +1339,14 @@ and space used by a piece of code.
 
 @deffn {Scheme Procedure} call-with-time-limit limit thunk limit-reached
 Call @var{thunk}, but cancel it if @var{limit} seconds of wall-clock
-time have elapsed.  If the computation is cancelled, call
+time have elapsed.  If the computation is canceled, call
 @var{limit-reached} in tail position.  @var{thunk} must not disable
 interrupts or prevent an abort via a @code{dynamic-wind} unwind handler.
 @end deffn
 
 @deffn {Scheme Procedure} call-with-allocation-limit limit thunk limit-reached
 Call @var{thunk}, but cancel it if @var{limit} bytes have been
-allocated.  If the computation is cancelled, call @var{limit-reached} in
+allocated.  If the computation is canceled, call @var{limit-reached} in
 tail position.  @var{thunk} must not disable interrupts or prevent an
 abort via a @code{dynamic-wind} unwind handler.
 
@@ -1407,7 +1407,7 @@ defaults to @code{all-pure-bindings}.  This is the core of the
 sandbox: creating a scope for the expression that is @dfn{safe}.
 
 A safe sandbox module has two characteristics.  Firstly, it will not
-allow the expression being evaluated to avoid being cancelled due to
+allow the expression being evaluated to avoid being canceled due to
 time or allocation limits.  This ensures that the expression terminates
 in a timely fashion.
 
@@ -1604,7 +1604,7 @@ uses them internally to implement the @option{--listen} switch,
 @deffn {Scheme Procedure} make-tcp-server-socket [#:host=#f] @
                           [#:addr] [#:port=37146]
 Return a stream socket bound to a given address @var{addr} and port
-number @var{port}. If the @var{host} is given, and @var{addr} is not,
+number @var{port}.  If the @var{host} is given, and @var{addr} is not,
 then the @var{host} string is converted to an address.  If neither is
 given, we use the loopback address.
 @end deffn
@@ -1628,7 +1628,7 @@ with no arguments.
 Closes the connection on all running server sockets.
 
 Please note that in the current implementation, the REPL threads are
-cancelled without unwinding their stacks.  If any of them are holding
+canceled without unwinding their stacks.  If any of them are holding
 mutexes or are within a critical section, the results are unspecified.
 @end deffn
 

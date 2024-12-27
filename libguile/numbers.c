@@ -4567,6 +4567,7 @@ scm_is_less_than (SCM x, SCM y)
 	return SCM_REAL_VALUE (x) < SCM_REAL_VALUE (y);
       if (!SCM_FRACTIONP (y))
         abort ();
+      /* REALP x FRACTIONP y, see symmetric case below  */
       if (isnan (SCM_REAL_VALUE (x)))
         return 0;
       if (isinf (SCM_REAL_VALUE (x)))
@@ -4577,9 +4578,19 @@ scm_is_less_than (SCM x, SCM y)
   if (!SCM_FRACTIONP (x))
     abort ();
 
-  /* "a/b < " becomes "a < y*b" */
-  return scm_is_less_than (SCM_FRACTION_NUMERATOR (x),
-                           scm_product (y, SCM_FRACTION_DENOMINATOR (x)));
+  if (SCM_REALP (y))
+    {
+      /* FRACTIONP x REALP y, see symmetric case above */
+      if (isnan (SCM_REAL_VALUE (y)))
+        return 0;
+      if (isinf (SCM_REAL_VALUE (y)))
+        return 0.0 < SCM_REAL_VALUE (y);
+      return scm_is_less_than (x, scm_inexact_to_exact (y));
+    }
+  else
+    /* "a/b < y" becomes "a < y*b" */
+    return scm_is_less_than (SCM_FRACTION_NUMERATOR (x),
+                             scm_product (y, SCM_FRACTION_DENOMINATOR (x)));
 }
 
 static int

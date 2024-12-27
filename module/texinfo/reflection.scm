@@ -20,7 +20,7 @@
 
 ;;; Commentary:
 ;;
-;;Routines to generare @code{stexi} documentation for objects and
+;;Routines to generate @code{stexi} documentation for objects and
 ;;modules.
 ;;
 ;;Note that in this context, an @dfn{object} is just a value associated

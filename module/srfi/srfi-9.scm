@@ -1,6 +1,6 @@
 ;;; srfi-9.scm --- define-record-type
 
-;; Copyright (C) 2001-2002, 2006, 2008-2014, 2018-2019, 2023
+;; Copyright (C) 2001-2002,2006,2008-2014,2018-2019,2023-2024
 ;;   Free Software Foundation, Inc.
 ;;
 ;; This library is free software; you can redistribute it and/or
@@ -274,11 +274,6 @@
                   field-specs
                   (iota (length field-specs))))
 
-    (define (record-layout immutable? count)
-      ;; Mutability is expressed on the record level; all structs in the
-      ;; future will be mutable.
-      (string-concatenate (make-list count "pw")))
-
     (syntax-case x ()
       ((_ immutable? form type-name constructor-spec predicate-name
           field-spec ...)
@@ -308,7 +303,6 @@
               (getter-ids  (getter-identifiers #'(field-spec ...)))
               (field-count (length field-ids))
               (immutable?  (syntax->datum #'immutable?))
-              (layout      (record-layout immutable? field-count))
               (ctor-name   (syntax-case #'constructor-spec ()
                              ((ctor args ...) #'ctor)))
               (copier-id   (make-copier-id #'type-name)))
