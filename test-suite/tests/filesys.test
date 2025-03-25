@@ -46,6 +46,18 @@
       (chmod file (logior (stat:mode (stat file)) #o200)))
     (delete-file file)))
 
+(define (normalize-newlines s)
+  "Returns a copy of the input string, replacing any #\return #\newline
+pairs with #\newline."
+  (let loop ((i 0) (result '()))
+    (if (< i (string-length s))
+        (if (and (< (+ i 1) (string-length s))
+                 (char=? (string-ref s i) #\return)
+                 (char=? (string-ref s (+ i 1)) #\newline))
+            (loop (+ i 2) (cons #\newline result))
+            (loop (+ i 1) (cons (string-ref s i) result)))
+        (list->string (reverse result)))))
+
 ;;;
 ;;; copy-file
 ;;;
@@ -69,8 +81,14 @@
        (with-test-prefix "successful copy"
          (copy-file src dest)
          (pass-if-equal "copy-file dest content" msg
-           (call-with-input-file dest get-string-all)))
-       (unless (zero? (geteuid))
+	   ;; Since call-with-input-file is always text mode, it may have
+	   ;; \r\n on MinGW.
+           (normalize-newlines
+            (call-with-input-file dest get-string-all))))
+       ;; Checking for a geteuid of zero is testing of the user
+       ;; is root, making the chmod to read-only meaningless.  geteuid is
+       ;; not defined in MinGW.
+       (unless (and (defined? 'geteuid) (zero? (geteuid)))
          (with-test-prefix "read only dest"
            (chmod dest #o444)
            (with-exception-handler
