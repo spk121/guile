@@ -22,7 +22,7 @@
 
 
 
-#ifndef _WIN64
+#ifndef _WIN32
 #include <setjmp.h>
 #else
 #include "libguile/setjump-win.h"
