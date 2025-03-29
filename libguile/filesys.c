@@ -89,6 +89,9 @@
 #include "pairs.h"
 #include "ports-internal.h"
 #include "ports.h"
+#ifdef __MINGW32__
+#include "posix-w32.h"
+#endif
 #include "posix.h"
 #include "smob.h"
 #include "srfi-13.h"

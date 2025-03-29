@@ -18,10 +18,11 @@
    <https://www.gnu.org/licenses/>.  */
 
 #ifdef HAVE_CONFIG_H
-# include <config.h>
+#include <config.h>
 #endif
 
 #define WIN32_LEAN_AND_MEAN
+#define _CRT_RAND_S
 #include <windows.h>
 #include <c-strcase.h>
 #include <process.h>
@@ -33,8 +34,8 @@
 #include <io.h>
 #include <fcntl.h>
 
-#include "gc.h"        /* for scm_*alloc, scm_strdup */
-#include "threads.h"   /* for scm_i_scm_pthread_mutex_lock */
+#include "gc.h"			/* for scm_*alloc, scm_strdup */
+#include "threads.h"		/* for scm_i_scm_pthread_mutex_lock */
 
 #include "posix-w32.h"
 
@@ -44,7 +45,8 @@
 int
 uname (struct utsname *uts)
 {
-  enum { WinNT, Win95, Win98, WinUnknown };
+  enum
+  { WinNT, Win95, Win98, WinUnknown };
   OSVERSIONINFO osver;
   SYSTEM_INFO sysinfo;
   DWORD sLength;
@@ -58,55 +60,55 @@ uname (struct utsname *uts)
 
   switch (osver.dwPlatformId)
     {
-    case VER_PLATFORM_WIN32_NT: /* NT, Windows 2000 or Windows XP */
+    case VER_PLATFORM_WIN32_NT:	/* NT, Windows 2000 or Windows XP */
       if (osver.dwMajorVersion == 4)
-        strcpy (uts->sysname, "Windows NT4x"); /* NT4x */
+	strcpy (uts->sysname, "Windows NT4x");	/* NT4x */
       else if (osver.dwMajorVersion <= 3)
-        strcpy (uts->sysname, "Windows NT3x"); /* NT3x */
+	strcpy (uts->sysname, "Windows NT3x");	/* NT3x */
       else if (osver.dwMajorVersion == 5 && osver.dwMinorVersion < 1)
-        strcpy (uts->sysname, "Windows 2000"); /* 2k */
+	strcpy (uts->sysname, "Windows 2000");	/* 2k */
       else if (osver.dwMajorVersion < 6)
-        strcpy (uts->sysname, "Windows XP");   /* XP */
+	strcpy (uts->sysname, "Windows XP");	/* XP */
       else if (osver.dwMajorVersion == 6)
-        {
-          if (osver.dwMinorVersion < 1)
-            strcpy (uts->sysname, "Windows Vista");   /* Vista */
-          else if (osver.dwMinorVersion < 2)
-            strcpy (uts->sysname, "Windows 7"); /* Windows 7 */
-          else if (osver.dwMinorVersion < 3)
-            strcpy (uts->sysname, "Windows 8"); /* Windows 8 */
-          else if (osver.dwMinorVersion < 4)
-            strcpy (uts->sysname, "Windows 8.1"); /* Windows 8.1 */
-        }
+	{
+	  if (osver.dwMinorVersion < 1)
+	    strcpy (uts->sysname, "Windows Vista");	/* Vista */
+	  else if (osver.dwMinorVersion < 2)
+	    strcpy (uts->sysname, "Windows 7");	/* Windows 7 */
+	  else if (osver.dwMinorVersion < 3)
+	    strcpy (uts->sysname, "Windows 8");	/* Windows 8 */
+	  else if (osver.dwMinorVersion < 4)
+	    strcpy (uts->sysname, "Windows 8.1");	/* Windows 8.1 */
+	}
       else if (osver.dwMajorVersion >= 10)
-        strcpy (uts->sysname, "Windows 10 or later"); /* Windows 10 and later */
+	strcpy (uts->sysname, "Windows 10 or later");	/* Windows 10 and later */
       os = WinNT;
       break;
 
-    case VER_PLATFORM_WIN32_WINDOWS: /* Win95, Win98 or WinME */
+    case VER_PLATFORM_WIN32_WINDOWS:	/* Win95, Win98 or WinME */
       if ((osver.dwMajorVersion > 4) ||
-          ((osver.dwMajorVersion == 4) && (osver.dwMinorVersion > 0)))
-        {
-          if (osver.dwMinorVersion >= 90)
-            strcpy (uts->sysname, "Windows ME"); /* ME */
-          else
-            strcpy (uts->sysname, "Windows 98"); /* 98 */
-          os = Win98;
-        }
+	  ((osver.dwMajorVersion == 4) && (osver.dwMinorVersion > 0)))
+	{
+	  if (osver.dwMinorVersion >= 90)
+	    strcpy (uts->sysname, "Windows ME");	/* ME */
+	  else
+	    strcpy (uts->sysname, "Windows 98");	/* 98 */
+	  os = Win98;
+	}
       else
-        {
-          strcpy (uts->sysname, "Windows 95"); /* 95 */
-          os = Win95;
-        }
+	{
+	  strcpy (uts->sysname, "Windows 95");	/* 95 */
+	  os = Win95;
+	}
       break;
 
-    case VER_PLATFORM_WIN32s: /* Windows 3.x */
+    case VER_PLATFORM_WIN32s:	/* Windows 3.x */
       strcpy (uts->sysname, "Windows");
       break;
     }
 
   sprintf (uts->version, "%ld.%02ld",
-           osver.dwMajorVersion, osver.dwMinorVersion);
+	   osver.dwMajorVersion, osver.dwMinorVersion);
 
   if (osver.szCSDVersion[0] != '\0' &&
       (strlen (osver.szCSDVersion) + strlen (uts->version) + 1) <
@@ -138,28 +140,28 @@ uname (struct utsname *uts)
        * wProcessorLevel is only valid in WinNT
        */
       switch (os)
-        {
-        case Win95:
-        case Win98:
-          switch (sysinfo.dwProcessorType)
-            {
-            case PROCESSOR_INTEL_386:
-            case PROCESSOR_INTEL_486:
-            case PROCESSOR_INTEL_PENTIUM:
-              sprintf (uts->machine, "i%ld", sysinfo.dwProcessorType);
-              break;
-            default:
-              strcpy (uts->machine, "i386");
-              break;
-          }
-          break;
-        case WinNT:
-          sprintf (uts->machine, "i%d86", sysinfo.wProcessorLevel);
-          break;
-        default:
-          strcpy (uts->machine, "unknown");
-          break;
-        }
+	{
+	case Win95:
+	case Win98:
+	  switch (sysinfo.dwProcessorType)
+	    {
+	    case PROCESSOR_INTEL_386:
+	    case PROCESSOR_INTEL_486:
+	    case PROCESSOR_INTEL_PENTIUM:
+	      sprintf (uts->machine, "i%ld", sysinfo.dwProcessorType);
+	      break;
+	    default:
+	      strcpy (uts->machine, "i386");
+	      break;
+	    }
+	  break;
+	case WinNT:
+	  sprintf (uts->machine, "i%d86", sysinfo.wProcessorLevel);
+	  break;
+	default:
+	  strcpy (uts->machine, "unknown");
+	  break;
+	}
       break;
     case PROCESSOR_ARCHITECTURE_AMD64:
       strcpy (uts->machine, "x86_64");
@@ -167,42 +169,43 @@ uname (struct utsname *uts)
     default:
       strcpy (uts->machine, "unknown");
       break;
-  }
+    }
 
   sLength = sizeof (uts->nodename) - 1;
   GetComputerName (uts->nodename, &sLength);
   return 0;
 }
-
 
+
 /* Translate abnormal exit status of Windows programs into the signal
    that terminated the program.  This is required to support scm_kill
    and WTERMSIG.  */
 
-struct signal_and_status {
+struct signal_and_status
+{
   int sig;
   DWORD status;
 };
 
 static const struct signal_and_status sigtbl[] = {
-  {SIGSEGV, 0xC0000005},        /* access to invalid address */
-  {SIGSEGV, 0xC0000008},        /* invalid handle */
-  {SIGILL,  0xC000001D},        /* illegal instruction */
-  {SIGILL,  0xC0000025},        /* non-continuable instruction */
-  {SIGSEGV, 0xC000008C},        /* array bounds exceeded */
-  {SIGFPE,  0xC000008D},        /* float denormal */
-  {SIGFPE,  0xC000008E},        /* float divide by zero */
-  {SIGFPE,  0xC000008F},        /* float inexact */
-  {SIGFPE,  0xC0000090},        /* float invalid operation */
-  {SIGFPE,  0xC0000091},        /* float overflow */
-  {SIGFPE,  0xC0000092},        /* float stack check */
-  {SIGFPE,  0xC0000093},        /* float underflow */
-  {SIGFPE,  0xC0000094},        /* integer divide by zero */
-  {SIGFPE,  0xC0000095},        /* integer overflow */
-  {SIGILL,  0xC0000096},        /* privileged instruction */
-  {SIGSEGV, 0xC00000FD},        /* stack overflow */
-  {SIGTERM, 0xC000013A},        /* Ctrl-C exit */
-  {SIGINT,  0xC000013A}
+  {SIGSEGV, 0xC0000005},	/* access to invalid address */
+  {SIGSEGV, 0xC0000008},	/* invalid handle */
+  {SIGILL, 0xC000001D},		/* illegal instruction */
+  {SIGILL, 0xC0000025},		/* non-continuable instruction */
+  {SIGSEGV, 0xC000008C},	/* array bounds exceeded */
+  {SIGFPE, 0xC000008D},		/* float denormal */
+  {SIGFPE, 0xC000008E},		/* float divide by zero */
+  {SIGFPE, 0xC000008F},		/* float inexact */
+  {SIGFPE, 0xC0000090},		/* float invalid operation */
+  {SIGFPE, 0xC0000091},		/* float overflow */
+  {SIGFPE, 0xC0000092},		/* float stack check */
+  {SIGFPE, 0xC0000093},		/* float underflow */
+  {SIGFPE, 0xC0000094},		/* integer divide by zero */
+  {SIGFPE, 0xC0000095},		/* integer overflow */
+  {SIGILL, 0xC0000096},		/* privileged instruction */
+  {SIGSEGV, 0xC00000FD},	/* stack overflow */
+  {SIGTERM, 0xC000013A},	/* Ctrl-C exit */
+  {SIGINT, 0xC000013A}
 };
 
 static int
@@ -214,7 +217,7 @@ w32_signal_to_status (int sig)
     if (sig == sigtbl[i].sig)
       return sigtbl[i].status;
 
-  return (int)0xC000013A;
+  return (int) 0xC000013A;
 }
 
 int
@@ -318,17 +321,17 @@ console_has_return_keyevent_w32 (int fdes)
     {
       bRet = PeekConsoleInput (h, irbuffer, NBUFFER, &avail);
       if (!bRet || avail == 0)
-        break;
+	break;
 
       for (i = 0; i < avail; i++)
-        if (irbuffer[i].EventType == KEY_EVENT)
-          {
-            n_chars ++;
-            if (irbuffer[i].Event.KeyEvent.uChar.AsciiChar == 13)
-              n_returns ++;
-          }
+	if (irbuffer[i].EventType == KEY_EVENT)
+	  {
+	    n_chars++;
+	    if (irbuffer[i].Event.KeyEvent.uChar.AsciiChar == 13)
+	      n_returns++;
+	  }
       if (avail < NBUFFER)
-        break;
+	break;
     }
 
   if (n_chars == 1 && n_returns == 1)
@@ -341,4 +344,88 @@ int
 getpagesize_w32 (void)
 {
   return 4 * 1024;
+}
+
+
+// Generate a random string of specified length using character set safe
+// for filenames
+static void
+generate_random_string (char *str, size_t len)
+{
+  const char charset[] = "abcdefghijklmnopqrstuvwxyz0123456789";
+  const size_t charset_size = sizeof (charset) - 1;
+
+  for (size_t i = 0; i < len; i++)
+    {
+      unsigned int r;
+      if (rand_s (&r) != 0)
+	{
+	  // Handle rand_s failure (rare, but possible)
+	  str[i] = charset[0];	// Fallback to first character
+	  continue;
+	}
+      str[i] = charset[r % charset_size];
+    }
+  str[len] = '\0';
+}
+
+char *
+mkdtemp (char *template)
+{
+  const int MAX_TRIES = 20;
+
+  if (template == NULL)
+    {
+      return NULL;
+    }
+
+  // Check if template ends with "XXXXXX"
+  size_t len = strlen (template);
+  if (len < 6 || strcmp (template + len - 6, "XXXXXX") != 0)
+    {
+      return NULL;
+    }
+
+  char *working_template = _strdup (template);
+  if (working_template == NULL)
+    {
+      return NULL;
+    }
+
+  // Locate the position of "XXXXXX" in the working copy
+  char *pattern_pos = working_template + len - 6;
+
+  // Try up to MAX_TRIES times to create a unique directory
+  for (int try = 0; try < MAX_TRIES; try++)
+    {
+      // Replace "XXXXXX" with a random 6-character string
+      generate_random_string (pattern_pos, 6);
+
+      if (CreateDirectoryA (working_template, NULL))
+	{
+	  // Success: copy the modified name back to the original template
+	  strcpy (template, working_template);
+	  free (working_template);
+	  return template;
+	}
+      else
+	{
+	  DWORD error = GetLastError ();
+	  if (error == ERROR_ALREADY_EXISTS)
+	    {
+	      // Name is taken, try again with a new random string
+	      continue;
+	    }
+	  else
+	    {
+	      // Other error (e.g., invalid path, permission denied), give up
+	      free (working_template);
+	      return NULL;
+	    }
+	}
+    }
+
+  // Failed to find a unique name after MAX_TRIES
+  free (working_template);
+  return NULL;
 }

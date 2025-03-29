@@ -76,9 +76,11 @@ SCM_INTERNAL int dlclose_w32 (void *handle);
 SCM_INTERNAL char *dlerror_w32 (void);
 SCM_INTERNAL int console_has_return_keyevent_w32 (int fdes);
 SCM_INTERNAL int getpagesize_w32 (void);
+SCM_INTERNAL char* mkdtemp (char* template);
 
 #define HAVE_UNAME 1
 #define HAVE_WAITPID 1
+#define HAVE_MKDTEMP 1
 
 #define RTLD_NOW 1
 #define RTLD_LAZY 2
