@@ -20,7 +20,7 @@
 /* avoid using it due to partial stalls */
 #define USE_INC_DEC                     0
 
-#if __X32
+#if __X32 || __X64_32
 # define WIDE 0
 # define IF_WIDE(wide, narrow) narrow
 #else
@@ -46,7 +46,7 @@
 #define _R15_REGNO                      15
 #define r7(reg)                 ((reg) & 7)
 #define r8(reg)                 ((reg) & 15)
-#if __X32
+#if ___X32 || __CYGWIN__ || __X64_32 || _WIN32
 # define reg8_p(rn) ((rn) >= _RAX_REGNO && (rn) <= _RBX_REGNO)
 #else
 # define reg8_p(rn) 1
