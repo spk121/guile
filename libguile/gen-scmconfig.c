@@ -140,6 +140,7 @@
 #include <stddef.h>
 #include <stdio.h>
 #include <string.h>
+#include <limits.h>
 
 #include "gen-scmconfig.h"
 
@@ -246,17 +247,17 @@ main (int argc, char *argv[])
   pf ("typedef unsigned long long  ulong_t;\n");
   pf ("#define SCM_SIZEOF_LONG_T %d\n", SIZEOF_LONG_LONG);
   pf ("#define SCM_SIZEOF_ULONG_T %d\n", SIZEOF_UNSIGNED_LONG_LONG);
-  pf ("#define LONG_T_MAX ((long_t)%lld)\n", LLONG_MAX);
-  pf ("#define ULONG_T_MAX ((ulong_t)%llu)\n", ULLONG_MAX);
-  pf ("#define LONG_T_MIN ((long_t)%lld)\n", LLONG_MIN);
+  pf ("#define LONG_T_MAX (%lldLL)\n", LLONG_MAX);
+  pf ("#define ULONG_T_MAX (%lluULL)\n", ULLONG_MAX);
+  pf ("#define LONG_T_MIN (%lldLL)\n", LLONG_MIN);
 #elif SIZEOF_LONG == SIZEOF_INTPTR_T
   pf ("typedef long long_t;\n");
   pf ("typedef unsigned long ulong_t;\n");
   pf ("#define SCM_SIZEOF_LONG_T %d\n", SIZEOF_LONG);
   pf ("#define SCM_SIZEOF_ULONG_T %d\n", SIZEOF_UNSIGNED_LONG);
-  pf ("#define LONG_T_MAX ((long_t)%ld)\n", LONG_MAX);
-  pf ("#define ULONG_T_MAX ((ulong_t)%lu)\n", ULONG_MAX);
-  pf ("#define LONG_T_MIN ((long_t)%ld)\n", LONG_MIN);
+  pf ("#define LONG_T_MAX (%ldL)\n", LONG_MAX);
+  pf ("#define ULONG_T_MAX (%luUL)\n", ULONG_MAX);
+  pf ("#define LONG_T_MIN (%ldUL)\n", LONG_MIN);
 #elif SIZEOF_LONG_LONG == SIZEOF_INTPTR_T
   // To deal with the strangeness of the Win64 integer model, we
   // force longs to be 64-bit, to match the standard ABI
@@ -264,9 +265,9 @@ main (int argc, char *argv[])
   pf ("typedef unsigned long long  ulong_t;\n");
   pf ("#define SCM_SIZEOF_LONG_T %d\n", SIZEOF_LONG_LONG);
   pf ("#define SCM_SIZEOF_ULONG_T %d\n", SIZEOF_UNSIGNED_LONG_LONG);
-  pf ("#define LONG_T_MAX ((long_t)%lld)\n", LLONG_MAX);
-  pf ("#define ULONG_T_MAX ((ulong_t)%llu)\n", ULLONG_MAX);
-  pf ("#define LONG_T_MIN ((long_t)%lld)\n", LLONG_MIN);
+  pf ("#define LONG_T_MAX (%lldLL)\n", LLONG_MAX);
+  pf ("#define ULONG_T_MAX (%lluULL)\n", ULLONG_MAX);
+  pf ("#define LONG_T_MIN (%lldLL)\n", LLONG_MIN);
   #endif
   pf ("#define LONG_T_C(x) ((long_t)(x))\n");
   pf ("#define ULONG_T_C(x) ((ulong_t)(x))\n");

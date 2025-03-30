@@ -2849,7 +2849,7 @@ SCM_DEFINE (scm_logbit_p, "logbit?", 2, 0, 0,
 #define FUNC_NAME s_scm_logbit_p
 {
   ulong_t iindex;
-  iindex = scm_to_ulong (index);
+  iindex = scm_to_ulong_t (index);
 
   if (SCM_I_INUMP (j))
     return scm_from_bool (scm_integer_logbit_ui (iindex, SCM_I_INUM (j)));
@@ -3027,7 +3027,7 @@ lsh (SCM n, SCM count, const char *fn)
   if (!scm_is_unsigned_integer (count, 0, ULONG_MAX))
     scm_num_overflow (fn);
 
-  ulong_t ucount = scm_to_ulong (count);
+  ulong_t ucount = scm_to_ulong_t (count);
   if (ucount == 0)
     return n;
   if (ucount / (sizeof (int) * 8) >= (ulong_t) INT_MAX)
@@ -3043,7 +3043,7 @@ floor_rsh (SCM n, SCM count)
   if (!scm_is_unsigned_integer (count, 0, ULONG_T_MAX))
     return scm_is_false (scm_negative_p (n)) ? SCM_INUM0 : SCM_I_MAKINUM (-1);
 
-  ulong_t ucount = scm_to_ulong (count);
+  ulong_t ucount = scm_to_ulong_t (count);
   if (ucount == 0)
     return n;
   if (SCM_I_INUMP (n))
@@ -3057,7 +3057,7 @@ round_rsh (SCM n, SCM count)
   if (!scm_is_unsigned_integer (count, 0, ULONG_T_MAX))
     return SCM_INUM0;
 
-  ulong_t ucount = scm_to_ulong (count);
+  ulong_t ucount = scm_to_ulong_t (count);
   if (ucount == 0)
     return n;
   if (SCM_I_INUMP (n))
@@ -3147,8 +3147,8 @@ SCM_DEFINE (scm_bit_extract, "bit-extract", 3, 0, 0,
   if (!scm_is_exact_integer (n))
     SCM_WRONG_TYPE_ARG (SCM_ARG1, n);
 
-  ulong_t istart = scm_to_ulong (start);
-  ulong_t iend = scm_to_ulong (end);
+  ulong_t istart = scm_to_ulong_t (start);
+  ulong_t iend = scm_to_ulong_t (end);
   SCM_ASSERT_RANGE (3, end, (iend >= istart));
   ulong_t bits = iend - istart;
 

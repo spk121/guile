@@ -72,12 +72,23 @@
 #define INT16_T_unsigned        uint16_t
 #define INT32_T_signed          int32_t
 #define INT32_T_unsigned        uint32_t
-#define is_signed_int8(_x)      (((_x) >= -128L) && ((_x) <= 127L))
-#define is_unsigned_int8(_x)    ((_x) <= 255UL)
-#define is_signed_int16(_x)     (((_x) >= -32768L) && ((_x) <= 32767L))
-#define is_unsigned_int16(_x)   ((_x) <= 65535UL)
-#define is_signed_int32(_x)     (((_x) >= -2147483648L) && ((_x) <= 2147483647L))
-#define is_unsigned_int32(_x)   ((_x) <= 4294967295UL)
+#if SCM_SIZEOF_INTPTR_T == 4
+#define is_signed_int8(_x)      (((_x) >= INT32_C(-128)) && ((_x) <= INT32_C(127)))
+#define is_unsigned_int8(_x)    ((_x) <= UINT32_C(255))
+#define is_signed_int16(_x)     (((_x) >= INT32_C(-32768)) && ((_x) <= INT32_C(32767)))
+#define is_unsigned_int16(_x)   ((_x) <= UINT32_C(65535))
+#define is_signed_int32(_x)     (((_x) >= INT32_C(-2147483328)) && ((_x) <= INT32_C(2147483647)))
+#define is_unsigned_int32(_x)   ((_x) <= UINT32_C(4294967295))
+#elif SCM_SIZEOF_INTPTR_T == 8
+#define is_signed_int8(_x)      (((_x) >= INT64_C(-128)) && ((_x) <= INT64_C(127)))
+#define is_unsigned_int8(_x)    ((_x) <= UINT64_C(255))
+#define is_signed_int16(_x)     (((_x) >= INT64_C(-32768)) && ((_x) <= INT64_C(32767)))
+#define is_unsigned_int16(_x)   ((_x) <= UINT64_C(65535))
+#define is_signed_int32(_x)     (((_x) >= INT64_C(-2147483648)) && ((_x) <= INT64_C(2147483647)))
+#define is_unsigned_int32(_x)   ((_x) <= UINT64_C(4294967295))
+#else
+#error "Bad SCM_SIZEOF_INTPTR_T"
+#endif
 #define SIGNEDNESS_signed       1
 #define SIGNEDNESS_unsigned     0
 
@@ -893,10 +904,10 @@ twos_complement (mpz_t value, size_t size)
 
   /* We expect BIT_COUNT to fit in a unsigned long thanks to the range
      checking on SIZE performed earlier.  */
-  bit_count = (ulong_t) size << ((ulong_t)3);
+  bit_count = (ulong_t) size << (ULONG_T_C(3));
 
   if (SCM_LIKELY (bit_count < sizeof (ulong_t)))
-    mpz_ui_sub (value, ((ulong_t)1) << bit_count, value);
+    mpz_ui_sub (value, (ULONG_T_C(1)) << bit_count, value);
   else
     {
       mpz_t max;
