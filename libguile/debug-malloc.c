@@ -54,7 +54,7 @@ static hash_entry_t *malloc_object = 0;
 #define TABLE(table) malloc_ ## table
 #define SIZE(table) malloc_ ## table ## _size
 #define HASH(table, key) \
-  &TABLE (table)[((unsigned long) key >> 4UL) * 2654435761UL % SIZE (table)]
+  &TABLE (table)[((ulong_t) key >> (ulong_t)(4)) * (ulong_t)(2654435761) % SIZE (table)]
 
 #define CREATE_HASH_ENTRY_AT(entry, table, h, k, done)	\
 {							\

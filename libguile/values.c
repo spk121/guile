@@ -86,7 +86,7 @@ SCM_DEFINE (scm_values, "values", 0, 0, 1,
 	    "were not created by @code{call-with-values} is unspecified.")
 #define FUNC_NAME s_scm_values
 {
-  long n;
+  long_t n;
   SCM result;
 
   SCM_VALIDATE_LIST_COPYLEN (1, args, n);

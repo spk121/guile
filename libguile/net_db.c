@@ -242,7 +242,7 @@ SCM_DEFINE (scm_getnet, "getnet", 0, 1, 0,
     }
   else
     {
-      unsigned long netnum = scm_to_ulong (net);
+      ulong_t netnum = scm_to_ulong (net);
       entry = getnetbyaddr (netnum, AF_INET);
       eno = errno;
     }
@@ -294,7 +294,7 @@ SCM_DEFINE (scm_getproto, "getproto", 0, 1, 0,
     }
   else
     {
-      unsigned long protonum = scm_to_ulong (protocol);
+      ulong_t protonum = scm_to_ulong (protocol);
       entry = getprotobynumber (protonum);
       eno = errno;
     }

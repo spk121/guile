@@ -358,7 +358,7 @@ SCM_DEFINE (scm_setgroups, "setgroups", 1, 0, 0,
   /* validate before allocating, so we don't have to worry about leaks */
   for (i = 0; i < ngroups; i++)
     {
-      unsigned long ulong_gid;
+      ulong_t ulong_gid;
       GETGROUPS_T gid;
       SCM_VALIDATE_ULONG_COPY (1, SCM_SIMPLE_VECTOR_REF (group_vec, i),
 			       ulong_gid);
@@ -1865,7 +1865,7 @@ SCM_DEFINE (scm_utime, "utime", 1, 5, 0,
 {
   int rv;
   time_t atim_sec, mtim_sec;
-  long atim_nsec, mtim_nsec;
+  long_t atim_nsec, mtim_nsec;
   int f;
   
   if (SCM_UNBNDP (actime))
@@ -2528,7 +2528,7 @@ SCM_DEFINE (scm_gethostname, "gethostname", 0, 0, 0,
    * Must watch out for this existing but giving -1, as happens for instance
    * in gnu/linux glibc 2.3.2.  */
   {
-    const long int n = sysconf (_SC_HOST_NAME_MAX);
+    const long_t n = sysconf (_SC_HOST_NAME_MAX);
     if (n != -1L)
       len = n;
   }

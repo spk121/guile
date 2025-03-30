@@ -228,10 +228,10 @@ main (int argc, char *argv[])
   pf ("#define SCM_SIZEOF_UNSIGNED_CHAR %d\n", SIZEOF_UNSIGNED_CHAR);
   pf ("#define SCM_SIZEOF_SHORT %d\n", SIZEOF_SHORT);
   pf ("#define SCM_SIZEOF_UNSIGNED_SHORT %d\n", SIZEOF_UNSIGNED_SHORT);
-  pf ("#define SCM_SIZEOF_LONG %d\n", SIZEOF_LONG);
-  pf ("#define SCM_SIZEOF_UNSIGNED_LONG %d\n", SIZEOF_UNSIGNED_LONG);
   pf ("#define SCM_SIZEOF_INT %d\n", SIZEOF_INT);
   pf ("#define SCM_SIZEOF_UNSIGNED_INT %d\n", SIZEOF_UNSIGNED_INT);
+  pf ("#define SCM_SIZEOF_LONG %d\n", SIZEOF_LONG);
+  pf ("#define SCM_SIZEOF_UNSIGNED_LONG %d\n", SIZEOF_UNSIGNED_LONG);
   pf ("#define SCM_SIZEOF_SIZE_T %d\n", SIZEOF_SIZE_T);
   pf ("#define SCM_SIZEOF_LONG_LONG %d\n", SIZEOF_LONG_LONG);
   pf ("#define SCM_SIZEOF_UNSIGNED_LONG_LONG %d\n", SIZEOF_UNSIGNED_LONG_LONG);
@@ -239,7 +239,38 @@ main (int argc, char *argv[])
   pf ("#define SCM_SIZEOF_SCM_T_PTRDIFF %d\n", SIZEOF_PTRDIFF_T);
   pf ("#define SCM_SIZEOF_INTPTR_T %d\n", SIZEOF_INTPTR_T);
   pf ("#define SCM_SIZEOF_UINTPTR_T %d\n", SIZEOF_UINTPTR_T);
-
+#if 0
+  // To deal with the strangeness of the Win64 integer model, we
+  // force longs to be 64-bit, to match the standard ABI
+  pf ("typedef long long  long_t;\n");
+  pf ("typedef unsigned long long  ulong_t;\n");
+  pf ("#define SCM_SIZEOF_LONG_T %d\n", SIZEOF_LONG_LONG);
+  pf ("#define SCM_SIZEOF_ULONG_T %d\n", SIZEOF_UNSIGNED_LONG_LONG);
+  pf ("#define LONG_T_MAX ((long_t)%lld)\n", LLONG_MAX);
+  pf ("#define ULONG_T_MAX ((ulong_t)%llu)\n", ULLONG_MAX);
+  pf ("#define LONG_T_MIN ((long_t)%lld)\n", LLONG_MIN);
+#elif SIZEOF_LONG == SIZEOF_INTPTR_T
+  pf ("typedef long long_t;\n");
+  pf ("typedef unsigned long ulong_t;\n");
+  pf ("#define SCM_SIZEOF_LONG_T %d\n", SIZEOF_LONG);
+  pf ("#define SCM_SIZEOF_ULONG_T %d\n", SIZEOF_UNSIGNED_LONG);
+  pf ("#define LONG_T_MAX ((long_t)%ld)\n", LONG_MAX);
+  pf ("#define ULONG_T_MAX ((ulong_t)%lu)\n", ULONG_MAX);
+  pf ("#define LONG_T_MIN ((long_t)%ld)\n", LONG_MIN);
+#elif SIZEOF_LONG_LONG == SIZEOF_INTPTR_T
+  // To deal with the strangeness of the Win64 integer model, we
+  // force longs to be 64-bit, to match the standard ABI
+  pf ("typedef long long  long_t;\n");
+  pf ("typedef unsigned long long  ulong_t;\n");
+  pf ("#define SCM_SIZEOF_LONG_T %d\n", SIZEOF_LONG_LONG);
+  pf ("#define SCM_SIZEOF_ULONG_T %d\n", SIZEOF_UNSIGNED_LONG_LONG);
+  pf ("#define LONG_T_MAX ((long_t)%lld)\n", LLONG_MAX);
+  pf ("#define ULONG_T_MAX ((ulong_t)%llu)\n", ULLONG_MAX);
+  pf ("#define LONG_T_MIN ((long_t)%lld)\n", LLONG_MIN);
+  #endif
+  pf ("#define LONG_T_C(x) ((long_t)(x))\n");
+  pf ("#define ULONG_T_C(x) ((ulong_t)(x))\n");
+  
   pf ("\n");
   pf ("/* same as POSIX \"struct timespec\" -- always defined */\n");
 #ifdef HAVE_SYSTEM_STRUCT_TIMESPEC
@@ -330,9 +361,9 @@ main (int argc, char *argv[])
   pf ("#define SCM_T_OFF_MAX INT_MAX\n");
   pf ("#define SCM_T_OFF_MIN INT_MIN\n");
 #else
-  pf ("typedef long int scm_t_off;\n");
-  pf ("#define SCM_T_OFF_MAX LONG_MAX\n");
-  pf ("#define SCM_T_OFF_MIN LONG_MIN\n");
+  pf ("typedef long_t scm_t_off;\n");
+  pf ("#define SCM_T_OFF_MAX LONG_T_MAX\n");
+  pf ("#define SCM_T_OFF_MIN LONG_T_MIN\n");
 #endif
 
   pf ("/* Define to 1 if the compiler supports the "

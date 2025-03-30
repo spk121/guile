@@ -53,7 +53,7 @@
 
 #define MAX_SMOB_COUNT SCM_I_MAX_SMOB_TYPE_COUNT
 
-long scm_numsmob;
+long_t scm_numsmob;
 scm_smob_descriptor scm_smobs[MAX_SMOB_COUNT];
 
 void
@@ -107,7 +107,7 @@ scm_free0 (SCM ptr SCM_UNUSED)
 int
 scm_smob_print (SCM exp, SCM port, scm_print_state *pstate SCM_UNUSED)
 {
-  long n = SCM_SMOBNUM (exp);
+  long_t n = SCM_SMOBNUM (exp);
   scm_puts ("#<", port);
   scm_puts (SCM_SMOBNAME (n) ? SCM_SMOBNAME (n) : "smob", port);
   scm_putc (' ', port);
@@ -206,7 +206,7 @@ scm_t_bits
 scm_make_smob_type (char const *name, size_t size)
 #define FUNC_NAME "scm_make_smob_type"
 {
-  long new_smob;
+  long_t new_smob;
 
   scm_i_pthread_mutex_lock (&scm_i_misc_mutex);
   new_smob = scm_numsmob;
@@ -485,7 +485,7 @@ scm_smob_type_class (scm_t_bits tc)
 void
 scm_smob_prehistory ()
 {
-  long i;
+  long_t i;
   scm_t_bits finalized_smob_tc16;
 
   scm_i_pthread_key_create (&current_mark_stack_pointer, NULL);

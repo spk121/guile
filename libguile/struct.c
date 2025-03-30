@@ -435,7 +435,7 @@ SCM_DEFINE (scm_make_struct_simple, "make-struct/simple", 1, 0, 1,
             "use @code{make-struct/no-tail}.")
 #define FUNC_NAME s_scm_make_struct_simple
 {
-  long i, n_init;
+  long_t i, n_init;
   SCM ret;
 
   SCM_VALIDATE_VTABLE (1, vtable);
@@ -470,7 +470,7 @@ SCM_DEFINE (scm_make_struct_no_tail, "make-struct/no-tail", 1, 0, 1,
 #define FUNC_NAME s_scm_make_struct_no_tail
 {
   size_t i, n_init;
-  long ilen;
+  long_t ilen;
   scm_t_bits *v;
 
   SCM_VALIDATE_VTABLE (1, vtable);
@@ -718,8 +718,8 @@ SCM_DEFINE (scm_struct_vtable, "struct-vtable", 1, 0, 0,
  * how to associate names with vtables.
  */
 
-unsigned long
-scm_struct_ihashq (SCM obj, unsigned long n, void *closure)
+ulong_t
+scm_struct_ihashq (SCM obj, ulong_t n, void *closure)
 {
   /* The length of the hash table should be a relative prime it's not
      necessary to shift down the address.  */

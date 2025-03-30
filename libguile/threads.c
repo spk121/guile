@@ -135,8 +135,8 @@ to_timespec (SCM t, scm_t_timespec *waittime)
       double time = scm_to_double (t);
       double sec = scm_c_truncate (time);
 
-      waittime->tv_sec = (long) sec;
-      waittime->tv_nsec = (long) ((time - sec) * 1000000000);
+      waittime->tv_sec = (long_t) sec;
+      waittime->tv_nsec = (long_t) ((time - sec) * 1000000000);
     }
 }
 
@@ -248,7 +248,7 @@ thread_print (SCM exp, SCM port, scm_print_state *pstate SCM_UNUSED)
     scm_i_pthread_t p;
     unsigned short us;
     unsigned int   ui;
-    unsigned long  ul;
+    ulong_t        ul;
     uintmax_t  um;
   } u;
   scm_thread *t = SCM_I_THREAD_DATA (exp);
@@ -259,7 +259,7 @@ thread_print (SCM exp, SCM port, scm_print_state *pstate SCM_UNUSED)
     id = u.us;
   else if (sizeof (p) == sizeof (unsigned int))
     id = u.ui;
-  else if (sizeof (p) == sizeof (unsigned long))
+  else if (sizeof (p) == sizeof (ulong_t))
     id = u.ul;
   else
     id = u.um;
@@ -1637,8 +1637,8 @@ scm_i_dynwind_pthread_mutex_lock_block_asyncs (scm_i_pthread_mutex_t *mutex)
                               SCM_F_WIND_EXPLICITLY);
 }
 
-unsigned long
-scm_std_usleep (unsigned long usecs)
+ulong_t
+scm_std_usleep (ulong_t usecs)
 {
   struct timeval tv;
   tv.tv_usec = usecs % 1000000;

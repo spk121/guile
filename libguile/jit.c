@@ -6157,7 +6157,7 @@ static FILE *perf_map = NULL;
 static void
 create_perf_map (void)
 {
-  unsigned long pid = getpid ();
+  long pid = getpid ();
   char *file_name;
   if (asprintf (&file_name, "/tmp/perf-%lu.map", pid) < 0)
     return;

@@ -510,7 +510,7 @@ scm_c_with_fluids (SCM fluids, SCM values, SCM (*cproc) (), void *cdata)
 #define FUNC_NAME "scm_c_with_fluids"
 {
   SCM ans;
-  long flen, vlen, i;
+  long_t flen, vlen, i;
   scm_thread *thread = SCM_I_CURRENT_THREAD;
 
   SCM_VALIDATE_LIST_COPYLEN (1, fluids, flen);

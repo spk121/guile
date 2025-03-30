@@ -63,7 +63,7 @@
  * hashtable_size.
  */
 
-static unsigned long hashtable_size[] = {
+static ulong_t hashtable_size[] = {
   31, 61, 113, 223, 443, 883, 1759, 3517, 7027, 14051, 28099, 56197, 112363,
   224717, 449419, 898823, 1797641, 3595271, 7190537, 14381041
 #if SIZEOF_UINTPTR_T > 4
@@ -74,12 +74,12 @@ static unsigned long hashtable_size[] = {
 #endif
 };
 
-#define HASHTABLE_SIZE_N (sizeof(hashtable_size)/sizeof(unsigned long))
+#define HASHTABLE_SIZE_N (sizeof(hashtable_size)/sizeof(ulong_t))
 
 static char *s_hashtable = "hashtable";
 
 static SCM
-make_hash_table (unsigned long k, const char *func_name) 
+make_hash_table (ulong_t k, const char *func_name) 
 {
   SCM vector;
   scm_t_hashtable *t;
@@ -109,8 +109,8 @@ scm_i_rehash (SCM table,
 {
   SCM buckets, new_buckets;
   int i;
-  unsigned long old_size;
-  unsigned long new_size;
+  ulong_t old_size;
+  ulong_t new_size;
 
   if (SCM_HASHTABLE_N_ITEMS (table) < SCM_HASHTABLE_LOWER (table))
     {
@@ -153,7 +153,7 @@ scm_i_rehash (SCM table,
 
       while (scm_is_pair (ls))
 	{
-	  unsigned long h;
+	  ulong_t h;
 
 	  cell = ls;
 	  handle = SCM_CAR (cell);
@@ -185,7 +185,7 @@ scm_i_hashtable_print (SCM exp, SCM port, scm_print_state *pstate)
 
 
 SCM
-scm_c_make_hash_table (unsigned long k)
+scm_c_make_hash_table (ulong_t k)
 {
   return make_hash_table (k, "scm_c_make_hash_table");
 }
@@ -220,7 +220,7 @@ scm_hash_fn_get_handle (SCM table, SCM obj,
 			void * closure)
 #define FUNC_NAME "scm_hash_fn_get_handle"
 {
-  unsigned long k;
+  ulong_t k;
   SCM buckets, h;
 
   SCM_VALIDATE_HASHTABLE (SCM_ARG1, table);
@@ -245,7 +245,7 @@ scm_hash_fn_create_handle_x (SCM table, SCM obj, SCM init,
                              void * closure)
 #define FUNC_NAME "scm_hash_fn_create_handle_x"
 {
-  unsigned long k;
+  ulong_t k;
   SCM buckets, it;
 
   SCM_VALIDATE_HASHTABLE (SCM_ARG1, table);
@@ -328,7 +328,7 @@ scm_hash_fn_remove_x (SCM table, SCM obj,
                       void *closure)
 #define FUNC_NAME "hash_fn_remove_x"
 {
-  unsigned long k;
+  ulong_t k;
   SCM buckets, h;
 
   SCM_VALIDATE_HASHTABLE (SCM_ARG1, table);
@@ -703,8 +703,8 @@ typedef struct scm_t_ihashx_closure
   SCM key;
 } scm_t_ihashx_closure;
 
-static unsigned long
-scm_ihashx (SCM obj, unsigned long n, void *arg)
+static ulong_t
+scm_ihashx (SCM obj, ulong_t n, void *arg)
 {
   SCM answer;
   scm_t_ihashx_closure *closure = (scm_t_ihashx_closure *) arg;
@@ -799,8 +799,8 @@ SCM_DEFINE (scm_hashx_ref, "hashx-ref", 4, 1, 0,
 
   if (SCM_WEAK_TABLE_P (table))
     {
-      unsigned long h = scm_to_ulong (scm_call_2 (hash, key,
-                                                  scm_from_ulong (-1)));
+      ulong_t h = scm_to_ulong (scm_call_2 (hash, key,
+                                            scm_from_ulong (-1)));
       return scm_c_weak_table_ref (table, h, assx_predicate, &closure, dflt);
     }
 
@@ -832,8 +832,8 @@ SCM_DEFINE (scm_hashx_set_x, "hashx-set!", 5, 0, 0,
 
   if (SCM_WEAK_TABLE_P (table))
     {
-      unsigned long h = scm_to_ulong (scm_call_2 (hash, key,
-                                                  scm_from_ulong (-1)));
+      ulong_t h = scm_to_ulong (scm_call_2 (hash, key,
+                                            scm_from_ulong (-1)));
       scm_c_weak_table_put_x (table, h, assx_predicate, &closure, key, val);
       return val;
     }
@@ -863,8 +863,8 @@ SCM_DEFINE (scm_hashx_remove_x, "hashx-remove!", 4, 0, 0,
 
   if (SCM_WEAK_TABLE_P (table))
     {
-      unsigned long h = scm_to_ulong (scm_call_2 (hash, obj,
-                                                  scm_from_ulong (-1)));
+      ulong_t h = scm_to_ulong (scm_call_2 (hash, obj,
+                                            scm_from_ulong (-1)));
       scm_c_weak_table_remove_x (table, h, assx_predicate, &closure);
       /* See note in hashq-remove!.  */
       return SCM_BOOL_F;
@@ -1008,7 +1008,7 @@ scm_internal_hash_fold (scm_t_hash_fold_fn fn, void *closure,
 			SCM init, SCM table)
 #define FUNC_NAME s_scm_hash_fold
 {
-  long i, n;
+  long_t i, n;
   SCM buckets, result = init;
   
   if (SCM_WEAK_TABLE_P (table))
@@ -1045,7 +1045,7 @@ scm_internal_hash_for_each_handle (scm_t_hash_handle_fn fn, void *closure,
 				   SCM table)
 #define FUNC_NAME s_scm_hash_for_each
 {
-  long i, n;
+  long_t i, n;
   SCM buckets;
   
   SCM_VALIDATE_HASHTABLE (0, table);

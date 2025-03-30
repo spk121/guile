@@ -76,7 +76,7 @@ SCM_DEFINE (scm_srfi60_copy_bit, "copy-bit", 3, 0, 0,
 	    "@end example")
 #define FUNC_NAME s_scm_srfi60_copy_bit
 {
-  unsigned long ii;
+  ulong_t ii;
   int bb;
 
   ii = scm_to_ulong (index);
@@ -113,9 +113,9 @@ SCM_DEFINE (scm_srfi60_rotate_bit_field, "rotate-bit-field", 4, 0, 0,
 	    "@end example")
 #define FUNC_NAME s_scm_srfi60_rotate_bit_field
 {
-  unsigned long ss = scm_to_ulong (start);
-  unsigned long ee = scm_to_ulong (end);
-  unsigned long ww, cc;
+  ulong_t ss = scm_to_ulong (start);
+  ulong_t ee = scm_to_ulong (end);
+  ulong_t ww, cc;
 
   SCM_ASSERT_RANGE (3, end, (ee >= ss));
   ww = ee - ss;
@@ -131,25 +131,25 @@ SCM_DEFINE (scm_srfi60_rotate_bit_field, "rotate-bit-field", 4, 0, 0,
 
   if (SCM_I_INUMP (n))
     {
-      long nn = SCM_I_INUM (n);
+      long_t nn = SCM_I_INUM (n);
 
       if (ee <= SCM_LONG_BIT-1)
         {
           /* Everything fits within a long.  To avoid undefined behavior
              when shifting negative numbers, we do all operations using
              unsigned values, and then convert to signed at the end. */
-          unsigned long unn = nn;
-          unsigned long below = unn &  ((1UL << ss) - 1);  /* below start */
-          unsigned long above = unn & ~((1UL << ee) - 1);  /* above end */
-          unsigned long fmask = ((1UL << ww) - 1) << ss;   /* field mask */
-          unsigned long ff = unn & fmask;                  /* field */
-          unsigned long uresult = (above
-                                   | ((ff << cc) & fmask)
-                                   | ((ff >> (ww-cc)) & fmask)
-                                   | below);
-          long result;
+          ulong_t unn = nn;
+          ulong_t below = unn &  ((1UL << ss) - 1);  /* below start */
+          ulong_t above = unn & ~((1UL << ee) - 1);  /* above end */
+          ulong_t fmask = ((1UL << ww) - 1) << ss;   /* field mask */
+          ulong_t ff = unn & fmask;                  /* field */
+          ulong_t uresult = (above
+                             | ((ff << cc) & fmask)
+                             | ((ff >> (ww-cc)) & fmask)
+                             | below);
+          long_t result;
 
-          if (uresult > LONG_MAX)
+          if (uresult > LONG_T_MAX)
             /* The high bit is set in uresult, so the result is
                negative.  We have to handle the conversion to signed
                integer carefully, to avoid undefined behavior.  First we
@@ -159,9 +159,9 @@ SCM_DEFINE (scm_srfi60_rotate_bit_field, "rotate-bit-field", 4, 0, 0,
                and unsigned longs and thus convertible between them.  We
                cast that difference to a signed long and then substract
                it from -1. */
-            result = -1 - (long) ~uresult;
+            result = -1 - (long_t) ~uresult;
           else
-            result = (long) uresult;
+            result = (long_t) uresult;
 
           return scm_from_long (result);
         }
@@ -230,24 +230,24 @@ SCM_DEFINE (scm_srfi60_reverse_bit_field, "reverse-bit-field", 3, 0, 0,
 	    "@end example")
 #define FUNC_NAME s_scm_srfi60_reverse_bit_field
 {
-  long ss = scm_to_long (start);
-  long ee = scm_to_long (end);
-  long swaps = (ee - ss) / 2;  /* number of swaps */
+  long_t ss = scm_to_long_t (start);
+  long_t ee = scm_to_long_t (end);
+  long_t swaps = (ee - ss) / 2;  /* number of swaps */
   mpz_t b;
 
   if (SCM_I_INUMP (n))
     {
-      long nn = SCM_I_INUM (n);
+      long_t nn = SCM_I_INUM (n);
 
       if (ee <= SCM_LONG_BIT-1)
         {
           /* all within a long */
-          long smask = 1L << ss;
-          long emask = 1L << (ee-1);
+          long_t smask = 1L << ss;
+          long_t emask = 1L << (ee-1);
           for ( ; swaps > 0; swaps--)
             {
-              long sbit = nn & smask;
-              long ebit = nn & emask;
+              long_t sbit = nn & smask;
+              long_t ebit = nn & emask;
               nn ^= sbit ^ (ebit ? smask : 0)  /* zap sbit, put ebit value */
                 ^   ebit ^ (sbit ? emask : 0); /* zap ebit, put sbit value */
 
@@ -319,7 +319,7 @@ SCM_DEFINE (scm_srfi60_integer_to_list, "integer->list", 1, 1, 0,
 #define FUNC_NAME s_scm_srfi60_integer_to_list
 {
   SCM ret = SCM_EOL;
-  unsigned long ll;
+  ulong_t ll;
 
   if (SCM_UNBNDP (len))
     len = scm_integer_length (n);
@@ -328,13 +328,13 @@ SCM_DEFINE (scm_srfi60_integer_to_list, "integer->list", 1, 1, 0,
   if (SCM_I_INUMP (n))
     {
       scm_t_inum nn = SCM_I_INUM (n);
-      for (unsigned long i = 0; i < ll; i++)
+      for (ulong_t i = 0; i < ll; i++)
         ret = scm_cons (scm_from_bool (scm_integer_logbit_ui (i, nn)), ret);
     }
   else if (SCM_BIGP (n))
     {
       struct scm_bignum *nn = scm_bignum (n);
-      for (unsigned long i = 0; i < ll; i++)
+      for (ulong_t i = 0; i < ll; i++)
         ret = scm_cons (scm_from_bool (scm_integer_logbit_uz (i, nn)), ret);
     }
   else
@@ -357,7 +357,7 @@ SCM_DEFINE (scm_srfi60_list_to_integer, "list->integer", 1, 0, 0,
 	    "@end example")
 #define FUNC_NAME s_scm_srfi60_list_to_integer
 {
-  long len;
+  long_t len;
 
   /* strip high zero bits from lst; after this the length tells us whether
      an inum or bignum is required */
@@ -369,7 +369,7 @@ SCM_DEFINE (scm_srfi60_list_to_integer, "list->integer", 1, 0, 0,
   if (len <= SCM_I_FIXNUM_BIT - 1)
     {
       /* fits an inum (a positive inum) */
-      long n = 0;
+      long_t n = 0;
       while (scm_is_pair (lst))
         {
           n <<= 1;

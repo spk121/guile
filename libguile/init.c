@@ -165,7 +165,7 @@
 static SCM
 scm_standard_stream_to_port (int fdes, char *mode)
 {
-  long mode_bits = scm_mode_bits (mode);
+  long_t mode_bits = scm_mode_bits (mode);
 
   if (!scm_i_fdes_is_valid (fdes, mode_bits))
     return scm_void_port (mode);

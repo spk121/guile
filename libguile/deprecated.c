@@ -658,7 +658,7 @@ scm_from_contiguous_typed_array (SCM type, SCM bounds, const void *bytes,
 SCM_GLOBAL_SYMBOL (scm_sym_copy, "copy");
 
 SCM
-scm_make_srcprops (long line, int col, SCM filename, SCM copy, SCM alist)
+scm_make_srcprops (long_t line, int col, SCM filename, SCM copy, SCM alist)
 {
   scm_c_issue_deprecation_warning
     ("scm_make_srcprops is deprecated; use set-source-properties! instead");

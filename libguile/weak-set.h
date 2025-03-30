@@ -36,15 +36,15 @@ typedef int (*scm_t_set_predicate_fn) (SCM obj, void *closure);
 /* Function to fold over the elements of a set.  */
 typedef SCM (*scm_t_set_fold_fn) (void *closure, SCM key, SCM result);
 
-SCM_INTERNAL SCM scm_c_make_weak_set (unsigned long k);
+SCM_INTERNAL SCM scm_c_make_weak_set (ulong_t k);
 SCM_INTERNAL SCM scm_weak_set_p (SCM h);
-SCM_INTERNAL SCM scm_c_weak_set_lookup (SCM set, unsigned long raw_hash,
+SCM_INTERNAL SCM scm_c_weak_set_lookup (SCM set, ulong_t raw_hash,
                                         scm_t_set_predicate_fn pred,
                                         void *closure, SCM dflt);
-SCM_INTERNAL SCM scm_c_weak_set_add_x (SCM set, unsigned long raw_hash,
+SCM_INTERNAL SCM scm_c_weak_set_add_x (SCM set, ulong_t raw_hash,
                                        scm_t_set_predicate_fn pred,
                                        void *closure, SCM obj);
-SCM_INTERNAL void scm_c_weak_set_remove_x (SCM set, unsigned long raw_hash,
+SCM_INTERNAL void scm_c_weak_set_remove_x (SCM set, ulong_t raw_hash,
                                            scm_t_set_predicate_fn pred,
                                            void *closure);
 SCM_INTERNAL SCM scm_weak_set_add_x (SCM set, SCM obj);

@@ -138,7 +138,7 @@ SCM_DEFINE (scm_vector, "vector", 0, 0, 1,
 {
   SCM res;
   SCM *data;
-  long i, len;
+  long_t i, len;
 
   SCM_VALIDATE_LIST_COPYLEN (1, l, len);
 
@@ -448,7 +448,7 @@ scm_vector_fill_x (SCM vec, SCM fill)
 SCM
 scm_i_vector_equal_p (SCM x, SCM y)
 {
-  long i;
+  long_t i;
   for (i = SCM_I_VECTOR_LENGTH (x) - 1; i >= 0; i--)
     if (scm_is_false (scm_equal_p (SCM_I_VECTOR_ELTS (x)[i],
 				   SCM_I_VECTOR_ELTS (y)[i])))

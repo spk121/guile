@@ -187,7 +187,7 @@ scm_i_make_continuation (scm_thread *thread, SCM vm_cont)
 {
   SCM cont;
   scm_t_contregs *continuation;
-  long stack_size;
+  long_t stack_size;
   SCM_STACKITEM * src;
 
   SCM_FLUSH_REGISTER_WINDOWS;

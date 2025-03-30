@@ -150,7 +150,7 @@ scm_i_rstate_from_datum (scm_t_rstate *state, SCM value)
 {
   scm_t_i_rstate *istate = (scm_t_i_rstate*) state;
   uint32_t w, c;
-  long length;
+  long_t length;
   
   SCM_VALIDATE_LIST_COPYLEN (SCM_ARG1, value, length);
   SCM_ASSERT (length == 3, value, SCM_ARG1, FUNC_NAME);

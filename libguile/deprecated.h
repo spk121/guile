@@ -139,7 +139,7 @@ SCM_DEPRECATED SCM scm_from_contiguous_typed_array (SCM type, SCM bounds,
 
 SCM_DEPRECATED scm_t_bits scm_tc16_srcprops;
 SCM_DEPRECATED SCM scm_sym_copy;
-SCM_DEPRECATED SCM scm_make_srcprops (long line, int col, SCM filename,
+SCM_DEPRECATED SCM scm_make_srcprops (long_t line, int col, SCM filename,
                                       SCM copy, SCM alist);
 
 SCM_DEPRECATED SCM scm_copy_tree (SCM obj);

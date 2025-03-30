@@ -36,7 +36,7 @@ SCM_API SCM scm_stack_type;
   "pw" /* frame */
 
 #define SCM_STACKP(obj) (SCM_STRUCTP (obj) && scm_is_eq (SCM_STRUCT_VTABLE (obj), scm_stack_type))
-#define SCM_STACK_LENGTH(obj) (scm_to_long (SCM_STRUCT_SLOT_REF (obj,0)))
+#define SCM_STACK_LENGTH(obj) (scm_to_long_t (SCM_STRUCT_SLOT_REF (obj,0)))
 #define SCM_SET_STACK_LENGTH(obj,f) (SCM_STRUCT_SLOT_SET (obj,0,scm_from_long (f)))
 #define SCM_STACK_ID(obj) (SCM_STRUCT_SLOT_REF (obj,1))
 #define SCM_SET_STACK_ID(obj,f) (SCM_STRUCT_SLOT_SET (obj,1,f))

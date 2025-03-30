@@ -64,14 +64,14 @@ do { \
 typedef struct scm_print_state {
   SCM handle;			/* Struct handle */
   int revealed;                 /* Has the state escaped to Scheme? */
-  unsigned long writingp;	/* Writing? */
-  unsigned long fancyp;		/* Fancy printing? */
-  unsigned long level;		/* Max level */
-  unsigned long length;		/* Max number of objects per level */
+  ulong_t writingp;             /* Writing? */
+  ulong_t fancyp;		/* Fancy printing? */
+  ulong_t level;		/* Max level */
+  ulong_t length;		/* Max number of objects per level */
   SCM hot_ref;			/* Hot reference */
-  unsigned long list_offset;
-  unsigned long top;		/* Top of reference stack */
-  unsigned long ceiling;	/* Max size of reference stack */
+  ulong_t list_offset;
+  ulong_t top;                  /* Top of reference stack */
+  ulong_t ceiling;              /* Max size of reference stack */
   SCM ref_vect;	 	        /* Stack of references used during
 				   circular reference detection;
 				   a vector. */

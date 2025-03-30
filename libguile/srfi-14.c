@@ -763,8 +763,8 @@ SCM_DEFINE (scm_char_set_hash, "char-set-hash", 1, 1, 0,
 	    "returned value to the range 0 @dots{} @var{bound} - 1.")
 #define FUNC_NAME s_scm_char_set_hash
 {
-  const unsigned long default_bnd = 871;
-  unsigned long bnd;
+  const ulong_t default_bnd = 871;
+  ulong_t bnd;
   scm_t_char_set *p;
   unsigned long val = 0;
   int k;

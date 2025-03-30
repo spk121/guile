@@ -102,10 +102,10 @@ bignum_limbs (struct scm_bignum *z)
   return z->u.z.limbs;
 }
 
-static inline unsigned long
-long_magnitude (long l)
+static inline ulong_t
+long_magnitude (long_t l)
 {
-  unsigned long mag = l;
+  ulong_t mag = l;
   return l < 0 ? ~mag + 1 : mag;
 }
 
@@ -224,7 +224,7 @@ make_bignum_2 (int is_negative, mp_limb_t lo, mp_limb_t hi)
 static struct scm_bignum *
 make_bignum_from_uint64 (uint64_t val)
 {
-#if SCM_SIZEOF_LONG == 4
+#if SCM_SIZEOF_LONG_T == 4
   if (val > UINT32_MAX)
     return make_bignum_2 (0, val, val >> 32);
 #endif
@@ -240,7 +240,7 @@ make_bignum_from_int64 (int64_t val)
 }
 
 static struct scm_bignum *
-ulong_to_bignum (unsigned long u)
+ulong_to_bignum (ulong_t u)
 {
   return u == 0 ? make_bignum_0 () : make_bignum_1 (0, u);
 };
@@ -248,7 +248,7 @@ ulong_to_bignum (unsigned long u)
 static struct scm_bignum *
 inum_to_bignum (scm_t_inum i)
 {
-#if SCM_LONG_BIT >= SCM_I_FIXNUM_BIT
+#if SCM_LONG_T_BIT >= SCM_I_FIXNUM_BIT
   if (i > 0)
     return ulong_to_bignum (i);
 
@@ -273,7 +273,7 @@ scm_from_inum (scm_t_inum i)
 }
 
 static SCM
-ulong_to_scm (unsigned long i)
+ulong_to_scm (ulong_t i)
 {
   if (SCM_POSFIXABLE (i))
     return SCM_I_MAKINUM (i);
@@ -341,7 +341,7 @@ take_mpz (mpz_ptr mpz)
 }
 
 static int
-long_sign (long l)
+long_sign (long_t l)
 {
   if (l < 0) return -1;
   if (l == 0) return 0;
@@ -371,7 +371,7 @@ bignum_to_int64 (struct scm_bignum *z, int64_t *val)
 {
   switch (bignum_size (z))
     {
-#if SCM_SIZEOF_LONG == 4
+#if SCM_SIZEOF_LONG_T == 4
     case -2:
       {
         uint64_t mag = bignum_limbs (z)[0];
@@ -386,7 +386,7 @@ bignum_to_int64 (struct scm_bignum *z, int64_t *val)
       return 1;
     case 1:
       return positive_uint64_to_int64 (bignum_limbs (z)[0], val);
-#if SCM_SIZEOF_LONG == 4
+#if SCM_SIZEOF_LONG_T == 4
     case 2:
       {
         uint64_t mag = bignum_limbs (z)[0];
@@ -410,7 +410,7 @@ bignum_to_uint64 (struct scm_bignum *z, uint64_t *val)
     case 1:
       *val = bignum_limbs (z)[0];
       return 1;
-#if SCM_SIZEOF_LONG == 4
+#if SCM_SIZEOF_LONG_T == 4
     case 2:
       {
         uint64_t mag = bignum_limbs (z)[0];
@@ -424,7 +424,7 @@ bignum_to_uint64 (struct scm_bignum *z, uint64_t *val)
     }
 }
 
-#if SCM_SIZEOF_LONG == 4
+#if SCM_SIZEOF_LONG_T == 4
 static int
 negative_uint32_to_int32 (uint32_t magnitude, int32_t *val)
 {
@@ -478,7 +478,7 @@ bignum_to_uint32 (struct scm_bignum *z, uint32_t *val)
 #endif
 
 static int
-bignum_cmp_long (struct scm_bignum *z, long l)
+bignum_cmp_long (struct scm_bignum *z, long_t l)
 {
   switch (bignum_size (z))
     {
@@ -491,7 +491,7 @@ bignum_cmp_long (struct scm_bignum *z, long l)
     case 1:
       if (l <= 0)
         return 1;
-      return long_sign (bignum_limbs (z)[0] - (unsigned long) l);
+      return long_sign (bignum_limbs (z)[0] - (ulong_t) l);
     default:
       return long_sign (bignum_size (z));
     }
@@ -2020,8 +2020,8 @@ scm_integer_gcd_zi (struct scm_bignum *x, scm_t_inum y)
     return scm_integer_abs_z (x);
   if (y < 0)
     y = -y;
-#if SCM_I_FIXNUM_BIT > SCM_LONG_BIT
-  if (y > ULONG_MAX)
+#if SCM_I_FIXNUM_BIT > SCM_LONG_T_BIT
+  if (y > ULONG_T_MAX)
     {
       struct scm_bignum *y_bignum = inum_to_bignum (y);
       return scm_integer_gcd_zz (x, y_bignum);
@@ -2250,9 +2250,9 @@ scm_integer_logtest_zz (struct scm_bignum *x, struct scm_bignum *y)
 }
 
 int
-scm_integer_logbit_ui (unsigned long index, scm_t_inum n)
+scm_integer_logbit_ui (ulong_t index, scm_t_inum n)
 {
-  if (index < SCM_LONG_BIT)
+  if (index < SCM_LONG_T_BIT)
     /* Assume two's complement representation.  */
     return (n >> index) & 1;
   else
@@ -2260,7 +2260,7 @@ scm_integer_logbit_ui (unsigned long index, scm_t_inum n)
 }
 
 int
-scm_integer_logbit_uz (unsigned long index, struct scm_bignum *n)
+scm_integer_logbit_uz (ulong_t index, struct scm_bignum *n)
 {
   mpz_t zn;
   alias_bignum_to_mpz (n, zn);
@@ -2383,7 +2383,7 @@ scm_integer_modulo_expt_nnn (SCM n, SCM k, SCM m)
 /* Efficiently compute (N * 2^COUNT), where N is an exact integer, and
    COUNT > 0. */
 SCM
-scm_integer_lsh_iu (scm_t_inum n, unsigned long count)
+scm_integer_lsh_iu (scm_t_inum n, ulong_t count)
 {
   ASSERT (count > 0);
   /* Left shift of count >= SCM_I_FIXNUM_BIT-1 will almost[*] always
@@ -2411,7 +2411,7 @@ scm_integer_lsh_iu (scm_t_inum n, unsigned long count)
 }
 
 SCM
-scm_integer_lsh_zu (struct scm_bignum *n, unsigned long count)
+scm_integer_lsh_zu (struct scm_bignum *n, ulong_t count)
 {
   ASSERT (count > 0);
   mpz_t result, zn;
@@ -2425,7 +2425,7 @@ scm_integer_lsh_zu (struct scm_bignum *n, unsigned long count)
 /* Efficiently compute floor (N / 2^COUNT), where N is an exact integer
    and COUNT > 0. */
 SCM
-scm_integer_floor_rsh_iu (scm_t_inum n, unsigned long count)
+scm_integer_floor_rsh_iu (scm_t_inum n, ulong_t count)
 {
   ASSERT (count > 0);
   if (count >= SCM_I_FIXNUM_BIT)
@@ -2435,7 +2435,7 @@ scm_integer_floor_rsh_iu (scm_t_inum n, unsigned long count)
 }
 
 SCM
-scm_integer_floor_rsh_zu (struct scm_bignum *n, unsigned long count)
+scm_integer_floor_rsh_zu (struct scm_bignum *n, ulong_t count)
 {
   ASSERT (count > 0);
   mpz_t result, zn;
@@ -2449,7 +2449,7 @@ scm_integer_floor_rsh_zu (struct scm_bignum *n, unsigned long count)
 /* Efficiently compute round (N / 2^COUNT), where N is an exact integer
    and COUNT > 0. */
 SCM
-scm_integer_round_rsh_iu (scm_t_inum n, unsigned long count)
+scm_integer_round_rsh_iu (scm_t_inum n, ulong_t count)
 {
   ASSERT (count > 0);
   if (count >= SCM_I_FIXNUM_BIT)
@@ -2468,7 +2468,7 @@ scm_integer_round_rsh_iu (scm_t_inum n, unsigned long count)
 }
 
 SCM
-scm_integer_round_rsh_zu (struct scm_bignum *n, unsigned long count)
+scm_integer_round_rsh_zu (struct scm_bignum *n, ulong_t count)
 {
   ASSERT (count > 0);
   mpz_t q, zn;
@@ -2485,8 +2485,8 @@ scm_integer_round_rsh_zu (struct scm_bignum *n, unsigned long count)
 #define MIN(A, B) ((A) <= (B) ? (A) : (B))
 
 SCM
-scm_integer_bit_extract_i (scm_t_inum n, unsigned long start,
-                           unsigned long bits)
+scm_integer_bit_extract_i (scm_t_inum n, ulong_t start,
+                           ulong_t bits)
 {
   /* When istart>=SCM_I_FIXNUM_BIT we can just limit the shift to
      SCM_I_FIXNUM_BIT-1 to get either 0 or -1 per the sign of "n". */
@@ -2509,7 +2509,7 @@ scm_integer_bit_extract_i (scm_t_inum n, unsigned long start,
 }
 
 SCM
-scm_integer_bit_extract_z (struct scm_bignum *n, unsigned long start, unsigned long bits)
+scm_integer_bit_extract_z (struct scm_bignum *n, ulong_t start, ulong_t bits)
 {
   mpz_t zn;
   alias_bignum_to_mpz (n, zn);
@@ -2539,7 +2539,7 @@ static const char scm_logtab[] = {
 SCM
 scm_integer_logcount_i (scm_t_inum n)
 {
-  unsigned long c = 0;
+  ulong_t c = 0;
   if (n < 0)
     n = -1 - n;
   while (n)
@@ -2553,7 +2553,7 @@ scm_integer_logcount_i (scm_t_inum n)
 SCM
 scm_integer_logcount_z (struct scm_bignum *n)
 {
-  unsigned long count;
+  ulong_t count;
   mpz_t zn;
   alias_bignum_to_mpz (n, zn);
   if (mpz_sgn (zn) >= 0)
@@ -2576,7 +2576,7 @@ static const char scm_ilentab[] = {
 SCM
 scm_integer_length_i (scm_t_inum n)
 {
-  unsigned long c = 0;
+  ulong_t c = 0;
   unsigned int l = 4;
   if (n < 0)
     n = -1 - n;
@@ -2599,7 +2599,7 @@ scm_integer_length_z (struct scm_bignum *n)
   alias_bignum_to_mpz (n, zn);
   size_t size = mpz_sizeinbase (zn, 2);
   /* If negative and no 0 bits above the lowest 1, adjust result.  */
-  if (mpz_sgn (zn) < 0 && mpz_scan0 (zn, mpz_scan1 (zn, 0)) == ULONG_MAX)
+  if (mpz_sgn (zn) < 0 && mpz_scan0 (zn, mpz_scan1 (zn, 0)) == ULONG_T_MAX)
     size--;
   scm_remember_upto_here_1 (n);
   return scm_from_size_t (size);
@@ -2779,7 +2779,7 @@ scm_is_integer_negative_z (struct scm_bignum *x)
 
 #if SCM_ENABLE_MINI_GMP
 static double
-mpz_get_d_2exp (long *exp, mpz_srcptr z)
+mpz_get_d_2exp (long_t *exp, mpz_srcptr z)
 {
   double signif = mpz_get_d (z);
   int iexp;
@@ -2790,7 +2790,7 @@ mpz_get_d_2exp (long *exp, mpz_srcptr z)
 #endif
 
 double
-scm_integer_frexp_z (struct scm_bignum *x, long *exp)
+scm_integer_frexp_z (struct scm_bignum *x, long_t *exp)
 {
   mpz_t zx;
   alias_bignum_to_mpz (x, zx);
@@ -2822,7 +2822,7 @@ scm_integer_frexp_z (struct scm_bignum *x, long *exp)
 double
 scm_integer_to_double_z (struct scm_bignum *x)
 {
-  long exponent;
+  long_t exponent;
   double significand = scm_integer_frexp_z (x, &exponent);
   return ldexp (significand, exponent);
 }
@@ -3236,7 +3236,7 @@ scm_integer_exact_quotient_zz (struct scm_bignum *n, struct scm_bignum *d)
   return take_mpz (q);
 }
 
-#if SCM_SIZEOF_LONG == 4
+#if SCM_SIZEOF_LONG_T == 4
 SCM
 scm_integer_from_int32 (int32_t n)
 {
@@ -3394,7 +3394,7 @@ scm_integer_inexact_sqrt_i (scm_t_inum k)
 double
 scm_integer_inexact_sqrt_z (struct scm_bignum *k)
 {
-  long expon;
+  long_t expon;
   double signif = scm_integer_frexp_z (k, &expon);
   int negative = signif < 0;
   if (negative)
@@ -3423,7 +3423,7 @@ scm_integer_scan1_z (struct scm_bignum *n)
 {
   mpz_t zn;
   alias_bignum_to_mpz (n, zn);
-  unsigned long pos = mpz_scan1 (zn, 0L);
+  ulong_t pos = mpz_scan1 (zn, 0L);
   scm_remember_upto_here_1 (n);
   return ulong_to_scm (pos);
 }

@@ -107,8 +107,8 @@ SCM_DEFINE (scm_read_string_x_partial, "read-string!/partial", 1, 3, 0,
 {
   char *dest;
   size_t offset;
-  long read_len;
-  long chars_read = 0;
+  long_t read_len;
+  long_t chars_read = 0;
   int fdes;
 
   {
@@ -255,7 +255,7 @@ SCM_DEFINE (scm_write_string_partial, "write-string/partial", 1, 3, 0,
       fdes = SCM_FPORT_FDES (port);
     }
   {
-    long rv;
+    long_t rv;
 
     SCM_SYSCALL (rv = write (fdes, src, write_len));
     if (rv == -1)

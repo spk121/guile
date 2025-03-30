@@ -72,7 +72,7 @@ static scm_t_bits tc16_guardian;
 typedef struct t_guardian
 {
   scm_i_pthread_mutex_t mutex;
-  unsigned long live;
+  ulong_t live;
   SCM zombies;
   struct t_guardian *next;
 } t_guardian;

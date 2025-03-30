@@ -26,11 +26,11 @@
 
 
 
-SCM_API long scm_c_time_units_per_second;
+SCM_API long_t scm_c_time_units_per_second;
 #define SCM_TIME_UNITS_PER_SECOND scm_c_time_units_per_second
 
 
-SCM_API long scm_c_get_internal_run_time (void);
+SCM_API long_t scm_c_get_internal_run_time (void);
 SCM_API SCM scm_get_internal_real_time (void);
 SCM_API SCM scm_get_internal_run_time (void);
 SCM_API SCM scm_current_time (void);

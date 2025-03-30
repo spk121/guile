@@ -129,7 +129,7 @@ SCM_DEFINE (scm_sorted_p, "sorted?", 2, 0, 0,
 	    "@code{#f}.")
 #define FUNC_NAME s_scm_sorted_p
 {
-  long len, j;			/* list/vector length, temp j */
+  long_t len, j;                /* list/vector length, temp j */
   SCM item, rest;		/* rest of items loop variable */
 
   if (SCM_NULL_OR_NIL_P (items))
@@ -231,7 +231,7 @@ SCM_DEFINE (scm_merge, "merge", 3, 0, 0,
     return alist;
   else
     {
-      long alen, blen;		/* list lengths */
+      long_t alen, blen;        /* list lengths */
       SCM last;
 
       SCM_VALIDATE_NONEMPTYLIST_COPYLEN (1, alist, alen);
@@ -278,7 +278,7 @@ SCM_DEFINE (scm_merge, "merge", 3, 0, 0,
 
 static SCM
 scm_merge_list_x (SCM alist, SCM blist,
-		  long alen, long blen,
+		  long_t alen, long_t blen,
 		  SCM less)
 {
   SCM build, last;
@@ -345,7 +345,7 @@ SCM_DEFINE (scm_merge_x, "merge!", 3, 0, 0,
     return alist;
   else
     {
-      long alen, blen;		/* list lengths */
+      long_t alen, blen;        /* list lengths */
       SCM_VALIDATE_NONEMPTYLIST_COPYLEN (1, alist, alen);
       SCM_VALIDATE_NONEMPTYLIST_COPYLEN (2, blist, blen);
       return scm_merge_list_x (alist, blist, alen, blen, less);
@@ -360,13 +360,13 @@ SCM_DEFINE (scm_merge_x, "merge!", 3, 0, 0,
    though it claimed to be.
 */
 static SCM
-scm_merge_list_step (SCM * seq, SCM less, long n)
+scm_merge_list_step (SCM * seq, SCM less, long_t n)
 {
   SCM a, b;
 
   if (n > 2)
     {
-      long mid = n / 2;
+      long_t mid = n / 2;
       SCM_TICK;
       a = scm_merge_list_step (seq, less, mid);
       b = scm_merge_list_step (seq, less, n - mid);
@@ -416,7 +416,7 @@ SCM_DEFINE (scm_sort_x, "sort!", 2, 0, 0,
 	    "This is not a stable sort.")
 #define FUNC_NAME s_scm_sort_x
 {
-  long len;			/* list/vector length */
+  long_t len;			/* list/vector length */
   if (SCM_NULL_OR_NIL_P (items))
     return items;
 
@@ -548,7 +548,7 @@ SCM_DEFINE (scm_stable_sort_x, "stable-sort!", 2, 0, 0,
 	    "This is a stable sort.")
 #define FUNC_NAME s_scm_stable_sort_x
 {
-  long len;			/* list/vector length */
+  long_t len;			/* list/vector length */
 
   if (SCM_NULL_OR_NIL_P (items))
     return items;
@@ -617,7 +617,7 @@ SCM_DEFINE (scm_sort_list_x, "sort-list!", 2, 0, 0,
 	    "This is a stable sort.")
 #define FUNC_NAME s_scm_sort_list_x
 {
-  long len;
+  long_t len;
 
   SCM_VALIDATE_LIST_COPYLEN (1, items, len);
   SCM_VALIDATE_MUTABLE_LIST (1, items);
@@ -633,7 +633,7 @@ SCM_DEFINE (scm_sort_list, "sort-list", 2, 0, 0,
 	    "list elements. This is a stable sort.")
 #define FUNC_NAME s_scm_sort_list
 {
-  long len;
+  long_t len;
 
   SCM_VALIDATE_LIST_COPYLEN (1, items, len);
   items = scm_list_copy (items);

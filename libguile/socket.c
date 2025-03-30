@@ -150,8 +150,8 @@ SCM_DEFINE (scm_inet_makeaddr, "inet-makeaddr", 2, 0, 0,
 #define FUNC_NAME s_scm_inet_makeaddr
 {
   struct in_addr addr;
-  unsigned long netnum;
-  unsigned long lnanum;
+  ulong_t netnum;
+  ulong_t lnanum;
 
   netnum = SCM_NUM2ULONG (1, net);
   lnanum = SCM_NUM2ULONG (2, lna);
@@ -787,7 +787,7 @@ scm_fill_sockaddr (int fam, SCM address, SCM *args, int which_arg,
     case AF_INET:
       {
 	struct sockaddr_in *soka;
-	unsigned long addr;
+	ulong_t addr;
 	int port;
 
 	SCM_VALIDATE_ULONG_COPY (which_arg, address, addr);
@@ -812,8 +812,8 @@ scm_fill_sockaddr (int fam, SCM address, SCM *args, int which_arg,
 	/* see RFC2553.  */
 	int port;
 	struct sockaddr_in6 *soka;
-	unsigned long flowinfo = 0;
-	unsigned long scope_id = 0;
+	ulong_t flowinfo = 0;
+	ulong_t scope_id = 0;
 
 	SCM_VALIDATE_CONS (which_arg + 1, *args);
 	port = scm_to_int (SCM_CAR (*args));

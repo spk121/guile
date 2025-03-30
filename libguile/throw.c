@@ -241,13 +241,18 @@ scm_with_throw_handler (SCM key, SCM thunk, SCM handler)
 SCM
 scm_throw (SCM key, SCM args)
 {
-  SCM throw = scm_variable_ref (throw_var);
+  SCM throw = SCM_BOOL_F;
+  if (throw_var)
+    throw = scm_variable_ref (throw_var);
   if (scm_is_false (throw)) {
     static int error_printing_error = 0;
     if (error_printing_error++)
       {
-        fprintf (stderr, "Error while printing pre-boot error: %s\n",
-                 scm_i_symbol_chars (key));
+        if (key)
+          fprintf (stderr, "Error while printing pre-boot error: %s\n",
+                   scm_i_symbol_chars (key));
+        else
+          fprintf (stderr, "Error while printing pre-boot error\n");
       }
     else
       {

@@ -42,17 +42,17 @@ typedef int (*scm_t_table_predicate_fn) (SCM k, SCM v, void *closure);
 /* Function to fold over the elements of a set.  */
 typedef SCM (*scm_t_table_fold_fn) (void *closure, SCM k, SCM v, SCM result);
 
-SCM_INTERNAL SCM scm_c_make_weak_table (unsigned long k,
+SCM_INTERNAL SCM scm_c_make_weak_table (ulong_t k,
                                         scm_t_weak_table_kind kind);
 SCM_INTERNAL SCM scm_weak_table_p (SCM h);
 
-SCM_INTERNAL SCM scm_c_weak_table_ref (SCM table, unsigned long raw_hash,
+SCM_INTERNAL SCM scm_c_weak_table_ref (SCM table, ulong_t raw_hash,
                                        scm_t_table_predicate_fn pred,
                                        void *closure, SCM dflt);
-SCM_INTERNAL void scm_c_weak_table_put_x (SCM table, unsigned long raw_hash,
+SCM_INTERNAL void scm_c_weak_table_put_x (SCM table, ulong_t raw_hash,
                                           scm_t_table_predicate_fn pred,
                                           void *closure, SCM key, SCM value);
-SCM_INTERNAL void scm_c_weak_table_remove_x (SCM table, unsigned long raw_hash,
+SCM_INTERNAL void scm_c_weak_table_remove_x (SCM table, ulong_t raw_hash,
                                              scm_t_table_predicate_fn pred,
                                              void *closure);
 

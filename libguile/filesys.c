@@ -453,7 +453,7 @@ scm_stat2scm (struct stat_or_stat64 *stat_temp)
 #ifdef HAVE_STRUCT_STAT_ST_BLKSIZE
   SCM_SIMPLE_VECTOR_SET(ans, 11, scm_from_ulong (stat_temp->st_blksize));
 #else
-  SCM_SIMPLE_VECTOR_SET(ans, 11, scm_from_ulong (4096L));
+  SCM_SIMPLE_VECTOR_SET(ans, 11, scm_from_ulong (4096));
 #endif
 #ifdef HAVE_STRUCT_STAT_ST_BLOCKS
   SCM_SIMPLE_VECTOR_SET(ans, 12, scm_from_blkcnt_t_or_blkcnt64_t (stat_temp->st_blocks));
@@ -1877,7 +1877,7 @@ SCM_DEFINE (scm_i_mkstemp, "mkstemp", 1, 1, 0,
 #define FUNC_NAME s_scm_i_mkstemp
 {
   char *c_tmpl;
-  long mode_bits;
+  long_t mode_bits;
   int rv;
   int open_flags, is_binary;
   SCM port;

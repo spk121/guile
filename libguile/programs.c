@@ -240,7 +240,7 @@ SCM_DEFINE (scm_program_free_variable_ref, "program-free-variable-ref", 2, 0, 0,
 	    "")
 #define FUNC_NAME s_scm_program_free_variable_ref
 {
-  unsigned long idx;
+  ulong_t idx;
 
   SCM_VALIDATE_PROGRAM (1, program);
   SCM_VALIDATE_ULONG_COPY (2, i, idx);
@@ -255,7 +255,7 @@ SCM_DEFINE (scm_program_free_variable_set_x, "program-free-variable-set!", 3, 0,
 	    "")
 #define FUNC_NAME s_scm_program_free_variable_set_x
 {
-  unsigned long idx;
+  ulong_t idx;
 
   SCM_VALIDATE_PROGRAM (1, program);
   SCM_VALIDATE_ULONG_COPY (2, i, idx);

@@ -141,11 +141,11 @@ run_before_gc_c_hook (void)
 
 /* GC Statistics Keeping
  */
-unsigned long scm_gc_ports_collected = 0;
-static long gc_time_taken = 0;
-static long gc_start_time = 0;
+ulong_t scm_gc_ports_collected = 0;
+static long_t gc_time_taken = 0;
+static long_t gc_start_time = 0;
 
-static unsigned long protected_obj_count = 0;
+static ulong_t protected_obj_count = 0;
 
 
 SCM_SYMBOL (sym_gc_time_taken, "gc-time-taken");
@@ -424,7 +424,7 @@ scm_gc_unregister_root (SCM *p)
 }
 
 void
-scm_gc_register_roots (SCM *b, unsigned long n)
+scm_gc_register_roots (SCM *b, ulong_t n)
 {
   SCM *p = b;
   for (; p < b + n; ++p)
@@ -432,7 +432,7 @@ scm_gc_register_roots (SCM *b, unsigned long n)
 }
 
 void
-scm_gc_unregister_roots (SCM *b, unsigned long n)
+scm_gc_unregister_roots (SCM *b, ulong_t n)
 {
   SCM *p = b;
   for (; p < b + n; ++p)
@@ -567,7 +567,7 @@ accumulate_gc_timer (void * hook_data SCM_UNUSED,
 {
   if (gc_start_time)
     {
-      long now = scm_c_get_internal_run_time ();
+      long_t now = scm_c_get_internal_run_time ();
       gc_time_taken += now - gc_start_time;
       gc_start_time = 0;
     }

@@ -64,7 +64,7 @@ typedef struct scm_smob_descriptor
 /* Maximum number of SMOB types.  */
 #define SCM_I_MAX_SMOB_TYPE_COUNT  256
 
-SCM_API long scm_numsmob;
+SCM_API long_t scm_numsmob;
 SCM_API scm_smob_descriptor scm_smobs[];
 
 

@@ -138,7 +138,7 @@ SCM_DEFINE_STATIC (make_custom_port, "%make-custom-port", 6, 0, 0,
                    (SCM input_p, SCM output_p, SCM stream, SCM encoding,
                     SCM conversion_strategy, SCM close_on_gc_p), "")
 {
-  long mode_bits = 0;
+  long_t mode_bits = 0;
   if (scm_is_true (input_p))
     mode_bits |= SCM_RDNG;
   if (scm_is_true (output_p))

@@ -96,7 +96,7 @@
 
 
 typedef struct {
-  unsigned long hash;
+  ulong_t hash;
   scm_t_bits key;
 } scm_t_weak_entry;
 
@@ -132,10 +132,10 @@ copy_weak_entry (scm_t_weak_entry *src, scm_t_weak_entry *dst)
 typedef struct {
   scm_t_weak_entry *entries;    /* the data */
   scm_i_pthread_mutex_t lock;   /* the lock */
-  unsigned long size;    	/* total number of slots. */
-  unsigned long n_items;	/* number of items in set */
-  unsigned long lower;		/* when to shrink */
-  unsigned long upper;		/* when to grow */
+  ulong_t size;                 /* total number of slots. */
+  ulong_t n_items;              /* number of items in set */
+  ulong_t lower;		/* when to shrink */
+  ulong_t upper;		/* when to grow */
   int size_index;		/* index into hashset_size */
   int min_size_index;		/* minimum size_index */
 } scm_t_weak_set;
@@ -147,16 +147,16 @@ typedef struct {
 #define SCM_WEAK_SET(x) ((scm_t_weak_set *) SCM_CELL_WORD_1 (x))
 
 
-static unsigned long
-hash_to_index (unsigned long hash, unsigned long size)
+static ulong_t
+hash_to_index (ulong_t hash, ulong_t size)
 {
   return (hash >> 1) % size;
 }
 
-static unsigned long
-entry_distance (unsigned long hash, unsigned long k, unsigned long size)
+static ulong_t
+entry_distance (ulong_t hash, ulong_t k, ulong_t size)
 {
-  unsigned long origin = hash_to_index (hash, size);
+  ulong_t origin = hash_to_index (hash, size);
 
   if (k >= origin)
     return k - origin;
@@ -196,9 +196,9 @@ move_weak_entry (scm_t_weak_entry *from, scm_t_weak_entry *to)
 }
 
 static void
-rob_from_rich (scm_t_weak_set *set, unsigned long k)
+rob_from_rich (scm_t_weak_set *set, ulong_t k)
 {
-  unsigned long empty, size;
+  ulong_t empty, size;
 
   size = set->size;
 
@@ -214,7 +214,7 @@ rob_from_rich (scm_t_weak_set *set, unsigned long k)
 
   do
     {
-      unsigned long last = empty ? (empty - 1) : (size - 1);
+      ulong_t last = empty ? (empty - 1) : (size - 1);
       move_weak_entry (&set->entries[last], &set->entries[empty]);
       empty = last;
     }
@@ -226,15 +226,15 @@ rob_from_rich (scm_t_weak_set *set, unsigned long k)
 }
 
 static void
-give_to_poor (scm_t_weak_set *set, unsigned long k)
+give_to_poor (scm_t_weak_set *set, ulong_t k)
 {
   /* Slot K was just freed up; possibly shuffle others down.  */
-  unsigned long size = set->size;
+  ulong_t size = set->size;
 
   while (1)
     {
-      unsigned long next = (k + 1) % size;
-      unsigned long hash;
+      ulong_t next = (k + 1) % size;
+      ulong_t hash;
       scm_t_weak_entry copy;
 
       hash = set->entries[next].hash;
@@ -279,13 +279,13 @@ give_to_poor (scm_t_weak_set *set, unsigned long k)
  * hashset_size.
  */
 
-static unsigned long hashset_size[] = {
+static ulong_t hashset_size[] = {
   31, 61, 113, 223, 443, 883, 1759, 3517, 7027, 14051, 28099, 56197, 112363,
   224717, 449419, 898823, 1797641, 3595271, 7190537, 14381041, 28762081,
   57524111, 115048217, 230096423
 };
 
-#define HASHSET_SIZE_N (sizeof(hashset_size)/sizeof(unsigned long))
+#define HASHSET_SIZE_N (sizeof(hashset_size)/sizeof(ulong_t))
 
 static int
 compute_size_index (scm_t_weak_set *set)
@@ -332,7 +332,7 @@ is_acceptable_size_index (scm_t_weak_set *set, int size_index)
          set, though.  (This branch also gets hit if, while allocating
          the vector, some other thread was actively removing items from
          the set.  That is less likely, though.)  */
-      unsigned long new_lower = hashset_size[size_index] / 5;
+      ulong_t new_lower = hashset_size[size_index] / 5;
 
       return set->size > new_lower;
     }
@@ -355,7 +355,7 @@ resize_set (scm_t_weak_set *set)
 {
   scm_t_weak_entry *old_entries, *new_entries;
   int new_size_index;
-  unsigned long old_size, new_size, old_k;
+  ulong_t old_size, new_size, old_k;
 
   do 
     {
@@ -386,7 +386,7 @@ resize_set (scm_t_weak_set *set)
   for (old_k = 0; old_k < old_size; old_k++)
     {
       scm_t_weak_entry copy;
-      unsigned long new_k, distance;
+      ulong_t new_k, distance;
 
       if (!old_entries[old_k].hash)
         continue;
@@ -400,7 +400,7 @@ resize_set (scm_t_weak_set *set)
 
       for (distance = 0; ; distance++, new_k = (new_k + 1) % new_size)
         {
-          unsigned long other_hash = new_entries[new_k].hash;
+          ulong_t other_hash = new_entries[new_k].hash;
 
           if (!other_hash)
             /* Found an empty entry. */
@@ -432,12 +432,12 @@ static void
 vacuum_weak_set (scm_t_weak_set *set)
 {
   scm_t_weak_entry *entries = set->entries;
-  unsigned long size = set->size;
-  unsigned long k;
+  ulong_t size = set->size;
+  ulong_t k;
 
   for (k = 0; k < size; k++)
     {
-      unsigned long hash = entries[k].hash;
+      ulong_t hash = entries[k].hash;
       
       if (hash)
         {
@@ -462,11 +462,11 @@ vacuum_weak_set (scm_t_weak_set *set)
 
 
 static SCM
-weak_set_lookup (scm_t_weak_set *set, unsigned long hash,
+weak_set_lookup (scm_t_weak_set *set, ulong_t hash,
                  scm_t_set_predicate_fn pred, void *closure,
                  SCM dflt)
 {
-  unsigned long k, distance, size;
+  ulong_t k, distance, size;
   scm_t_weak_entry *entries;
   
   size = set->size;
@@ -477,7 +477,7 @@ weak_set_lookup (scm_t_weak_set *set, unsigned long hash,
   
   for (distance = 0; distance < size; distance++, k = (k + 1) % size)
     {
-      unsigned long other_hash;
+      ulong_t other_hash;
 
     retry:
       other_hash = entries[k].hash;
@@ -517,11 +517,11 @@ weak_set_lookup (scm_t_weak_set *set, unsigned long hash,
 
 
 static SCM
-weak_set_add_x (scm_t_weak_set *set, unsigned long hash,
+weak_set_add_x (scm_t_weak_set *set, ulong_t hash,
                 scm_t_set_predicate_fn pred, void *closure,
                 SCM obj)
 {
-  unsigned long k, distance, size;
+  ulong_t k, distance, size;
   scm_t_weak_entry *entries;
   
   size = set->size;
@@ -532,7 +532,7 @@ weak_set_add_x (scm_t_weak_set *set, unsigned long hash,
 
   for (distance = 0; ; distance++, k = (k + 1) % size)
     {
-      unsigned long other_hash;
+      ulong_t other_hash;
 
     retry:
       other_hash = entries[k].hash;
@@ -590,10 +590,10 @@ weak_set_add_x (scm_t_weak_set *set, unsigned long hash,
 
 
 static void
-weak_set_remove_x (scm_t_weak_set *set, unsigned long hash,
+weak_set_remove_x (scm_t_weak_set *set, ulong_t hash,
                    scm_t_set_predicate_fn pred, void *closure)
 {
-  unsigned long k, distance, size;
+  ulong_t k, distance, size;
   scm_t_weak_entry *entries;
   
   size = set->size;
@@ -604,7 +604,7 @@ weak_set_remove_x (scm_t_weak_set *set, unsigned long hash,
 
   for (distance = 0; distance < size; distance++, k = (k + 1) % size)
     {
-      unsigned long other_hash;
+      ulong_t other_hash;
 
     retry:
       other_hash = entries[k].hash;
@@ -654,7 +654,7 @@ weak_set_remove_x (scm_t_weak_set *set, unsigned long hash,
 
 
 static SCM
-make_weak_set (unsigned long k)
+make_weak_set (ulong_t k)
 {
   scm_t_weak_set *set;
 
@@ -716,7 +716,7 @@ vacuum_all_weak_sets (void)
 }
 
 SCM
-scm_c_make_weak_set (unsigned long k)
+scm_c_make_weak_set (ulong_t k)
 {
   SCM ret;
 
@@ -751,7 +751,7 @@ scm_weak_set_clear_x (SCM set)
 }
 
 SCM
-scm_c_weak_set_lookup (SCM set, unsigned long raw_hash,
+scm_c_weak_set_lookup (SCM set, ulong_t raw_hash,
                        scm_t_set_predicate_fn pred,
                        void *closure, SCM dflt)
 {
@@ -768,7 +768,7 @@ scm_c_weak_set_lookup (SCM set, unsigned long raw_hash,
 }
 
 SCM
-scm_c_weak_set_add_x (SCM set, unsigned long raw_hash,
+scm_c_weak_set_add_x (SCM set, ulong_t raw_hash,
                       scm_t_set_predicate_fn pred,
                       void *closure, SCM obj)
 {
@@ -785,7 +785,7 @@ scm_c_weak_set_add_x (SCM set, unsigned long raw_hash,
 }
 
 void
-scm_c_weak_set_remove_x (SCM set, unsigned long raw_hash,
+scm_c_weak_set_remove_x (SCM set, ulong_t raw_hash,
                          scm_t_set_predicate_fn pred,
                          void *closure)
 {
@@ -826,7 +826,7 @@ scm_c_weak_set_fold (scm_t_set_fold_fn proc, void *closure,
 {
   scm_t_weak_set *s;
   scm_t_weak_entry *entries;
-  unsigned long k, size;
+  ulong_t k, size;
 
   s = SCM_WEAK_SET (set);
 

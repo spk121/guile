@@ -47,8 +47,8 @@
   SCM_SIMPLE_VECTOR_SET (SCM_HASHTABLE_VECTOR (h), i, x)
 
 /* Function that computes a hash of OBJ modulo MAX.  */
-typedef unsigned long (*scm_t_hash_fn) (SCM obj, unsigned long max,
-					void *closure);
+typedef ulong_t (*scm_t_hash_fn) (SCM obj, ulong_t max,
+                                  void *closure);
 
 /* Function that returns the value associated with OBJ in ALIST according to
    some equality predicate.  */
@@ -63,18 +63,18 @@ typedef SCM (*scm_t_hash_fold_fn) (void *closure, SCM key, SCM value,
 typedef SCM (*scm_t_hash_handle_fn) (void *closure, SCM handle);
 
 typedef struct scm_t_hashtable {
-  unsigned long n_items;	/* number of items in table */
-  unsigned long lower;		/* when to shrink */
-  unsigned long upper;		/* when to grow */
+  ulong_t n_items;              /* number of items in table */
+  ulong_t lower;		/* when to shrink */
+  ulong_t upper;		/* when to grow */
   int size_index;		/* index into hashtable_size */
   int min_size_index;		/* minimum size_index */
-  scm_t_hash_fn hash_fn;  /* for rehashing after a GC. */
+  scm_t_hash_fn hash_fn;        /* for rehashing after a GC. */
 } scm_t_hashtable;
 
 
 
 SCM_API SCM scm_vector_to_hash_table (SCM vector);
-SCM_API SCM scm_c_make_hash_table (unsigned long k);
+SCM_API SCM scm_c_make_hash_table (ulong_t k);
 SCM_API SCM scm_make_hash_table (SCM n);
 
 SCM_API SCM scm_hash_table_p (SCM h);

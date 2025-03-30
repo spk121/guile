@@ -172,7 +172,7 @@ string_port_truncate (SCM port, scm_t_off length)
    buffer is allocated; otherwise STR must be a string and a copy of it
    serves as the buffer for the new port.  */
 SCM
-scm_mkstrport (SCM pos, SCM str, long modes, const char *caller)
+scm_mkstrport (SCM pos, SCM str, long_t modes, const char *caller)
 {
   SCM buf;
   size_t len, byte_pos;

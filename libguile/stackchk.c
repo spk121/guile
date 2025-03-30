@@ -40,7 +40,7 @@
 
 int scm_stack_checking_enabled_p;
 
-long
+long_t
 scm_stack_size (SCM_STACKITEM *start)
 {
   SCM_STACKITEM stack;

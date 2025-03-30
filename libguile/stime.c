@@ -81,7 +81,7 @@ extern char *strptime ();
 #ifdef __STDC__
 # define timet time_t
 #else
-# define timet long
+# define timet long_t
 #endif
 
 
@@ -93,10 +93,10 @@ extern char *strptime ();
 #define TIME_UNITS_PER_SECOND 1000
 #endif
 
-long scm_c_time_units_per_second = TIME_UNITS_PER_SECOND;
+long_t scm_c_time_units_per_second = TIME_UNITS_PER_SECOND;
 
-static long
-time_from_seconds_and_nanoseconds (long s, long ns)
+static long_t
+time_from_seconds_and_nanoseconds (long_t s, long_t ns)
 {
   return s * TIME_UNITS_PER_SECOND
     + ns / (1000000000 / TIME_UNITS_PER_SECOND);
@@ -108,14 +108,14 @@ time_from_seconds_and_nanoseconds (long s, long ns)
    the user may have everything she needs at compile-time, but if she's
    running on an SMP machine without a common clock source, she can't
    use POSIX CPUTIME clocks.  */
-static long (*get_internal_real_time) (void);
-static long (*get_internal_run_time) (void);
+static long_t (*get_internal_real_time) (void);
+static long_t (*get_internal_run_time) (void);
 
 
 #ifdef HAVE_CLOCK_GETTIME
 struct timespec posix_real_time_base;
 
-static long
+static long_t
 get_internal_real_time_posix_timer (void)
 {
   struct timespec ts;
@@ -132,7 +132,7 @@ get_internal_real_time_posix_timer (void)
 
 struct timespec posix_run_time_base;
 
-static long
+static long_t
 get_internal_run_time_posix_timer (void)
 {
   struct timespec ts;
@@ -148,7 +148,7 @@ get_internal_run_time_posix_timer (void)
 #ifdef HAVE_GETTIMEOFDAY
 struct timeval gettimeofday_real_time_base;
 
-static long
+static long_t
 get_internal_real_time_gettimeofday (void)
 {
   struct timeval tv;
@@ -160,9 +160,9 @@ get_internal_real_time_gettimeofday (void)
 #endif
 
 
-static long ticks_per_second;
+static long_t ticks_per_second;
 
-static long
+static long_t
 get_internal_run_time_times (void)
 {
   struct tms time_buffer;
@@ -172,11 +172,11 @@ get_internal_run_time_times (void)
 }
 
 static timet fallback_real_time_base;
-static long
+static long_t
 get_internal_real_time_fallback (void)
 {
   return time_from_seconds_and_nanoseconds
-    ((long) time (NULL) - fallback_real_time_base, 0);
+    ((long_t) time (NULL) - fallback_real_time_base, 0);
 }
 
 
@@ -242,7 +242,7 @@ SCM_DEFINE (scm_times, "times", 0, 0, 0,
 }
 #undef FUNC_NAME
 
-long
+long_t
 scm_c_get_internal_run_time (void)
 {
   return get_internal_run_time ();
@@ -302,7 +302,7 @@ SCM_DEFINE (scm_gettimeofday, "gettimeofday", 0, 0, 0,
   if (errno)
     SCM_SYSERROR;
   else
-    return scm_cons (scm_from_long ((long)t), SCM_INUM0);
+    return scm_cons (scm_from_long ((long_t)t), SCM_INUM0);
 #endif
 }
 #undef FUNC_NAME
@@ -758,7 +758,7 @@ SCM_DEFINE (scm_strptime, "strptime", 2, 0, 0,
   struct tm t;
   char *fmt, *str, *rest;
   SCM used_len;
-  long zoff;
+  long_t zoff;
 
   SCM_VALIDATE_STRING (1, format);
   SCM_VALIDATE_STRING (2, string);

@@ -47,7 +47,7 @@ SCM_API scm_t_port_type *scm_string_port_type;
 
 
 
-SCM_API SCM scm_mkstrport (SCM pos, SCM str, long modes, const char * caller);
+SCM_API SCM scm_mkstrport (SCM pos, SCM str, long_t modes, const char * caller);
 SCM_API SCM scm_strport_to_string (SCM port);
 SCM_API SCM scm_object_to_string (SCM obj, SCM printer);
 SCM_API SCM scm_call_with_output_string (SCM proc);

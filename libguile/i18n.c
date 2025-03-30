@@ -1365,7 +1365,7 @@ SCM_DEFINE (scm_locale_string_to_integer, "locale-string->integer",
 #define FUNC_NAME s_scm_locale_string_to_integer
 {
   SCM result;
-  long c_result;
+  long_t c_result;
   int c_base;
   const char *c_str;
   char *c_endptr;

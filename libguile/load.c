@@ -1187,7 +1187,7 @@ SCM_DEFINE (scm_primitive_load_path, "primitive-load-path", 0, 0, 1,
     {
       /* Starting from 1.9, this function takes 1 required and 1 optional
 	 argument.  */
-      long len;
+      long_t len;
 
       SCM_VALIDATE_LIST_COPYLEN (SCM_ARG1, args, len);
       if (len < 1 || len > 2)
@@ -1311,7 +1311,7 @@ init_build_info ()
 {
   static struct { char *name; char *value; } info[] = SCM_BUILD_INFO;
   SCM *loc = SCM_VARIABLE_LOC (scm_c_define ("%guile-build-info", SCM_EOL));
-  unsigned long i;
+  ulong_t i;
 
   for (i = 0; i < (sizeof (info) / sizeof (info[0])); i++)
     {

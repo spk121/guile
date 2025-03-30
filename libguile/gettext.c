@@ -152,7 +152,7 @@ SCM_DEFINE (scm_ngettext, "ngettext", 3, 2, 0,
 {
   char *c_msgid;
   char *c_msgid_plural;
-  unsigned long c_n;
+  ulong_t c_n;
   const char *c_result;
   SCM result;
 

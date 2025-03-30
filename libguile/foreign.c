@@ -608,7 +608,7 @@ SCM_DEFINE (scm_sizeof, "sizeof", 1, 0, 0, (SCM type),
 
 /* return 1 on success, 0 on failure */
 static int
-parse_ffi_type (SCM type, int return_p, long *n_structs, long *n_struct_elts)
+parse_ffi_type (SCM type, int return_p, long_t *n_structs, long_t *n_struct_elts)
 {
   if (SCM_I_INUMP (type))
     {
@@ -633,7 +633,7 @@ parse_ffi_type (SCM type, int return_p, long *n_structs, long *n_struct_elts)
     return 1;
   else
     {
-      long len;
+      long_t len;
       
       len = scm_ilength (type);
       if (len < 1)
@@ -712,7 +712,7 @@ fill_ffi_type (SCM type, ffi_type *ftype, ffi_type ***type_ptrs,
     }
   else
     {
-      long i, len;
+      long_t i, len;
       
       len = scm_ilength (type);
 
@@ -741,7 +741,7 @@ make_cif (SCM return_type, SCM arg_types, const char *caller)
 #define FUNC_NAME caller
 {
   SCM walk;
-  long i, nargs, n_structs, n_struct_elts;
+  long_t i, nargs, n_structs, n_struct_elts;
   size_t cif_len;
   char *mem;
   ffi_cif *cif;

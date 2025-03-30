@@ -186,7 +186,7 @@ SCM_API SCM scm_set_struct_vtable_name_x (SCM vtable, SCM name);
 SCM_API void scm_print_struct (SCM exp, SCM port, scm_print_state *);
 
 SCM_INTERNAL SCM scm_i_struct_equalp (SCM s1, SCM s2);
-SCM_INTERNAL unsigned long scm_struct_ihashq (SCM, unsigned long, void *);
+SCM_INTERNAL ulong_t scm_struct_ihashq (SCM, ulong_t, void *);
 SCM_INTERNAL void scm_i_struct_inherit_vtable_magic (SCM vtable, SCM obj);
 SCM_INTERNAL void scm_init_struct (void);
 

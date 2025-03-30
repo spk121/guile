@@ -86,7 +86,7 @@ typedef struct scm_t_cell
 
 
 
-SCM_API unsigned long scm_gc_ports_collected;
+SCM_API ulong_t scm_gc_ports_collected;
 
 SCM_API SCM scm_after_gc_hook;
 
@@ -280,8 +280,8 @@ SCM_API SCM scm_gc_protect_object (SCM obj);
 SCM_API SCM scm_gc_unprotect_object (SCM obj);
 SCM_API void scm_gc_register_root (SCM *p);
 SCM_API void scm_gc_unregister_root (SCM *p);
-SCM_API void scm_gc_register_roots (SCM *b, unsigned long n);
-SCM_API void scm_gc_unregister_roots (SCM *b, unsigned long n);
+SCM_API void scm_gc_register_roots (SCM *b, ulong_t n);
+SCM_API void scm_gc_unregister_roots (SCM *b, ulong_t n);
 SCM_INTERNAL void scm_gc_after_nonlocal_exit (void);
 SCM_INTERNAL void scm_storage_prehistory (void);
 SCM_INTERNAL void scm_init_gc_protect_object (void);

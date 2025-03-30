@@ -339,7 +339,7 @@ SCM_DEFINE (scm_reverse_list_to_string, "reverse-list->string", 1, 0, 0,
 #define FUNC_NAME s_scm_reverse_list_to_string
 {
   SCM result;
-  long i = scm_ilength (chrs), j;
+  long_t i = scm_ilength (chrs), j;
   char *data;
 
   if (i < 0)
@@ -404,7 +404,7 @@ SCM_DEFINE (scm_string_join, "string-join", 1, 2, 0,
 #define FUNC_NAME s_scm_string_join
 {
   SCM append_list = SCM_EOL;
-  long list_len = scm_ilength (ls);
+  long_t list_len = scm_ilength (ls);
   size_t delimiter_len = 0;
 
   /* Validate the string list.  */
@@ -3039,7 +3039,7 @@ SCM_DEFINE (scm_string_split, "string-split", 2, 0, 0,
   
   if (SCM_CHARP (char_pred))
     {
-      long idx, last_idx;
+      long_t idx, last_idx;
       int narrow;
 
       /* This is explicit wide/narrow logic (instead of using

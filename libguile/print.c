@@ -161,7 +161,7 @@ do						\
 #define ENTER_NESTED_DATA(pstate, obj, label)			\
 do								\
 {								\
-  register unsigned long i;					\
+  register ulong_t i;                                           \
   for (i = 0; i < pstate->top; ++i)				\
     if (scm_is_eq (PSTATE_STACK_REF (pstate, i), (obj)))	\
       goto label;						\
@@ -280,7 +280,7 @@ grow_ref_stack (scm_print_state *pstate)
   size_t old_size = SCM_SIMPLE_VECTOR_LENGTH (old_vect);
   size_t new_size = 2 * pstate->ceiling;
   SCM new_vect = scm_c_make_vector (new_size, SCM_UNDEFINED);
-  unsigned long int i;
+  ulong_t i;
 
   for (i = 0; i != old_size; ++i)
     SCM_SIMPLE_VECTOR_SET (new_vect, i, SCM_SIMPLE_VECTOR_REF (old_vect, i));
@@ -295,8 +295,8 @@ grow_ref_stack (scm_print_state *pstate)
 static void
 print_circref (SCM port, scm_print_state *pstate, SCM ref)
 {
-  register long i;
-  long self = pstate->top - 1;
+  register long_t i;
+  long_t self = pstate->top - 1;
   i = pstate->top - 1;
   if (scm_is_pair (PSTATE_STACK_REF (pstate, i)))
     {
@@ -565,8 +565,8 @@ static void
 print_vector_or_weak_vector (SCM v, size_t len, SCM (*ref) (SCM, size_t),
                              SCM port, scm_print_state *pstate)
 {
-  long i;
-  long last = len - 1;
+  long_t i;
+  long_t last = len - 1;
   int cutp = 0;
   if (pstate->fancyp && len > pstate->length)
     {
@@ -983,7 +983,7 @@ void
 scm_iprlist (char *hdr, SCM exp, int tlr, SCM port, scm_print_state *pstate)
 {
   register SCM hare, tortoise;
-  long floor = pstate->top - 2;
+  long_t floor = pstate->top - 2;
   scm_puts (hdr, port);
   /* CHECK_INTS; */
   if (pstate->fancyp)
@@ -1008,7 +1008,7 @@ scm_iprlist (char *hdr, SCM exp, int tlr, SCM port, scm_print_state *pstate)
   scm_iprin1 (SCM_CAR (exp), port, pstate);
   for (exp = SCM_CDR (exp); scm_is_pair (exp); exp = SCM_CDR (exp))
     {
-      register long i;
+      register long_t i;
 
       for (i = floor; i >= 0; --i)
 	if (scm_is_eq (PSTATE_STACK_REF(pstate, i), exp))
@@ -1031,13 +1031,13 @@ end:
   
 fancy_printing:
   {
-    long n = pstate->length;
+    long_t n = pstate->length;
     
     scm_iprin1 (SCM_CAR (exp), port, pstate);
     exp = SCM_CDR (exp); --n;
     for (; scm_is_pair (exp); exp = SCM_CDR (exp))
       {
-	register unsigned long i;
+	register ulong_t i;
 
 	for (i = 0; i < pstate->top; ++i)
 	  if (scm_is_eq (PSTATE_STACK_REF(pstate, i), exp))

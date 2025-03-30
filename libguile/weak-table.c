@@ -73,7 +73,7 @@
 typedef struct scm_weak_entry scm_t_weak_entry;
 
 struct scm_weak_entry {
-  unsigned long hash;
+  ulong_t hash;
   scm_t_weak_entry *next;
   scm_t_bits key;
   scm_t_bits value;
@@ -142,10 +142,10 @@ typedef struct {
   scm_t_weak_entry **buckets;   /* the data */
   scm_i_pthread_mutex_t lock;   /* the lock */
   scm_t_weak_table_kind kind;   /* what kind of table it is */
-  unsigned long n_buckets;    	/* total number of buckets. */
-  unsigned long n_items;	/* number of items in table */
-  unsigned long lower;		/* when to shrink */
-  unsigned long upper;		/* when to grow */
+  ulong_t n_buckets;    	/* total number of buckets. */
+  ulong_t n_items;              /* number of items in table */
+  ulong_t lower;		/* when to shrink */
+  ulong_t upper;		/* when to grow */
   int size_index;		/* index into hashtable_size */
   int min_size_index;		/* minimum size_index */
   GC_word last_gc_no;
@@ -191,7 +191,7 @@ allocate_entry (scm_t_weak_table_kind kind)
 static void
 add_entry (scm_t_weak_table *table, scm_t_weak_entry *entry)
 {
-  unsigned long bucket = entry->hash % table->n_buckets;
+  ulong_t bucket = entry->hash % table->n_buckets;
   entry->next = table->buckets[bucket];
   table->buckets[bucket] = entry;
   table->n_items++;
@@ -212,20 +212,20 @@ add_entry (scm_t_weak_table *table, scm_t_weak_entry *entry)
  * hashtable_size.
  */
 
-static unsigned long hashtable_size[] = {
+static ulong_t hashtable_size[] = {
   31, 61, 113, 223, 443, 883, 1759, 3517, 7027, 14051, 28099, 56197, 112363,
   224717, 449419, 898823, 1797641, 3595271, 7190537, 14381041, 28762081,
   57524111, 115048217, 230096423
 };
 
-#define HASHTABLE_SIZE_N (sizeof(hashtable_size)/sizeof(unsigned long))
+#define HASHTABLE_SIZE_N (sizeof(hashtable_size)/sizeof(ulong_t))
 
 static void
 resize_table (scm_t_weak_table *table)
 {
   scm_t_weak_entry **old_buckets, **new_buckets;
   int new_size_index;
-  unsigned long old_n_buckets, new_n_buckets, old_k;
+  ulong_t old_n_buckets, new_n_buckets, old_k;
 
   new_size_index = table->size_index;
   if (table->n_items < table->lower)
@@ -284,7 +284,7 @@ static void
 vacuum_weak_table (scm_t_weak_table *table)
 {
   GC_word gc_no = GC_get_gc_no ();
-  unsigned long k;
+  ulong_t k;
 
   if (gc_no == table->last_gc_no)
     return;
@@ -322,11 +322,11 @@ vacuum_weak_table (scm_t_weak_table *table)
 
 
 static SCM
-weak_table_ref (scm_t_weak_table *table, unsigned long hash,
+weak_table_ref (scm_t_weak_table *table, ulong_t hash,
                 scm_t_table_predicate_fn pred, void *closure,
                 SCM dflt)
 {
-  unsigned long bucket = hash % table->n_buckets;
+  ulong_t bucket = hash % table->n_buckets;
   scm_t_weak_entry *entry;
 
   for (entry = table->buckets[bucket]; entry; entry = entry->next)
@@ -347,11 +347,11 @@ weak_table_ref (scm_t_weak_table *table, unsigned long hash,
 
 
 static void
-weak_table_put_x (scm_t_weak_table *table, unsigned long hash,
+weak_table_put_x (scm_t_weak_table *table, ulong_t hash,
                   scm_t_table_predicate_fn pred, void *closure,
                   SCM key, SCM value)
 {
-  unsigned long bucket = hash % table->n_buckets;
+  ulong_t bucket = hash % table->n_buckets;
   scm_t_weak_entry *entry;
 
   for (entry = table->buckets[bucket]; entry; entry = entry->next)
@@ -386,10 +386,10 @@ weak_table_put_x (scm_t_weak_table *table, unsigned long hash,
 
 
 static void
-weak_table_remove_x (scm_t_weak_table *table, unsigned long hash,
+weak_table_remove_x (scm_t_weak_table *table, ulong_t hash,
                    scm_t_table_predicate_fn pred, void *closure)
 {
-  unsigned long bucket = hash % table->n_buckets;
+  ulong_t bucket = hash % table->n_buckets;
   scm_t_weak_entry **loc = table->buckets + bucket;
   scm_t_weak_entry *entry;
 
@@ -422,7 +422,7 @@ weak_table_remove_x (scm_t_weak_table *table, unsigned long hash,
 
 
 static SCM
-make_weak_table (unsigned long k, scm_t_weak_table_kind kind)
+make_weak_table (ulong_t k, scm_t_weak_table_kind kind)
 {
   scm_t_weak_table *table;
 
@@ -496,7 +496,7 @@ vacuum_all_weak_tables (void)
 }
 
 SCM
-scm_c_make_weak_table (unsigned long k, scm_t_weak_table_kind kind)
+scm_c_make_weak_table (ulong_t k, scm_t_weak_table_kind kind)
 {
   SCM ret;
 
@@ -516,7 +516,7 @@ scm_weak_table_p (SCM obj)
 }
 
 SCM
-scm_c_weak_table_ref (SCM table, unsigned long raw_hash,
+scm_c_weak_table_ref (SCM table, ulong_t raw_hash,
                       scm_t_table_predicate_fn pred,
                       void *closure, SCM dflt)
 #define FUNC_NAME "weak-table-ref"
@@ -541,7 +541,7 @@ scm_c_weak_table_ref (SCM table, unsigned long raw_hash,
 #undef FUNC_NAME
 
 void
-scm_c_weak_table_put_x (SCM table, unsigned long raw_hash,
+scm_c_weak_table_put_x (SCM table, ulong_t raw_hash,
                         scm_t_table_predicate_fn pred,
                         void *closure, SCM key, SCM value)
 #define FUNC_NAME "weak-table-put!"
@@ -563,7 +563,7 @@ scm_c_weak_table_put_x (SCM table, unsigned long raw_hash,
 #undef FUNC_NAME
 
 void
-scm_c_weak_table_remove_x (SCM table, unsigned long raw_hash,
+scm_c_weak_table_remove_x (SCM table, ulong_t raw_hash,
                            scm_t_table_predicate_fn pred,
                            void *closure)
 #define FUNC_NAME "weak-table-remove!"
@@ -618,7 +618,7 @@ scm_weak_table_clear_x (SCM table)
 #define FUNC_NAME "weak-table-clear!"
 {
   scm_t_weak_table *t;
-  unsigned long k;
+  ulong_t k;
   scm_t_weak_entry *entry;
 
   SCM_VALIDATE_WEAK_TABLE (1, table);
@@ -646,7 +646,7 @@ scm_c_weak_table_fold (scm_t_table_fold_fn proc, void *closure,
                        SCM init, SCM table)
 {
   scm_t_weak_table *t;
-  unsigned long k;
+  ulong_t k;
   SCM alist = SCM_EOL;
 
   t = SCM_WEAK_TABLE (table);

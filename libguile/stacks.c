@@ -70,11 +70,11 @@ static SCM scm_sys_stacks;
 
 /* Count number of debug info frames on a stack, beginning with FRAME.
  */
-static long
+static long_t
 stack_depth (enum scm_vm_frame_kind kind, const struct scm_frame *frame)
 {
   struct scm_frame tmp;
-  long n = 1;
+  long_t n = 1;
   memcpy (&tmp, frame, sizeof tmp);
   while (scm_c_frame_previous (kind, &tmp))
     ++n;
@@ -115,8 +115,8 @@ find_prompt (SCM key)
   return fp_offset;
 }
 
-static long
-narrow_stack (long len, enum scm_vm_frame_kind kind, struct scm_frame *frame,
+static long_t
+narrow_stack (long_t len, enum scm_vm_frame_kind kind, struct scm_frame *frame,
               SCM inner_cut, SCM outer_cut)
 {
   /* Resolve procedure cuts to address ranges, if possible.  If the
@@ -170,7 +170,7 @@ narrow_stack (long len, enum scm_vm_frame_kind kind, struct scm_frame *frame,
   else if (scm_is_integer (inner_cut))
     {
       /* Cut specified number of frames. */
-      long inner = scm_to_int (inner_cut);
+      long_t inner = scm_to_int (inner_cut);
       
       for (; inner && len; --inner)
         {
@@ -190,7 +190,7 @@ narrow_stack (long len, enum scm_vm_frame_kind kind, struct scm_frame *frame,
   /* Cut outer part. */
   if (scm_is_true (scm_procedure_p (outer_cut)))
     {
-      long i, new_len;
+      long_t i, new_len;
       struct scm_frame tmp;
 
       memcpy (&tmp, frame, sizeof tmp);
@@ -208,7 +208,7 @@ narrow_stack (long len, enum scm_vm_frame_kind kind, struct scm_frame *frame,
     {
       /* Cut until an IP within the given range is found.  */
       uintptr_t low_pc, high_pc, pc;
-      long i, new_len;
+      long_t i, new_len;
       struct scm_frame tmp;
 
       low_pc = scm_to_uintptr_t (scm_car (outer_cut));
@@ -229,7 +229,7 @@ narrow_stack (long len, enum scm_vm_frame_kind kind, struct scm_frame *frame,
   else if (scm_is_integer (outer_cut))
     {
       /* Cut specified number of frames. */
-      long outer = scm_to_int (outer_cut);
+      long_t outer = scm_to_int (outer_cut);
       
       if (outer < len)
         len -= outer;
@@ -239,7 +239,7 @@ narrow_stack (long len, enum scm_vm_frame_kind kind, struct scm_frame *frame,
   else
     {
       /* Cut until the given prompt tag is seen. */
-      long i;
+      long_t i;
       struct scm_frame tmp;
       ptrdiff_t fp_offset = find_prompt (outer_cut);
 
@@ -315,7 +315,7 @@ SCM_DEFINE (scm_make_stack, "make-stack", 1, 0, 1,
             "taken as 0.")
 #define FUNC_NAME s_scm_make_stack
 {
-  long n;
+  long_t n;
   SCM inner_cut, outer_cut;
   enum scm_vm_frame_kind kind;
   struct scm_frame frame;
@@ -439,7 +439,7 @@ SCM_DEFINE (scm_stack_ref, "stack-ref", 2, 0, 0,
 	    "Return the @var{index}'th frame from @var{stack}.")
 #define FUNC_NAME s_scm_stack_ref
 {
-  unsigned long int c_index;
+  ulong_t c_index;
   SCM frame;
 
   SCM_VALIDATE_STACK (1, stack);

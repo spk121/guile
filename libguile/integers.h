@@ -117,8 +117,8 @@ SCM_INTERNAL int scm_integer_logtest_zi (struct scm_bignum *x, scm_t_inum y);
 SCM_INTERNAL int scm_integer_logtest_zz (struct scm_bignum *x,
                                          struct scm_bignum *y);
 
-SCM_INTERNAL int scm_integer_logbit_ui (unsigned long bit, scm_t_inum n);
-SCM_INTERNAL int scm_integer_logbit_uz (unsigned long bit,
+SCM_INTERNAL int scm_integer_logbit_ui (ulong_t bit, scm_t_inum n);
+SCM_INTERNAL int scm_integer_logbit_uz (ulong_t bit,
                                         struct scm_bignum *n);
 
 SCM_INTERNAL SCM scm_integer_lognot_i (scm_t_inum n);
@@ -129,21 +129,21 @@ SCM_INTERNAL SCM scm_integer_expt_zi (struct scm_bignum *n, scm_t_inum k);
 
 SCM_INTERNAL SCM scm_integer_modulo_expt_nnn (SCM n, SCM k, SCM m);
 
-SCM_INTERNAL SCM scm_integer_lsh_iu (scm_t_inum n, unsigned long count);
+SCM_INTERNAL SCM scm_integer_lsh_iu (scm_t_inum n, ulong_t count);
 SCM_INTERNAL SCM scm_integer_lsh_zu (struct scm_bignum *n,
-                                     unsigned long count);
-SCM_INTERNAL SCM scm_integer_floor_rsh_iu (scm_t_inum n, unsigned long count);
+                                     ulong_t count);
+SCM_INTERNAL SCM scm_integer_floor_rsh_iu (scm_t_inum n, ulong_t count);
 SCM_INTERNAL SCM scm_integer_floor_rsh_zu (struct scm_bignum *n,
-                                           unsigned long count);
-SCM_INTERNAL SCM scm_integer_round_rsh_iu (scm_t_inum n, unsigned long count);
+                                           ulong_t count);
+SCM_INTERNAL SCM scm_integer_round_rsh_iu (scm_t_inum n, ulong_t count);
 SCM_INTERNAL SCM scm_integer_round_rsh_zu (struct scm_bignum *n,
-                                           unsigned long count);
+                                           ulong_t count);
 
-SCM_INTERNAL SCM scm_integer_bit_extract_i (scm_t_inum n, unsigned long start,
-                                            unsigned long bits);
+SCM_INTERNAL SCM scm_integer_bit_extract_i (scm_t_inum n, ulong_t start,
+                                            ulong_t bits);
 SCM_INTERNAL SCM scm_integer_bit_extract_z (struct scm_bignum *n,
-                                            unsigned long start,
-                                            unsigned long bits);
+                                            ulong_t start,
+                                            ulong_t bits);
 
 SCM_INTERNAL SCM scm_integer_logcount_i (scm_t_inum n);
 SCM_INTERNAL SCM scm_integer_logcount_z (struct scm_bignum *n);
@@ -173,7 +173,7 @@ SCM_INTERNAL int scm_is_integer_less_than_rz (double y, struct scm_bignum *x);
 SCM_INTERNAL int scm_is_integer_positive_z (struct scm_bignum *x);
 SCM_INTERNAL int scm_is_integer_negative_z (struct scm_bignum *x);
 
-SCM_INTERNAL double scm_integer_frexp_z (struct scm_bignum *x, long *exp);
+SCM_INTERNAL double scm_integer_frexp_z (struct scm_bignum *x, long_t *exp);
 SCM_INTERNAL double scm_integer_to_double_z (struct scm_bignum *x);
 SCM_INTERNAL SCM scm_integer_from_double (double val);
 
@@ -207,7 +207,7 @@ SCM_INTERNAL SCM scm_integer_exact_quotient_zi (struct scm_bignum *n,
 SCM_INTERNAL SCM scm_integer_exact_quotient_zz (struct scm_bignum *n,
                                                 struct scm_bignum *d);
 
-#if SCM_SIZEOF_LONG == 4
+#if SCM_SIZEOF_LONG_T == 4
 SCM_INTERNAL SCM scm_integer_from_int32 (int32_t n);
 SCM_INTERNAL SCM scm_integer_from_uint32 (uint32_t n);
 SCM_INTERNAL int scm_integer_to_int32_z (struct scm_bignum *z, int32_t *val);

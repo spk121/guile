@@ -152,17 +152,17 @@ SCM_API void scm_dynwind_current_error_port (SCM port);
 SCM_INTERNAL void scm_i_dynwind_current_load_port (SCM port);
 
 /* Mode bits.  */
-SCM_INTERNAL long scm_i_mode_bits (SCM modes);
-SCM_API long scm_mode_bits (char *modes);
+SCM_INTERNAL long_t scm_i_mode_bits (SCM modes);
+SCM_API long_t scm_mode_bits (char *modes);
 SCM_API SCM scm_port_mode (SCM port);
 
 /* Low-level constructors.  */
 SCM_API SCM scm_c_make_port_with_encoding (scm_t_port_type *ptob,
-                                           unsigned long mode_bits,
+                                           ulong_t mode_bits,
                                            SCM encoding,
                                            SCM conversion_strategy,
                                            scm_t_bits stream);
-SCM_API SCM scm_c_make_port (scm_t_port_type *ptob, unsigned long mode_bits,
+SCM_API SCM scm_c_make_port (scm_t_port_type *ptob, ulong_t mode_bits,
                              scm_t_bits stream);
 
 /* Predicates.  */

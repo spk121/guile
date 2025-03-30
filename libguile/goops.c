@@ -689,7 +689,7 @@ scm_i_inherit_applicable (SCM c)
 static void
 create_smob_classes (void)
 {
-  long i;
+  long_t i;
 
   for (i = 0; i < SCM_I_MAX_SMOB_TYPE_COUNT; ++i)
     scm_i_smob_class[i] = SCM_BOOL_F;

@@ -103,7 +103,7 @@ struct bytevector_input_port {
 static inline SCM
 make_bytevector_input_port (SCM bv)
 {
-  const unsigned long mode_bits = SCM_RDNG;
+  const ulong_t mode_bits = SCM_RDNG;
   struct bytevector_input_port *stream;
 
   stream = scm_gc_typed_calloc (struct bytevector_input_port);
@@ -600,7 +600,7 @@ make_bytevector_output_port (void)
 {
   SCM port, proc;
   scm_t_bytevector_output_port_buffer *buf;
-  const unsigned long mode_bits = SCM_WRTNG;
+  const ulong_t mode_bits = SCM_WRTNG;
 
   buf = (scm_t_bytevector_output_port_buffer *)
     scm_gc_malloc (sizeof (* buf), SCM_GC_BYTEVECTOR_OUTPUT_PORT);
@@ -800,7 +800,7 @@ static scm_t_port_type *transcoded_port_type = 0;
 #define SCM_TRANSCODED_PORT_BINARY_PORT(_port) SCM_PACK (SCM_STREAM (_port))
 
 static inline SCM
-make_transcoded_port (SCM binary_port, unsigned long mode)
+make_transcoded_port (SCM binary_port, ulong_t mode)
 {
   return scm_c_make_port (transcoded_port_type, mode,
                           SCM_UNPACK (binary_port));
@@ -846,7 +846,7 @@ SCM_DEFINE (scm_i_make_transcoded_port,
 #define FUNC_NAME s_scm_i_make_transcoded_port
 {
   SCM result;
-  unsigned long mode = 0;
+  ulong_t mode = 0;
   
   SCM_VALIDATE_PORT (SCM_ARG1, port);
 

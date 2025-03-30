@@ -467,7 +467,7 @@ static SCM
 expand_cond_clauses (SCM clause, SCM rest, int elp, int alp, SCM env)
 {
   SCM test;
-  const long length = scm_ilength (clause);
+  const long_t length = scm_ilength (clause);
   ASSERT_SYNTAX (length >= 1, s_bad_cond_clause, clause);
 
   test = CAR (clause);
@@ -581,7 +581,7 @@ static SCM
 expand_if (SCM expr, SCM env SCM_UNUSED)
 {
   const SCM cdr_expr = CDR (expr);
-  const long length = scm_ilength (cdr_expr);
+  const long_t length = scm_ilength (cdr_expr);
   ASSERT_SYNTAX (length == 2 || length == 3, s_expression, expr);
   return CONDITIONAL (scm_source_properties (expr),
                       expand (CADR (expr), env),
@@ -685,7 +685,7 @@ expand_lambda_star_case (SCM clause, SCM alternate, SCM env)
   SCM inits;
   int nreq, nopt;
 
-  const long length = scm_ilength (clause);
+  const long_t length = scm_ilength (clause);
   ASSERT_SYNTAX (length >= 1, s_bad_expression,
                  scm_cons (sym_lambda_star, clause));
   ASSERT_SYNTAX (length >= 2, s_missing_expression,
@@ -992,7 +992,7 @@ expand_let (SCM expr, SCM env)
   SCM bindings;
 
   const SCM cdr_expr = CDR (expr);
-  const long length = scm_ilength (cdr_expr);
+  const long_t length = scm_ilength (cdr_expr);
   ASSERT_SYNTAX (length >= 0, s_bad_expression, expr);
   ASSERT_SYNTAX (length >= 2, s_missing_expression, expr);
 
@@ -1024,7 +1024,7 @@ expand_letrec_helper (SCM expr, SCM env, SCM in_order_p)
   SCM bindings;
 
   const SCM cdr_expr = CDR (expr);
-  const long length = scm_ilength (cdr_expr);
+  const long_t length = scm_ilength (cdr_expr);
   ASSERT_SYNTAX (length >= 0, s_bad_expression, expr);
   ASSERT_SYNTAX (length >= 2, s_missing_expression, expr);
 
@@ -1092,7 +1092,7 @@ static SCM
 expand_or (SCM expr, SCM env SCM_UNUSED)
 {
   SCM tail = CDR (expr);
-  const long length = scm_ilength (tail);
+  const long_t length = scm_ilength (tail);
 
   ASSERT_SYNTAX (length >= 0, s_bad_expression, expr);
 

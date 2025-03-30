@@ -49,7 +49,7 @@ typedef struct
   jmp_buf jmpbuf;
 #if SCM_HAVE_AUXILIARY_STACK
   void *auxiliary_stack;
-  unsigned long auxiliary_stack_size;
+  ulong_t auxiliary_stack_size;
 #endif
   size_t num_stack_items;   /* size of the saved stack.  */
   SCM root;                 /* continuation root identifier.  */

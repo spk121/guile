@@ -112,7 +112,7 @@ SCM_DEFINE (scm_abort_to_prompt_star, "abort-to-prompt*", 2, 0, 0,
 {
   SCM *tag_and_argv;
   size_t i;
-  long n;
+  long_t n;
 
   SCM_VALIDATE_LIST_COPYLEN (SCM_ARG2, args, n);
   n = n + 1; /* Add space for the tag.  */

@@ -635,7 +635,7 @@ make_port_buffer (SCM port, size_t size)
  * See PORT FLAGS in scm.h
  */
 
-static long
+static long_t
 scm_i_mode_bits_n (SCM modes)
 {
   return ((scm_i_string_contains_char (modes, 'r')
@@ -647,17 +647,17 @@ scm_i_mode_bits_n (SCM modes)
 	  | (scm_i_string_contains_char (modes, 'l') ? SCM_BUFLINE : 0));
 }
 
-long
+long_t
 scm_mode_bits (char *modes)
 {
   /* Valid characters are rw+a0l.  So, use latin1.  */
   return scm_i_mode_bits (scm_from_latin1_string (modes));
 }
 
-long
+long_t
 scm_i_mode_bits (SCM modes)
 {
-  long bits;
+  long_t bits;
 
   if (!scm_is_string (modes))
     scm_wrong_type_arg_msg (NULL, 0, modes, "string");
@@ -776,7 +776,7 @@ initialize_port_buffers (SCM port)
 }
 
 SCM
-scm_c_make_port_with_encoding (scm_t_port_type *ptob, unsigned long mode_bits,
+scm_c_make_port_with_encoding (scm_t_port_type *ptob, ulong_t mode_bits,
                                SCM encoding, SCM conversion_strategy,
                                scm_t_bits stream)
 {
@@ -821,7 +821,7 @@ scm_c_make_port_with_encoding (scm_t_port_type *ptob, unsigned long mode_bits,
 
 SCM
 scm_c_make_port (scm_t_port_type *ptob,
-                 unsigned long mode_bits, scm_t_bits stream)
+                 ulong_t mode_bits, scm_t_bits stream)
 {
   return scm_c_make_port_with_encoding (ptob, mode_bits,
                                         scm_i_default_port_encoding (),
@@ -1738,7 +1738,7 @@ update_port_position (SCM position, scm_t_wchar c)
       break;
     case '\n':
       {
-        long line = scm_to_long (scm_port_position_line (position));
+        long_t line = scm_to_long_t (scm_port_position_line (position));
         scm_port_position_set_line (position, scm_from_long (line + 1));
         scm_port_position_set_column (position, SCM_INUM0);
       }
@@ -2166,7 +2166,7 @@ scm_ungetc (scm_t_wchar c, SCM port)
     free (result);
 
   {
-    long line;
+    long_t line;
     int column;
 
     line = scm_to_long (scm_port_position_line (pt->position));
@@ -2303,7 +2303,7 @@ SCM_DEFINE (scm_setvbuf, "setvbuf", 2, 1, 0,
 	    "file ports.")
 #define FUNC_NAME s_scm_setvbuf
 {
-  long csize;
+  long_t csize;
   scm_t_port *pt;
   scm_t_port_type *ptob;
   scm_t_bits tag_word;
@@ -4160,7 +4160,7 @@ void_port_write (SCM port, SCM src, size_t start, size_t count)
 }
 
 static SCM
-scm_i_void_port (long mode_bits)
+scm_i_void_port (long_t mode_bits)
 {
   return scm_c_make_port (scm_void_port_type, mode_bits, 0);
 }
