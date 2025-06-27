@@ -2,6 +2,7 @@
 @c This is part of the GNU Guile Reference Manual.
 @c Copyright (C) 1996-1997,2000-2005,2010-2011,2013-2014,2016,2019,2021-2022
 @c   Free Software Foundation, Inc.
+@c Copyright (C) 2025 Noé Lopez <noelopez@free.fr>
 @c See the file guile.texi for copying conditions.
 
 @node Invoking Guile
@@ -212,6 +213,13 @@ Nevertheless, you are advised to use UNIX domain sockets, as in
 
 That said, @option{--listen} is great for interactive debugging and
 development.
+
+@vnew{3.0.11}
+
+@item --statprof=@var{style}
+Run any scripts or expressions inside the statprof profiler.  Show the
+results in @var{style}, @xref{Statprof} for the possible values of
+@var{STYLE}.  Inside the REPL, use @ref{Profile Commands} instead.
 
 @vnew{2.0}
 
