@@ -460,12 +460,13 @@ have them.  Send any bug reports to bug-guile@gnu.org.
    (<https://bugs.gnu.org/56413>)
 
 Hearty thanks to Arne Babenhauserheide, Arsen Arsenović, Bruno Victal,
-Christopher Baines, Daniel Llorens, Denis 'GNUtoo' Carikli, Ekaitz
-Zarraga, Jonas Hahnfeld, Jorge Gomez, Josselin Poiret, Juliana Sims,
-Linus Bjornstam, Luke Nihlen, Maxim Cournoyer, Michael Gran, Michael
-Käppler, Mikael Djurfeldt, Morgan Smith, Nikita Domnitskii, Olivier
-Dion, Rob Browning, Taylan Kammer, Timothy Sample, Tomas Volf, Tony
-Garnock-Jones, and 無無for their patches and bug reports.
+Christopher Baines, Dale P. Swith, Daniel Llorens, Denis 'GNUtoo'
+Carikli, Ekaitz Zarraga, Jonas Hahnfeld, Jorge Gomez, Josselin Poiret,
+Juliana Sims, Linus Bjornstam, Luke Nihlen, Matthew Wette, Maxim
+Cournoyer, Michael Gran, Michael Käppler, Mikael Djurfeldt, Morgan
+Smith, Nikita Domnitskii, Olivier Dion, Richard Sent, Rob Browning,
+Taylan Kammer, Timothy Sample, Tomas Volf, Tony Garnock-Jones, and 無無
+for their patches and bug reports.
 
 
 Changes in 3.0.9 (since 3.0.8)
