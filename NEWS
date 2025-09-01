@@ -66,6 +66,11 @@ for-delimited-from-port and for-line-in-file. Of these, for-line-in-file
 is helpful in the common situation where you want a procedure applied to
 every line in a file.
 
+** Add procedure (%inhibit-welcome-message) to silence the REPL welcome
+
+If ((@ (system repl repl) %inhibit-welcome-message) #t) is set in
+$HOME/.guile, the welcome message in the REPL is suppressed.
+
 ** Improve 'load-foreign-library' handling of DLLs
 
 The non-libltdl load-foreign-library introduced in 3.0.6 does not handle
