@@ -236,6 +236,8 @@ References}, for more on version references.
 
 If the module name is not resolvable, @code{use-modules} will signal an
 error.
+
+See also @code{scm_c_use_module} for the C API.
 @end deffn
 
 @deffn syntax @@ module-name binding-name
