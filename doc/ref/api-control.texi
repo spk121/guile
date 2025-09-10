@@ -1506,16 +1506,17 @@ type with a known mapping to @code{throw}, return @code{(list @var{exn})}.
 @node Exceptions and C
 @subsubsection Exceptions and C
 
-There are some specific versions of Guile's original @code{catch} and
-@code{with-throw-handler} exception-handling primitives that are still
-widely used in C code.
+The primary function to deal with Guile's exceptions from C is
+@code{scm_c_catch}.
 
 @deftypefn {C Function} SCM scm_c_catch (SCM tag, scm_t_catch_body body, void *body_data, scm_t_catch_handler handler, void *handler_data, scm_t_catch_handler pre_unwind_handler, void *pre_unwind_handler_data)
 @deftypefnx {C Function} SCM scm_internal_catch (SCM tag, scm_t_catch_body body, void *body_data, scm_t_catch_handler handler, void *handler_data)
-The above @code{scm_catch_with_pre_unwind_handler} and @code{scm_catch}
-take Scheme procedures as body and handler arguments.
-@code{scm_c_catch} and @code{scm_internal_catch} are equivalents taking
-C functions.
+@code{scm_c_catch} can register a C functions as a body thunk and
+exception handler as opposed to @code{scm_catch_with_pre_unwind_handler}
+and @code{scm_catch} which take Scheme procedures as body thunk and
+handler arguments. @code{scm_internal_catch} is retained for backward
+compatibility and is a specialization of @code{scm_c_catch} with the
+pre-unwind handler and corresponding data set to @code{NULL}.
 
 @var{body} is called as @code{@var{body} (@var{body_data})} with a catch
 on exceptions of the given @var{tag} type.  If an exception is caught,
