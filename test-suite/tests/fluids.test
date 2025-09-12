@@ -129,16 +129,22 @@
       (throw 'unresolved)))
 
 (pass-if "fluids are GC'd"
-
   (let ((g (make-guardian)))
     (g (make-fluid))
-    (let loop ((i 1000))
-      (and (> i 0)
-           (begin
-             (make-fluid)
-             (loop (1- i)))))
-    (gc)
-    (fluid? (g))))
+    (let loop ((i 0))
+      ;; nudge the gc, though this didn't appear to be needed
+      (iota 10000)
+      (cond
+       ((= i 100) #f)
+       ((fluid? (g)) #t)
+       (else
+        ;; Note that a usleep (of any duration) here didn't work on at
+        ;; least s390x. Making usleep work even more identically to
+        ;; sleep by changing usleep to convert the interval to/from C as
+        ;; a uint rather than a long "fixed" the problem.
+        (sleep 0)
+        (gc)
+        (loop (1+ i)))))))
 
 (pass-if-exception "fluid-ref* depth must be non-negative"
     exception:out-of-range
