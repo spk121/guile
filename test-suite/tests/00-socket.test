@@ -190,7 +190,9 @@
 (define (primitive-fork-if-available)
   (if (not (provided? 'fork))
       -1
-      (primitive-fork)))
+      (begin
+        (flush-all-ports)
+        (primitive-fork))))
 
 (if (defined? 'AF_UNIX)
     (with-test-prefix "AF_UNIX/SOCK_DGRAM"
@@ -288,8 +290,6 @@
 		(set! server-listening? #t)
 		#t)))
 
-	(force-output (current-output-port))
-	(force-output (current-error-port))
 	(when server-listening?
           (let ((pid (primitive-fork-if-available)))
 	    ;; Spawn a server process.
@@ -368,8 +368,6 @@
 		(set! server-listening? #t)
 		#t)))
 
-	(force-output (current-output-port))
-	(force-output (current-error-port))
 	(when server-listening?
           (let ((pid (primitive-fork-if-available)))
 	    ;; Spawn a server process.
@@ -440,8 +438,6 @@
                 (set! server-listening? #t)
                 #t)))
 
-        (force-output (current-output-port))
-        (force-output (current-error-port))
         (if server-listening?
             (let ((pid (primitive-fork-if-available)))
               ;; Spawn a server process.
@@ -539,8 +535,6 @@
 		(set! server-listening? #t)
 		#t)))
 
-	(force-output (current-output-port))
-	(force-output (current-error-port))
 	(if server-listening?
             (let ((pid (primitive-fork-if-available)))
 	      ;; Spawn a server process.
