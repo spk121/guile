@@ -438,7 +438,7 @@
       (let ((str (get-string-all (car c+d))))
         (close-port (car c+d))
         (waitpid pid)
-        str)))
+        (string-trim str))))
 
   (pass-if-equal "env with #:environment and #:output"
       "GNU=guile\n"
