@@ -26,6 +26,10 @@
   (when (string-ci=? "darwin" (utsname:sysname (uname)))
     (throw 'untested)))
 
+(define (skip-on-freebsd)
+  (when (string-ci=? "FreeBSD" (utsname:sysname (uname)))
+    (throw 'untested)))
+
 ;; FIXME: The following exec tests are disabled since on an i386 debian with
 ;; glibc 2.3.2 they seem to interact badly with threads.test, the latter
 ;; dies with signal 32 (one of the SIGRTs).  Don't know how or why, or who's
@@ -485,6 +489,7 @@
     ;; write such test.  However due to posix_spawnp being buggy on macOS it is
     ;; always replaced, so whatever.
     (skip-on-darwin)
+    (skip-on-freebsd)
     (catch 'system-error
       (lambda ()
         (spawn "this-does-not-exist" '("nope")
