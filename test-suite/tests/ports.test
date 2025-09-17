@@ -43,6 +43,10 @@
   (when (string-ci=? "darwin" (utsname:sysname (uname)))
     (throw 'untested)))
 
+(define (skip-on-freebsd)
+  (when (string-ci=? "FreeBSD" (utsname:sysname (uname)))
+    (throw 'untested)))
+
 
 ;;;; Some general utilities for testing ports.
 
@@ -220,6 +224,7 @@
   (pass-if-equal "SEEK_DATA while in hole"
       4096
     (skip-on-darwin)
+    (skip-on-freebsd)
     (if (defined? 'SEEK_DATA)
         (call-with-input-file file
           (lambda (port)
@@ -233,6 +238,7 @@
   (pass-if-equal "SEEK_HOLE while in hole"
       10
     (skip-on-darwin)
+    (skip-on-freebsd)
     (if (defined? 'SEEK_HOLE)
         (call-with-input-file file
           (lambda (port)
