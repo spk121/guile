@@ -531,6 +531,7 @@ case $host in
 esac
 AC_SUBST(EXTRA_DEFS)
 AM_CONDITIONAL([MINGW_LIBPATH], [test x$mingw_libpath = xtrue])
+AM_CONDITIONAL([HAVE_GNU_DATE], [date --version 2>/dev/null | grep -q GNU])
 
 # Reasons for testing:
 #   crt_externs.h - Darwin specific
