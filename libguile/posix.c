@@ -1331,7 +1331,7 @@ SCM_DEFINE (scm_fork, "primitive-fork", 0, 0, 0,
 # define HAVE_ADDCLOSEFROM 1
 #endif
 
-#ifndef HAVE_ADDCLOSEFROM
+#if !defined (HAVE_ADDCLOSEFROM) || defined (REPLACE_POSIX_SPAWN)
 
 static void
 close_inherited_fds (posix_spawn_file_actions_t *actions, int max_fd)
@@ -1409,7 +1409,7 @@ do_spawn (char *exec_file, char **exec_argv, char **exec_env,
         return -1;
     }
 
-#ifdef HAVE_ADDCLOSEFROM
+#if defined (HAVE_ADDCLOSEFROM) && !defined (REPLACE_POSIX_SPAWN)
   /* This function appears in glibc 2.34.  It's both free from race
      conditions and more efficient than the alternative.  */
   posix_spawn_file_actions_addclosefrom_np (&actions, 3);
