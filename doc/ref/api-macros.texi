@@ -837,17 +837,50 @@ macros can use to compare, generate, and query objects of this data
 type.
 
 @deffn {Scheme Procedure} bound-identifier=? a b
-Return @code{#t} if the syntax objects @var{a} and @var{b} refer to the
-same lexically-bound identifier, or @code{#f} otherwise.
+Return @code{#t} if and only if the syntax objects @var{a} and @var{b}
+are both identifiers with the same symbolic name (that is, the procedure
+@code{syntax->datum} would return the same symbol on both of them) and
+were both created by the same hygienic macro expansion. This means that
+if @var{a} already has some binding in an outer scope, and another macro
+binds @var{b} in some inner scope, the binding of @var{a} would be
+shadowed. The same applies vice versa if @var{b} were bound in some
+outer scope and @var{a} shadowed it.
+
+If the two identifiers have different symbolic names or were created
+by different expansion steps, return @code{#f}.
+
+This test is used by syntax forms such as @code{let} and @code{lambda}
+to ensure that the code using them isn't trying to bind the same
+identifier more than once.
 @end deffn
 
 @deffn {Scheme Procedure} free-identifier=? a b
-Return @code{#t} if the syntax objects @var{a} and @var{b} refer to the
-same free identifier, or @code{#f} otherwise.
+Return @code{#t} if the syntax objects @var{a} and @var{b} are both
+identifiers and refer to the same binding. If neither @var{a} nor
+@var{b} is bound, return @code{#t} if both have the same symbolic name.
+
+If the two identifiers have different bindings, if one is bound and the
+other unbound, or if neither has a binding and the two have different
+symbolic names, return @code{#f}.
+
+This test is used by syntax forms such as @code{cond} to look for uses
+of auxiliary keywords like @code{else}. It can also be used by advanced
+procedural macros to coalesce references to the same external identifier
+in their input into only one reference in their output.
+
+In practice, the fallback case which applies for identifiers without
+bindings can usually be ignored by programmers. Auxiliary keywords
+should usually be bound to dummy macros which always raise a syntax
+violation if they're used outside of their correct context; also, if an
+unbound identifier is inserted into expanded code, it will eventually
+result in an error anyway.
 @end deffn
 
 @deffn {Scheme Procedure} generate-temporaries ls
-Return a list of temporary identifiers as long as @var{ls} is long.
+Return a list of temporary identifiers as long as @var{ls} is long. Each
+temporary identifier will be distinct from every other identifier in the
+sense of @code{bound-identifier=?} and will have no existing binding
+associated with it.
 @end deffn
 
 @deffn {Scheme Procedure} syntax-source x
