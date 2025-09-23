@@ -38,6 +38,10 @@
   (when (string-ci=? "darwin" (utsname:sysname (uname)))
     (throw 'untested)))
 
+(define (skip-on-freebsd)
+  (when (string-ci=? "FreeBSD" (utsname:sysname (uname)))
+    (throw 'untested)))
+
 ;;;
 ;;; copy-file
 ;;;
@@ -377,6 +381,7 @@
   (pass-if-exception "invalid template" exception:system-error
     ;; MacOS accepts any template and just does no replacements.
     (skip-on-darwin)
+    (skip-on-freebsd)
     (if (not (defined? 'mkdtemp))
         (throw 'unresolved)
         (mkdtemp "T-AAAAAA")))

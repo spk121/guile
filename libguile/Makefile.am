@@ -816,8 +816,13 @@ libpath.h: $(srcdir)/Makefile.in  $(top_builddir)/config.status
 		>> libpath.tmp
 	@echo '	{ "LIBS",	   "@GUILE_LIBS@" }, \' >> libpath.tmp
 	@echo '	{ "CFLAGS",	   "@GUILE_CFLAGS@" }, \' >> libpath.tmp
+if HAVE_GNU_DATE
 	@BUILD_DATE="$${SOURCE_DATE_EPOCH:-`date '+%s'`}" ; \
 	 echo '	{ "buildstamp",    "'`date -u -d @$$BUILD_DATE +'%Y-%m-%d %T'`'" }, \' >> libpath.tmp
+else
+	@BUILD_DATE="$${SOURCE_DATE_EPOCH:-`date '+%s'`}" ; \
+	 echo '	{ "buildstamp",    "'`date -j -u -r $$BUILD_DATE +'%Y-%m-%d %T'`'" }, \' >> libpath.tmp
+endif
 	@echo '}' >> libpath.tmp
 	$(AM_V_GEN)mv libpath.tmp libpath.h
 endif

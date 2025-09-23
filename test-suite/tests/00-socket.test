@@ -29,6 +29,10 @@
   (when (string-ci=? "darwin" (utsname:sysname (uname)))
     (throw 'untested)))
 
+(define (skip-on-freebsd)
+  (when (string-ci=? "FreeBSD" (utsname:sysname (uname)))
+    (throw 'untested)))
+
 (define (skip-on-cygwin-msys)
   (when (or (string-contains %host-type "cygwin")
             (string-contains %host-type "msys"))
@@ -348,6 +352,7 @@
 	(pass-if "bind abstract"
           (skip-on-darwin)
           (skip-on-cygwin-msys)
+          (skip-on-freebsd)
 	  (catch 'system-error
 	    (lambda ()
 	      (bind server-socket AF_UNIX path)
