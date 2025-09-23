@@ -120,6 +120,7 @@
 #  posix_spawn_file_actions_addclose \
 #  posix_spawn_file_actions_adddup2 \
 #  posix_spawn_file_actions_addopen \
+#  posix_spawn_file_actions_destroy \
 #  posix_spawn_file_actions_init \
 #  posix_spawnp \
 #  putenv \
@@ -227,6 +228,7 @@ gl_MODULES([
   posix_spawn_file_actions_addclose
   posix_spawn_file_actions_adddup2
   posix_spawn_file_actions_addopen
+  posix_spawn_file_actions_destroy
   posix_spawn_file_actions_init
   posix_spawnp
   putenv

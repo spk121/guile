@@ -198,6 +198,7 @@ AC_DEFUN([gl_EARLY],
   # Code from module posix_spawn_file_actions_addclose:
   # Code from module posix_spawn_file_actions_adddup2:
   # Code from module posix_spawn_file_actions_addopen:
+  # Code from module posix_spawn_file_actions_destroy:
   # Code from module posix_spawn_file_actions_init:
   # Code from module posix_spawnp:
   # Code from module putenv:
@@ -645,6 +646,10 @@ AC_DEFUN([gl_INIT],
   gl_CONDITIONAL([GL_COND_OBJ_SPAWN_FACTION_ADDOPEN],
                  [test $HAVE_POSIX_SPAWN = 0 || test $REPLACE_POSIX_SPAWN = 1 || test $REPLACE_POSIX_SPAWN_FILE_ACTIONS_ADDOPEN = 1])
   gl_SPAWN_MODULE_INDICATOR([posix_spawn_file_actions_addopen])
+  gl_POSIX_SPAWN
+  gl_CONDITIONAL([GL_COND_OBJ_SPAWN_FACTION_DESTROY],
+                 [test $HAVE_POSIX_SPAWN = 0 || test $REPLACE_POSIX_SPAWN = 1])
+  gl_SPAWN_MODULE_INDICATOR([posix_spawn_file_actions_destroy])
   gl_POSIX_SPAWN
   gl_CONDITIONAL([GL_COND_OBJ_SPAWN_FACTION_INIT],
                  [test $HAVE_POSIX_SPAWN = 0 || test $REPLACE_POSIX_SPAWN = 1])
@@ -2275,6 +2280,7 @@ AC_DEFUN([gl_FILE_LIST], [
   lib/spawn_faction_addclose.c
   lib/spawn_faction_adddup2.c
   lib/spawn_faction_addopen.c
+  lib/spawn_faction_destroy.c
   lib/spawn_faction_init.c
   lib/spawn_int.h
   lib/spawni.c

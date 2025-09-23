@@ -115,6 +115,7 @@
 #  posix_spawn_file_actions_addclose \
 #  posix_spawn_file_actions_adddup2 \
 #  posix_spawn_file_actions_addopen \
+#  posix_spawn_file_actions_destroy \
 #  posix_spawn_file_actions_init \
 #  posix_spawnp \
 #  putenv \
@@ -2114,6 +2115,14 @@ endif
 EXTRA_DIST += spawn_int.h
 
 ## end   gnulib module posix_spawn_file_actions_addopen
+
+## begin gnulib module posix_spawn_file_actions_destroy
+
+if GL_COND_OBJ_SPAWN_FACTION_DESTROY
+libgnu_la_SOURCES += spawn_faction_destroy.c
+endif
+
+## end   gnulib module posix_spawn_file_actions_destroy
 
 ## begin gnulib module posix_spawn_file_actions_init
 

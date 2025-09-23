@@ -1406,7 +1406,10 @@ do_spawn (char *exec_file, char **exec_argv, char **exec_env,
       errno = posix_spawn_file_actions_adddup2 (&actions, dup2_action_from[i],
                                                 dup2_action_to[i]);
       if (errno != 0)
-        return -1;
+        {
+          posix_spawn_file_actions_destroy (&actions);
+          return -1;
+        }
     }
 
 #if defined (HAVE_ADDCLOSEFROM) && !defined (REPLACE_POSIX_SPAWN)
@@ -1424,6 +1427,9 @@ do_spawn (char *exec_file, char **exec_argv, char **exec_env,
   else
     res = posix_spawn (&pid, exec_file, &actions, attrp,
                        exec_argv, exec_env);
+
+  posix_spawn_file_actions_destroy (&actions);
+
   if (res != 0)
     return -1;
 
