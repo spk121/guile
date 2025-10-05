@@ -71,6 +71,7 @@ get the relevant SRFI documents from the SRFI home page
 * SRFI-171::                    Transducers
 * SRFI-197::                    Pipeline operators
 * SRFI-207::                    String-notated bytevectors
+* SRFI-244::                    Multiple-value Definitions
 @end menu
 
 
@@ -7872,6 +7873,12 @@ particular: Lassi Kortela corrected an embarrassing technical error;
 Marc Nieper-Wißkirchen explained why the @code{write} procedure ought
 not to be allowed to use this notation by default.
 
+@node SRFI-244
+@subsection SRFI-244 - Multiple-value Definitions
+@cindex SRFI-244
+
+The implementation of this SRFI re-exports the @code{define-values} form
+described in @ref{Binding Multiple Values}.
 @c srfi-modules.texi ends here
 
 @c Local Variables:

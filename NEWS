@@ -37,6 +37,12 @@ downright unusable (e.g., <https://bugs.gnu.org/72378>), non-conforming
 Guile now provides chain, chain-and, chain-when, chain-lambda, nest, and
 nest-reverse.
 
+** Guile now supports SRFI-244 (Multiple-value Definitions)
+
+Guile now provides syntax 'define-values' under the module (srfi
+srfi-244). This syntax existed for a long time in the core of Guile,
+now it is also exported via srfi-244 to help writing portable code.
+
 ** PEG parser
 
 PEG grammar parser in (ice-9 peg string-peg) has been rewritten to cover

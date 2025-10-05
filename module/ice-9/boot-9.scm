@@ -4539,6 +4539,7 @@ when none is available, reading FILE-NAME with READER."
     srfi-62  ;; s-expression comments
     srfi-87  ;; => in case clauses
     srfi-105 ;; curly infix expressions
+    srfi-244 ;; define-values
     ))
 
 ;; This table maps module public interfaces to the list of features.

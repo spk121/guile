@@ -358,6 +358,7 @@ SOURCES =					\
   srfi/srfi-171/meta.scm                        \
   srfi/srfi-197.scm	                        \
   srfi/srfi-207.scm	                        \
+  srfi/srfi-244.scm	                        \
 						\
   statprof.scm					\
 						\
