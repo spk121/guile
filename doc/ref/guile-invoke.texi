@@ -461,6 +461,18 @@ integer indicating the maximum number of functions to JIT-compile.  By
 bisecting over the value of @env{GUILE_JIT_STOP_AFTER}, you can pinpoint
 the precise function that is being miscompiled.
 
+@item GUILE_JIT_PAUSE_WHEN_STOPPING
+@vindex GUILE_JIT_PAUSE_WHEN_STOPPING
+Debugging the JIT compiler sometimes requires analysing the running
+process.  Setting @env{GUILE_JIT_PAUSE_WHEN_STOPPING} will pause the
+process when the JIT stops to let you connect a debugger to it and will
+print something along these lines:
+@example
+stopping automatic JIT compilation, as requested
+sleeping for 30s; to debug:
+   gdb -p 133646
+@end example
+
 @end table
 
 @c Local Variables: 
