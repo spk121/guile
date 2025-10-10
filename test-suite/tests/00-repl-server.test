@@ -129,14 +129,14 @@ reached."
 
       (read-until-prompt socket %last-line-before-prompt)
 
-      ;; Simulate an HTTP inter-protocol attack.
-      (write-request (build-request (string->uri "http://localhost"))
-                     socket)
-
       ;; Make sure the server reacts by closing the connection.  If it
       ;; fails to do that, this test hangs.
       (catch 'system-error
         (lambda ()
+          ;; Simulate an HTTP inter-protocol attack.
+          (write-request (build-request (string->uri "http://localhost"))
+                     socket)
+
           (let loop ((n 0))
             (display "(+ 40 2)\n(quit)\n" socket) ;trigger EPIPE
             (read-string socket)
