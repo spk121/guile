@@ -840,8 +840,8 @@ via alloc-frame.
 
 @deftypefn Instruction {} assert-nargs-ee/locals c12:@var{expected} c12:@var{nlocals}
 Equivalent to a sequence of @code{assert-nargs-ee} and
-@code{allocate-frame}.  The number of locals reserved is @var{expected}
-+ @var{nlocals}.
+@code{alloc-frame}.  The number of locals reserved is @var{expected} +
+@var{nlocals}.
 @end deftypefn
 
 
