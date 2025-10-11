@@ -1026,8 +1026,8 @@ graph.
 @node Instrumentation Instructions
 @subsubsection Instrumentation Instructions
 
-@deftypefn Instruction {} instrument-entry x24_@var{_} n32:@var{data}
-@deftypefnx Instruction {} instrument-loop x24_@var{_} n32:@var{data}
+@deftypefn Instruction {} instrument-entry x24:@var{_} n32:@var{data}
+@deftypefnx Instruction {} instrument-loop x24:@var{_} n32:@var{data}
 Increase execution counter for this function and potentially tier up to
 the next JIT level.  @var{data} is an offset to a structure recording
 execution counts and the next-level JIT code corresponding to this
