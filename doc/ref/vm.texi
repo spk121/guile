@@ -1670,6 +1670,9 @@ Divide the @code{f64} values @var{a} by @var{b}, and store the
 @node Comparison Instructions
 @subsubsection Comparison Instructions
 
+Comparison instructions set the comparison result, which may then be
+utilized by the @ref{Branch Instructions}.
+
 @deftypefn Instruction {} u64=? s12:@var{a} s12:@var{b}
 Set the comparison result to @var{EQUAL} if the @code{u64} values
 @var{a} and @var{b} are the same, or @code{NONE} otherwise.
