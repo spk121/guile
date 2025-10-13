@@ -1749,13 +1749,13 @@ than or equal to @var{b}, or @code{INVALID} otherwise.
 
 @deftypefn Instruction {} immediate-tag=? s24:@var{obj} c16:@var{mask} c16:@var{tag}
 Set the comparison result to @var{EQUAL} if the result of a bitwise
-@code{and} between the bits of @code{scm} value @var{a} and the
+@code{and} between the bits of @code{scm} value @var{obj} and the
 immediate @var{mask} is @var{tag}, or @code{NONE} otherwise.
 @end deftypefn
 
 @deftypefn Instruction {} heap-tag=? s24:@var{obj} c16:@var{mask} c16:@var{tag}
 Set the comparison result to @var{EQUAL} if the result of a bitwise
-@code{and} between the first word of @code{scm} value @var{a} and the
+@code{and} between the first word of @code{scm} value @var{obj} and the
 immediate @var{mask} is @var{tag}, or @code{NONE} otherwise.
 @end deftypefn
 
