@@ -2959,7 +2959,7 @@ uses)."
 
 (define (module-use-interfaces! module interfaces)
   "Same as MODULE-USE!, but only notifies module observers after all
-interfaces are added to the inports list."
+interfaces are added to the imports list."
   (let* ((cur (module-uses module))
          (new (let lp ((in interfaces) (out '()))
                 (if (null? in)
