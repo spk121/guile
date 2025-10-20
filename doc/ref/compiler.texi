@@ -93,7 +93,7 @@ Looks up a language named @var{name}, autoloading it if necessary.
 Languages are autoloaded by looking for a variable named @var{name} in
 a module named @code{(language @var{name} spec)}.
 
-The language object will be returned, or @code{#f} if there does not
+The language object will be returned, or an error will be raised if there does not
 exist a language with that name.
 @end deffn
 
