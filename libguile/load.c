@@ -72,35 +72,75 @@
 
 /* Loading a file, given an absolute filename.  */
 
-/* Hook to run when we load a file, perhaps to announce the fact somewhere.
-   Applied to the full name of the file.  */
+/* Hook to run when we load a file, perhaps to announce the fact
+   somewhere. */
 static SCM *scm_loc_load_hook;
+static SCM *scm_loc_load_hook_with_arguments;
 
 /* The current reader (a fluid).  */
 static SCM the_reader = SCM_BOOL_F;
 
+/* Helper to call %load-hook. */
+static void call_hook (SCM hook, SCM filename) {
+  if (scm_is_false (hook))
+    return;
+  scm_call_1(hook, filename);
+}
 
-SCM_DEFINE (scm_primitive_load, "primitive-load", 1, 0, 0, 
-           (SCM filename),
+/* Helper to call %load-hook-with-arguments. */
+static void call_hook_with_arguments (SCM hook, SCM filename, SCM depth) {
+  if (scm_is_false (hook))
+    return;
+  scm_call_3(hook, filename, scm_from_utf8_keyword("depth"), depth);
+}
+
+SCM_DEFINE (scm_primitive_load, "primitive-load", 0, 0, 1,
+            (SCM args),
 	    "Load the file named @var{filename} and evaluate its contents in\n"
 	    "the top-level environment. The load paths are not searched;\n"
 	    "@var{filename} must either be a full pathname or be a pathname\n"
 	    "relative to the current directory.  If the  variable\n"
 	    "@code{%load-hook} is defined, it should be bound to a procedure\n"
 	    "that will be called before any code is loaded.  See the\n"
-	    "documentation for @code{%load-hook} later in this section.")
+	    "documentation for @code{%load-hook} later in this section.\n"
+            "A second optional argument can be used to specify the depth\n"
+            "at which the module was loaded.")
 #define FUNC_NAME s_scm_primitive_load
 {
+  SCM filename;
+  SCM depth;
   SCM hook = *scm_loc_load_hook;
+  SCM hook_with_arguments = *scm_loc_load_hook_with_arguments;
   SCM ret = SCM_UNSPECIFIED;
+
+  if (scm_is_string (args)) {
+      /* C code written for 3.0.10 and earlier expects this function to
+         take a single argument (the file name).  */
+      filename = args;
+      depth = scm_from_int(0);
+    }
+  else {
+    /* Starting from 3.0.11, this function takes 1 required and 1
+       optional arguments. */
+    long len;
+
+    SCM_VALIDATE_LIST_COPYLEN (SCM_ARG1, args, len);
+    if (len < 1 || len > 2)
+      scm_error_num_args_subr (FUNC_NAME);
+
+    filename = SCM_CAR (args);
+    SCM_VALIDATE_STRING (SCM_ARG1, filename);
+
+    depth = len > 1 ? SCM_CADR (args) : scm_from_int(0);
+  }
 
   SCM_VALIDATE_STRING (1, filename);
   if (scm_is_true (hook) && scm_is_false (scm_procedure_p (hook)))
     SCM_MISC_ERROR ("value of %load-hook is neither a procedure nor #f",
 		    SCM_EOL);
 
-  if (!scm_is_false (hook))
-    scm_call_1 (hook, filename);
+  call_hook (hook, filename);
+  call_hook_with_arguments (hook_with_arguments, filename, depth);
 
   {
     SCM port;
@@ -1163,12 +1203,15 @@ SCM_DEFINE (scm_primitive_load_path, "primitive-load-path", 0, 0, 1,
             "depending on the optional second argument,\n"
             "@var{exception_on_not_found}.  If it is @code{#f}, @code{#f}\n"
             "will be returned.  If it is a procedure, it will be called\n"
-            "with no arguments.  Otherwise an error is signaled.")
+            "with no arguments.  Otherwise an error is signaled.\n\n"
+            "A third optional argument may be provided to track module depth.")
 #define FUNC_NAME s_scm_primitive_load_path
 {
   SCM filename, exception_on_not_found;
   SCM full_filename, compiled_thunk;
+  SCM depth;
   SCM hook = *scm_loc_load_hook;
+  SCM hook_with_arguments = *scm_loc_load_hook_with_arguments;
   struct stat stat_source, stat_compiled;
   int found_stale_compiled_file = 0;
 
@@ -1176,27 +1219,36 @@ SCM_DEFINE (scm_primitive_load_path, "primitive-load-path", 0, 0, 1,
     SCM_MISC_ERROR ("value of %load-hook is neither a procedure nor #f",
 		    SCM_EOL);
 
+  if (scm_is_true (hook_with_arguments)
+      && scm_is_false (scm_procedure_p (hook_with_arguments)))
+    SCM_MISC_ERROR
+      ("value of %load-hook-with-arguments is neither a procedure nor #f",
+       SCM_EOL);
+
   if (scm_is_string (args))
     {
       /* C code written for 1.8 and earlier expects this function to take a
 	 single argument (the file name).  */
       filename = args;
       exception_on_not_found = SCM_UNDEFINED;
+      depth = scm_from_int (0);
     }
   else
     {
-      /* Starting from 1.9, this function takes 1 required and 1 optional
-	 argument.  */
+      /* Starting from 1.9, this function takes 1 required and 1
+	 optional arguments.  From 3.0.11, this function takes 1
+	 required and 2 optional arguments.  */
       long len;
 
       SCM_VALIDATE_LIST_COPYLEN (SCM_ARG1, args, len);
-      if (len < 1 || len > 2)
+      if (len < 1 || len > 3)
 	scm_error_num_args_subr (FUNC_NAME);
 
       filename = SCM_CAR (args);
       SCM_VALIDATE_STRING (SCM_ARG1, filename);
 
       exception_on_not_found = len > 1 ? SCM_CADR (args) : SCM_UNDEFINED;
+      depth = len > 2 ? SCM_CADDR (args) : scm_from_int (0);
     }
 
   if (SCM_UNBNDP (exception_on_not_found))
@@ -1252,8 +1304,8 @@ SCM_DEFINE (scm_primitive_load_path, "primitive-load-path", 0, 0, 1,
                         scm_list_1 (filename));
     }
 
-  if (!scm_is_false (hook))
-    scm_call_1 (hook, full_filename);
+  call_hook(hook, full_filename);
+  call_hook_with_arguments(hook_with_arguments, full_filename, depth);
 
   if (scm_is_true (compiled_thunk))
     return scm_call_0 (compiled_thunk);
@@ -1264,7 +1316,7 @@ SCM_DEFINE (scm_primitive_load_path, "primitive-load-path", 0, 0, 1,
       if (scm_is_true (freshly_compiled))
         return scm_call_0 (scm_load_thunk_from_file (freshly_compiled));
       else
-        return scm_primitive_load (full_filename);
+        return scm_primitive_load (scm_list_2 (full_filename, depth));
     }
 }
 #undef FUNC_NAME
@@ -1352,6 +1404,8 @@ scm_init_load ()
     = SCM_VARIABLE_LOC (scm_c_define ("%load-compiled-extensions",
 				      scm_list_1 (scm_from_utf8_string (".go"))));
   scm_loc_load_hook = SCM_VARIABLE_LOC (scm_c_define ("%load-hook", SCM_BOOL_F));
+  scm_loc_load_hook_with_arguments = SCM_VARIABLE_LOC
+    (scm_c_define ("%load-hook-with-arguments", SCM_BOOL_F));
 
   scm_loc_compile_fallback_path
     = SCM_VARIABLE_LOC (scm_c_define ("%compile-fallback-path", SCM_BOOL_F));

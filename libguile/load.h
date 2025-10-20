@@ -27,7 +27,7 @@
 
 SCM_API SCM scm_parse_path (SCM path, SCM tail);
 SCM_API SCM scm_parse_path_with_ellipsis (SCM path, SCM base);
-SCM_API SCM scm_primitive_load (SCM filename);
+SCM_API SCM scm_primitive_load (SCM filename_and_depth);
 SCM_API SCM scm_c_primitive_load (const char *filename);
 SCM_API SCM scm_sys_package_data_dir (void);
 SCM_API SCM scm_sys_library_dir (void);
@@ -36,7 +36,7 @@ SCM_API SCM scm_sys_global_site_dir (void);
 SCM_API SCM scm_sys_site_ccache_dir (void);
 SCM_API SCM scm_search_path (SCM path, SCM filename, SCM rest);
 SCM_API SCM scm_sys_search_load_path (SCM filename);
-SCM_API SCM scm_primitive_load_path (SCM filename_and_exception_on_not_found);
+SCM_API SCM scm_primitive_load_path (SCM filename_and_exception_on_not_found_and_depth);
 SCM_API SCM scm_c_primitive_load_path (const char *filename);
 SCM_INTERNAL SCM scm_sys_warn_auto_compilation_enabled (void);
 SCM_INTERNAL void scm_init_load_path (void);

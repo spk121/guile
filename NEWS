@@ -295,6 +295,21 @@ to ensure name uniqueness.
 
 * New interfaces and functionality
 
+** New %load-hook-with-arguments procedure
+
+This can be used in place of `%load-hook`.  Extra arguments such
+as `#:depth` are applied to the hook, exposing more details about the
+loading of modules.  More specifically, the `#:depth` keyword argument
+is used to show the depth level of the module being load in the output
+when setting `%load-verbosely-with-arguments` to #t, which makes it
+easier to inspect which module caused others to be loaded.
+
+When overriding the default `%load-hook-with-arguments` procedure, you
+should use the signature below to ensure forward compatibility:
+
+(define* (%load-hook-with-arguments file #:key (depth 0) #:allow-other-keys)
+ ...)
+
 ** R6RS custom textual ports
 
 Guile finally supports this venerable R6RS interface; see "Custom Ports"

@@ -371,7 +371,6 @@
 (asin (groups Scheme) (scan-data "#<procedure asin (z)>"))
 (asinh (groups Scheme) (scan-data "#<procedure asinh (z)>"))
 (assert-defmacro?! (groups Scheme) (scan-data "#<procedure assert-defmacro?! (m)>"))
-(assert-load-verbosity (groups Scheme) (scan-data "#<procedure assert-load-verbosity (v)>"))
 (assert-repl-print-unspecified (groups Scheme) (scan-data "#<procedure assert-repl-print-unspecified (v)>"))
 (assert-repl-silence (groups Scheme) (scan-data "#<procedure assert-repl-silence (v)>"))
 (assert-repl-verbosity (groups Scheme) (scan-data "#<procedure assert-repl-verbosity (v)>"))

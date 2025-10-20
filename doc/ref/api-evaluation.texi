@@ -867,14 +867,21 @@ calling @code{load-compiled} on the resulting file is equivalent to
 calling @code{load} on the source file.
 @end deffn
 
-@deffn {Scheme Procedure} primitive-load filename
+@deffn {Scheme Procedure} primitive-load filename [depth]
 @deffnx {C Function} scm_primitive_load (filename)
 Load the file named @var{filename} and evaluate its contents in the
 top-level environment.  @var{filename} must either be a full pathname or
 be a pathname relative to the current directory.  If the variable
 @code{%load-hook} is defined, it should be bound to a procedure that
 will be called before any code is loaded.  See the documentation for
-@code{%load-hook} later in this section.
+@code{%load-hook} later in this section.  Another hook is also honored:
+@code{%load-hook-with-arguments}.  That variant receives extra keyword
+arguments such as @var{#:depth}, which can be used to track the depth at
+which modules are loaded.
+
+For compatibility with Guile 3.0.10 and earlier, the C function takes
+only one argument, which can be either a string (the file name) or an
+argument list.
 @end deffn
 
 @deftypefn {C Function} SCM scm_c_primitive_load (const char *filename)
@@ -913,14 +920,64 @@ used by all of the loading functions (@code{load} and
 @code{primitive-load}, and @code{load-from-path} and
 @code{primitive-load-path} documented in the next section).
 
-For example an application can set this to show what's loaded,
+The default @code{%load-hook} is bound to the @code{%load-announce}
+procedure, which simply prints the module file names as they get loaded
+@emph{if} the @var{%load-verbosely} variable is set to @code{#t} as
+documented below.
+
+@vindex %load-verbosely, to enable default %load-hook output
+This variable can be set to @code{#t} to enable the default
+@code{load-hook} output.
+
+@end defvar
+
+@defvar %load-hook-with-arguments
+
+Like @code{%load-hook}, except it gets applied extra keyword arguments.
+Currently, a single extra keyword argument is applied, @code{#:depth}.
+
+The default @code{%load-hook-with-arguments} is defined as:
+
+@lisp
+(define* (%load-hook file #:key (depth 0) #:allow-other-keys)
+  (when %load-verbosely
+    (let* ((pad-count (- 3 (string-length (number->string depth))))
+           (pad (if (> pad-count 0)
+                    (make-string pad-count #\space)
+                    ""))
+           (visual-depth (if (> depth 0)
+                             (make-string depth #\space)
+                             "")))
+      (format (current-warning-port)
+              ";;; loading ~a~a ~a~a~%" pad depth visual-depth file)
+      (force-output (current-warning-port)))))
+@end lisp
+
+It is important to define your @code{%load-hook-with-arguments}
+procedure with at least the @code{#:depth} keyword argument as well as
+the @code{#:allow-other-keys} modifier for forward compatibility in case
+new keyword arguments get applied to the hook in future Guile releases.
+
+@vindex %load-verbosely-with-arguments, to enable default %load-hook-with-arguments output
+This is like @code{%load-verbosely}, but for use with
+@code{%load-hook-with-arguments}.  You can see from the above procedure,
+an application can thus set the @code{%load-verbosely} variable to
+@code{#t} to enable the default load hook output, which produces
+something like:
 
 @example
-(set! %load-hook (lambda (filename)
-                   (format #t "Loading ~a ...\n" filename)))
-(load-from-path "foo.scm")
-@print{} Loading /usr/local/share/guile/site/foo.scm ...
+@print{};;; loading   0 guix/gnu/packages/abiword.scm
+@print{};;; loading   1  guix/build-system/glib-or-gtk.scm
+@print{};;; loading   2   guix/build/glib-or-gtk-build-system.scm
+@print{};;; loading   3    guix/build/gnu-build-system.scm
+@print{};;; loading   4     guix/build/gremlin.scm
+@print{};;; loading   5      guix/elf.scm
 @end example
+
+The number corresponds to the depth at which the module was loaded,
+which is a recursive process.  The indentation of the file name loaded
+corresponds to that depth value, to make it easy to visually discern
+which module caused others to be loaded.
 @end defvar
 
 @deffn {Scheme Procedure} current-load-port
@@ -971,7 +1028,7 @@ It's better to use @code{add-to-load-path} than to modify
 @code{%load-path} directly, because @code{add-to-load-path} takes care
 of modifying the path both at compile-time and at run-time.
 
-@deffn {Scheme Procedure} primitive-load-path filename [exception-on-not-found]
+@deffn {Scheme Procedure} primitive-load-path filename [exception-on-not-found] [depth]
 @deffnx {C Function} scm_primitive_load_path (filename)
 Search @code{%load-path} for the file named @var{filename} and
 load it into the top-level environment.  If @var{filename} is a
@@ -985,7 +1042,9 @@ second argument, @var{exception-on-not-found}.  If it is @code{#f},
 @code{#f} will be returned.  If it is a procedure, it will be called
 with no arguments.  (This allows a distinction to be made between
 exceptions raised by loading a file, and exceptions related to the
-loader itself.)  Otherwise an error is signaled.
+loader itself.)  Otherwise an error is signaled.  An optional third
+argument, @var{depth}, can be specified to track the depth at which modules are
+loaded.
 
 For compatibility with Guile 1.8 and earlier, the C function takes only
 one argument, which can be either a string (the file name) or an

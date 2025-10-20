@@ -2266,7 +2266,8 @@ name extensions listed in %load-extensions."
     (set! %load-path (cons elt (delete elt %load-path)))))
 
 (define %load-verbosely #f)
-(define (assert-load-verbosity v) (set! %load-verbosely v))
+
+(define %load-verbosely-with-arguments #f)
 
 (define (%load-announce file)
   (if %load-verbosely
@@ -2279,6 +2280,21 @@ name extensions listed in %load-extensions."
           (force-output)))))
 
 (set! %load-hook %load-announce)
+
+(define* (%load-announce-with-arguments file #:key (depth 0) #:allow-other-keys)
+  (when %load-verbosely-with-arguments
+    (let* ((pad-count (- 3 (string-length (number->string depth))))
+           (pad (if (> pad-count 0)
+                    (make-string pad-count #\space)
+                    ""))
+           (visual-depth (if (> depth 0)
+                             (make-string depth #\space)
+                             "")))
+      (format (current-warning-port)
+              ";;; loading ~a~a ~a~a~%" pad depth visual-depth file)
+      (force-output (current-warning-port)))))
+
+(set! %load-hook-with-arguments %load-announce-with-arguments)
 
 
 
@@ -3282,6 +3298,10 @@ deterministic."
     (set-module-declarative?! m (user-modules-declarative?))
     m))
 
+;;; This parameter is used to track the depth at which modules are
+;;; loaded.
+(define %current-module-load-depth (make-parameter -1))
+
 ;; NOTE: This binding is used in libguile/modules.c.
 ;;
 (define resolve-module
@@ -3304,8 +3324,10 @@ deterministic."
              already)
             (autoload
              ;; Try to autoload the module, and recurse.
-             (try-load-module name version)
-             (resolve-module name #f #:ensure ensure))
+             (parameterize ((%current-module-load-depth
+                             (1+ (%current-module-load-depth))))
+               (try-load-module name version)
+               (resolve-module name #f #:ensure ensure)))
             (else
              ;; No module found (or if one was, it had no public interface), and
              ;; we're not autoloading. Make an empty module if #:ensure is true.
@@ -3614,7 +3636,8 @@ but it fails to load."
                        (call/ec
                         (lambda (abort)
                           (primitive-load-path (in-vicinity dir-hint name)
-                                               abort)
+                                               abort
+                                               (%current-module-load-depth))
                           (set! didit #t)))))))
                 (lambda () (set-autoloaded! dir-hint name didit)))
               didit))))))
@@ -4437,6 +4460,9 @@ when none is available, reading FILE-NAME with READER."
           (begin
             (if %load-hook
                 (%load-hook abs-file-name))
+            (if %load-hook-with-arguments
+                (%load-hook-with-arguments
+                 abs-file-name #:depth (%current-module-load-depth)))
             (compiled))
           (start-stack 'load-stack
                        (primitive-load abs-file-name)))))
