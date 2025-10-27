@@ -30,8 +30,8 @@ functionality, and Lightening wraps it all in a lightweight API.
 
 ## Supported targets
 
-Lightening can generate code for the x86-64, i686, ARMv7, AArch64 and RISC-V
-(RV64) architectures.  It supports the calling conventions of MS Windows,
+Lightening can generate code for the x86-64, i686, ARMv7, and AArch64
+architectures.  It supports the calling conventions of MS Windows,
 GNU/Linux, and Mac OS.
 
 On i686, Lightening requires SSE support.  On ARMv7, we require hardware
@@ -43,15 +43,13 @@ for under the supported architectures, for GNU/Linux; for a list of
 recent jobs, see [the CI
 page](https://gitlab.com/wingo/lightening/-/jobs).
 
-In Codeberg, Lightening is tested using the Woodpecker CI Codeberg provides;
-for a list of recent jobs, see [the CI
-page](https://ci.codeberg.org/repos/guile/lightening).
-
 ## Future targets
 
 Lightening has some inherited code from GNU Lightning for MIPS, PPC64,
 and s390.  Patches to adapt this code to the Lightening code structure
 are quite welcome.
+
+RISC-V support would be fun too.
 
 ## Status
 
