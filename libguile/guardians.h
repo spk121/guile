@@ -26,10 +26,6 @@
 
 SCM_API SCM scm_make_guardian (void);
 
-SCM_INTERNAL void scm_i_init_guardians_for_gc (void);
-SCM_INTERNAL void scm_i_identify_inaccessible_guardeds (void);
-SCM_INTERNAL int scm_i_mark_inaccessible_guardeds (void);
-
 SCM_INTERNAL void scm_init_guardians (void);
 
 #endif  /* SCM_GUARDIANS_H */
