@@ -142,6 +142,7 @@ INSTALL
 /meta/uninstalled-env
 /module/ice-9/eval.go.stamp
 /po/
+/test-suite/standalone/test-concurrent-init
 /test-suite/standalone/test-foreign-object-c
 /test-suite/standalone/test-pthread-create
 /test-suite/standalone/test-pthread-create-secondary
