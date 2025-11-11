@@ -200,7 +200,6 @@ scm_init_standard_ports ()
   scm_set_current_error_port
     (scm_standard_stream_to_port (2, isatty (2) ? "w0" : "w"));
   scm_set_current_warning_port (scm_current_error_port ());
-  scm_set_current_info_port (scm_current_error_port ());
 }
 
 

@@ -137,7 +137,6 @@ If FILE begins with `-' the -s switch is mandatory.
   --listen[=P]   listen on a local port or a path for REPL clients;
                  if P is not given, the default is local port 37146
   --statprof[=STYLE] profile using statprof and show results in STYLE
-  -I             silence informative diagnostics
   -q             inhibit loading of user init file
   --use-srfi=LS  load SRFI modules for the SRFIs in LS,
                  which is a list of numbers like \"2,13,14\"
@@ -385,9 +384,6 @@ If FILE begins with `-' the -s switch is mandatory.
            ((string=? "--r7rs" arg)
             (parse args
                    (cons '(install-r7rs!) out)))
-
-           ((string=? arg "-I")   ; silence diagnostics
-            (parse args (cons `(current-info-port (%make-void-port "w")) out)))
 
            ((string=? arg "--listen")   ; start a repl server
             (parse args

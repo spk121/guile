@@ -432,7 +432,6 @@ static SCM cur_inport_fluid = SCM_BOOL_F;
 static SCM cur_outport_fluid = SCM_BOOL_F;
 static SCM cur_errport_fluid = SCM_BOOL_F;
 static SCM cur_warnport_fluid = SCM_BOOL_F;
-static SCM cur_infoport_fluid = SCM_BOOL_F;
 static SCM cur_loadport_fluid = SCM_BOOL_F;
 
 SCM_DEFINE (scm_current_input_port, "current-input-port", 0, 0, 0,
@@ -484,18 +483,6 @@ SCM_DEFINE (scm_current_warning_port, "current-warning-port", 0, 0, 0,
 {
   if (scm_is_true (cur_warnport_fluid))
     return scm_fluid_ref (cur_warnport_fluid);
-  else
-    return SCM_BOOL_F;
-}
-#undef FUNC_NAME
-
-SCM_DEFINE (scm_current_info_port, "current-info-port", 0, 0, 0,
-            (void),
-	    "Return the port to which diagnostic information should be sent.")
-#define FUNC_NAME s_scm_current_info_port
-{
-  if (scm_is_true (cur_infoport_fluid))
-    return scm_fluid_ref (cur_infoport_fluid);
   else
     return SCM_BOOL_F;
 }
@@ -555,18 +542,6 @@ scm_set_current_warning_port (SCM port)
   SCM_VALIDATE_OPOUTPORT (1, port);
   scm_fluid_set_x (cur_warnport_fluid, port);
   return owarnp;
-}
-#undef FUNC_NAME
-
-SCM
-scm_set_current_info_port (SCM port)
-#define FUNC_NAME "set-current-info-port"
-{
-  SCM oinfop = scm_fluid_ref (cur_infoport_fluid);
-  port = SCM_COERCE_OUTPORT (port);
-  SCM_VALIDATE_OPOUTPORT (1, port);
-  scm_fluid_set_x (cur_infoport_fluid, port);
-  return oinfop;
 }
 #undef FUNC_NAME
 
@@ -4212,7 +4187,6 @@ scm_init_ice_9_ports (void)
   scm_c_define ("%current-output-port-fluid", cur_outport_fluid);
   scm_c_define ("%current-error-port-fluid", cur_errport_fluid);
   scm_c_define ("%current-warning-port-fluid", cur_warnport_fluid);
-  scm_c_define ("%current-info-port-fluid", cur_infoport_fluid);
 }
 
 void
@@ -4247,7 +4221,6 @@ scm_init_ports (void)
   cur_outport_fluid = scm_make_fluid ();
   cur_errport_fluid = scm_make_fluid ();
   cur_warnport_fluid = scm_make_fluid ();
-  cur_infoport_fluid = scm_make_fluid ();
   cur_loadport_fluid = scm_make_fluid ();
 
   default_port_encoding_var =
@@ -4286,8 +4259,4 @@ scm_init_ports (void)
                       (scm_t_subr) scm_current_error_port);
   scm_c_define_gsubr (s_scm_current_warning_port, 0, 0, 0,
                       (scm_t_subr) scm_current_warning_port);
-
-  /* Used by welcome and compiler routines. */
-  scm_c_define_gsubr (s_scm_current_info_port, 0, 0, 0,
-                      (scm_t_subr) scm_current_info_port);
 }

@@ -199,13 +199,6 @@ This is handy for tracing function calls, e.g.:
   (newline (current-warning-port))
   (car (last-pair stuff)))
 
-(define (info . stuff)
-  (newline (current-info-port))
-  (display ";;; INFO " (current-info-port))
-  (display stuff (current-info-port))
-  (newline (current-info-port))
-  (car (last-pair stuff)))
-
 
 
 ;;; {Features}
@@ -4387,15 +4380,15 @@ when none is available, reading FILE-NAME with READER."
            (load-thunk-from-file go-file-name)
            (begin
              (when gostat
-               (format (current-info-port)
+               (format (current-warning-port)
                        ";;; note: source file ~a\n;;;       newer than compiled ~a\n"
                        name go-file-name))
              (cond
               (%load-should-auto-compile
                (%warn-auto-compilation-enabled)
-               (format (current-info-port) ";;; compiling ~a\n" name)
+               (format (current-warning-port) ";;; compiling ~a\n" name)
                (let ((cfn (compile name)))
-                 (format (current-info-port) ";;; compiled ~a\n" cfn)
+                 (format (current-warning-port) ";;; compiled ~a\n" cfn)
                  (load-thunk-from-file cfn)))
               (else #f)))))
      #:warning "WARNING: compilation of ~a failed:\n" name))
