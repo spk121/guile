@@ -233,6 +233,7 @@ change.
 ** 'tmpfile' preserves O_CLOEXEC so children won't prevent removal on exit
 ** Concurrent 'scm_with_guile' invocations no longer risk segfaulting
    <https://bugs.gnu.org/79100>
+** 'spawn' should no longer risk segfaulting on at least FreeBSD
 
 
 Changes in 3.0.10 (since 3.0.9)
