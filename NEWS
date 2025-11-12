@@ -234,6 +234,7 @@ change.
 ** Concurrent 'scm_with_guile' invocations no longer risk segfaulting
    <https://bugs.gnu.org/79100>
 ** 'spawn' should no longer risk segfaulting on at least FreeBSD
+** A memory leak in 'spawn' has been fixed
 
 
 Changes in 3.0.10 (since 3.0.9)
