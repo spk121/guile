@@ -231,6 +231,8 @@ change.
    values that weren't compatible with a vtable.
    (<https://bugs.gnu.org/78789>)
 ** 'tmpfile' preserves O_CLOEXEC so children won't prevent removal on exit
+** Concurrent 'scm_with_guile' invocations no longer risk segfaulting
+   <https://bugs.gnu.org/79100>
 
 
 Changes in 3.0.10 (since 3.0.9)
