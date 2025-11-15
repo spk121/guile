@@ -52,12 +52,12 @@
 
 	  boolean? symbol? char? vector? null? pair? number? string? procedure?
 	  define define-syntax syntax-rules lambda let let* let-values
-	  let*-values letrec letrec* begin quote lambda if set! cond case or 
+	  let*-values letrec letrec* begin quote if set! cond case or 
           and not eqv? equal? eq? + - * / max min abs numerator denominator gcd
           lcm floor ceiling truncate round rationalize real-part imag-part 
 	  make-rectangular angle div mod div-and-mod div0 mod0 div0-and-mod0
 	  expt exact-integer-sqrt sqrt exp log sin cos tan asin acos atan 
-	  make-polar magnitude angle complex? real? rational? integer? exact? 
+	  make-polar magnitude complex? real? rational? integer? exact? 
 	  inexact? real-valued? rational-valued? integer-valued? zero? 
 	  positive? negative? odd? even? nan? finite? infinite? exact inexact =
 	  < > <= >= number->string string->number boolean=? cons car cdr caar 
@@ -68,12 +68,12 @@
 	  char->integer integer->char char=? char<? char>? char<=? char>=?
 	  make-string string string-length string-ref string=? string<? string>?
 	  string<=? string>=? substring string-append string->list list->string
-	  string-for-each string-copy vector? make-vector vector vector-length 
+	  string-for-each string-copy make-vector vector vector-length 
 	  vector-ref vector-set! vector->list list->vector vector-fill! 
 	  vector-map vector-for-each error assertion-violation assert
 	  call-with-current-continuation call/cc call-with-values dynamic-wind
 	  values apply quasiquote unquote unquote-splicing let-syntax 
-	  letrec-syntax syntax-rules identifier-syntax else => _ ...
+	  letrec-syntax identifier-syntax else => _ ...
 
 	  ;; (rnrs bytevectors)
 	  
@@ -185,11 +185,9 @@
           open-string-input-port open-string-output-port
           call-with-bytevector-output-port
           call-with-string-output-port
-          latin-1-codec utf-8-codec utf-16-codec
           open-file-input-port open-file-output-port open-file-input/output-port
           make-custom-textual-output-port
-          call-with-string-output-port
-	  output-port-buffer-mode flush-output-port put-string
+          output-port-buffer-mode flush-output-port
           get-char get-datum get-line get-string-all get-string-n get-string-n!
           lookahead-char
           put-char put-datum put-string
