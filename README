@@ -151,6 +151,7 @@ FreeBSD 11.0:
     - pkgconf : provides pkg-config
     - gmake : /usr/bin/make does not work
     - boehm-gc-threaded : needed for threaded support
+    - texinfo: needed for makeinfo
 
   Configure as:
 
