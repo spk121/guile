@@ -27,18 +27,6 @@ GUILE_2.0
     # functions or macros).
     scm_*;
 
-    # GDB interface.
-    gdb_options;
-    gdb_language;
-    gdb_result;
-    gdb_output;
-    gdb_output_length;
-    gdb_maybe_valid_type_p;
-    gdb_read;
-    gdb_eval;
-    gdb_print;
-    gdb_binding;
-
   local:
     *;
 };
