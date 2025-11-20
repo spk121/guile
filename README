@@ -162,6 +162,21 @@ FreeBSD 11.0:
 
     ./configure --without-threads
 
+Big-endian, 32-bit systems:
+  A known issue may prevent building on 32-bit, big-endian systems:
+  https://debbugs.gnu.org/45214
+
+  You can work around this problem by changing GUILE_OPTIMIZATIONS in
+  bootstrap/Makefile.am from this:
+
+    GUILE_OPTIMIZATIONS = -O1
+
+  to this:
+
+    GUILE_OPTIMIZATIONS = -O1 -Oresolve-primitives -Ocps
+
+  before building.
+
 Guile specific flags Accepted by Configure =================================
 
 If you run the configure script with no arguments, it should examine
