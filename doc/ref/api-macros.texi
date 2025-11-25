@@ -678,8 +678,18 @@ Scheme datum.
 @end deffn
 
 In this case we want to introduce @code{it} in the context of the whole
-expression, so we can create a syntax object as @code{(datum->syntax x 'it)},
-where @code{x} is the whole expression, as passed to the transformer procedure.
+expression, so we can create a syntax object as @code{(datum->syntax
+#'aif 'it)}, where @code{#'aif} is an identifier in the context of
+invocation site, as extracted by the @code{syntax-case}.
+
+Note that the way like @code{(datum->syntax @var{x} 'it)} (@var{x} is
+the input argument of macro transformer) to introduce hygiene-bending
+syntax is unreliable: Operationally, the input of a macro transformer
+only contains the @emph{antimark} of current macro use, it doesn't
+contain full lexical context of the macro invocation site. The Chapter
+12.1 of @cite{Revised@math{^6} Report on the Algorithmic Language
+Scheme} contains a description of the hygiene model used by Guile
+expander.
 
 Here's another solution that doesn't work:
 
@@ -688,8 +698,8 @@ Here's another solution that doesn't work:
 (define-syntax aif
   (lambda (x)
     (syntax-case x ()
-      ((_ test then else)
-       (let ((it (datum->syntax x 'it)))
+      ((aif test then else)
+       (let ((it (datum->syntax #'aif 'it)))
          #'(let ((it test))
              (if it then else)))))))
 @end example
@@ -708,10 +718,10 @@ variable environment, and we can do so using @code{syntax-case} itself:
 (define-syntax aif
   (lambda (x)
     (syntax-case x ()
-      ((_ test then else)
+      ((aif test then else)
        ;; invoking syntax-case on the generated
        ;; syntax object to expose it to `syntax'
-       (syntax-case (datum->syntax x 'it) ()
+       (syntax-case (datum->syntax #'aif 'it) ()
          (it
            #'(let ((it test))
                (if it then else))))))))
@@ -732,8 +742,8 @@ lexical context of @var{exp} @enddots{}.
 (define-syntax aif
   (lambda (x)
     (syntax-case x ()
-      ((_ test then else)
-       (with-syntax ((it (datum->syntax x 'it)))
+      ((aif test then else)
+       (with-syntax ((it (datum->syntax #'aif 'it)))
          #'(let ((it test))
              (if it then else)))))))
 @end example
