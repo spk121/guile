@@ -1,4 +1,4 @@
-;;; Copyright © 2023-2024 Free Software Foundation, Inc.
+;;; Copyright © 2023-2025 Free Software Foundation, Inc.
 ;;;
 ;;; This file is part of GNU Guile.
 ;;;
@@ -115,9 +115,6 @@
                      texlive-scheme-basic         ;for "make pdf"
                      texlive-epsf
                      gperf
-                     git
-                     gdb
-                     strace
                      readline
                      lzip
 
