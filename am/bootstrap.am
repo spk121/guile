@@ -347,6 +347,7 @@ SOURCES =					\
   srfi/srfi-45.scm				\
   srfi/srfi-60.scm				\
   srfi/srfi-64.scm				\
+  srfi/srfi-64/automake.scm 			\
   srfi/srfi-67.scm				\
   srfi/srfi-69.scm				\
   srfi/srfi-71.scm				\
