@@ -128,6 +128,8 @@ assert-no-store-file-names:
 	  exit 1 ;								\
 	fi
 
+# Unless GUILE-VERSION changes or configure runs, .version is intended
+# to remain stale in a source tree until removed.  See git-version-gen.
 BUILT_SOURCES += $(top_srcdir)/.version
 $(top_srcdir)/.version:
 	echo $(VERSION) > $@-t && mv $@-t $@

@@ -404,6 +404,14 @@ Interesting files include:
 - INSTALL, which contains general instructions for building/installing Guile.
 - NEWS, which describes user-visible changes since the last release of Guile.
 
+The components of Guile's version are set in GUILE-VERSION and the
+version itself is determined by git-version-gen.  In the source tree,
+the "current" version is cached in .version, and anything that should be
+affected by version changes should depend on that.  Note that .version
+intentionally won't change until it is manually removed, configure runs
+again, or GUILE-VERSION changes.  See git-version-gen for further
+information.
+
 Files are usually installed according to the prefix specified to
 configure, /usr/local by default.  Building and installing gives you:
 
