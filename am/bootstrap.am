@@ -447,6 +447,8 @@ NOCOMP_SOURCES =				\
   ice-9/quasisyntax.scm				\
   srfi/srfi-42/ec.scm				\
   srfi/srfi-67/compare.scm			\
+  srfi/srfi-207/upstream/base64.scm		\
+  srfi/srfi-207/upstream/bytestrings-impl.scm 	\
   system/base/lalr.upstream.scm			\
   system/repl/describe.scm			\
   sxml/sxml-match.ss				\
