@@ -37,6 +37,12 @@ install-exec-hook:
 	cd $(DESTDIR)$(bindir) && rm -f "$$guile_tools" &&	\
 	$(LN_S) "$$guild" "$$guile_tools"
 
+# Remove the manual symlink created by install-exec-hook
+uninstall-hook:
+	guile_tools="`echo $(ECHO_N) guile-tools		\
+	   | $(SED) -e '$(program_transform_name)'`" ;		\
+	rm -f "$(DESTDIR)$(bindir)/$$guile_tools"
+
 pkgconfig_DATA = guile-$(GUILE_EFFECTIVE_VERSION).pc
 
 ## FIXME: in the future there will be direct automake support for
