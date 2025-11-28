@@ -157,7 +157,7 @@ FreeBSD 11.0:
 
     ./configure --with-bdw-gc=bdw-gc-threaded
 
-  Alternately if you want a Guile without threads, then install boehm-gc
+  Alternatively, if you want a Guile without threads, then install boehm-gc
   and configure as:
 
     ./configure --without-threads

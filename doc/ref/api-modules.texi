@@ -1044,7 +1044,7 @@ but care should be taken to set this parameter when the modules are
 compiled, e.g. via @code{(eval-when (expand) (user-modules-declarative?
 #f))}.  @xref{Eval When}.
 
-Alternately you can prevent declarative-definition optimizations by
+Alternatively, you can prevent declarative-definition optimizations by
 compiling at the @code{-O1} optimization level instead of the default
 @code{-O2}, or via explicitly passing @code{-Ono-letrectify} to the
 @code{guild compile} invocation.  @xref{Compilation}, for more on

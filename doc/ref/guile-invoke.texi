@@ -188,7 +188,7 @@ assumed to be the file name of a UNIX domain socket on which to listen.
 If @var{p} is not given, the default is local port 37146.  If you look
 at it upside down, it almost spells ``Guile''.  If you have netcat
 installed, you should be able to @kbd{nc localhost 37146} and get a
-Guile prompt.  Alternately you can fire up Emacs and connect to the
+Guile prompt.  Alternatively, you can fire up Emacs and connect to the
 process; see @ref{Using Guile in Emacs} for more details.
 
 @quotation Note

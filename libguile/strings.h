@@ -75,7 +75,7 @@
      substring of the string.  Do not call scm_i_string_stop_writing
      for this pointer.
 
-   - Alternately, scm_i_string_ref and scm_i_string_set_x can be used
+   - Alternatively, scm_i_string_ref and scm_i_string_set_x can be used
      to read and write strings without worrying about whether the
      string is narrow or wide.  scm_i_string_set_x still needs to be
      bracketed by scm_i_string_start_writing and

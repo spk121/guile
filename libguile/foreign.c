@@ -462,7 +462,7 @@ SCM_DEFINE (scm_pointer_to_string, "pointer->string", 1, 2, 0,
 SCM_DEFINE (scm_alignof, "alignof", 1, 0, 0, (SCM type),
             "Return the alignment of @var{type}, in bytes.\n\n"
             "@var{type} should be a valid C type, like @code{int}.\n"
-            "Alternately @var{type} may be the symbol @code{*}, in which\n"
+            "Alternatively, @var{type} may be the symbol @code{*}, in which\n"
             "case the alignment of a pointer is returned. @var{type} may\n"
             "also be a list of types, in which case the alignment of a\n"
             "@code{struct} with ABI-conventional packing is returned.")
@@ -538,7 +538,7 @@ SCM_DEFINE (scm_alignof, "alignof", 1, 0, 0, (SCM type),
 SCM_DEFINE (scm_sizeof, "sizeof", 1, 0, 0, (SCM type),
             "Return the size of @var{type}, in bytes.\n\n"
             "@var{type} should be a valid C type, like @code{int}.\n"
-            "Alternately @var{type} may be the symbol @code{*}, in which\n"
+            "Alternatively, @var{type} may be the symbol @code{*}, in which\n"
             "case the size of a pointer is returned. @var{type} may also\n"
             "be a list of types, in which case the size of a @code{struct}\n"
             "with ABI-conventional packing is returned.")

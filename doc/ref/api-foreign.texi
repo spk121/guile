@@ -339,7 +339,7 @@ Note that the new primitives that the extension adds to Guile with
 the other mechanisms are placed into the module that is current when the
 @code{scm_c_define_gsubr} is executed, so to be clear about what goes
 where it's best to include the @code{load-extension} in a module, as
-above.  Alternately, the C code can use @code{scm_c_define_module} to
+above.  Alternatively, the C code can use @code{scm_c_define_module} to
 specify which module is being created:
 
 @smallexample
@@ -777,7 +777,7 @@ some primitives to support this.
 Return the size of @var{type}, in bytes.
 
 @var{type} should be a valid C type, like @code{int}.
-Alternately @var{type} may be the symbol @code{*}, in which
+Alternatively, @var{type} may be the symbol @code{*}, in which
 case the size of a pointer is returned. @var{type} may
 also be a list of types, in which case the size of a
 @code{struct} with ABI-conventional packing is returned.
@@ -788,7 +788,7 @@ also be a list of types, in which case the size of a
 Return the alignment of @var{type}, in bytes.
 
 @var{type} should be a valid C type, like @code{int}.
-Alternately @var{type} may be the symbol @code{*}, in which
+Alternatively, @var{type} may be the symbol @code{*}, in which
 case the alignment of a pointer is returned. @var{type} may
 also be a list of types, in which case the alignment of a
 @code{struct} with ABI-conventional packing is returned.

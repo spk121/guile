@@ -356,7 +356,7 @@
 ;;      the types don't match. In that case the arguments are all on the
 ;;      stack, and nothing else is on the stack.
 ;;
-;;   3. Alternately it's possible that we're between a primitive call
+;;   3. Alternatively, it's possible that we're between a primitive call
 ;;      and its associated return.  In that case, we won't be able to
 ;;      say anything at all.
 
