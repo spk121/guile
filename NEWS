@@ -236,6 +236,19 @@ change.
 ** 'spawn' should no longer risk segfaulting on at least FreeBSD
 ** A memory leak in 'spawn' has been fixed
 
+* Thanks to (at least)
+
+Adam Faiz, Andrew McNulty, Andy Wingo, Arne Babenhauserheide, Arun
+Isaac, Brennan Vincent, Dale P. Smith, Daniel Llorens, Daphne
+Preston-Kendal, David Thompson, Ekaitz Zarraga, Francesco
+P. Lovergine, Hannes Müller, Helmut Eller, Ido Yariv, Jessica Tallon,
+Jonas Hahnfeld, Juliana Sims, Ludovic Courtès, Matthew Wette, Maxim
+Cournoyer, Michael Gran, Michael Käppler, Mikael Djurfeldt, Morgan
+Smith, Natanael Copa, Nikolaos Chatzikonstantinou, Noé Lopez, Olivier
+Dion, Richard Sent, Rob Browning, Simon Josefsson, Taylan Kammer,
+Thomas Klausner, Tomas Volf, Werner Lemberg, Yuval Langer, Zheng
+Junjie, Zhu Zihao, a aa, and euouae.
+
 
 Changes in 3.0.10 (since 3.0.9)
 
