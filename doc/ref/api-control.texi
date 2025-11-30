@@ -590,7 +590,12 @@ continuation.  A common use of escape continuations is when handling an
 exception (@pxref{Exceptions}).
 
 The constructs below are syntactic sugar atop prompts to simplify the
-use of escape continuations.
+use of escape continuations.  They are found within the @code{(ice-9
+control)} module.
+
+@example
+(use-modules (ice-9 control))
+@end example
 
 @deffn {Scheme Procedure} call-with-escape-continuation proc
 @deffnx {Scheme Procedure} call/ec proc
@@ -628,12 +633,8 @@ This is equivalent to
 @code{(call/ec (lambda (@var{k}) @var{body} @dots{}))}.
 @end deffn
 
-Additionally there is another helper primitive exported by @code{(ice-9
-control)}, so load up that module for @code{suspendable-continuation?}:
-
-@example
-(use-modules (ice-9 control))
-@end example
+Additionally, there is another helper primitive exported by @code{(ice-9
+control)}.
 
 @deffn {Scheme Procedure} suspendable-continuation? tag
 Return @code{#t} if a call to @code{abort-to-prompt} with the prompt tag
