@@ -235,6 +235,7 @@ change.
    <https://bugs.gnu.org/79100>
 ** 'spawn' should no longer risk segfaulting on at least FreeBSD
 ** A memory leak in 'spawn' has been fixed
+** Issues preventing 'make check' from succeeding on FreeBSD have been fixed
 
 * Thanks to (at least)
 
