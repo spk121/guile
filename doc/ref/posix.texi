@@ -1223,10 +1223,26 @@ valid separators.  Thus, programs should not assume that
 separator---e.g., when extracting the components of a file name.
 @end defvr
 
-@deffn {Scheme Procedure} in-vicinity @var{directory} @var{file}
-Concatenate @var{directory} and @var{file}, adding
+@deffn {Scheme Procedure} in-vicinity @var{directory} @var{file-name} @code{.} @var{rest}
+Concatenate @var{directory} and @var{file-name}, adding
 @code{file-name-separator-string} (by default slash) in between if it is
-not already present.  This helps create file names.
+-not already present.  If the optional @var{rest} is non-@code{null},
+assume more file-name parts and concatenate them too.  This helps create
+file names.
+
+@lisp
+(define sysconfdir "/etc")
+@dots{}
+(in-vicinity sysconfdir "hostname")
+@result{} "/etc/hostname"
+
+(define prefix "/usr")
+@dots{}
+(let ((program "env"))
+  (in-vicinity prefix "bin" program))
+@result{} "/usr/bin/env"
+@end lisp
+
 @end deffn
 
 @node User Information

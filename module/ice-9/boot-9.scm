@@ -1,6 +1,6 @@
 ;;; -*- mode: scheme; coding: utf-8; -*-
 
-;;;; Copyright (C) 1995-2014, 2016-2025  Free Software Foundation, Inc.
+;;;; Copyright (C) 1995-2014, 2016-2026  Free Software Foundation, Inc.
 ;;;;
 ;;;; This library is free software; you can redistribute it and/or
 ;;;; modify it under the terms of the GNU Lesser General Public
@@ -2173,20 +2173,29 @@ non-locally, that exit determines the continuation."
                (file-name-separator-at-index? 2)
                (file-name-separator-at-index? 0)))))))
 
-(define (in-vicinity directory file)
-  "Concatenate @var{directory} and @var{file}, adding
+(define (in-vicinity directory file-name . rest)
+  "Concatenate @var{directory} and @var{file-name}, adding
 @code{file-name-separator-string} (by default slash) in between if it is
-not already present.  This helps create file names."
-  (let ((tail (let ((len (string-length directory)))
-                (if (zero? len)
-                    #f
-                    (string-ref directory (- len 1))))))
-    (string-append directory
-                   (if (or (not tail) (file-name-separator? tail))
-                       ""
-                       file-name-separator-string)
-                   file)))
-
+not already present.  If the optional @var{rest} is non-@code{null}
+set, assume more file-name parts and concatenate them too.  This helps
+create file names."
+  (let* ((tail (let ((len (string-length directory)))
+                 (if (zero? len)
+                     #f
+                     (string-ref directory (- len 1)))))
+         (file-name (string-append
+                     directory
+                     (if (or (not tail)
+                             (file-name-separator? tail)
+                             (and (not (string-null? file-name))
+                                  (file-name-separator?
+                                   (string-ref file-name 0))))
+                         ""
+                         file-name-separator-string)
+                     file-name)))
+    (if (null? rest)
+        file-name
+        (apply in-vicinity file-name (car rest) (cdr rest)))))
 
 
 

@@ -1,6 +1,6 @@
 ;;;; filesys.test --- test file system functions -*- scheme -*-
 ;;;; 
-;;;; Copyright (C) 2004, 2006, 2013, 2019, 2021 Free Software Foundation, Inc.
+;;;; Copyright (C) 2004, 2006, 2013, 2019, 2021, 2026 Free Software Foundation, Inc.
 ;;;; Copyright (C) 2021 Maxime Devos <maximedevos@telenet.be>
 ;;;; 
 ;;;; This library is free software; you can redistribute it and/or
@@ -354,6 +354,14 @@
 
   ;; https://debbugs.gnu.org/69437
   (pass-if-equal "bar" (basename "foo/bar" "o/bar")))
+
+(with-test-prefix "in-vicinity"
+
+  (pass-if-equal "bin" (in-vicinity "" "bin"))
+  (pass-if-equal "lib/" (in-vicinity "lib" ""))
+  (pass-if-equal "/tmp/test" (in-vicinity "/tmp" "test"))
+  (pass-if-equal "/usr/local/bin/guile"
+      (in-vicinity "/usr/" "local" "/bin" "guile")))
 
 (delete-file (test-file))
 (when (file-exists? (test-symlink))
