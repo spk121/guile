@@ -84,6 +84,7 @@ INSTALL
 /build-aux/compile
 /build-aux/config.rpath
 /build-aux/test-driver
+/doc/guile.1
 /doc/ref/standard-libraryscmfiles
 /doc/ref/standard-library.texi
 /examples/box/box
