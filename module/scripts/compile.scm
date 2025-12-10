@@ -1,4 +1,4 @@
-;;; Compile --- Command-line Guile Scheme compiler  -*- coding: iso-8859-1 -*-
+;;; Compile --- Command-line Guile Scheme compiler
 
 ;; Copyright 2005,2008-2011,2013-2015,2017-2020,2024 Free Software Foundation, Inc.
 ;;
@@ -17,7 +17,7 @@
 ;; not, write to the Free Software Foundation, Inc., 51 Franklin
 ;; Street, Fifth Floor, Boston, MA 02110-1301 USA
 
-;;; Author: Ludovic Courtès <ludo@gnu.org>
+;;; Author: Ludovic CourtÃ¨s <ludo@gnu.org>
 ;;; Author: Andy Wingo <wingo@pobox.com>
 
 ;;; Commentary:
