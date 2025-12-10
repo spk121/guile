@@ -24,7 +24,7 @@ AUTOMAKE_OPTIONS = gnu
 
 SUBDIRS = ref r5rs
 
-guile_generated_mans = guile.1 guile-config.1 guile-snarf.1
+guile_generated_mans = guild.1 guile.1 guile-config.1 guile-snarf.1
 
 dist_man1_MANS = $(guile_generated_mans)
 
