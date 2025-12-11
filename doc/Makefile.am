@@ -26,7 +26,7 @@ SUBDIRS = ref r5rs
 
 guile_generated_mans = guild.1 guile.1 guile-config.1 guile-snarf.1
 
-dist_man1_MANS = $(guile_generated_mans)
+dist_man1_MANS = $(guile_generated_mans) guile-tools.1
 
 EXTRA_DIST = groupings.alist ChangeLog-2008 # guile-api.alist
 EXTRA_DIST += $(guile_generated_mans:.1=.1.in)

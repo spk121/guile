@@ -4,7 +4,7 @@
 .TH guild 1 "2025-12-12" "@GUILE_VERSION@" "GNU Guile"
 .
 .SH NAME
-guild \- run scripts provided by GNU Guile and related programs
+guild, guile-tools \- run Guile-related commands
 .
 .SH SYNOPSIS
 .SY guild
