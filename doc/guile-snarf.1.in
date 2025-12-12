@@ -1,0 +1,65 @@
+.\" The macros used below are those described in groff_man(7) and
+ \" groff_man_style(7).
+.
+.TH guile\-snarf 1 "2025-12-12" "@GUILE_VERSION@" "GNU Guile"
+.
+.SH NAME
+guile\-snarf \- extracts the initialization actions from C source files
+.
+.SH SYNOPSIS
+.SY guile-snarf
+.RB [ \-o
+.IR OUTPUT\-FILE ]
+.RI [ CPP\-ARG \fR\&.\|.\|.\&]
+.YS
+.
+.SH DESCRIPTION
+Scan the output produced by invoking the C preprocessor (by default
+.BR "gcc -E" )
+with the given
+.IR CPP\-ARG s,
+extract the Guile initialization actions, and write them to standard
+output or the specified
+.IR OUTPUT\-FILE .
+
+During snarfing, the pre-processor macro
+.B SCM_MAGIC_SNARFER
+is defined.  You can use this to avoid including snarfer output files
+that don't yet exist by writing code like this:
+
+.RS 4
+.EX
+  #ifndef SCM_MAGIC_SNARFER
+  #include "foo.x"
+  #endif
+.EE
+.RE
+.SH OPTIONS
+.TP
+.BI \-o \ OUTPUT\-FILE
+Write to
+.IR OUTPUT\-FILE .
+When \(dq-\(dq, write to standard output.  If there are errors during
+processing,
+.I OUTFILE
+is deleted and the program exits with non-zero status.
+.
+.SH ENVIRONMENT
+.TP
+.B CPP
+Specifies the C preprocessor to invoke.  Defaults to
+.BR "gcc -E" .
+.
+.SH SEE ALSO
+.
+.IR guile (1),
+.IR pkg-config (1),
+and for much more detail, the
+.UR https://www.gnu.org/software/guile/manual/html_node/index.html
+Guile Reference Manual
+.UE
+which may also be available via
+.BR info\ guile
+or
+.B M\-x info
+in emacs.

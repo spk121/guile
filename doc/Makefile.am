@@ -1,6 +1,7 @@
 ## Process this file with Automake to create Makefile.in
 ##
-##  	Copyright (C) 1998, 2002, 2006, 2008, 2009, 2010, 2014 Free Software Foundation, Inc.
+##     Copyright (C) 1998, 2002, 2006, 2008-2010 Free Software Foundation, Inc.
+##     Copyright (C) 2014, 2025 Free Software Foundation, Inc.
 ##
 ##   This file is part of GUILE.
 ##
@@ -23,11 +24,20 @@ AUTOMAKE_OPTIONS = gnu
 
 SUBDIRS = ref r5rs
 
-dist_man1_MANS = guile.1
+guile_generated_mans = guild.1 guile.1 guile-config.1 guile-snarf.1
+
+dist_man1_MANS = $(guile_generated_mans) guile-tools.1
 
 EXTRA_DIST = groupings.alist ChangeLog-2008 # guile-api.alist
+EXTRA_DIST += $(guile_generated_mans:.1=.1.in)
+
+CLEANFILES = $(guile_generated_mans)
 
 include $(top_srcdir)/am/maintainer-dirs
 guile-api.alist: guile-api.alist-FORCE
 	( cd $(top_builddir) ; $(mscripts)/update-guile-api.alist )
 guile-api.alist-FORCE:
+
+$(guile_generated_mans): %.1: %.1.in $(top_srcdir)/.version
+	$(SED) -e "s/\@GUILE_VERSION\@/$(GUILE_VERSION)/" $< > $@.tmp
+	mv $@.tmp $@

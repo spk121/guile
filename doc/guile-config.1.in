@@ -1,0 +1,68 @@
+.\" The macros used below are those described in groff_man(7) and
+ \" groff_man_style(7).
+.
+.TH guile\-config 1 "2025-12-12" "@GUILE_VERSION@" "GNU Guile"
+.
+.SH NAME
+guile\-config \- a tool to retrieve Guile configuration information
+.
+.SH SYNOPSIS
+.SY guile-config
+.B \-\-version
+.YS
+.SY guile-config
+.B \-\-help
+.RB [ SUBCOMMAND ]
+.YS
+.SY guile-config
+.B link
+.YS
+.SY guile-config
+.B compile
+.YS
+.SY guile-config
+.BI info \ VAR
+.YS
+.
+.SH DESCRIPTION
+.B guile-config
+reports configuration information for guile, including compilation and
+linkage flags, and
+.B pkg-config
+variables.
+.
+.SH SUBCOMMANDS
+.TP
+.B compile
+Print C compiler flags for compiling code that uses Guile.  This
+includes any
+.B -I
+flags needed to find Guile's header files.
+.TP
+.B link
+Print linker flags for building the
+.B guile
+executable.  Print the linker command-line flags necessary to link
+against the Guile library, and any other libraries it requires.
+.TP
+.BI info \ VAR
+Display the value of the
+.B pkg-config
+variable
+.I VAR
+used when Guile was built.  Use this command to find out where Guile was
+installed, where it will look for Scheme code at run-time, and so on.
+.
+.SH SEE ALSO
+.
+.IR guile (1),
+.IR pkg-config (1),
+and for much more detail, the
+.UR https://www.gnu.org/software/guile/manual/html_node/index.html
+Guile Reference Manual
+.UE
+which may also be available via
+.BR info\ guile
+or
+.B M\-x info
+in emacs.

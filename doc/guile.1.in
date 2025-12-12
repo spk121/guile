@@ -1,10 +1,9 @@
 .\" Written by Robert Merkel (rgmerk@mira.net)
 .\" augmented by Rob Browning <rlb@defaultvalue.org>
-.\" Process this file with
-.\" groff -man -Tascii foo.1
+.\" The macros used below are those described in groff_man(7) and
+ \" groff_man_style(7).
 .\"
-.\" title section date source manual
-.TH GUILE 1 "2017-05-22" GNU "GNU Guile 3.0"
+.TH GUILE 1 "2017-05-22" "@GUILE_VERSION@" "GNU Guile"
 .
 .SH NAME
 guile \- The GNU Project Extension Language

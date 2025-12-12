@@ -1,0 +1,186 @@
+.\" The macros used below are those described in groff_man(7) and
+ \" groff_man_style(7).
+.
+.TH guild 1 "2025-12-12" "@GUILE_VERSION@" "GNU Guile"
+.
+.SH NAME
+guild, guile-tools \- run Guile-related commands
+.
+.SH SYNOPSIS
+.SY guild
+.B compile
+.YS
+.SY guild
+.B disassemble
+.YS
+.SY guild
+.B display\-commentary
+.YS
+.SY guild
+.B doc\-snarf
+.YS
+.SY guild
+.B help
+.YS
+.SY guild
+.B use2dot
+.YS
+.SY .\|.\|.
+.YS
+.SH DESCRIPTION
+Run Guile-related commands; \(dqguild help --all\(dq will provide a
+complete list.
+.B guile\-tools
+is an older, deprecated name for this program.
+.
+.SH SUBCOMMANDS
+.TP
+.B help \fR[\fB--all \fR| \fICOMMAND]
+Display a list of
+.B \-\-all
+available subcommands, information about
+.IR COMMAND ,
+or summary information.
+.TP
+.B compile \fR[\fIARG \fR\&.\|.\|.\&]
+Invoke the Guile compiler.
+.TP
+.B disassemble \fR[\fIFILE \fR\&.\|.\|.\&]
+Disassemble a compiled .go file.
+.TP
+.B display\-commentary \fR[\fIREF \fR\&.\|.\|.\&]
+Display Commentary section from
+.IR REF1 , \ REF2
+and so on.  Each
+.I REF
+may be a filename or module name (list of symbols).  In the latter case,
+a filename is computed by searching
+.BR %load-path.
+.TP
+.BI doc\-snarf \ FILE
+Read a Scheme source file to extract docstrings in the format specified
+in
+.B DOCSTRINGS
+below, and infer a procedure prototype from procedure definition lines
+starting with
+.BR "(define... )" .
+.
+Currently, two output modes are implemented: texinfo and plaintext.
+Default is plaintext, texinfo can be switched on with the
+.B \-\-texinfo
+or
+.B \-t
+command line option.
+.TP
+.BI use2dot \ \fR[\fB\-m \ \fIMODULE] \ [\fIFILE \fR\&.\|.\|.\&]
+Display to stdout a graphviz DOT specification that describes module
+dependencies in the
+.IR FILE s.
+
+A top-level
+.B use-modules
+form or a
+.BR :use-module
+component in a
+.B define-module
+form results in a \(dqsolid\(dq style edge.
+
+An
+.B :autoload
+component in a
+.B define-module
+form results in a \(dqdotted\(dq style edge with label \(dqN\(dq
+indicating that N names are responsible for triggering the autoload.
+(The \(dqN\(dq label is not implemented.)
+
+A top-level
+.B load or
+.B primitive-load form results in a a \(dqbold\(dq style
+edge to a node named with either the file name if the
+.B load
+argument is a string, or \(dq[computed in \fIFILE\fR]\(dq otherwise.
+
+The
+.BR \-\-default-module
+.I MODULE
+(or
+.BR \-m)
+option sets
+.I MODULE
+as the default for top-level
+.B use-modules
+forms that do not follow a
+.B define-module
+form in a file.
+.I MODULE
+should be be a list, or
+.BR #f ,
+in which case such top-level
+.B use-modules forms are effectively
+ignored.  The default value is
+.B (guile-user).
+.
+.SH DOCSTRINGS
+A docstring can span multiple lines and begins with a line that starts
+with \(dq;;\(dq (two semicolons and a space). A docstring ends with a
+line that begins with \(dq(define ...)\(dq or with one or more
+\(dqoption\(dq lines that begin with \(dq;;-\(dq (two semicolons and a
+dash), which is then followed by a keyword, a colon, and a string.
+
+Additionally, \(dqstandard internal docstrings\(dq (for Scheme source)
+are recognized and output as \(dqoptions\(dq.  The output formatting is
+likely to change in the future.
+
+Here's an example:
+
+.RS 4
+.EX
+;; This procedure foos, or bars, depending on the argument @var{braz}.
+;;-Author: Martin Grabmueller
+(define (foo/bar braz)
+  (if braz 'foo 'bar))
+.EE
+.RE
+
+which produces this when the output format is texinfo:
+
+.RS 4
+.EX
+#!
+.
+foo/bar
+@deffn procedure foo/bar braz
+This procedure foos, or bars, depending on the argument @var{braz}.
+@c Author: Martin Grabmueller
+@end deffn
+!#
+
+.EE
+.RE
+
+or this when the output format is plain text:
+
+.RS 4
+.EX
+#!
+Procedure: foo/bar braz
+This procedure foos, or bars, depending on the argument @var{braz}.
+ Author: Martin Grabmueller
+^L
+!#
+.EE
+.RE
+.
+.SH SEE ALSO
+.
+.IR dot (1),
+.IR guile (1),
+and for much more detail, the
+.UR https://www.gnu.org/software/guile/manual/html_node/index.html
+Guile Reference Manual
+.UE
+which may also be available via
+.BR info\ guile
+or
+.B M\-x info
+in emacs.
