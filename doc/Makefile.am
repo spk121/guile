@@ -31,7 +31,7 @@ dist_man1_MANS = $(guile_generated_mans) guile-tools.1
 EXTRA_DIST = groupings.alist ChangeLog-2008 # guile-api.alist
 EXTRA_DIST += $(guile_generated_mans:.1=.1.in)
 
-CLEANFILES = $(guile_generated_mans)
+CLEANFILES = $(guile_generated_mans) guile-tools.1
 
 include $(top_srcdir)/am/maintainer-dirs
 guile-api.alist: guile-api.alist-FORCE
@@ -41,3 +41,6 @@ guile-api.alist-FORCE:
 $(guile_generated_mans): %.1: %.1.in $(top_srcdir)/.version
 	$(SED) -e "s/\@GUILE_VERSION\@/$(GUILE_VERSION)/" $< > $@.tmp
 	mv $@.tmp $@
+
+guile-tools.1: guild.1
+	$(LN_S) -f $< $@
