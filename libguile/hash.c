@@ -188,7 +188,7 @@ scm_i_utf8_string_hash (const char *str, size_t len)
 
   const uint8_t * const end = ustr + len;
   uint32_t a, b, c, u32;
-  unsigned long ret;
+  scm_t_hash ret;
 
   /* Set up the internal state.  */
   a = b = c = 0xdeadbeef + ((uint32_t)(length<<2)) + 47;
