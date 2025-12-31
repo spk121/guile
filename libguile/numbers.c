@@ -99,10 +99,6 @@ verify (sizeof (scm_t_inum) <= sizeof (scm_t_bits));
    without overflowing. */
 verify (SCM_I_FIXNUM_BIT <= SCM_INTPTR_T_BIT - 2);
 
-/* Some functions that use GMP's mpn functions assume that a
-   non-negative fixnum will always fit in a 'mp_limb_t'.  */
-verify (SCM_MOST_POSITIVE_FIXNUM <= (mp_limb_t) -1);
-
 #define scm_from_inum(x) (scm_from_signed_integer (x))
 
 /* Test an inum to see if it can be converted to a double without loss
