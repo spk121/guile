@@ -22,6 +22,13 @@
 
 
 
+/* On Windows, long is always 32 bits even on 64-bit. Default to long long
+ * unless the user is compiling Guile with an explicit MINI_GMP_LIMB_TYPE.
+ */
+#if !defined(MINI_GMP_LIMB_TYPE) && defined(_WIN64)
+#define MINI_GMP_LIMB_TYPE long long
+#endif
+
 #include "mini-gmp/mini-gmp.h"
 
 #endif  /* SCM_MINI_GMP_H */
