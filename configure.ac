@@ -1143,6 +1143,11 @@ save_LIBS="$LIBS"
 LIBS="$BDW_GC_LIBS $LIBS"
 CFLAGS="$BDW_GC_CFLAGS $CFLAGS"
 
+AC_CHECK_FUNCS([GC_init])
+if test $ac_cv_func_GC_init = no; then
+    AC_MSG_ERROR([cannot find GC_init])
+fi
+
 # Functions that might not be defined, depending on configuration.
 AC_CHECK_FUNCS([GC_pthread_exit GC_pthread_cancel GC_pthread_sigmask])
 
