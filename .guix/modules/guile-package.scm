@@ -1,4 +1,4 @@
-;;; Copyright © 2023-2025 Free Software Foundation, Inc.
+;;; Copyright © 2023-2026 Free Software Foundation, Inc.
 ;;;
 ;;; This file is part of GNU Guile.
 ;;;
@@ -44,6 +44,7 @@
   #:use-module (gnu packages bash)
   #:use-module (gnu packages bdw-gc)
   #:use-module (gnu packages compression)
+  #:use-module (gnu packages crypto)
   #:use-module (gnu packages flex)
   #:use-module (gnu packages gdb)
   #:use-module (gnu packages gettext)
@@ -128,6 +129,10 @@
                    '())))
       (inputs
        (append (list libffi)
+
+               (if (target-mingw?)
+                   '()
+                   (list libxcrypt))          ;for the 'crypt' procedure
 
                ;; We need Bash when cross-compiling because some of the
                ;; scripts in bin/ refer to it.  Use 'bash-minimal' because
