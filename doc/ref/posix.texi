@@ -3839,13 +3839,23 @@ Please note that the procedures in this section are not suited for
 strong encryption, they are only interfaces to the well-known and
 common system library functions of the same name.  They are just as good
 (or bad) as the underlying functions, so you should refer to your system
-documentation before using them (@pxref{crypt,, Encrypting Passwords,
-libc, The GNU C Library Reference Manual}).
+documentation before using them.
 
 @deffn {Scheme Procedure} crypt key salt
 @deffnx {C Function} scm_crypt (key, salt)
 Encrypt @var{key}, with the addition of @var{salt} (both strings),
 using the @code{crypt} C library call.
+
+@quotation Note
+This procedure is only available on systems that provide the
+@code{crypt} C function.
+
+The @code{crypt} function used to be part of the GNU@tie{}C Library
+(glibc) but it was removed in version 2.39, released in 2023.  On recent
+glibc-based systems, you are advised to build Guile with
+@uref{https://github.com/besser82/libxcrypt, libxcrypt} if you wish to
+have the @code{crypt} procedure.
+@end quotation
 @end deffn
 
 Although @code{getpass} is not an encryption procedure per se, it

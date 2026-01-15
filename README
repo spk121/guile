@@ -25,7 +25,8 @@ Guile depends on the following external libraries.
 - libunistring
 - libgc
 - libffi
-It will also use the libreadline library if it is available.
+- libxcrypt (optional)
+- readline (optional)
 
 There is a corresponding `--with-XXX-prefix' option for each of these
 libraries (except for libgc and libffi which use `pkg-config', see
