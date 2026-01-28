@@ -1,6 +1,6 @@
 ;;; Continuation-passing style (CPS) intermediate language (IL)
 
-;; Copyright (C) 2017-2021 Free Software Foundation, Inc.
+;; Copyright (C) 2017-2021,2026 Free Software Foundation, Inc.
 
 ;;;; This library is free software; you can redistribute it and/or
 ;;;; modify it under the terms of the GNU Lesser General Public
@@ -178,10 +178,12 @@ the trace should be referenced outside of it."
                ((not uses-of-interest?)
                 (fail))
                ((bailout? cps kt)
-                (continue kf live-vars defs-of-interest? can-terminate-trace?
-                          (lambda (kf)
-                            (build-term
-                              ($branch kf kt src op param peeled-args)))))
+                (if (bailout? cps kf)
+                    (fail)
+                    (continue kf live-vars defs-of-interest? can-terminate-trace?
+                              (lambda (kf)
+                                (build-term
+                                  ($branch kf kt src op param peeled-args))))))
                ((bailout? cps kf)
                 (continue kt live-vars defs-of-interest? can-terminate-trace?
                           (lambda (kt)
