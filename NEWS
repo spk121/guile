@@ -14,6 +14,10 @@ Changes in 3.0.12 (since 3.0.11)
 SRFI-14 and the 'digit-value' procedure of R7RS-small can now handle new
 characters introduced in Unicode 17.0.0.
 
+** New debugging procedure: `peek-error', with alias `pke'
+
+Same as peek but outputs to the current-error-port.
+
 * Bug fixes
 
 ** Cross-compiling Guile produces .go files with the right word size
