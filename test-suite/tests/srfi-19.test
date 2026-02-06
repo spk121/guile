@@ -415,6 +415,28 @@ incomplete numerical tower implementation.)"
     (pass-if (= 0 (date-week-number (make-date 0 0 0 0 7 1 1984 0) 0)))
     (pass-if (= 1 (date-week-number (make-date 0 0 0 0 8 1 1984 0) 0))))
 
+  (with-test-prefix "date->string ~I"
+    (pass-if-equal "09:00 as 9 o'clock"
+        "09"
+      (date->string (make-date 0 0 0 9 1 1 1984 0) "~I"))
+    (pass-if-equal "23:00 as 11 o'clock"
+        "11"
+      (date->string (make-date 0 0 0 23 1 1 1984 0) "~I"))
+    (pass-if-equal "00:00 as 12 o'clock"
+        "12"
+      (date->string (make-date 0 0 0 0 1 1 1984 0) "~I")))
+
+  (with-test-prefix "date->string ~l"
+    (pass-if-equal "09:00 as 9 o'clock"
+        " 9"
+      (date->string (make-date 0 0 0 9 1 1 1984 0) "~l"))
+    (pass-if-equal "23:00 as 11 o'clock"
+        "11"
+      (date->string (make-date 0 0 0 23 1 1 1984 0) "~l"))
+    (pass-if-equal "00:00 as 12 o'clock"
+        "12"
+      (date->string (make-date 0 0 0 0 1 1 1984 0) "~l")))
+
   (let ((convert (match-lambda
                    ((y m d)
                     (date->string (make-date 0 0 0 0 d m y 0)

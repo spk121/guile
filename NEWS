@@ -48,6 +48,9 @@ Numbers with exponents too large to represent now return `+inf.0' or
 signaling an error.  This also fixes `string->symbol' failing for
 symbols resembling numbers with large exponents like "9f470".
 
+** SRFI-19: 'date->string' directive ~I and ~l now print 12 for time 00:XX
+   (<https://codeberg.org/guile/guile/issues/102>)
+
 * Documentation updates
 
 ** `string->number' behavior for extreme exponents
