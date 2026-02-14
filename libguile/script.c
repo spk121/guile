@@ -288,7 +288,7 @@ scm_shell_usage (int fatal, char *message)
 
 /* Return a list of strings from ARGV, which contains ARGC strings
    assumed to be encoded in the current locale.  Use
-   `environ_locale_charset' instead of relying on
+   `scm_i_environ_locale_charset' instead of relying on
    `scm_from_locale_string' because the user hasn't had a change to call
    (setlocale LC_ALL "") yet.
 
@@ -303,7 +303,7 @@ locale_arguments_to_string_list (int argc, char **const argv)
   SCM lst;
   const char *encoding;
 
-  encoding = environ_locale_charset ();
+  encoding = scm_i_environ_locale_charset ();
   for (i = argc - 1, lst = SCM_EOL;
        i >= 0;
        i--)

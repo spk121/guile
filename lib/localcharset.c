@@ -828,7 +828,7 @@ static const struct table_entry locale_table[] =
 STATIC
 #endif
 const char *
-locale_charset (void)
+scm_i_locale_charset (void)
 {
   const char *codeset;
 
@@ -1161,7 +1161,7 @@ locale_charset (void)
 /* A variant of the above, without calls to `setlocale', `nl_langinfo',
    etc.  */
 const char *
-environ_locale_charset (void)
+scm_i_environ_locale_charset (void)
 {
   static char buf[2 + 10 + 1];
   const char *codeset, *aliases;

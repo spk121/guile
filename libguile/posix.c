@@ -27,6 +27,7 @@
 #include <dirent.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <localcharset.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -2065,7 +2066,7 @@ SCM_DEFINE (scm_setlocale, "setlocale", 1, 1, 0,
       SCM_SYSERROR;
     }
 
-  enc = locale_charset ();
+  enc = scm_i_locale_charset ();
 
   /* Set the default encoding for new ports.  */
   scm_i_set_default_port_encoding (enc);

@@ -5,7 +5,16 @@ rationale.
 
 --- a/lib/localcharset.c
 +++ b/lib/localcharset.c
-@@ -544,3 +544,120 @@ locale_charset (void)
+@@ -828,7 +828,7 @@ static const struct table_entry locale_table[] =
+ STATIC
+ #endif
+ const char *
+-locale_charset (void)
++scm_i_locale_charset (void)
+ {
+   const char *codeset;
+ 
+@@ -1157,3 +1157,120 @@ locale_charset (void)
  
    return codeset;
  }
@@ -13,7 +22,7 @@ rationale.
 +/* A variant of the above, without calls to `setlocale', `nl_langinfo',
 +   etc.  */
 +const char *
-+environ_locale_charset (void)
++scm_i_environ_locale_charset (void)
 +{
 +  static char buf[2 + 10 + 1];
 +  const char *codeset, *aliases;

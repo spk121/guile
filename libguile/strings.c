@@ -28,6 +28,7 @@
 #include <stdio.h>
 #include <ctype.h>
 #include <errno.h>
+#include <localcharset.h>
 #include <uninorm.h>
 #include <unistr.h>
 #include <uniconv.h>
@@ -1582,7 +1583,7 @@ scm_i_default_string_failed_conversion_handler (void)
 SCM
 scm_from_locale_stringn (const char *str, size_t len)
 {
-  return scm_from_stringn (str, len, locale_charset (),
+  return scm_from_stringn (str, len, scm_i_locale_charset (),
                            scm_i_default_string_failed_conversion_handler ());
 }
 
@@ -1910,7 +1911,7 @@ char *
 scm_to_locale_stringn (SCM str, size_t *lenp)
 {
   return scm_to_stringn (str, lenp,
-                         locale_charset (),
+                         scm_i_locale_charset (),
                          scm_i_default_string_failed_conversion_handler ());
 }
 

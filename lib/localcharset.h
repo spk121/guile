@@ -23,12 +23,6 @@
 extern "C" {
 #endif
 
-/* Same as above, but only look at environment variables, avoiding calls to
-   `setlocale', `nl_langinfo', etc.  See
-   <http://lists.gnu.org/archive/html/guile-devel/2011-11/msg00040.html> for
-   the rationale.  */
-extern const char * environ_locale_charset (void);
-
 
 /* Determine the current locale's character encoding, and canonicalize it
    into one of the canonical names listed below.
@@ -38,7 +32,13 @@ extern const char * environ_locale_charset (void);
    is changed; threads in multithreaded programs should not do this.
    If the canonical name cannot be determined, the result is a non-canonical
    name.  */
-extern const char * locale_charset (void);
+extern const char * scm_i_locale_charset (void);
+
+/* Same as above, but only look at environment variables, avoiding calls to
+   `setlocale', `nl_langinfo', etc.  See
+   <http://lists.gnu.org/archive/html/guile-devel/2011-11/msg00040.html> for
+   the rationale.  */
+extern const char * scm_i_environ_locale_charset (void);
 
 /* About GNU canonical names for character encodings:
 

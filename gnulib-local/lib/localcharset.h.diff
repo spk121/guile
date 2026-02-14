@@ -3,20 +3,20 @@ information from the environment.  See
 http://lists.gnu.org/archive/html/guile-devel/2011-11/msg00040.html for the
 rationale.
 
-diff --git a/lib/localcharset.h b/lib/localcharset.h
-index 8907ccd..43e976f 100644
 --- a/lib/localcharset.h
 +++ b/lib/localcharset.h
-@@ -32,6 +32,12 @@ extern "C" {
+@@ -32,7 +32,13 @@ extern "C" {
+    is changed; threads in multithreaded programs should not do this.
+    If the canonical name cannot be determined, the result is a non-canonical
     name.  */
- extern const char * locale_charset (void);
- 
+-extern const char * locale_charset (void);
++extern const char * scm_i_locale_charset (void);
++
 +/* Same as above, but only look at environment variables, avoiding calls to
 +   `setlocale', `nl_langinfo', etc.  See
 +   <http://lists.gnu.org/archive/html/guile-devel/2011-11/msg00040.html> for
 +   the rationale.  */
-+extern const char * environ_locale_charset (void);
-+
++extern const char * scm_i_environ_locale_charset (void);
  
- #ifdef __cplusplus
- }
+ /* About GNU canonical names for character encodings:
+ 

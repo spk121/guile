@@ -31,6 +31,7 @@
 #include <errno.h>
 #include <fcntl.h>  /* for chsize on mingw */
 #include <iconv.h>
+#include <localcharset.h>
 #include <poll.h>
 #include <stdio.h>
 #include <striconveh.h>
@@ -4230,7 +4231,7 @@ scm_init_ports (void)
     scm_c_define ("%default-port-conversion-strategy",
                   scm_make_fluid_with_default (sym_substitute));
   /* Use the locale as the default port encoding.  */
-  scm_i_set_default_port_encoding (locale_charset ());
+  scm_i_set_default_port_encoding (scm_i_locale_charset ());
 
   scm_c_register_extension ("libguile-" SCM_EFFECTIVE_VERSION,
                             "scm_init_ice_9_ports",

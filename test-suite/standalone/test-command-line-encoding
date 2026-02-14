@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # Choose a UTF-8 locale.  The locale doesn't have to be available on the
-# system since `environ_locale_charset' does not actually try to set it.
+# system since `scm_i_environ_locale_charset' does not actually try to set it.
 LC_ALL="en_US.UTF-8"
 export LC_ALL
 unset LANG

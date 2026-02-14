@@ -2151,7 +2151,7 @@ VASNPRINTF (DCHAR_T *resultbuf, size_t *lengthp,
 #  if DCHAR_IS_TCHAR
                         /* Convert from UTF-8 to locale encoding.  */
                         converted =
-                          u8_conv_to_encoding (locale_charset (),
+                          u8_conv_to_encoding (scm_i_locale_charset (),
                                                iconveh_question_mark,
                                                arg, arg_end - arg, NULL,
                                                converted, &converted_len);
@@ -2253,7 +2253,7 @@ VASNPRINTF (DCHAR_T *resultbuf, size_t *lengthp,
 #  if DCHAR_IS_TCHAR
                         /* Convert from UTF-16 to locale encoding.  */
                         converted =
-                          u16_conv_to_encoding (locale_charset (),
+                          u16_conv_to_encoding (scm_i_locale_charset (),
                                                 iconveh_question_mark,
                                                 arg, arg_end - arg, NULL,
                                                 converted, &converted_len);
@@ -2355,7 +2355,7 @@ VASNPRINTF (DCHAR_T *resultbuf, size_t *lengthp,
 #  if DCHAR_IS_TCHAR
                         /* Convert from UTF-32 to locale encoding.  */
                         converted =
-                          u32_conv_to_encoding (locale_charset (),
+                          u32_conv_to_encoding (scm_i_locale_charset (),
                                                 iconveh_question_mark,
                                                 arg, arg_end - arg, NULL,
                                                 converted, &converted_len);
@@ -2737,7 +2737,7 @@ VASNPRINTF (DCHAR_T *resultbuf, size_t *lengthp,
 
                   /* Convert from TCHAR_T[] to DCHAR_T[].  */
                   tmpdst =
-                    DCHAR_CONV_FROM_ENCODING (locale_charset (),
+                    DCHAR_CONV_FROM_ENCODING (scm_i_locale_charset (),
                                               iconveh_question_mark,
                                               tmpsrc, characters,
                                               NULL,
@@ -2950,7 +2950,7 @@ VASNPRINTF (DCHAR_T *resultbuf, size_t *lengthp,
 
                   /* Convert from TCHAR_T[] to DCHAR_T[].  */
                   tmpdst =
-                    DCHAR_CONV_FROM_ENCODING (locale_charset (),
+                    DCHAR_CONV_FROM_ENCODING (scm_i_locale_charset (),
                                               iconveh_question_mark,
                                               tmpsrc, characters,
                                               NULL,
@@ -5457,7 +5457,7 @@ VASNPRINTF (DCHAR_T *resultbuf, size_t *lengthp,
                         tmpsrc = tmp;
 # endif
                         tmpdst =
-                          DCHAR_CONV_FROM_ENCODING (locale_charset (),
+                          DCHAR_CONV_FROM_ENCODING (scm_i_locale_charset (),
                                                     iconveh_question_mark,
                                                     tmpsrc, count,
                                                     NULL,
