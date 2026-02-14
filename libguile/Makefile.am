@@ -730,7 +730,8 @@ EXTRA_DIST = ChangeLog-scm ChangeLog-threads				\
     scmconfig.h.top libgettext.h libguile.map				\
     unidata_to_charset.awk UnicodeData.txt				\
     vm-operations.h libguile-@GUILE_EFFECTIVE_VERSION@-gdb.scm		\
-    $(lightening_c_files) $(lightening_extra_files)
+    $(lightening_c_files) $(lightening_extra_files)			\
+    mini-gmp/mini-gmp.c mini-gmp/mini-gmp.h mini-gmp/README
 
 ## FIXME: Consider using timestamp file, to avoid unnecessary rebuilds.
 if MINGW_LIBPATH

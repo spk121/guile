@@ -1,0 +1,2 @@
+This directory contains mini-gmp.c and mini-gmp.h copied from gmp-6.2.1.
+Please do not modify the files, changes can be made to files of the same name in the parent directory.
