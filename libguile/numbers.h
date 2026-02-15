@@ -115,10 +115,6 @@ typedef intptr_t scm_t_inum;
 
 #ifndef GO32
 # include <float.h>
-# ifdef __MINGW32__
-#  define copysign _copysign
-#  define finite _finite
-# endif /* __MINGW32__ */
 #endif /* ndef GO32 */
 
 #ifdef DBL_MAX_10_EXP
