@@ -109,9 +109,7 @@ scm_init_feature()
 #ifndef _Windows
   scm_add_feature("system");
 #endif
-#ifndef GO32
   scm_add_feature("char-ready?");
-#endif
 #if SCM_USE_PTHREAD_THREADS
   scm_add_feature ("threads");
 #endif

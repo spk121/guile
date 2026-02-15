@@ -113,9 +113,7 @@ typedef intptr_t scm_t_inum;
  * SCM_FLTMAX is less than or scm_equal the largest single precision float
  */
 
-#ifndef GO32
-# include <float.h>
-#endif /* ndef GO32 */
+#include <float.h>
 
 #ifdef DBL_MAX_10_EXP
 # define SCM_MAXEXP DBL_MAX_10_EXP
