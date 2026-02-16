@@ -480,19 +480,15 @@ doc:	Documentation (see above).
 
 Git Repository Access ================================================
 
-Guile's source code is stored in a Git repository at Savannah.  Anyone
+Guile's source code is stored in a Git repository at Codeberg.  Anyone
 can access it using `git-clone' from one of the following URLs:
 
-  git://git.savannah.gnu.org/guile.git
-  https://git.savannah.gnu.org/git/guile.git
-
-Developers with a Savannah SSH account can also access it from:
-
-  ssh://git.sv.gnu.org/srv/git/guile.git
+  ssh://git@codeberg.org/guile/guile.git
+  https://codeberg.org/guile/guile.git
 
 The repository can also be browsed on-line at the following address:
 
-  https://git.savannah.gnu.org/cgit/guile.git/
+  https://codeberg.org/guile/guile
 
 For more information on Git, please see:
 
