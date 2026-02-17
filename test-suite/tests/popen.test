@@ -279,3 +279,19 @@ exec 2>~a; read REPLY"
                   ("tr" "[:lower:]" "[:upper:]")))
     (list (read-string from)
           (map (compose status:exit-val cdr waitpid) pids))))
+
+;; File descriptor leak when current-error-port is a void port.
+(let* ((scandir (@ (ice-9 ftw) scandir))
+       (count-open-fds (lambda ()
+                   ;; Remove . and ..
+                   (- (length (scandir "/proc/self/fd")) 2))))
+  (pass-if "https://debbugs.gnu.org/72092"
+    (unless (file-exists? "/proc/self/fd")
+      (throw 'unresolved))
+    (let ((open-fds-then (count-open-fds)))
+      (parameterize ((current-input-port (%make-void-port "r"))
+                     (current-output-port (%make-void-port "w"))
+                     (current-error-port (%make-void-port "w")))
+        (close-pipe (open-pipe* OPEN_READ "true")))
+      (let ((open-fds-now (count-open-fds)))
+        (= open-fds-now open-fds-then)))))

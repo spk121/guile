@@ -1539,7 +1539,6 @@ static int
 piped_process (pid_t *pid, SCM prog, SCM args, SCM from, SCM to)
 #define FUNC_NAME "piped-process"
 {
-  int reading, writing;
   int c2p[2] = {0, 0}; /* Child to parent.  */
   int p2c[2] = {0, 0}; /* Parent to child.  */
   int in = -1, out = -1, err = -1;
@@ -1547,25 +1546,25 @@ piped_process (pid_t *pid, SCM prog, SCM args, SCM from, SCM to)
   char *exec_file;
   char **exec_argv;
   char **exec_env = environ;
+  int to_close[STDERR_FILENO + 1] = { -1, -1, -1 };
 
   exec_file = scm_to_locale_string (prog);
   exec_argv = scm_i_allocate_string_pointers (scm_cons (prog, args));
 
-  reading = scm_is_pair (from);
-  writing = scm_is_pair (to);
-
-  if (reading)
+  if (scm_is_pair (from))
     {
       c2p[0] = scm_to_int (scm_car (from));
       c2p[1] = scm_to_int (scm_cdr (from));
       out = c2p[1];
+      to_close[STDOUT_FILENO] = out;
     }
 
-  if (writing)
+  if (scm_is_pair (to))
     {
       p2c[0] = scm_to_int (scm_car (to));
       p2c[1] = scm_to_int (scm_cdr (to));
       in = p2c[0];
+      to_close[STDIN_FILENO] = in;
     }
 
   {
@@ -1574,30 +1573,38 @@ piped_process (pid_t *pid, SCM prog, SCM args, SCM from, SCM to)
     if (SCM_OPOUTFPORTP ((port = scm_current_error_port ())))
       err = SCM_FPORT_FDES (port);
     else
-      err = open ("/dev/null", O_WRONLY | O_CLOEXEC);
+      {
+        err = open ("/dev/null", O_WRONLY | O_CLOEXEC);
+        to_close[STDERR_FILENO] = err;
+      }
     if (out == -1)
       {
         if (SCM_OPOUTFPORTP ((port = scm_current_output_port ())))
           out = SCM_FPORT_FDES (port);
         else
-          out = open ("/dev/null", O_WRONLY | O_CLOEXEC);
+          {
+            out = open ("/dev/null", O_WRONLY | O_CLOEXEC);
+            to_close[STDOUT_FILENO] = out;
+          }
       }
     if (in == -1)
       {
         if (SCM_OPINFPORTP ((port = scm_current_input_port ())))
           in = SCM_FPORT_FDES (port);
         else
-          in = open ("/dev/null", O_RDONLY | O_CLOEXEC);
+          {
+            in = open ("/dev/null", O_RDONLY | O_CLOEXEC);
+            to_close[STDIN_FILENO] = in;
+          }
       }
   }
 
   *pid = do_spawn (exec_file, exec_argv, exec_env, in, out, err, 1);
   int errno_save = (*pid < 0) ? errno : 0;
 
-  if (reading)
-    close (c2p[1]);
-  if (writing)
-    close (p2c[0]);
+  for (size_t k = 0; k <= STDERR_FILENO; ++k)
+    if (to_close[k] != -1)
+      close (to_close[k]);
 
   if (*pid == -1)
     switch (errno_save)
