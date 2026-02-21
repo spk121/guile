@@ -138,6 +138,8 @@
 (define-unary-type-predicate-folder bignum? &bignum)
 (define-unary-type-predicate-folder bitvector? &bitvector)
 (define-unary-type-predicate-folder bytevector? &bytevector)
+(define-unary-type-predicate-folder immutable-bytevector? &immutable-bytevector)
+(define-unary-type-predicate-folder mutable-bytevector? &mutable-bytevector)
 (define-unary-type-predicate-folder char? &char)
 (define-unary-type-predicate-folder compnum? &complex)
 (define-unary-type-predicate-folder fixnum? &fixnum)

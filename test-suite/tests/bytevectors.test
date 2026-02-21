@@ -731,6 +731,30 @@
       (and (not (f32vector? s))
            (bytevector-length s)))))
 
+(with-test-prefix "bytevector immutability"
+  (for-each
+   (lambda (optimization-level)
+     (with-test-prefix (format #f "optimization-level=~a" optimization-level)
+
+       (pass-if-equal "immutable flag is not set by compiler for (make-bytevector)"
+           42
+         (compile '(begin
+                     (use-modules (rnrs bytevectors))
+                     (let ((bv (make-bytevector 3)))
+                       (bytevector-u8-set! bv 0 42)
+                       (bytevector-u8-ref bv 0)))
+                  #:optimization-level optimization-level
+                  #:to 'value))
+
+       (pass-if-exception "immutable flag is set by compiler for #vu8()"
+           exception:wrong-type-arg
+         (compile '(begin
+                     (use-modules (rnrs bytevectors))
+                     (bytevector-u8-set! #vu8(1 2 3) 0 0))
+                  #:optimization-level optimization-level
+                  #:to 'value))))
+   '(0 1 2 3)))
+
 
 (with-test-prefix "Arrays"
 
@@ -748,7 +772,7 @@
            (= 127 (array-ref bv 1)))))
 
   (pass-if-exception "array-ref [index out-of-range]"
-    exception:out-of-range
+      exception:out-of-range
     (let ((bv #vu8(1 2)))
       (array-ref bv 2)))
 
@@ -760,12 +784,12 @@
               (bytevector->u8-list bv))))
 
   (pass-if-exception "array-set! [index out-of-range]"
-    exception:out-of-range
+      exception:out-of-range
     (let ((bv (make-bytevector 2)))
       (array-set! bv 0 2)))
 
   (pass-if-exception "array-set! [value out-of-range]"
-    exception:out-of-range
+      exception:out-of-range
     (let ((bv (make-bytevector 2)))
       (array-set! bv 256 0)))
 
@@ -795,7 +819,7 @@
       (equal? bv (u8-list->bytevector (make-list 33 77)))))
 
   (pass-if-exception "make-typed-array [out-of-range]"
-    exception:out-of-range
+      exception:out-of-range
     (make-typed-array 'vu8 256 77)))
 
 

@@ -106,6 +106,8 @@
             &struct
             &string
             &bytevector
+            &immutable-bytevector
+            &mutable-bytevector
             &bitvector
             &array
             &syntax
@@ -168,6 +170,8 @@
   &struct
   &string
   &bytevector
+  &immutable-bytevector
+  &mutable-bytevector
   &bitvector
   &array
   &syntax
@@ -202,6 +206,9 @@
 
 (define-syntax &vector
   (identifier-syntax (logior &immutable-vector &mutable-vector)))
+
+(define-syntax &bytevector
+  (identifier-syntax (logior &immutable-bytevector &mutable-bytevector)))
 
 (define-syntax-rule (type<=? x type)
   (zero? (logand x (lognot type))))
@@ -376,7 +383,7 @@ minimum, and maximum."
    ((pair? val) (return &pair #f))
    ((vector? val) (return &immutable-vector (vector-length val)))
    ((string? val) (return &string (string-length val)))
-   ((bytevector? val) (return &bytevector (bytevector-length val)))
+   ((bytevector? val) (return &immutable-bytevector (bytevector-length val)))
    ((bitvector? val) (return &bitvector (bitvector-length val)))
    ((array? val) (return &array (array-rank val)))
    ((syntax? val) (return &syntax 0))
@@ -674,6 +681,8 @@ minimum, and maximum."
 (define-simple-predicate-inferrer bignum? &bignum)
 (define-simple-predicate-inferrer bitvector? &bitvector)
 (define-simple-predicate-inferrer bytevector? &bytevector)
+(define-simple-predicate-inferrer immutable-bytevector? &immutable-bytevector)
+(define-simple-predicate-inferrer mutable-bytevector? &mutable-bytevector)
 (define-simple-predicate-inferrer char? &char)
 (define-simple-predicate-inferrer compnum? &complex)
 (define-simple-predicate-inferrer flonum? &flonum)
@@ -840,6 +849,7 @@ minimum, and maximum."
 (define (annotation->mutable-type ann)
   (match ann
     ('vector &mutable-vector)
+    ('bytevector &mutable-bytevector)
     (_ (annotation->type ann))))
 
 (define-type-inferrer/param (allocate-words param size result)

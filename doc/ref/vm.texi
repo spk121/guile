@@ -1817,6 +1817,8 @@ result to @code{EQUAL} if @var{x} would pass the corresponding predicate
 @deffnx {Macro Instruction} program? x
 @deffnx {Macro Instruction} vm-continuation? x
 @deffnx {Macro Instruction} bytevector? x
+@deffnx {Macro Instruction} immutable-bytevector? x
+@deffnx {Macro Instruction} mutable-bytevector? x
 @deffnx {Macro Instruction} weak-set? x
 @deffnx {Macro Instruction} weak-table? x
 @deffnx {Macro Instruction} array? x

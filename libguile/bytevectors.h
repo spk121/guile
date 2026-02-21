@@ -129,12 +129,38 @@ SCM_API SCM scm_utf32_to_string (SCM, SCM);
   SCM_SET_CELL_TYPE ((_bv),						\
 		     scm_tc7_bytevector | ((scm_t_bits)(_f) << 7UL))
 
-#define SCM_F_BYTEVECTOR_CONTIGUOUS 0x100UL
-#define SCM_F_BYTEVECTOR_IMMUTABLE 0x200UL
+/*
+  The value of `SCM_F_BYTEVECTOR_IMMUTABLE' used to be 0x200, which is
+  now the value for `SCM_F_BYTEVECTOR_OLD_IMMUTABLE'.  Furthermore, the
+  value of `SCM_F_BYTEVECTOR_CONTIGUOUS' used to be 0x100, but is now
+  0x400.
+
+  This deserves an explanation.
+
+  The old immutable bit (0x200) was located at the 17th bit position,
+  which was too far for the VM instruction `heap-tag=?' to reach.  A
+  bytevector's type consists of a fixed 7-bit value followed by an 8-bit
+  element type.  The 16th and 17th bits were the contiguous and
+  immutable bits respectively.
+
+  To fix this, the immutable bit was moved to the 16th position (0x100).
+  However, old compiled Guile code (.go files) still has the 17th bit
+  set in bytevectors emitted by the assembler.  The C code must
+  therefore check this bit as well to recognize these legacy immutable
+  bytevectors.
+
+  Upon an ABI breaking change, we can remove
+  `SCM_F_BYTEVECTOR_OLD_IMMUTABLE' and set the value of
+  `SCM_F_BYTEVECTOR_CONTIGUOUS' to 0x200. */
+#define SCM_F_BYTEVECTOR_IMMUTABLE 0x100UL
+#define SCM_F_BYTEVECTOR_OLD_IMMUTABLE 0x200UL
+#define SCM_F_BYTEVECTOR_CONTIGUOUS 0x400UL
 
 #define SCM_MUTABLE_BYTEVECTOR_P(x)                                     \
   (SCM_NIMP (x) &&                                                      \
-   ((SCM_CELL_TYPE (x) & (0x7fUL | (SCM_F_BYTEVECTOR_IMMUTABLE << 7UL)))  \
+   ((SCM_CELL_TYPE (x) &                                                \
+     (0x7fUL | ((SCM_F_BYTEVECTOR_OLD_IMMUTABLE |                       \
+                 SCM_F_BYTEVECTOR_IMMUTABLE) << 7UL)))                  \
     == scm_tc7_bytevector))
 
 #define SCM_BYTEVECTOR_ELEMENT_TYPE(_bv)	\

@@ -132,6 +132,8 @@
             emit-program?
             emit-vm-continuation?
             emit-bytevector?
+            emit-immutable-bytevector?
+            emit-mutable-bytevector?
             emit-weak-set?
             emit-weak-table?
             emit-array?
@@ -1866,7 +1868,7 @@ should be .data or .rodata), and return the resulting linker object.
 
   (define tc7-bytevector #x4d)
   ;; This flag is intended to be left-shifted by 7 bits.
-  (define bytevector-immutable-flag #x200)
+  (define bytevector-immutable-flag #x100)
 
   (define tc7-array #x5d)
 

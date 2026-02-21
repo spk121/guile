@@ -408,6 +408,8 @@ the LABELS that are clobbered by the effects of LABEL."
   ((bignum? arg))
   ((bitvector? arg))
   ((bytevector? arg))
+  ((immutable-bytevector? arg))
+  ((mutable-bytevector? arg))
   ((char? arg))
   ((compnum? arg))
   ((eq-constant? arg))

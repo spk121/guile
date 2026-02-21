@@ -882,7 +882,7 @@
              ($continue k src ($primcall 'scm->f64 #f (val)))))))))
   (lambda (cps k src op param bv idx val)
     (prepare-bytevector-access
-     cps src scheme-name 'bytevector? bv idx width
+     cps src scheme-name 'mutable-bytevector? bv idx width
      (lambda (cps ptr uidx)
        (untag
         cps src val

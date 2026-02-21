@@ -508,6 +508,8 @@
         (#('weak-table? #f (a)) (unary emit-weak-table? a))
         (#('array? #f (a)) (unary emit-array? a))
         (#('bitvector? #f (a)) (unary emit-bitvector? a))
+        (#('mutable-bytevector? #f (a)) (unary emit-mutable-bytevector? a))
+        (#('immutable-bytevector? #f (a)) (unary emit-immutable-bytevector? a))
         (#('smob? #f (a)) (unary emit-smob? a))
         (#('port? #f (a)) (unary emit-port? a))
         (#('bignum? #f (a)) (unary emit-bignum? a))

@@ -20,6 +20,9 @@ Same as peek but outputs to the current-error-port.
 
 * Bug fixes
 
+** Segfault on write to immutable bytevector
+   (<https://codeberg.org/guile/guile/pulls/114>)
+
 ** Cross-compiling Guile produces .go files with the right word size
    (<https://codeberg.org/guile/guile/issues/88>)
 
