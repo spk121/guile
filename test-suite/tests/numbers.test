@@ -1705,9 +1705,69 @@
 		))
     #t)
 
-  (pass-if-exception "exponent too big"
-    exception:out-of-range
-    (string->number "12.13e141414"))
+  (with-test-prefix "exponent too big"
+
+    (with-test-prefix "positive"
+      (for-each
+       (lambda (str)
+         (pass-if-equal str
+             +inf.0
+           (string->number str)))
+       '(
+         "12.13e141414"
+         "9d470"
+         "9f470"
+         "41.3e1999"
+         "20e566"
+         "4729l1888"
+         )))
+
+    (with-test-prefix "negative"
+      (for-each
+       (lambda (str)
+         (pass-if-equal str
+             -inf.0
+           (string->number str)))
+       '(
+         "-12.13e141414"
+         "-9d470"
+         "-9f470"
+         "-41.3e1999"
+         "-20e566"
+         "-4729l1888"
+         ))))
+
+  (with-test-prefix "exponent too low"
+
+    (with-test-prefix "positive"
+      (for-each
+       (lambda (str)
+         (pass-if-equal str
+             0.0
+           (string->number str)))
+       '(
+         "12.13e-141414"
+         "9d-470"
+         "9f-470"
+         "41.3e-1999"
+         "20e-566"
+         "4729l-1888"
+         )))
+
+    (with-test-prefix "negative"
+      (for-each
+       (lambda (str)
+         (pass-if-equal str
+             -0.0
+           (string->number str)))
+       '(
+         "-12.13e-141414"
+         "-9d-470"
+         "-9f-470"
+         "-41.3e-1999"
+         "-20e-566"
+         "-4729l-1888"
+         ))))
 
   ;; in guile 1.6.7 and earlier, bad polar forms (where the conversion of
   ;; the angle gave #f) caused a segv

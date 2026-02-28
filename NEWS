@@ -32,6 +32,21 @@ Same as peek but outputs to the current-error-port.
 ** Cross-compiling Guile produces .go files with the right word size
    (<https://codeberg.org/guile/guile/issues/88>)
 
+** `string->number' no longer throws for extreme exponents
+   (<https://codeberg.org/guile/guile/issues/96>)
+
+Numbers with exponents too large to represent now return `+inf.0' or
+`-inf.0', and exponents too small return `0.0' or `-0.0', instead of
+signaling an error.  This also fixes `string->symbol' failing for
+symbols resembling numbers with large exponents like "9f470".
+
+* Documentation updates
+
+** `string->number' behavior for extreme exponents
+
+The `string->number' procedure now returns infinity or zero for numbers
+with exponents outside the representable range, improving R6RS compliance.
+
 
 Changes in 3.0.11 (since 3.0.10)
 

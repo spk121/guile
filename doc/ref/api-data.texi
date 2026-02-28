@@ -1098,6 +1098,10 @@ prefix in @var{string} (e.g.@: "#o177"). If @var{radix} is not
 supplied, then the default radix is 10. If string is not a
 syntactically valid notation for a number, then
 @code{string->number} returns @code{#f}.
+
+If the exponent of a number is too large to represent, @code{+inf.0} or
+@code{-inf.0} is returned.  If the exponent is too small (i.e., a large
+negative exponent), @code{0.0} or @code{-0.0} is returned.
 @end deffn
 
 @deftypefn {C Function} SCM scm_c_locale_stringn_to_number (const char *string, size_t len, unsigned radix)

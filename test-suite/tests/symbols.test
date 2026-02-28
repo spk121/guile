@@ -113,6 +113,17 @@
                    (symbol->string (string->symbol "abc\u0100"))))))
 
 ;;;
+;;; string->symbol
+;;;
+
+(with-test-prefix "string->symbol"
+
+  ;; <https://codeberg.org/guile/guile/issues/96>
+  (pass-if "symbol resembling number with large exponent"
+    (symbol?
+     (string->symbol "9f470"))))
+
+;;;
 ;;; symbol->string
 ;;;
 

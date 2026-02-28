@@ -3834,7 +3834,6 @@ mem2decimal_from_point (SCM result, SCM mem,
   if (idx != len)
     {
       int sign = 1;
-      unsigned int start;
       scm_t_wchar c;
       int exponent;
       SCM e;
@@ -3852,7 +3851,6 @@ mem2decimal_from_point (SCM result, SCM mem,
           if (idx == len)
             return SCM_BOOL_F;
 
-	  start = idx;
 	  c = scm_i_string_ref (mem, idx);
 	  if (c == '-')
 	    {
@@ -3895,10 +3893,13 @@ mem2decimal_from_point (SCM result, SCM mem,
 
 	  if (exponent > ((sign == 1) ? SCM_MAXEXP : SCM_MAXEXP + DBL_DIG + 1))
 	    {
-	      size_t exp_len = idx - start;
-	      SCM exp_string = scm_i_substring_copy (mem, start, start + exp_len);
-	      SCM exp_num = scm_string_to_number (exp_string, SCM_UNDEFINED);
-	      scm_out_of_range ("string->number", exp_num);
+              /* Return Infinity for large positive exponents, Zero for
+                 large negative exponents.  The caller handles sign
+                 negation. */
+              *p_idx = len;
+              if (sign == 1)
+                return scm_inf ();
+              return scm_i_from_double (0.0);
 	    }
 
 	  e = scm_integer_expt (SCM_I_MAKINUM (10), SCM_I_MAKINUM (exponent));
