@@ -605,20 +605,20 @@
     ;; case, this routine returns either a symbol, a syntax object, or
     ;; a string label.
     ;;
-    (define (search sym subst marks)
+    (define (search sym subst marks mod)
       (match subst
         (() #f)
         (('shift . subst)
          (match marks
            ((_ . marks)
-            (search sym subst marks))))
+            (search sym subst marks mod))))
         ((#('ribcage rsymnames rmarks rlabels) . subst)
          (define (search-list-rib)
            (let lp ((rsymnames rsymnames)
                     (rmarks rmarks)
                     (rlabels rlabels))
              (match rsymnames
-               (() (search sym subst marks))
+               (() (search sym subst marks mod))
                ((rsym . rsymnames)
                 (match rmarks
                   ((rmarks1 . rmarks)
@@ -636,7 +636,7 @@
            (let ((n (vector-length rsymnames)))
              (let lp ((i 0))
                (cond
-                ((= i n) (search sym subst marks))
+                ((= i n) (search sym subst marks mod))
                 ((and (eq? (vector-ref rsymnames i) sym)
                       (same-marks? marks (vector-ref rmarks i)))
                  (match (vector-ref rlabels i)
@@ -652,14 +652,14 @@
              (search-list-rib)))))
     (cond
      ((symbol? id)
-      (or (search id (wrap-subst w) (wrap-marks w)) id))
+      (or (search id (wrap-subst w) (wrap-marks w) mod) id))
      ((syntax? id)
       (let ((id (syntax-expression id))
             (w1 (syntax-wrap id))
             (mod (or (syntax-module id) mod)))
         (let ((marks (join-marks (wrap-marks w) (wrap-marks w1))))
-          (or (search id (wrap-subst w) marks)
-              (search id (wrap-subst w1) marks)
+          (or (search id (wrap-subst w) marks mod)
+              (search id (wrap-subst w1) marks mod)
               id))))
      (else (syntax-violation 'id-var-name "invalid id" id))))
 

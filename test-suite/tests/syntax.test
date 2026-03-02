@@ -1226,7 +1226,35 @@
     (pass-if-syntax-error "(set! #\\space #f)"
       exception:bad-set!
       (eval '(set! #\space #f)
-	    (interaction-environment)))))
+	    (interaction-environment))))
+
+  (with-test-prefix "set! is hygienic"
+
+    ;; Regression test for <https://codeberg.org/guile/guile/issues/120>.
+    ;; Prior to the fix, the macro-introduced `t' in the `set!' form
+    ;; would incorrectly resolve to a top-level binding instead of the
+    ;; locally-defined `t'.  The bug only triggers when the macro is
+    ;; defined in a different module.
+    (pass-if-equal "set! to macro-introduced variable"
+        106
+      (eval
+       '(begin
+          (define-module (set!-hygiene-test)
+            #:export (set!-test))
+          (define-syntax set!-test
+            (lambda (x)
+              (syntax-case x ()
+                ((_ num* ...)
+                 #'(begin
+                     (define t 100)
+                     (let ()
+                       (set! t (+ t num*))
+                       ...
+                       t))))))
+          (define-module (set!-hygiene-test-user)
+            #:use-module (set!-hygiene-test))
+          (set!-test 1 2 3))
+       (interaction-environment)))))
 
 (with-test-prefix "quote"
 

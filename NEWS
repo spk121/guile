@@ -20,6 +20,9 @@ Same as peek but outputs to the current-error-port.
 
 * Bug fixes
 
+** Macro hygiene issue with identifier resolution across modules
+   (<https://codeberg.org/guile/guile/issues/120>)
+
 ** Segfault on write to immutable bytevector
    (<https://codeberg.org/guile/guile/pulls/114>)
 
