@@ -616,11 +616,9 @@ If returning early, return the return value of F."
   (lambda (orig-form)
     (syntax-case orig-form ()
       ((_ () expr)
-       ;; XXX Work around the lack of hygienic top-level identifiers
-       (with-syntax (((dummy) (generate-temporaries '(dummy))))
-         #`(define dummy
-             (call-with-values (lambda () expr)
-               (lambda () #f)))))
+       #`(define dummy
+           (call-with-values (lambda () expr)
+             (lambda () #f))))
       ((_ (var) expr)
        (identifier? #'var)
        #`(define var
@@ -628,23 +626,21 @@ If returning early, return the return value of F."
              (lambda (v) v))))
       ((_ (var0 ... varn) expr)
        (and-map identifier? #'(var0 ... varn))
-       ;; XXX Work around the lack of hygienic toplevel identifiers
-       (with-syntax (((dummy) (generate-temporaries '(dummy))))
-         #`(begin
-             ;; Avoid mutating the user-visible variables
-             (define dummy
-               (call-with-values (lambda () expr)
-                 (lambda (var0 ... varn)
-                   (list var0 ... varn))))
-             (define var0
-               (let ((v (car dummy)))
-                 (set! dummy (cdr dummy))
-                 v))
-             ...
-             (define varn
-               (let ((v (car dummy)))
-                 (set! dummy #f)  ; blackhole dummy
-                 v)))))
+       #`(begin
+           ;; Avoid mutating the user-visible variables
+           (define dummy
+             (call-with-values (lambda () expr)
+               (lambda (var0 ... varn)
+                 (list var0 ... varn))))
+           (define var0
+             (let ((v (car dummy)))
+               (set! dummy (cdr dummy))
+               v))
+           ...
+           (define varn
+             (let ((v (car dummy)))
+               (set! dummy #f)          ; blackhole dummy
+               v))))
       ((_ var expr)
        (identifier? #'var)
        #'(define var
@@ -652,23 +648,21 @@ If returning early, return the return value of F."
              list)))
       ((_ (var0 ... . varn) expr)
        (and-map identifier? #'(var0 ... varn))
-       ;; XXX Work around the lack of hygienic toplevel identifiers
-       (with-syntax (((dummy) (generate-temporaries '(dummy))))
-         #`(begin
-             ;; Avoid mutating the user-visible variables
-             (define dummy
-               (call-with-values (lambda () expr)
-                 (lambda (var0 ... . varn)
-                   (list var0 ... varn))))
-             (define var0
-               (let ((v (car dummy)))
-                 (set! dummy (cdr dummy))
-                 v))
-             ...
-             (define varn
-               (let ((v (car dummy)))
-                 (set! dummy #f)  ; blackhole dummy
-                 v))))))))
+       #`(begin
+           ;; Avoid mutating the user-visible variables
+           (define dummy
+             (call-with-values (lambda () expr)
+               (lambda (var0 ... . varn)
+                 (list var0 ... varn))))
+           (define var0
+             (let ((v (car dummy)))
+               (set! dummy (cdr dummy))
+               v))
+           ...
+           (define varn
+             (let ((v (car dummy)))
+               (set! dummy #f)          ; blackhole dummy
+               v)))))))
 
 (define-syntax-rule (delay exp)
   (make-promise (lambda () exp)))

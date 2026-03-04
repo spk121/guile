@@ -1012,6 +1012,24 @@
 
 (with-test-prefix "top-level define-values"
 
+  ;; See the implementation of `define-values'.  A `dummy' identifier is
+  ;; used, but syntax hygiene should protect us from messing around with
+  ;; user bindings.
+  (with-test-prefix "hygiene"
+
+    (pass-if-equal "binding named dummy"
+        '(1 2)
+      (eval '(begin (define-values (dummy x) (values 1 2))
+                    (list dummy x))
+            (interaction-environment)))
+
+    (pass-if-equal "does not shadow outer dummy"
+        '(1 2 outer)
+      (eval '(begin (define dummy 'outer)
+                    (define-values (x y) (values 1 2))
+                    (list x y dummy))
+            (interaction-environment))))
+
   (pass-if "zero values"
     (eval '(begin (define-values () (values))
                   #t)
@@ -1096,6 +1114,23 @@
 	    (interaction-environment)))))
 
 (with-test-prefix "internal define-values"
+
+  ;; See the implementation of `define-values'.  A `dummy' identifier is
+  ;; used, but syntax hygiene should protect us from messing around with
+  ;; user bindings.
+  (with-test-prefix "hygiene"
+
+    (pass-if-equal "binding named dummy"
+        '(1 2)
+      (let ()
+        (define-values (dummy x) (values 1 2))
+        (list dummy x)))
+
+    (pass-if-equal "does not shadow outer dummy"
+        '(1 2 outer)
+      (let ((dummy 'outer))
+        (define-values (x y) (values 1 2))
+        (list x y dummy))))
 
   (pass-if "zero values"
     (let ()
