@@ -705,8 +705,17 @@ minimum, and maximum."
 (define-type-inferrer-aliases number? rational? complex?)
 (define-simple-predicate-inferrer heap-number? &heap-number)
 (define-simple-predicate-inferrer real? &real)
-(let ((&maybe-integer (logior &exact-integer &flonum &complex)))
-  (define-simple-predicate-inferrer integer? &maybe-integer))
+(define-predicate-inferrer (integer? val true?)
+  (restrict! val
+             (if true?
+                 ;; An integer may be:
+                 ;; - &exact-integer
+                 ;; - &flonum (e.g. 5.0, 1.0)
+                 ;; - &complex (e.g. 5+0i)
+                 (logior &exact-integer &flonum &complex)
+                 ;; A non-integer can't be &exact-integer
+                 (lognot &exact-integer))
+             -inf.0 +inf.0))
 (define-simple-predicate-inferrer exact-integer? &exact-integer)
 (define-simple-predicate-inferrer exact? &exact-number)
 (let ((&inexact-number (logior &flonum &complex)))

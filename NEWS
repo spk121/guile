@@ -20,6 +20,9 @@ Same as peek but outputs to the current-error-port.
 
 * Bug fixes
 
+** Incorrect predicate inferer of `integer?'
+   (<https://codeberg.org/guile/guile/issues/77>)
+
 ** Macro hygiene issue with identifier resolution across modules
    (<https://codeberg.org/guile/guile/issues/120>)
 

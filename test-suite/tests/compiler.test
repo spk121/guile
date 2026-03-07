@@ -241,7 +241,32 @@
       '(#f #f)
     ;; The baseline compiler (-O0 and -O1) in 3.0.8 would crash.
     (list (compile '(not (list 1 2)) #:optimization-level 2)
-          (compile '(not (list 1 2)) #:optimization-level 0))))
+          (compile '(not (list 1 2)) #:optimization-level 0)))
+
+  (with-test-prefix "integer? type info propagation" ;https://codeberg.org/guile/guile/issues/77
+    (let ((type-of (compile '(lambda (n)
+                            (cond
+                             ((integer? n) 'int)
+                             ((number? n) 'num)
+                             (else 'others)))
+                         #:optimization-level 2)))
+
+      (for-each
+       (lambda (num+expected-type)
+         (let ((num (car num+expected-type))
+               (expected-type (cdr num+expected-type)))
+           (pass-if-equal (format #f "~a: ~a" num expected-type)
+               expected-type
+             (type-of num))))
+       '(
+         (27   . int)
+         (1.0  . int)
+         (5+0i . int)
+         (0.1  . num)
+         (2/3  . num)
+         (4+5i . num)
+         ("1"  . others)
+         )))))
 
 (with-test-prefix "prompt body slot allocation"
   (define test-code
