@@ -1630,9 +1630,10 @@ infinite precision twos-complements.  For instance @math{-6} is bits
 be seen that adding 6 (binary 110) to such a bit pattern gives all
 zeros.
 
-@deffn {Scheme Procedure} logand n1 n2 @dots{}
+@deffn {Scheme Procedure} logand n1 @dots{}
 @deffnx {C Function} scm_logand (n1, n2)
-Return the bitwise @sc{and} of the integer arguments.
+Return the bitwise @sc{and} of the integer arguments.  If no arguments
+are passed, return the identity element -1.
 
 @lisp
 (logand) @result{} -1
@@ -1641,9 +1642,10 @@ Return the bitwise @sc{and} of the integer arguments.
 @end lisp
 @end deffn
 
-@deffn {Scheme Procedure} logior n1 n2 @dots{}
+@deffn {Scheme Procedure} logior n1 @dots{}
 @deffnx {C Function} scm_logior (n1, n2)
-Return the bitwise @sc{or} of the integer arguments.
+Return the bitwise @sc{or} of the integer arguments.  If no arguments
+are passed, return the identity element 0.
 
 @lisp
 (logior) @result{} 0
@@ -1652,10 +1654,11 @@ Return the bitwise @sc{or} of the integer arguments.
 @end lisp
 @end deffn
 
-@deffn {Scheme Procedure} logxor n1 n2 @dots{}
-@deffnx {C Function} scm_loxor (n1, n2)
-Return the bitwise @sc{xor} of the integer arguments.  A bit is
-set in the result if it is set in an odd number of arguments.
+@deffn {Scheme Procedure} logxor n1 @dots{}
+@deffnx {C Function} scm_logxor (n1, n2)
+Return the bitwise @sc{xor} of the integer arguments.  A bit is set in
+the result if it is set in an odd number of arguments.  If no arguments
+are passed, return the identity element 0.
 
 @lisp
 (logxor) @result{} 0

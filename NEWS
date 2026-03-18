@@ -47,6 +47,13 @@ symbols resembling numbers with large exponents like "9f470".
 The `string->number' procedure now returns infinity or zero for numbers
 with exponents outside the representable range, improving R6RS compliance.
 
+** Fix documentation of logand, logior and logxor to reflect reality.
+
+Previously, the documentation incorrectly implies that logand, logior
+and logxor must accept at least 1 argument. However, these procedures
+can be called with 0 arguments and return their corresponding identity
+element.
+
 
 Changes in 3.0.11 (since 3.0.10)
 
