@@ -422,7 +422,39 @@
     (let ((layout (list complex-float int complex-double))
           (data '(1+3i 99 3-1i)))
       (equal? data (parse-c-struct (make-c-struct layout data)
-                                   layout)))))
+                                   layout))))
+
+  (with-test-prefix "https://codeberg.org/guile/guile/issues/128"
+
+    (pass-if-equal "simple point"
+        '(1 2 0 0)
+      (let* ((point-type (list int int))
+            (bv (make-bytevector (* 2 (sizeof point-type)) 0)))
+        (write-c-struct bv 0 ((1 int) (2 int)))
+        (read-c-struct bv 0 ((a int) (b int) (c int) (d int)) list)))
+
+    (pass-if-equal "write-c-struct with exact-size bytevector"
+        '(42 42)
+      (let ((bv (make-bytevector (sizeof (list int64 uint8)) 0)))
+        (write-c-struct bv 0 ((42 int64) (42 uint8)))
+        (read-c-struct bv 0 ((a int64) (b uint8)) list)))
+
+    (pass-if-equal "write-c-struct with offset"
+        '(0 42 42 0)
+      (let* ((size   (sizeof (list int64 uint8)))
+             (bv     (make-bytevector (* 2 size) 0)))
+        (write-c-struct bv (sizeof int64) ((42 int64) (42 uint8)))
+        (read-c-struct bv 0 ((a int64) (b uint8) (c int64) (d uint8)) list)))
+
+    (pass-if-exception "write-c-struct with too-small bytevector"
+        exception:miscellaneous-error
+      (let ((bv (make-bytevector 1 0)))
+        (write-c-struct bv 0 ((42 int64)))))
+
+    (pass-if-exception "read-c-struct with too-small bytevector"
+        exception:miscellaneous-error
+      (let ((bv (make-bytevector 1 0)))
+        (read-c-struct bv 0 ((a int64)) list)))))
 
 
 (with-test-prefix "host-type-rename?"

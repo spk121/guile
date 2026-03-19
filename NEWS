@@ -20,6 +20,9 @@ Same as peek but outputs to the current-error-port.
 
 * Bug fixes
 
+** Inverted boundary check in `read-c-struct' and `write-c-struct'
+   (<https://codeberg.org/guile/guile/issues/128>)
+
 ** Incorrect predicate inferer of `integer?'
    (<https://codeberg.org/guile/guile/issues/77>)
 
