@@ -2,7 +2,7 @@
 # Extract the initialization actions from source files.
 #
 #  Copyright (C) 1996, 97, 98, 99, 2000, 2001, 2002, 2004, 2006, 2008,
-#    2009, 2014 Free Software Foundation, Inc.
+#    2009, 2014, 2026 Free Software Foundation, Inc.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as
@@ -98,19 +98,18 @@ trap "rm -rf $tempdir" 0 1 2 15
 # filter out -g* flags from commandline
 # as some flags like -ggdb3 cause CPP
 
-cpp_args=""
-for arg in "$@"
-do
+for arg in "$@"; do
+    shift
     case "$arg" in
-        -g*) ;; # skip debug flag
-        *) cpp_args="$cpp_args $arg" ;;
+        -g*) ;;
+        *) set -- "$@" "$arg" ;;
     esac
 done
 
 if [ ! "$outfile" = "-" ] ; then
-    modern_snarf $cpp_args > $outfile
+    modern_snarf "$@" > $outfile
 else
-    modern_snarf $cpp_args
+    modern_snarf "$@"
 fi
 
 # zonk outfile if errors occurred

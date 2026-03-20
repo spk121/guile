@@ -35,6 +35,11 @@ Same as peek but outputs to the current-error-port.
 ** Cross-compiling Guile produces .go files with the right word size
    (<https://codeberg.org/guile/guile/issues/88>)
 
+** `guile-snarf' now correctly handles arguments containing `='
+
+Previously, arguments like `-Dfoo=bar' would be incorrectly split due to
+improper quoting, causing the preprocessor to fail.
+
 ** `string->number' no longer throws for extreme exponents
    (<https://codeberg.org/guile/guile/issues/96>)
 
