@@ -51,6 +51,9 @@ symbols resembling numbers with large exponents like "9f470".
 ** SRFI-19: 'date->string' directive ~I and ~l now print 12 for time 00:XX
    (<https://codeberg.org/guile/guile/issues/102>)
 
+** Invalid locale encoding no longer causes crash
+   (<https://codeberg.org/guile/guile/issues/98>)
+
 * Documentation updates
 
 ** Document the legacy `dynamic-*' API

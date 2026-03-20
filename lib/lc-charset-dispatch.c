@@ -41,7 +41,7 @@ static inline
 enc_t
 locale_encoding_classification_uncached (void)
 {
-  const char *encoding = scm_i_locale_charset ();
+  const char *encoding = locale_charset ();
   if (STREQ_OPT (encoding, "UTF-8", 'U', 'T', 'F', '-', '8', 0, 0, 0, 0))
     return enc_utf8;
   if (STREQ_OPT (encoding, "EUC-JP", 'E', 'U', 'C', '-', 'J', 'P', 0, 0, 0))

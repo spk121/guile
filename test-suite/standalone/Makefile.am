@@ -88,6 +88,9 @@ TESTS += test-command-line-encoding
 check_SCRIPTS += test-command-line-encoding2
 TESTS += test-command-line-encoding2
 
+check_SCRIPTS += test-command-line-encoding3
+TESTS += test-command-line-encoding3
+
 check_SCRIPTS += test-language
 TESTS += test-language
 EXTRA_DIST += test-language.el test-language.js

@@ -2066,7 +2066,7 @@ SCM_DEFINE (scm_setlocale, "setlocale", 1, 1, 0,
       SCM_SYSERROR;
     }
 
-  enc = scm_i_locale_charset ();
+  enc = locale_charset ();
 
   /* Set the default encoding for new ports.  */
   scm_i_set_default_port_encoding (enc);

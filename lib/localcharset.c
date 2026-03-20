@@ -828,7 +828,7 @@ static const struct table_entry locale_table[] =
 STATIC
 #endif
 const char *
-scm_i_locale_charset (void)
+locale_charset (void)
 {
   const char *codeset;
 
@@ -1154,123 +1154,6 @@ scm_i_locale_charset (void)
   if (strcmp (codeset, "UTF-8") == 0 && MB_CUR_MAX_L (uselocale (NULL)) <= 1)
     codeset = "ASCII";
 #endif
-
-  return codeset;
-}
-
-/* A variant of the above, without calls to `setlocale', `nl_langinfo',
-   etc.  */
-const char *
-scm_i_environ_locale_charset (void)
-{
-  static char buf[2 + 10 + 1];
-  const char *codeset, *aliases;
-  const char *locale = NULL;
-
-  locale = getenv ("LC_ALL");
-  if (locale == NULL || locale[0] == '\0')
-    {
-      locale = getenv ("LC_CTYPE");
-      if (locale == NULL || locale[0] == '\0')
-	locale = getenv ("LANG");
-    }
-
-  if (locale != NULL && locale[0] != '\0')
-    {
-      /* If the locale name contains an encoding after the dot, return it.  */
-      const char *dot = strchr (locale, '.');
-
-      if (dot != NULL)
-        {
-          const char *modifier;
-
-          dot++;
-          /* Look for the possible @... trailer and remove it, if any.  */
-          modifier = strchr (dot, '@');
-          if (modifier == NULL)
-            return dot;
-          if (modifier - dot < sizeof (buf))
-            {
-              memcpy (buf, dot, modifier - dot);
-              buf [modifier - dot] = '\0';
-              return buf;
-            }
-        }
-      else if (strcmp (locale, "C") == 0)
-	{
-	  strcpy (buf, "ASCII");
-	  return buf;
-	}
-      else
-	codeset = "";
-    }
-  else
-    codeset = "";
-
-  /* Resolve alias. */
-  {
-# ifdef alias_table_defined
-    /* On some platforms, UTF-8 locales are the most frequently used ones.
-       Speed up the common case and slow down the less common cases by
-       testing for this case first.  */
-#  if defined __OpenBSD__ || (defined __APPLE__ && defined __MACH__) || defined __sun || defined __CYGWIN__
-    if (strcmp (codeset, "UTF-8") == 0)
-      goto done_table_lookup;
-    else
-#  endif
-      {
-        const struct table_entry * const table = alias_table;
-        size_t const table_size =
-          sizeof (alias_table) / sizeof (struct table_entry);
-        /* The table is sorted.  Perform a binary search.  */
-        size_t hi = table_size;
-        size_t lo = 0;
-        while (lo < hi)
-          {
-            /* Invariant:
-               for i < lo, strcmp (table[i].alias, codeset) < 0,
-               for i >= hi, strcmp (table[i].alias, codeset) > 0.  */
-            size_t mid = (hi + lo) >> 1; /* >= lo, < hi */
-            int cmp = strcmp (table[mid].alias, codeset);
-            if (cmp < 0)
-              lo = mid + 1;
-            else if (cmp > 0)
-              hi = mid;
-            else
-              {
-                /* Found an i with
-                     strcmp (table[i].alias, codeset) == 0.  */
-                codeset = table[mid].canonical;
-                goto done_table_lookup;
-              }
-          }
-      }
-    if (0)
-      done_table_lookup: ;
-    else
-# endif
-      {
-        /* Did not find it in the table.  */
-        /* On Mac OS X, all modern locales use the UTF-8 encoding.
-           BeOS and Haiku have a single locale, and it has UTF-8 encoding.  */
-# if (defined __APPLE__ && defined __MACH__) || defined __BEOS__ || defined __HAIKU__
-        codeset = "UTF-8";
-# else
-        /* Don't return an empty string.  GNU libc and GNU libiconv interpret
-           the empty string as denoting "the locale's character encoding",
-           thus GNU libiconv would call this function a second time.  */
-        if (codeset[0] == '\0')
-          codeset = "ASCII";
-# endif
-      }
-  }
-
-  /* Don't return an empty string.  GNU libc and GNU libiconv interpret
-     the empty string as denoting "the locale's character encoding",
-     thus GNU libiconv would call this function a second time.  */
-  if (codeset[0] == '\0')
-    /* Default to Latin-1, for backward compatibility with Guile 1.8.  */
-    codeset = "ISO-8859-1";
 
   return codeset;
 }

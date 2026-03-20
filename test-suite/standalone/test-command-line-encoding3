@@ -1,0 +1,42 @@
+#!/bin/sh
+# Copyright (C) 2026 Olivier Dion <olivier.dion@polymtl.ca>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+# Test that an invalid encoding in the locale (like LANG=A.A) doesn't
+# crash Guile.
+
+unset LC_ALL
+unset LC_CTYPE
+LANG=A.A
+export LANG
+output=$(guile -q -c '(display (cdr (command-line)))' foo bar 2>&1)
+status=$?
+
+if test $status -ne 0; then
+    echo "FAIL: guile crashed with exit status $status"
+    echo "$output"
+    exit 1
+fi
+
+echo "$output"
+
+case "$output" in
+    "guile: warning: failed to install locale"*"(foo bar)")
+        exit 0
+        ;;
+    *)
+        exit 1
+        ;;
+esac
