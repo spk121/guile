@@ -1,4 +1,4 @@
-/* Copyright 1995-2003,2006,2008-2014,2016-2018,2020,2024
+/* Copyright 1995-2003,2006,2008-2014,2016-2018,2020,2024,2026
      Free Software Foundation, Inc.
 
    This file is part of Guile.
@@ -211,7 +211,7 @@ SCM_DEFINE (scm_object_address, "object-address", 1, 0, 0,
 	    "returned by this function for @var{obj}")
 #define FUNC_NAME s_scm_object_address
 {
-  return scm_from_ulong (SCM_UNPACK (obj));
+  return scm_from_uintptr_t (SCM_UNPACK (obj));
 }
 #undef FUNC_NAME
 
