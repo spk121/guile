@@ -977,7 +977,7 @@ twos_complement (mpz_t value, size_t size)
      checking on SIZE performed earlier.  */
   bit_count = (unsigned long) size << 3UL;
 
-  if (SCM_LIKELY (bit_count < sizeof (unsigned long)))
+  if (SCM_LIKELY (bit_count < SCM_LONG_BIT))
     mpz_ui_sub (value, 1UL << bit_count, value);
   else
     {

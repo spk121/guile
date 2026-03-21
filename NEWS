@@ -28,6 +28,13 @@ Same as peek but outputs to the current-error-port.
 
 * Bug fixes
 
+** Fix fast path in signed bytevector two's-complement handling
+
+When signed bytevector accessors convert negative values using two's
+complement, an internal helper can use a fast path for small widths. A
+bits-versus-bytes comparison error prevented that fast path from being
+taken.
+
 ** Bogus format warning with nested list for `~{~}'
   (<https://codeberg.org/guile/guile/issues/138>)
 
