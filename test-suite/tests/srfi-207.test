@@ -23,6 +23,7 @@
 ;;; SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 (define-module (srfi-207-test)
+  #:use-module ((ice-9 format) #:select (format))
   #:use-module ((rnrs bytevectors) #:select (string->utf8 u8-list->bytevector))
   #:use-module ((srfi srfi-1) #:select (every list-tabulate))
   #:use-module ((srfi srfi-207)
