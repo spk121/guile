@@ -528,7 +528,7 @@ static void str_uc(jit_state_t *_jit, int32_t r0, int32_t r1);
 static void str_s(jit_state_t *_jit, int32_t r0, int32_t r1);
 static void str_i(jit_state_t *_jit, int32_t r0, int32_t r1);
 #if __WORDSIZE == 64
-static void str_i(jit_state_t *_jit, int32_t r0, int32_t r1);
+static void str_l(jit_state_t *_jit, int32_t r0, int32_t r1);
 #endif
 
 static void sti_c(jit_state_t *_jit, jit_word_t i0, int32_t r0);
@@ -2352,7 +2352,11 @@ static void
 ldr_atomic(jit_state_t *_jit, int32_t dst, int32_t loc)
 {
   em_wp(_jit, _FENCE(0xFF));
+#if __WORDSIZE == 64
+  ldr_l(_jit, dst, loc);
+#elif __WORDSIZE == 32
   ldr_i(_jit, dst, loc);
+#endif
   em_wp(_jit, _FENCE(0xFF));
 }
 
@@ -2360,7 +2364,11 @@ static void
 str_atomic(jit_state_t *_jit, int32_t loc, int32_t val)
 {
   em_wp(_jit, _FENCE(0xFF));
+#if __WORDSIZE == 64
+  str_l(_jit, loc, val);
+#elif __WORDSIZE == 32
   str_i(_jit, loc, val);
+#endif
   em_wp(_jit, _FENCE(0xFF));
 }
 
