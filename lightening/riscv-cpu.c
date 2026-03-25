@@ -2391,6 +2391,7 @@ cas_atomic(jit_state_t *_jit, int32_t dst, int32_t loc, int32_t expected,
 
   void *retry = jit_address(_jit);
 
+  em_wp(_jit, _FENCE(0xFF));
 #if __WORDSIZE == 64
   em_wp(_jit, _LR_D(t0, loc, 0,0));
 #elif __WORDSIZE == 32
@@ -2400,9 +2401,9 @@ cas_atomic(jit_state_t *_jit, int32_t dst, int32_t loc, int32_t expected,
   jit_reloc_t fail = bner(_jit, t0, expected);
 
 #if __WORDSIZE == 64
-  em_wp(_jit, _SC_D(t1, desired, loc, 0,0));
+  em_wp(_jit, _SC_D(t1, loc, desired, 0,0));
 #elif __WORDSIZE == 32
-  em_wp(_jit, _SC_W(t1, desired, loc, 0,0));
+  em_wp(_jit, _SC_W(t1, loc, desired, 0,0));
 #endif
 
   jit_patch_there(_jit, bner(_jit, t1, jit_gpr_regno(_ZERO)), retry);
