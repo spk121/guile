@@ -1,6 +1,6 @@
 /* dynl.c - dynamic linking
 
-   Copyright 1990-2003,2008-2011,2017-2018,2021
+   Copyright 1990-2003,2008-2011,2017-2018,2021,2026
      Free Software Foundation, Inc.
 
    This file is part of Guile.
@@ -192,8 +192,7 @@ scm_init_dynamic_linking ()
                             scm_init_system_foreign_library,
 			    NULL);
 
-  // FIXME: Deprecate all of these, once (system foreign-library) has
-  // had enough time in the world.
+  // This is the old API that we still support.
   scm_c_define_gsubr
     ("dynamic-link", 0, 1, 0, (scm_t_subr) scm_dynamic_link);
   scm_c_define_gsubr

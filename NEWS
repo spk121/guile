@@ -53,6 +53,15 @@ symbols resembling numbers with large exponents like "9f470".
 
 * Documentation updates
 
+** Document the legacy `dynamic-*' API
+
+The legacy dynamic linking API (`dynamic-link', `dynamic-object?',
+`dynamic-pointer', `dynamic-func', and `dynamic-call') is now documented
+in a new "Legacy Dynamic Linking API" section.  This API predates the
+`(system foreign-library)' module but is still supported.  The
+documentation includes a correspondence table between the old and new
+APIs.
+
 ** `string->number' behavior for extreme exponents
 
 The `string->number' procedure now returns infinity or zero for numbers
