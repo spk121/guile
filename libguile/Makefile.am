@@ -553,9 +553,16 @@ version_info = @LIBGUILE_INTERFACE_CURRENT@:@LIBGUILE_INTERFACE_REVISION@:@LIBGU
 libguile_@GUILE_EFFECTIVE_VERSION@_la_LDFLAGS =	\
   $(BDW_GC_LIBS) $(LIBFFI_LIBS)			\
   $(CEIL_LIBM)					\
+  $(CLOCK_TIME_LIB)				\
+  $(COPYSIGN_LIBM)				\
+  $(DUPLOCALE_LIB)				\
   $(FLOOR_LIBM)					\
   $(FREXP_LIBM)					\
-  $(GETADDRINFO_LIB)				\
+  $(GETADDRINFO_LIB)			\
+  $(GETHOSTNAME_LIB)			\
+  $(GETLOCALENAME_L_LIB)		\
+  $(GETRANDOM_LIB)				\
+  $(HARD_LOCALE_LIB)			\
   $(HOSTENT_LIB)				\
   $(INET_NTOP_LIB)				\
   $(INET_PTON_LIB)				\
@@ -564,15 +571,22 @@ libguile_@GUILE_EFFECTIVE_VERSION@_la_LDFLAGS =	\
   $(ISNANL_LIBM)				\
   $(LDEXP_LIBM)					\
   $(LIBSOCKET)					\
-  $(LIB_CLOCK_GETTIME)				\
+  $(LIBTHREAD)					\
   $(LOG1P_LIBM)					\
   $(LOG_LIBM)					\
+  $(LTLIBC32CONV)				\
   $(LTLIBICONV)					\
   $(LTLIBINTL)					\
   $(LTLIBUNISTRING)				\
+  $(MBRTOWC_LIB)				\
+  $(POLL_LIB)					\
+  $(POSIX_SPAWN_LIB)			\
   $(ROUND_LIBM)					\
+  $(SELECT_LIB)					\
   $(SERVENT_LIB)				\
+  $(SETLOCALE_NULL_LIB)			\
   $(TRUNC_LIBM)					\
+  @INTL_MACOSX_LIBS@			\
   -version-info $(version_info)			\
   -export-dynamic -no-undefined			\
   $(GNU_LD_FLAGS)
