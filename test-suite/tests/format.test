@@ -165,4 +165,17 @@
   ;; In Guile 1.6.4 and earlier, the maximum iterations parameter defaulted
   ;; to 100, but it's now like Common Lisp where the default is no limit
   (pass-if "no arbitrary iteration limit"
-    (= (string-length (format #f "~{~a~}" (make-list 200 #\b))) 200)))
+    (= (string-length (format #f "~{~a~}" (make-list 200 #\b))) 200))
+
+  ;; Nested iteration should not produce a bogus argument count warning.
+  ;; <https://codeberg.org/guile/guile/issues/138>
+  (pass-if-equal "no warnings are emitted and value is formatted"
+      "123"
+    (call-with-output-string
+      (lambda (port)
+        (parameterize ((current-warning-port port))
+          (display
+           ((@ (system base compile) compile)
+            '((@ (ice-9 format) format) #f "~{~{~{~{~{~{~{~{~{~{~a~}~}~}~}~}~}~}~}~}~}"
+              '((((((((((1 2 3))))))))))))
+           port))))))

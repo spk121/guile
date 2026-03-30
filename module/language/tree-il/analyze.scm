@@ -1107,19 +1107,27 @@ given `tree-il' element."
   ;; `any' if the format string can be followed by any number of
   ;; arguments.
 
-  (define (drop-group chars end)
-    ;; Drop characters from CHARS until "~END" is encountered.
+  (define (drop-group chars begin end)
+    ;; Drop characters from CHARS until the matching END is encountered,
+    ;; accounting for nested iterations of BEGIN and END.
     (let loop ((chars  chars)
-               (tilde? #f))
-      (if (null? chars)
-          (throw &syntax-error 'unterminated-iteration)
-          (if tilde?
-              (if (eq? (car chars) end)
-                  (cdr chars)
-                  (loop (cdr chars) #f))
-              (if (eq? (car chars) #\~)
-                  (loop (cdr chars) #t)
-                  (loop (cdr chars) #f))))))
+               (tilde? #f)
+               (depth  0))
+      (match chars
+        (()
+         (throw &syntax-error 'unterminated-iteration))
+        ((head . tail)
+         (cond
+          ((not tilde?)
+           (loop tail (char=? head #\~) depth))
+          ((char=? head end)
+           (if (zero? depth)
+               tail
+               (loop tail #f (1- depth))))
+          ((char=? head begin)
+           (loop tail #f (1+ depth)))
+          (else
+           (loop tail #f depth)))))))
 
   (define (digit? char)
     ;; Return true if CHAR is a digit, #f otherwise.
@@ -1213,7 +1221,7 @@ given `tree-il' element."
                   (throw &syntax-error 'unexpected-conditional-termination)))
              ((#\{)     (if (memq #\@ params)
                             (values min-count 'any)
-                            (loop (drop-group (cdr chars) #\})
+                            (loop (drop-group (cdr chars) #\{ #\})
                                   'literal '()
                                   conditions end-group
                                   (+ 1 min-count) (+ 1 max-count))))

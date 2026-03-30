@@ -20,6 +20,9 @@ Same as peek but outputs to the current-error-port.
 
 * Bug fixes
 
+** Bogus format warning with nested list for `~{~}'
+  (<https://codeberg.org/guile/guile/issues/138>)
+
 ** Inverted boundary check in `read-c-struct' and `write-c-struct'
    (<https://codeberg.org/guile/guile/issues/128>)
 
