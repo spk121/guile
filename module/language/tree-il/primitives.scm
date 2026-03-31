@@ -49,9 +49,20 @@
     memq memv
     = < > <= >= zero? positive? negative?
     + * - / 1- 1+ quotient remainder modulo exact->inexact
-    expt
-    ash logand logior logxor lognot logtest logbit?
-    sqrt abs floor ceiling sin cos tan asin acos atan
+    exact-integer-sqrt gcd lcm modulo-expt
+    euclidean-quotient euclidean-remainder euclidean/
+    floor-quotient floor-remainder floor/
+    ceiling-quotient ceiling-remainder ceiling/
+    truncate-quotient truncate-remainder truncate/
+    centered-quotient centered-remainder centered/
+    round-quotient round-remainder round/
+    expt integer-expt
+    ash integer-length logand logbit? logcount logior lognot logtest logxor
+    bit-extract
+    abs ceiling floor max min round sqrt truncate
+    acos asin atan cos exp log log10 sin tan
+    acosh asinh atanh cosh sinh tanh
+    angle imag-part magnitude make-polar make-rectangular real-part
     not
     pair? null? list? symbol? vector? string? struct? number? char? nil?
     eof-object?
@@ -178,9 +189,21 @@
   `(values
     eq? eqv? equal?
     = < > <= >= zero? positive? negative?
-    expt ash logand logior logxor lognot logtest logbit?
-    + * - / 1- 1+ sqrt abs quotient remainder modulo exact->inexact
-    floor ceiling sin cos tan asin acos atan
+    exact-integer-sqrt gcd lcm modulo-expt
+    euclidean-quotient euclidean-remainder euclidean/
+    floor-quotient floor-remainder floor/
+    ceiling-quotient ceiling-remainder ceiling/
+    truncate-quotient truncate-remainder truncate/
+    centered-quotient centered-remainder centered/
+    round-quotient round-remainder round/
+    expt integer-expt
+    ash integer-length logand logbit? logcount logior lognot logtest logxor
+    bit-extract
+    * + - / 1+ 1- abs exact->inexact max min modulo quotient remainder sqrt
+    ceiling floor round truncate
+    acos asin atan cos exp log log10 sin tan
+    acosh asinh atanh cosh sinh tanh
+    angle imag-part magnitude make-polar make-rectangular real-part
     not
     pair? null? nil? list?
     symbol? variable? vector? struct? string? number? char?
@@ -222,6 +245,8 @@
     call/cc
     dynamic-wind
     values
+    exact-integer-sqrt
+    ceiling/ centered/ euclidean/ floor/ round/ truncate/
     call-with-prompt
     @abort abort-to-prompt))
 

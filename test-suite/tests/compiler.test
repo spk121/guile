@@ -21,6 +21,8 @@
   #:use-module (system base compile)
   #:use-module ((language tree-il)
                 #:select (tree-il-src call-args))
+  #:use-module ((language tree-il optimize)
+                #:select (optimize tree-il-optimizations))
   #:use-module ((system vm loader) #:select (load-thunk-from-memory))
   #:use-module ((system vm program) #:select (program-sources source:addr)))
 
@@ -466,3 +468,104 @@
         (set! proc ((load-thunk-from-memory bytecode)))
         (procedure? proc)))
     (pass-if-equal "proc executes" 42 (proc))))
+
+;; See <https://codeberg.org/guile/guile/issues/137>.
+;;
+;; Ensure that effect-free primitives with constant arguments are folded
+;; at compile time.
+(with-test-prefix "constant folding"
+
+  (define (optimize-expr expr)
+    (decompile
+     (optimize (compile expr #:from 'scheme #:to 'tree-il)
+               (current-module)
+               (tree-il-optimizations))
+     #:from 'tree-il #:to 'scheme))
+
+  (define-syntax-rule (pass-if-optimized expr)
+    (pass-if-equal (object->string 'expr)
+        (call-with-values
+            (lambda () expr)
+          (case-lambda
+            ((x) x)
+            ((x . rest)
+             `(values ,x ,@rest))))
+      (optimize-expr 'expr)))
+
+  (with-test-prefix "complex number operations"
+    (pass-if-optimized (real-part 3+4i))
+    (pass-if-optimized (imag-part 3+4i))
+    (pass-if-optimized (magnitude 3+4i))
+    (pass-if-optimized (angle 0+1i))
+    (pass-if-optimized (make-rectangular 3 4))
+    (pass-if-optimized (make-polar 1 0)))
+
+  (with-test-prefix "arithmetic operations"
+    (pass-if-optimized (odd? 3))
+    (pass-if-optimized (even? 4))
+    (pass-if-optimized (quotient 17 5))
+    (pass-if-optimized (remainder 17 5))
+    (pass-if-optimized (modulo -17 5))
+    (pass-if-optimized (gcd 12 18))
+    (pass-if-optimized (lcm 4 6))
+    (pass-if-optimized (modulo-expt 2 10 1000))
+    (pass-if-optimized (exact-integer-sqrt 17))
+    (pass-if-optimized (abs -5))
+    (pass-if-optimized (min 3 1 4))
+    (pass-if-optimized (max 3 1 4))
+    (pass-if-optimized (expt 2 10))
+    (pass-if-optimized (integer-expt 2 10))
+    (pass-if-optimized (sqrt 4)))
+
+  (with-test-prefix "division operations"
+    (pass-if-optimized (euclidean/ 17 5))
+    (pass-if-optimized (euclidean-quotient 17 5))
+    (pass-if-optimized (euclidean-remainder 17 5))
+    (pass-if-optimized (floor/ 17 5))
+    (pass-if-optimized (floor-quotient 17 5))
+    (pass-if-optimized (floor-remainder 17 5))
+    (pass-if-optimized (ceiling/ 17 5))
+    (pass-if-optimized (ceiling-quotient 17 5))
+    (pass-if-optimized (ceiling-remainder 17 5))
+    (pass-if-optimized (truncate/ 17 5))
+    (pass-if-optimized (truncate-quotient 17 5))
+    (pass-if-optimized (truncate-remainder 17 5))
+    (pass-if-optimized (centered/ 17 5))
+    (pass-if-optimized (centered-quotient 17 5))
+    (pass-if-optimized (centered-remainder 17 5))
+    (pass-if-optimized (round/ 17 5))
+    (pass-if-optimized (round-quotient 17 5))
+    (pass-if-optimized (round-remainder 17 5)))
+
+  (with-test-prefix "bitwise operations"
+    (pass-if-optimized (logand 15 7))
+    (pass-if-optimized (logior 8 4))
+    (pass-if-optimized (lognot 4))
+    (pass-if-optimized (logtest 15 8))
+    (pass-if-optimized (ash 1 4))
+    (pass-if-optimized (logcount 15))
+    (pass-if-optimized (integer-length 15))
+    (pass-if-optimized (bit-extract #b1101 1 3)))
+
+  (with-test-prefix "rounding operations"
+    (pass-if-optimized (truncate 40.2))
+    (pass-if-optimized (round 40.2))
+    (pass-if-optimized (floor 40.2))
+    (pass-if-optimized (ceiling 40.2)))
+
+  (with-test-prefix "transcendental functions"
+    (pass-if-optimized (sin 1))
+    (pass-if-optimized (cos 2))
+    (pass-if-optimized (tan 3))
+    (pass-if-optimized (asin 4))
+    (pass-if-optimized (acos 5))
+    (pass-if-optimized (atan 6))
+    (pass-if-optimized (exp 7))
+    (pass-if-optimized (log 8))
+    (pass-if-optimized (log10 9))
+    (pass-if-optimized (sinh 10))
+    (pass-if-optimized (cosh 11))
+    (pass-if-optimized (tanh 12))
+    (pass-if-optimized (asinh 13))
+    (pass-if-optimized (acosh 14))
+    (pass-if-optimized (atanh 15))))

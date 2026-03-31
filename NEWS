@@ -7,6 +7,14 @@ Please send Guile bug reports to bug-guile@gnu.org.
 
 Changes in 3.0.12 (since 3.0.11)
 
+* Notable changes
+
+** More aggressive constant folding for numeric primitives
+   (<https://codeberg.org/guile/guile/issues/137>)
+
+The partial evaluator now folds many more numeric primitives at compile
+time when all arguments are constants.
+
 * New interfaces and functionality
 
 ** Unicode Data updates to 17.0.0.
