@@ -1,6 +1,6 @@
 ;;;; bytevectors.test --- R6RS bytevectors. -*- mode: scheme; coding: utf-8; -*-
 ;;;;
-;;;; Copyright (C) 2009-2015, 2018, 2021, 2023 Free Software Foundation, Inc.
+;;;; Copyright (C) 2009-2015, 2018, 2021, 2023, 2026 Free Software Foundation, Inc.
 ;;;;
 ;;;; Ludovic Courtès
 ;;;;
@@ -8,7 +8,7 @@
 ;;;; modify it under the terms of the GNU Lesser General Public
 ;;;; License as published by the Free Software Foundation; either
 ;;;; version 3 of the License, or (at your option) any later version.
-;;;; 
+;;;;
 ;;;; This library is distributed in the hope that it will be useful,
 ;;;; but WITHOUT ANY WARRANTY; without even the implied warranty of
 ;;;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
@@ -177,6 +177,54 @@
       (bytevector-sint-set! b 1 -16 (endianness little) 2)
       (equal? (bytevector->u8-list b)
 	      '(#xff #xf0 #xff))))
+
+  (pass-if-equal "bytevector-sint-ref [3 bytes, positive, bigendian]"
+      #x112233
+    (let ((b (u8-list->bytevector '(#x11 #x22 #x33 #x44 #x55 #x66))))
+      (bytevector-sint-ref b 0 (endianness big) 3)))
+
+  (pass-if-equal "bytevector-sint-ref [3 bytes, positive, littleendian]"
+      #x332211
+    (let ((b (u8-list->bytevector '(#x11 #x22 #x33 #x44 #x55 #x66))))
+      (bytevector-sint-ref b 0 (endianness little) 3)))
+
+  (pass-if-equal "bytevector-sint-ref [3 bytes, negative, bigendian]"
+      (- (1+ #x0eddcc))
+    (let ((b (u8-list->bytevector '(#xF1 #x22 #x33 #x44 #x55 #x66))))
+      (bytevector-sint-ref b 0 (endianness big) 3)))
+
+  (pass-if-equal "bytevector-sint-ref [3 bytes, negative, littleendian]"
+      (- (1+ #x0cddee))
+    (let ((b (u8-list->bytevector '(#x11 #x22 #xF3 #x44 #x55 #x66))))
+      (bytevector-sint-ref b 0 (endianness little) 3)))
+
+  (pass-if-equal "bytevector-sint-ref [3 bytes, negative, bigendian, offset]"
+      (- (1+ #x0baa99))
+    (let ((b (u8-list->bytevector '(#xF1 #x22 #x33 #xF4 #x55 #x66))))
+      (bytevector-sint-ref b 3 (endianness big) 3)))
+
+  (pass-if-equal "bytevector-sint-ref [3 bytes, negative, littlendian, offset]"
+      (- (1+ #x09aabb))
+    (let ((b (u8-list->bytevector '(#x11 #x22 #xF3 #x44 #x55 #xF6))))
+      (bytevector-sint-ref b 3 (endianness little) 3)))
+
+  (pass-if-equal "bytevector-sint-set! [3 bytes, positive]"
+      #vu8(0 0 15 15 0 0)
+      (let ((b (make-bytevector 6)))
+        ;; 00 00 0f
+        (bytevector-sint-set! b 0 15 (endianness big) 3)
+        ;; 0f 00 00
+        (bytevector-sint-set! b 3 15 (endianness little) 3)
+        b))
+
+  (pass-if-equal "bytevector-sint-set! [3 bytes, negative]"
+      #vu8(255 255 240 240 255 255)
+      (let ((b (make-bytevector 6)))
+        ;; ff ff f0
+        (bytevector-sint-set! b 0 -16 (endianness big) 3)
+        ;; f0 ff ff
+        (bytevector-sint-set! b 3 -16 (endianness little) 3)
+        b))
 
   (pass-if "equal?"
     (let ((bv1 (u8-list->bytevector (iota 123)))
