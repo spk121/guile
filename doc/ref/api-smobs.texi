@@ -11,7 +11,7 @@
 
 A @dfn{smob} is a ``small object''.  Before foreign objects were
 introduced in Guile 2.0.12 (@pxref{Foreign Objects}), smobs were the
-preferred way to for C code to define new kinds of Scheme objects.  With
+preferred way for C code to define new kinds of Scheme objects.  With
 the exception of the so-called ``applicable SMOBs'' discussed below,
 smobs are now a legacy interface and are headed for eventual
 deprecation.  @xref{Deprecation}.  New code should use the foreign
