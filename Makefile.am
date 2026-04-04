@@ -53,10 +53,11 @@ schemelib_DATA = libguile/guile-procedures.txt
 # Our own implementation of Gnulib's lock interface.
 noinst_HEADERS = lib/glthread/lock.h
 
-# Our lib/glthreads/lock.h header indirectly includes
-# libguile/scmconfig.h.  Make sure it is built before we recurse into
-# lib/.
-BUILT_SOURCES = libguile/scmconfig.h
+# Adding check-guile ensures it'll be rebuilt for make check when
+# check-guile.in changes.  Our lib/glthreads/lock.h header indirectly
+# includes libguile/scmconfig.h.  Make sure it is built before we
+# recurse into lib/.
+BUILT_SOURCES = check-guile libguile/scmconfig.h
 libguile/scmconfig.h:
 	$(MAKE) -C libguile scmconfig.h
 
