@@ -249,8 +249,10 @@ Refer to the binding named @var{binding-name} in module
 Refer to the binding named @var{binding-name} in module
 @var{module-name}.  The binding must not have been exported by the
 module.  This syntax is only intended for debugging purposes or as a
-last resort.  @xref{Declarative Modules}, for some limitations on the
-use of @code{@@@@}.
+last resort.  You may encounter an unbound variable error with
+@code{@@@@} if the variable is private and has been inlined.  A solution
+is to @code{,reload} the module containing the binding.
+@xref{Declarative Modules} for context.
 @end deffn
 
 @node Creating Guile Modules
