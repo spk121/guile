@@ -1148,6 +1148,44 @@ test_to_utf8_stringn ()
 }
 
 static void
+test_scm_to_stringn_termination ()
+{
+  {
+    SCM empty = scm_from_utf8_string("");
+    char *s;
+
+    const char *enc[3] = {"ASCII", "UTF-8", "ISO-8859-1"};
+    for (int i = 0; i < 3; i++)
+      {
+        s = scm_to_stringn (empty, NULL, enc[i], SCM_FAILED_CONVERSION_ERROR);
+        if (*s)
+          {
+            fprintf (stderr, "fail: scm_to_stringn \"\" %s termination\n",
+                     enc[i]);
+            exit (EXIT_FAILURE);
+          }
+        free (s);
+      }
+
+    s = scm_to_stringn (empty, NULL, "UTF-16LE", SCM_FAILED_CONVERSION_ERROR);
+    if (s[0] || s[1])
+      {
+        fprintf (stderr, "fail: scm_to_stringn \"\" UTF-16 termination\n");
+        exit (EXIT_FAILURE);
+      }
+    free (s);
+
+    s = scm_to_stringn (empty, NULL, "UTF-32", SCM_FAILED_CONVERSION_ERROR);
+    if (s[0] || s[1] || s[2] || s[3])
+      {
+        fprintf (stderr, "fail: scm_to_stringn \"\" UTF-32 termination\n");
+        exit (EXIT_FAILURE);
+      }
+    free (s);
+  }
+}
+
+static void
 test_is_exact ()
 {
   if (1 != scm_is_exact (scm_c_eval_string ("3")))
@@ -1192,6 +1230,7 @@ tests (void *data, int argc, char **argv)
   test_to_double ();
   test_locale_strings ();
   test_to_utf8_stringn ();
+  test_scm_to_stringn_termination ();
   test_is_exact ();
   test_is_inexact ();
 }

@@ -2191,6 +2191,17 @@ char *
 scm_to_stringn (SCM str, size_t *lenp, const char *encoding,
                 scm_t_string_failed_conversion_handler handler)
 {
+  /* Since we have no way to determine the encoding of #\nul[1], when we
+     need to add a terminator (when lenp is NULL), we use four zero
+     bytes, under the assumption that is the largest #\nul encoding, and
+     that all #\nul encodings are a sequence of zero bytes.
+
+     [1] because libunistring relies on iconv, which is "whole string"
+         oriented, and has no way to ask for the encoding of just one
+         character without any Byte Order Mark the encoding might
+         require, and no way to ask for the start position of the first
+         character after any BOM. */
+  const int largest_nul = 4;
   char *buf;
   size_t ilen, len, i;
   int ret;
@@ -2210,11 +2221,9 @@ scm_to_stringn (SCM str, size_t *lenp, const char *encoding,
 
   if (ilen == 0)
     {
-      buf = scm_malloc (1);
-      buf[0] = '\0';
       if (lenp)
         *lenp = 0;
-      return buf;
+      return scm_calloc(largest_nul);
     }
 
   if (lenp == NULL)
@@ -2297,8 +2306,10 @@ scm_to_stringn (SCM str, size_t *lenp, const char *encoding,
     *lenp = len;
   else
     {
-      buf = scm_realloc (buf, len + 1);
-      buf[len] = '\0';
+      if (SIZE_MAX - largest_nul < len) /* see comments above */
+        scm_num_overflow (__func__);
+      buf = scm_realloc (buf, len + largest_nul);
+      memset (buf + len, 0, largest_nul);
     }
 
   scm_remember_upto_here_1 (str);
