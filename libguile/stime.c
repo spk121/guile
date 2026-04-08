@@ -657,9 +657,6 @@ SCM_DEFINE (scm_strftime, "strftime", 2, 0, 0,
 
   char *tbuf;
   int size = 50;
-  char *fmt;
-  char *myfmt;
-  size_t len;
   SCM result;
 
   SCM_VALIDATE_STRING (1, format);
@@ -667,19 +664,21 @@ SCM_DEFINE (scm_strftime, "strftime", 2, 0, 0,
 
   /* Convert the format string to the locale encoding, as the underlying
      'strftime' C function expects.  */
-  fmt = scm_to_locale_stringn (format, &len);
+  char *fmt = scm_to_locale_string (format);
 
   /* Ugly hack: strftime can return 0 if its buffer is too small,
      but some valid time strings (e.g. "%p") can sometimes produce
      a zero-byte output string!  Workaround is to prepend a junk
      character to the format string, so that valid returns are always
      nonzero. */
-  myfmt = scm_malloc (len+2);
-  *myfmt = (uint8_t) 'x';
-  strncpy (myfmt + 1, fmt, len);
-  myfmt[len + 1] = 0;
+  size_t len = strlen (fmt);
+  if (SIZE_MAX - 2 < len)
+    scm_num_overflow (FUNC_NAME);
+  fmt = scm_realloc (fmt, len + 2);
+  memmove (fmt + 1, fmt, len);
+  *fmt = (uint8_t) 'x';
+  fmt[len + 1] = 0;
   scm_remember_upto_here_1 (format);
-  free (fmt);
 
   tbuf = scm_malloc (size);
   {
@@ -714,7 +713,7 @@ SCM_DEFINE (scm_strftime, "strftime", 2, 0, 0,
 
     /* Use `nstrftime ()' from Gnulib, which supports all GNU extensions
        supported by glibc.  */
-    while ((len = nstrftime (tbuf, size, myfmt, &t, 0, 0)) == 0)
+    while ((len = nstrftime (tbuf, size, fmt, &t, 0, 0)) == 0)
       {
 	free (tbuf);
 	size *= 2;
@@ -732,7 +731,7 @@ SCM_DEFINE (scm_strftime, "strftime", 2, 0, 0,
 
   result = scm_from_locale_string (tbuf + 1);
   free (tbuf);
-  free (myfmt);
+  free (fmt);
 #if HAVE_STRUCT_TM_TM_ZONE
   free ((char *) t.tm_zone);
 #endif

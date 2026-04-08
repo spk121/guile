@@ -195,6 +195,10 @@
 
 (with-test-prefix "strftime"
 
+  (pass-if-exception "rejection of #\\nuls in format string"
+       exception:string-contains-nul
+    (strftime "a\x00b" (localtime (current-time))))
+
   (pass-if-equal "strftime %Z doesn't return garbage"
     "ZOW"
     (let ((t (localtime (current-time))))

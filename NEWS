@@ -102,6 +102,10 @@ with a single zero byte, even for encodings like UTF-32 and UTF-16 that
 require a larger terminator.  The current implementation may sometimes
 use a slightly larger terminator than necessary, but never smaller.
 
+** `strftime' now notices and rejects format strings containing a #\nul
+
+Previously it didn't, and only used the prefix before the first #\nul.
+
 
 Changes in 3.0.11 (since 3.0.10)
 
