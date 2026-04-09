@@ -21,12 +21,12 @@
   #:use-module (test-suite lib))
 
 (pass-if "version reporting works"
-  (if (string-contains (version) "UNKNOWN")
+  (if (string-contains (pk 'version (version)) "UNKNOWN")
       (throw 'unsupported)
-      (and (string? (major-version))
-	   (string? (minor-version))
-	   (string? (micro-version))
-	   (equal? 0 (string-contains (version)
+      (and (string? (pk 'major-version (major-version)))
+	   (string? (pk 'minor-version (minor-version)))
+	   (string? (pk 'micro-version (micro-version)))
+	   (equal? 0 (pk 'string-contains (string-contains (version)
                                       (string-append (major-version) "."
                                                      (minor-version) "."
-                                                     (micro-version)))))))
+                                                     (micro-version))))))))
