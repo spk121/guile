@@ -4466,9 +4466,11 @@ null-terminated C string @var{encoding}.  The @var{handler} parameter
 gives a strategy for dealing with characters that cannot be converted
 into @var{encoding}.
 
-If @var{lenp} is @code{NULL}, this function will return a null-terminated C
-string.  It will throw an error if the string contains a null
-character.
+If @var{lenp} is @code{NULL}, this function will return a
+null-terminated C string.  It will throw an error if the string contains
+a null character, and currently, the final terminator may sometimes be a
+slightly longer sequence of zeros than strictly necessary for the
+@var{encoding}.
 
 The Scheme interface to this function is @code{string->bytevector}, from the
 @code{ice-9 iconv} module.  @xref{Representing Strings as Bytes}.
