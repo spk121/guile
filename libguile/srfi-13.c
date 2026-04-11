@@ -59,8 +59,17 @@
 			      start, &c_start, end, &c_end);            \
   } while (0)
 
-#define REF_IN_CHARSET(s, i, cs)					\
-  (scm_is_true (scm_char_set_contains_p ((cs), scm_c_make_char (scm_i_string_ref (s, i)))))
+static inline int
+c_in_charset (uint32_t c, SCM cs)
+{
+  return scm_is_true (scm_char_set_contains_p ((cs), scm_c_make_char (c)));
+}
+
+static inline int
+REF_IN_CHARSET(SCM s, size_t i, SCM cs)
+{
+  return c_in_charset (scm_i_string_ref (s, i), cs);
+}
 
 SCM_DEFINE (scm_string_null_p, "string-null?", 1, 0, 0,
            (SCM str),
@@ -734,7 +743,9 @@ SCM_DEFINE (scm_string_trim, "string-trim", 1, 3, 0,
     {
       while (cstart < cend)
 	{
-	  if (!uc_is_c_whitespace (scm_i_string_ref (s, cstart)))
+          uint32_t c = scm_i_string_ref (s, cstart);
+	  if (!uc_is_c_whitespace (c)
+              && !c_in_charset (c, scm_char_set_whitespace))
 	    break;
 	  cstart++;
 	}
@@ -810,7 +821,9 @@ SCM_DEFINE (scm_string_trim_right, "string-trim-right", 1, 3, 0,
     {
       while (cstart < cend)
 	{
-	  if (!uc_is_c_whitespace (scm_i_string_ref (s, cend - 1)))
+          uint32_t c = scm_i_string_ref (s, cend - 1);
+	  if (!uc_is_c_whitespace (c)
+              && !c_in_charset (c, scm_char_set_whitespace))
 	    break;
 	  cend--;
 	}
@@ -886,13 +899,17 @@ SCM_DEFINE (scm_string_trim_both, "string-trim-both", 1, 3, 0,
     {
       while (cstart < cend)
 	{
-	  if (!uc_is_c_whitespace (scm_i_string_ref (s, cstart)))
+          uint32_t c = scm_i_string_ref (s, cstart);
+	  if (!uc_is_c_whitespace (c)
+              && !c_in_charset (c, scm_char_set_whitespace))
 	    break;
 	  cstart++;
 	}
       while (cstart < cend)
 	{
-	  if (!uc_is_c_whitespace (scm_i_string_ref (s, cend - 1)))
+          uint32_t c = scm_i_string_ref (s, cend - 1);
+	  if (!uc_is_c_whitespace (c)
+               && !c_in_charset (c, scm_char_set_whitespace))
 	    break;
 	  cend--;
 	}
