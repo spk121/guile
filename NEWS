@@ -106,12 +106,6 @@ use a slightly larger terminator than necessary, but never smaller.
 
 Previously it didn't, and only used the prefix before the first #\nul.
 
-** `string-trim' `string-trim-right` `string-trim-both` trim *all* whitespace
-
-When given no predicate, they should now correctly trim all Unicode
-whitespace.  Previously they only trimmed ASCII whitespace, so
-(string-trim "\u2003") would do nothing.
-
 
 Changes in 3.0.11 (since 3.0.10)
 

@@ -725,12 +725,21 @@ SCM_DEFINE (scm_string_trim, "string-trim", 1, 3, 0,
 #define FUNC_NAME s_scm_string_trim
 {
   size_t cstart, cend;
-  MY_VALIDATE_SUBSTRING_SPEC (1, s, 3, start, cstart, 4, end, cend);
 
-  if (SCM_UNBNDP (char_pred))
-    char_pred = scm_char_set_whitespace;
-
-  if (SCM_CHARP (char_pred))
+  MY_VALIDATE_SUBSTRING_SPEC (1, s,
+			      3, start, cstart,
+			      4, end, cend);
+  if (SCM_UNBNDP (char_pred)
+      || scm_is_eq (char_pred, scm_char_set_whitespace))
+    {
+      while (cstart < cend)
+	{
+	  if (!uc_is_c_whitespace (scm_i_string_ref (s, cstart)))
+	    break;
+	  cstart++;
+	}
+    }
+  else if (SCM_CHARP (char_pred))
     {
       while (cstart < cend)
 	{
@@ -792,12 +801,21 @@ SCM_DEFINE (scm_string_trim_right, "string-trim-right", 1, 3, 0,
 #define FUNC_NAME s_scm_string_trim_right
 {
   size_t cstart, cend;
-  MY_VALIDATE_SUBSTRING_SPEC (1, s, 3, start, cstart, 4, end, cend);
 
-  if (SCM_UNBNDP (char_pred))
-    char_pred = scm_char_set_whitespace;
-
-  if (SCM_CHARP (char_pred))
+  MY_VALIDATE_SUBSTRING_SPEC (1, s,
+			      3, start, cstart,
+			      4, end, cend);
+  if (SCM_UNBNDP (char_pred)
+      || scm_is_eq (char_pred, scm_char_set_whitespace))
+    {
+      while (cstart < cend)
+	{
+	  if (!uc_is_c_whitespace (scm_i_string_ref (s, cend - 1)))
+	    break;
+	  cend--;
+	}
+    }
+  else if (SCM_CHARP (char_pred))
     {
       while (cstart < cend)
 	{
@@ -859,12 +877,27 @@ SCM_DEFINE (scm_string_trim_both, "string-trim-both", 1, 3, 0,
 #define FUNC_NAME s_scm_string_trim_both
 {
   size_t cstart, cend;
-  MY_VALIDATE_SUBSTRING_SPEC (1, s, 3, start, cstart, 4, end, cend);
 
-  if (SCM_UNBNDP (char_pred))
-    char_pred = scm_char_set_whitespace;
-
-  if (SCM_CHARP (char_pred))
+  MY_VALIDATE_SUBSTRING_SPEC (1, s,
+			      3, start, cstart,
+			      4, end, cend);
+  if (SCM_UNBNDP (char_pred)
+      || scm_is_eq (char_pred, scm_char_set_whitespace))
+    {
+      while (cstart < cend)
+	{
+	  if (!uc_is_c_whitespace (scm_i_string_ref (s, cstart)))
+	    break;
+	  cstart++;
+	}
+      while (cstart < cend)
+	{
+	  if (!uc_is_c_whitespace (scm_i_string_ref (s, cend - 1)))
+	    break;
+	  cend--;
+	}
+    }
+  else if (SCM_CHARP (char_pred))
     {
       while (cstart < cend)
 	{
