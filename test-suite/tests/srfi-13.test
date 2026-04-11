@@ -710,6 +710,11 @@
   (pass-if "empty string"
     (string=? "" (string-trim "")))
 
+  (pass-if-equal "" (string-trim " "))
+  (pass-if-equal "" (string-trim " " char-set:whitespace))
+  (pass-if-equal "" (string-trim "\u2003"))
+  (pass-if-equal "" (string-trim "\u2003" char-set:whitespace))
+
   (pass-if "no char/pred"
     (string=? "foo " (string-trim " \tfoo ")))
 
@@ -744,6 +749,11 @@
   (pass-if "empty string"
     (string=? "" (string-trim-right "")))
 
+  (pass-if-equal "" (string-trim-right " "))
+  (pass-if-equal "" (string-trim-right " " char-set:whitespace))
+  (pass-if-equal "" (string-trim-right "\u2003"))
+  (pass-if-equal "" (string-trim-right "\u2003" char-set:whitespace))
+
   (pass-if "no char/pred"
     (string=? " \tfoo" (string-trim-right " \tfoo ")))
 
@@ -777,6 +787,11 @@
 
   (pass-if "empty string"
     (string=? "" (string-trim-both "")))
+
+  (pass-if-equal "" (string-trim-right " "))
+  (pass-if-equal "" (string-trim-right " " char-set:whitespace))
+  (pass-if-equal "" (string-trim-right "\u2003"))
+  (pass-if-equal "" (string-trim-right "\u2003" char-set:whitespace))
 
   (pass-if "no char/pred"
     (string=? "foo" (string-trim-both " \tfoo ")))
