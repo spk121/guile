@@ -9,7 +9,7 @@ set -e
 }
 
 ######################################################################
-### announce build tool versions
+### Announce build tool versions
 echo ""
 autoconf --version
 echo ""
@@ -19,13 +19,22 @@ echo ""
 # Typical MacOS X installations rename 'libtoolize' to 'glibtoolize', so
 # adjust to that.
 if test "`uname -s`" = "Darwin"; then
-  glibtoolize --version
+  if glibtoolize --version 2>/dev/null; then
+    :
+  elif libtoolize --version 2>/dev/null; then
+    :
+  else
+    echo "autogen.sh: could not find glibtoolize or libtoolize on Darwin." >&2
+    exit 1
+  fi
 else
   libtoolize --version
 fi
 
 echo ""
-${M4:-m4} --version
+if ! ${M4:-m4} --version 2>/dev/null; then
+  echo "m4: --version not supported (likely BSD m4)"
+fi
 echo ""
 flex --version
 echo ""
@@ -54,7 +63,7 @@ get_serial() {
 }
 
 ######################################################################
-### update infrastructure
+### Update infrastructure
 
 M4_DIR="m4"
 
@@ -70,7 +79,7 @@ autopoint --force
 # Step 3: Restore any m4 file from the backup whose serial is greater
 # than (or equal to, meaning autopoint downgraded it) what autopoint
 # just installed.  If our backup had no serial (0) and autopoint also
-# wrote no serial (0) we leave autopoint's version in place, since the
+# wrote no serial (0), we leave autopoint's version in place, since the
 # backup and the installed file are from the same generation.
 for bak_file in "$M4_BAK"/*.m4; do
   [ -f "$bak_file" ] || continue
