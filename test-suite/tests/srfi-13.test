@@ -788,10 +788,10 @@
   (pass-if "empty string"
     (string=? "" (string-trim-both "")))
 
-  (pass-if-equal "" (string-trim-right " "))
-  (pass-if-equal "" (string-trim-right " " char-set:whitespace))
-  (pass-if-equal "" (string-trim-right "\u2003"))
-  (pass-if-equal "" (string-trim-right "\u2003" char-set:whitespace))
+  (pass-if-equal "" (string-trim-both " "))
+  (pass-if-equal "" (string-trim-both " " char-set:whitespace))
+  (pass-if-equal "" (string-trim-both "\u2003"))
+  (pass-if-equal "" (string-trim-both "\u2003" char-set:whitespace))
 
   (pass-if "no char/pred"
     (string=? "foo" (string-trim-both " \tfoo ")))
