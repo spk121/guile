@@ -1,9 +1,12 @@
-# Check for alignas and alignof that conform to C23.
-
-dnl Copyright 2011-2023 Free Software Foundation, Inc.
+# stdalign.m4
+# serial 3
+dnl Copyright 2011-2026 Free Software Foundation, Inc.
 dnl This file is free software; the Free Software Foundation
 dnl gives unlimited permission to copy and/or distribute it,
 dnl with or without modifications, as long as this notice is preserved.
+dnl This file is offered as-is, without any warranty.
+
+# Check for alignas and alignof that conform to C23.
 
 dnl Written by Paul Eggert and Bruno Haible.
 
@@ -13,10 +16,10 @@ AC_DEFUN([gl_ALIGNASOF],
 [
   AC_CACHE_CHECK([for alignas and alignof],
     [gl_cv_header_working_stdalign_h],
-    [gl_save_CFLAGS=$CFLAGS
+    [gl_saved_CFLAGS=$CFLAGS
      for gl_working in "yes, keywords" "yes, <stdalign.h> macros"; do
       AS_CASE([$gl_working],
-        [*stdalign.h*], [CFLAGS="$gl_save_CFLAGS -DINCLUDE_STDALIGN_H"])
+        [*stdalign.h*], [CFLAGS="$gl_saved_CFLAGS -DINCLUDE_STDALIGN_H"])
       AC_COMPILE_IFELSE(
        [AC_LANG_PROGRAM(
           [[#include <stdint.h>
@@ -27,7 +30,7 @@ AC_DEFUN([gl_ALIGNASOF],
 
             /* Test that alignof yields a result consistent with offsetof.
                This catches GCC bug 52023
-               <https://gcc.gnu.org/bugzilla/show_bug.cgi?id=52023>.  */
+               <https://gcc.gnu.org/PR52023>.  */
             #ifdef __cplusplus
                template <class t> struct alignof_helper { char a; t b; };
             # define ao(type) offsetof (alignof_helper<type>, b)
@@ -56,7 +59,7 @@ AC_DEFUN([gl_ALIGNASOF],
        [gl_cv_header_working_stdalign_h=$gl_working],
        [gl_cv_header_working_stdalign_h=no])
 
-      CFLAGS=$gl_save_CFLAGS
+      CFLAGS=$gl_saved_CFLAGS
       test "$gl_cv_header_working_stdalign_h" != no && break
      done])
 
@@ -68,18 +71,21 @@ AC_DEFUN([gl_ALIGNASOF],
   dnl The "zz" puts this toward config.h's end, to avoid potential
   dnl collisions with other definitions.
   AH_VERBATIM([zzalignas],
-[#if !defined HAVE_C_ALIGNASOF && __cplusplus < 201103 && !defined alignof
-# if HAVE_STDALIGN_H
+[#if !defined HAVE_C_ALIGNASOF \
+    && !(defined __cplusplus && 201103 <= __cplusplus) \
+    && !defined alignof
+# if defined HAVE_STDALIGN_H
 #  include <stdalign.h>
-# else
+# endif
+
 /* ISO C23 alignas and alignof for platforms that lack it.
 
    References:
    ISO C23 (latest free draft
-   <http://www.open-std.org/jtc1/sc22/wg14/www/docs/n3047.pdf>)
-   sections 6.5.3.4, 6.7.5, 7.15.
+   <https://www.open-std.org/jtc1/sc22/wg14/www/docs/n3220.pdf>)
+   sections 6.2.8, 6.7.6.
    C++11 (latest free draft
-   <http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2011/n3242.pdf>)
+   <https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2011/n3242.pdf>)
    section 18.10. */
 
 /* alignof (TYPE), also known as _Alignof (TYPE), yields the alignment
@@ -97,28 +103,40 @@ AC_DEFUN([gl_ALIGNASOF],
    want to be portable to HP-UX 10.20 cc and AIX 3.2.5 xlc.  */
 
 /* GCC releases before GCC 4.9 had a bug in _Alignof.  See GCC bug 52023
-   <https://gcc.gnu.org/bugzilla/show_bug.cgi?id=52023>.
-   clang versions < 8.0.0 have the same bug.  */
-#   if (!defined __STDC_VERSION__ || __STDC_VERSION__ < 201112 \
-        || (defined __GNUC__ && __GNUC__ < 4 + (__GNUC_MINOR__ < 9) \
-            && !defined __clang__) \
-        || (defined __clang__ && __clang_major__ < 8))
-#    ifdef __cplusplus
-#     if (201103 <= __cplusplus || defined _MSC_VER)
-#      define _Alignof(type) alignof (type)
+   <https://gcc.gnu.org/PR52023>.
+   clang versions < 8.0.0 have the same bug.
+   IBM XL C V16.1.0 cc (non-clang) has the same bug.  */
+#  if (!defined __STDC_VERSION__ || __STDC_VERSION__ < 201112 \
+       || (defined __GNUC__ && __GNUC__ < 4 + (__GNUC_MINOR__ < 9) \
+           && !defined __clang__) \
+       || (defined __clang__ && __clang_major__ < 8) \
+       || defined __xlC__)
+#   undef/**/_Alignof
+#   ifdef __cplusplus
+#    if (201103 <= __cplusplus || defined _MSC_VER)
+#     define _Alignof(type) alignof (type)
+#    else
+      template <class __t> struct __alignof_helper { char __a; __t __b; };
+#     if (defined __GNUC__ && 4 <= __GNUC__) || defined __clang__
+#      define _Alignof(type) __builtin_offsetof (__alignof_helper<type>, __b)
 #     else
-       template <class __t> struct __alignof_helper { char __a; __t __b; };
 #      define _Alignof(type) offsetof (__alignof_helper<type>, __b)
-#      define _GL_STDALIGN_NEEDS_STDDEF 1
 #     endif
+#     define _GL_STDALIGN_NEEDS_STDDEF 1
+#    endif
+#   else
+#    if (defined __GNUC__ && 4 <= __GNUC__) || defined __clang__
+#     define _Alignof(type) __builtin_offsetof (struct { char __a; type __b; }, __b)
 #    else
 #     define _Alignof(type) offsetof (struct { char __a; type __b; }, __b)
 #     define _GL_STDALIGN_NEEDS_STDDEF 1
 #    endif
 #   endif
-#   if ! (defined __cplusplus && (201103 <= __cplusplus || defined _MSC_VER))
-#    define alignof _Alignof
-#   endif
+#  endif
+#  if ! (defined __cplusplus && (201103 <= __cplusplus || defined _MSC_VER))
+#   undef/**/alignof
+#   define alignof _Alignof
+#  endif
 
 /* alignas (A), also known as _Alignas (A), aligns a variable or type
    to the alignment A, where A is an integer constant expression.  For
@@ -144,30 +162,33 @@ AC_DEFUN([gl_ALIGNASOF],
      - alignas (TYPE) is equivalent to alignas (alignof (TYPE)).
 
    */
-#  if !defined __STDC_VERSION__ || __STDC_VERSION__ < 201112
-#   if defined __cplusplus && (201103 <= __cplusplus || defined _MSC_VER)
-#    define _Alignas(a) alignas (a)
-#   elif (!defined __attribute__ \
-          && ((defined __APPLE__ && defined __MACH__ \
-               ? 4 < __GNUC__ + (1 <= __GNUC_MINOR__) \
-               : __GNUC__ && !defined __ibmxl__) \
-              || (4 <= __clang_major__) \
-              || (__ia64 && (61200 <= __HP_cc || 61200 <= __HP_aCC)) \
-              || __ICC || 0x590 <= __SUNPRO_C || 0x0600 <= __xlC__))
-#    define _Alignas(a) __attribute__ ((__aligned__ (a)))
-#   elif 1300 <= _MSC_VER
-#    define _Alignas(a) __declspec (align (a))
-#   endif
+# if !defined __STDC_VERSION__ || __STDC_VERSION__ < 201112
+#  if defined __cplusplus && (201103 <= __cplusplus || defined _MSC_VER)
+#   define _Alignas(a) alignas (a)
+#  elif (!defined __attribute__ \
+         && ((defined __APPLE__ && defined __MACH__ \
+              ? 4 < __GNUC__ + (1 <= __GNUC_MINOR__) \
+              : __GNUC__ && !defined __ibmxl__) \
+             || (4 <= __clang_major__) \
+             || (__ia64 && (61200 <= __HP_cc || 61200 <= __HP_aCC)) \
+             || __ICC || 0x590 <= __SUNPRO_C || 0x0600 <= __xlC__))
+#   define _Alignas(a) __attribute__ ((__aligned__ (a)))
+#  elif 1300 <= _MSC_VER
+#   define _Alignas(a) __declspec (align (a))
 #  endif
+# endif
+# if !defined HAVE_STDALIGN_H
 #  if ((defined _Alignas \
         && !(defined __cplusplus \
              && (201103 <= __cplusplus || defined _MSC_VER))) \
-       || (defined __STDC_VERSION__ && 201112 <= __STDC_VERSION__))
+       || (defined __STDC_VERSION__ && 201112 <= __STDC_VERSION__ \
+           && !defined __xlC__))
 #   define alignas _Alignas
 #  endif
-#  if _GL_STDALIGN_NEEDS_STDDEF
-#   include <stddef.h>
-#  endif
+# endif
+
+# if defined _GL_STDALIGN_NEEDS_STDDEF
+#  include <stddef.h>
 # endif
 #endif])
 ])
@@ -175,9 +196,17 @@ AC_DEFUN([gl_ALIGNASOF],
 AC_DEFUN([gl_STDALIGN_H],
 [
   AC_REQUIRE([gl_ALIGNASOF])
-  GL_GENERATE_STDALIGN_H=false
-  AS_IF([test "$gl_cv_header_working_stdalign_h" = no],
-    [GL_GENERATE_STDALIGN_H=true])
+  if test "$gl_cv_header_working_stdalign_h" = no; then
+    GL_GENERATE_STDALIGN_H=true
+  else
+    GL_GENERATE_STDALIGN_H=false
+  fi
 
-  AC_CHECK_HEADERS_ONCE([stdalign.h])
+  gl_CHECK_NEXT_HEADERS([stdalign.h])
+  if test $ac_cv_header_stdalign_h = yes; then
+    HAVE_STDALIGN_H=1
+  else
+    HAVE_STDALIGN_H=0
+  fi
+  AC_SUBST([HAVE_STDALIGN_H])
 ])

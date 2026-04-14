@@ -1,6 +1,6 @@
 /* Get process times
 
-   Copyright (C) 2008-2023 Free Software Foundation, Inc.
+   Copyright (C) 2008-2026 Free Software Foundation, Inc.
 
    This file is free software: you can redistribute it and/or modify
    it under the terms of the GNU Lesser General Public License as
@@ -31,8 +31,6 @@
 static clock_t
 filetime2clock (FILETIME time)
 {
-  float f;
-
   /* We have a 64-bit value, in the form of two DWORDS aka unsigned
      int, counting the number of 100-nanosecond intervals.  We need to
      convert these to clock ticks.  Older POSIX uses CLK_TCK to
@@ -42,7 +40,7 @@ filetime2clock (FILETIME time)
      use it.  Note that CLOCKS_PER_SEC constant does not apply here,
      it is for use with the clock function.  */
 
-  f = (unsigned long long) time.dwHighDateTime << 32;
+  float f = (unsigned long long) time.dwHighDateTime << 32;
   f += time.dwLowDateTime;
   f = f * CLK_TCK / 10000000;
   return (clock_t) round (f);

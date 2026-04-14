@@ -1,4 +1,4 @@
-# Copyright (C) 2002-2023 Free Software Foundation, Inc.
+# Copyright (C) 2002-2026 Free Software Foundation, Inc.
 #
 # This file is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -27,7 +27,8 @@
 
 
 # Specification in the form of a command-line invocation:
-# gnulib-tool --import --local-dir=gnulib-local \
+# gnulib-tool --import \
+#  --local-dir=gnulib-local \
 #  --lib=libgnu \
 #  --source-base=lib \
 #  --m4-base=m4 \
@@ -47,6 +48,11 @@
 #  --avoid=unistr/u8-prev \
 #  --avoid=unistr/u8-uctomb \
 #  --avoid=unitypes \
+#  --avoid=getlogin \
+#  --avoid=readutmp \
+#  --avoid=unlocked-io-internal \
+#  --avoid=xalloc \
+#  --avoid=xalloc-die \
 #  accept4 \
 #  alignof \
 #  alloca-opt \
@@ -59,6 +65,7 @@
 #  ceil \
 #  clock-time \
 #  close \
+#  closedir \
 #  connect \
 #  copysign \
 #  dirfd \
@@ -83,6 +90,7 @@
 #  getpeername \
 #  getsockname \
 #  getsockopt \
+#  gettext-h \
 #  git-version-gen \
 #  gitlog-to-changelog \
 #  gnu-web-doc-update \
@@ -101,7 +109,7 @@
 #  link \
 #  listen \
 #  localcharset \
-#  locale \
+#  locale-h \
 #  log1p \
 #  lstat \
 #  maintainer-makefile \
@@ -113,6 +121,7 @@
 #  nproc \
 #  nstrftime \
 #  open \
+#  opendir \
 #  pipe-posix \
 #  pipe2 \
 #  poll \
@@ -123,12 +132,14 @@
 #  posix_spawn_file_actions_destroy \
 #  posix_spawn_file_actions_init \
 #  posix_spawnp \
-#  putenv \
+#  putenv-gnu \
+#  readdir \
 #  readlink \
 #  recv \
 #  recvfrom \
 #  regex \
 #  rename \
+#  rewinddir \
 #  rmdir \
 #  select \
 #  send \
@@ -138,19 +149,21 @@
 #  shutdown \
 #  socket \
 #  stat-time \
-#  stdlib \
+#  stdlib-h \
 #  striconveh \
-#  string \
-#  sys_select \
-#  sys_stat \
+#  string-h \
+#  sys_select-h \
+#  sys_stat-h \
+#  threadlib \
 #  time \
 #  times \
 #  trunc \
-#  unistd \
+#  unistd-h \
 #  verify \
 #  vsnprintf \
 #  warnings \
-#  wchar
+#  wchar-h \
+#  wint_t
 
 # Specification in the form of a few gnulib-tool.m4 macro invocations:
 gl_LOCAL_DIR([gnulib-local])
@@ -167,6 +180,7 @@ gl_MODULES([
   ceil
   clock-time
   close
+  closedir
   connect
   copysign
   dirfd
@@ -191,6 +205,7 @@ gl_MODULES([
   getpeername
   getsockname
   getsockopt
+  gettext-h
   git-version-gen
   gitlog-to-changelog
   gnu-web-doc-update
@@ -209,7 +224,7 @@ gl_MODULES([
   link
   listen
   localcharset
-  locale
+  locale-h
   log1p
   lstat
   maintainer-makefile
@@ -221,6 +236,7 @@ gl_MODULES([
   nproc
   nstrftime
   open
+  opendir
   pipe-posix
   pipe2
   poll
@@ -231,12 +247,14 @@ gl_MODULES([
   posix_spawn_file_actions_destroy
   posix_spawn_file_actions_init
   posix_spawnp
-  putenv
+  putenv-gnu
+  readdir
   readlink
   recv
   recvfrom
   regex
   rename
+  rewinddir
   rmdir
   select
   send
@@ -246,21 +264,23 @@ gl_MODULES([
   shutdown
   socket
   stat-time
-  stdlib
+  stdlib-h
   striconveh
-  string
-  sys_select
-  sys_stat
+  string-h
+  sys_select-h
+  sys_stat-h
+  threadlib
   time
   times
   trunc
-  unistd
+  unistd-h
   verify
   vsnprintf
   warnings
-  wchar
+  wchar-h
+  wint_t
 ])
-gl_AVOID([lock unistr/base unistr/u8-mbtouc unistr/u8-mbtouc-unsafe unistr/u8-mbtoucr unistr/u8-prev unistr/u8-uctomb unitypes])
+gl_AVOID([lock unistr/base unistr/u8-mbtouc unistr/u8-mbtouc-unsafe unistr/u8-mbtoucr unistr/u8-prev unistr/u8-uctomb unitypes getlogin readutmp unlocked-io-internal xalloc xalloc-die])
 gl_SOURCE_BASE([lib])
 gl_M4_BASE([m4])
 gl_PO_BASE([])

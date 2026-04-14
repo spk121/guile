@@ -1,8 +1,10 @@
-# ceil.m4 serial 15
-dnl Copyright (C) 2007, 2009-2023 Free Software Foundation, Inc.
+# ceil.m4
+# serial 18
+dnl Copyright (C) 2007, 2009-2026 Free Software Foundation, Inc.
 dnl This file is free software; the Free Software Foundation
 dnl gives unlimited permission to copy and/or distribute it,
 dnl with or without modifications, as long as this notice is preserved.
+dnl This file is offered as-is, without any warranty.
 
 AC_DEFUN([gl_FUNC_CEIL],
 [
@@ -19,7 +21,7 @@ AC_DEFUN([gl_FUNC_CEIL],
       AC_CACHE_CHECK([whether ceil works according to ISO C 99 with IEC 60559],
         [gl_cv_func_ceil_ieee],
         [
-          save_LIBS="$LIBS"
+          saved_LIBS="$LIBS"
           LIBS="$LIBS $CEIL_LIBM"
           AC_RUN_IFELSE(
             [AC_LANG_SOURCE([[
@@ -46,17 +48,17 @@ int main (int argc, char *argv[])
             [gl_cv_func_ceil_ieee=yes],
             [gl_cv_func_ceil_ieee=no],
             [case "$host_os" in
-                              # Guess yes on glibc systems.
-               *-gnu* | gnu*) gl_cv_func_ceil_ieee="guessing yes" ;;
-                              # Guess yes on musl systems.
-               *-musl*)       gl_cv_func_ceil_ieee="guessing yes" ;;
-                              # Guess yes on native Windows.
-               mingw*)        gl_cv_func_ceil_ieee="guessing yes" ;;
-                              # If we don't know, obey --enable-cross-guesses.
-               *)             gl_cv_func_ceil_ieee="$gl_cross_guess_normal" ;;
+                                   # Guess yes on glibc systems.
+               *-gnu* | gnu*)      gl_cv_func_ceil_ieee="guessing yes" ;;
+                                   # Guess yes on musl systems.
+               *-musl* | midipix*) gl_cv_func_ceil_ieee="guessing yes" ;;
+                                   # Guess yes on native Windows.
+               mingw* | windows*)  gl_cv_func_ceil_ieee="guessing yes" ;;
+                                   # If we don't know, obey --enable-cross-guesses.
+               *)                  gl_cv_func_ceil_ieee="$gl_cross_guess_normal" ;;
              esac
             ])
-          LIBS="$save_LIBS"
+          LIBS="$saved_LIBS"
         ])
       case "$gl_cv_func_ceil_ieee" in
         *yes) ;;
@@ -88,7 +90,7 @@ AC_DEFUN([gl_FUNC_CEIL_LIBS],
          [[x = funcptr(x) + ceil(x);]])],
       [gl_cv_func_ceil_libm=])
     if test "$gl_cv_func_ceil_libm" = "?"; then
-      save_LIBS="$LIBS"
+      saved_LIBS="$LIBS"
       LIBS="$LIBS -lm"
       AC_LINK_IFELSE(
         [AC_LANG_PROGRAM(
@@ -100,7 +102,7 @@ AC_DEFUN([gl_FUNC_CEIL_LIBS],
              double x;]],
            [[x = funcptr(x) + ceil(x);]])],
         [gl_cv_func_ceil_libm="-lm"])
-      LIBS="$save_LIBS"
+      LIBS="$saved_LIBS"
     fi
   ])
   CEIL_LIBM="$gl_cv_func_ceil_libm"

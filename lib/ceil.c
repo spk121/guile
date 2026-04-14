@@ -1,5 +1,5 @@
 /* Round towards positive infinity.
-   Copyright (C) 2007, 2010-2023 Free Software Foundation, Inc.
+   Copyright (C) 2007, 2010-2026 Free Software Foundation, Inc.
 
    This file is free software: you can redistribute it and/or modify
    it under the terms of the GNU Lesser General Public License as
@@ -48,7 +48,7 @@
 #endif
 
 /* -0.0.  See minus-zero.h.  */
-#if defined __hpux || defined __sgi || defined __ICC
+#if defined __hpux || defined __ICC
 # define MINUS_ZERO (-MIN * MIN)
 #else
 # define MINUS_ZERO L_(-0.0)

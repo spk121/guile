@@ -102,6 +102,7 @@ INSTALL
 /lib/errno.h
 /lib/fcntl.h
 /lib/iconv.h
+/lib/iconv_open*.h
 /lib/inttypes.h
 /lib/langinfo.h
 /lib/limits.h

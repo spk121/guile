@@ -1,5 +1,5 @@
 /* Extended regular expression matching and search library.
-   Copyright (C) 2002-2023 Free Software Foundation, Inc.
+   Copyright (C) 2002-2026 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
    Contributed by Isamu Hasegawa <isamu@yamato.ibm.com>.
 
@@ -29,6 +29,7 @@
 #include <locale.h>
 #include <wchar.h>
 #include <wctype.h>
+#include <stdckdint.h>
 #include <stdint.h>
 
 #ifndef _LIBC
@@ -97,22 +98,14 @@
 #endif
 
 /* This is for other GNU distributions with internationalized messages.  */
-#if (HAVE_LIBINTL_H && ENABLE_NLS) || defined _LIBC
+#ifdef _LIBC
 # include <libintl.h>
-# ifdef _LIBC
-#  undef gettext
-#  define gettext(msgid) \
-  __dcgettext (_libc_intl_domainname, msgid, LC_MESSAGES)
-# endif
-#else
 # undef gettext
-# define gettext(msgid) (msgid)
-#endif
-
-#ifndef gettext_noop
-/* This define is so xgettext can find the internationalizable
-   strings.  */
+# define gettext(msgid) \
+  __dcgettext (_libc_intl_domainname, msgid, LC_MESSAGES)
 # define gettext_noop(String) String
+#else
+# include "gettext.h"
 #endif
 
 /* Number of ASCII characters.  */
@@ -150,9 +143,6 @@
    as some non-GCC platforms lack them, an issue when this code is
    used in Gnulib.  */
 
-#ifndef SSIZE_MAX
-# define SSIZE_MAX ((ssize_t) (SIZE_MAX / 2))
-#endif
 #ifndef ULONG_WIDTH
 # define ULONG_WIDTH REGEX_UINTEGER_WIDTH (ULONG_MAX)
 /* The number of usable bits in an unsigned integer type with maximum
@@ -437,12 +427,6 @@ typedef struct re_dfa_t re_dfa_t;
 #define re_string_byte_at(pstr,idx) ((pstr)->mbs[idx])
 #define re_string_skip_bytes(pstr,idx) ((pstr)->cur_idx += (idx))
 #define re_string_set_index(pstr,idx) ((pstr)->cur_idx = (idx))
-
-#ifdef _LIBC
-# define MALLOC_0_IS_NONNULL 1
-#elif !defined MALLOC_0_IS_NONNULL
-# define MALLOC_0_IS_NONNULL 0
-#endif
 
 #ifndef MAX
 # define MAX(a,b) ((a) < (b) ? (b) : (a))
@@ -822,7 +806,7 @@ re_string_elem_size_at (const re_string_t *pstr, Idx idx)
 }
 
 #ifdef _LIBC
-# if __GNUC__ >= 7
+# if __glibc_has_attribute (__fallthrough__)
 #  define FALLTHROUGH __attribute__ ((__fallthrough__))
 # else
 #  define FALLTHROUGH ((void) 0)

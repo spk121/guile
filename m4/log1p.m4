@@ -1,10 +1,12 @@
-# log1p.m4 serial 8
-dnl Copyright (C) 2012-2023 Free Software Foundation, Inc.
+# log1p.m4
+# serial 12
+dnl Copyright (C) 2012-2026 Free Software Foundation, Inc.
 dnl This file is free software; the Free Software Foundation
 dnl gives unlimited permission to copy and/or distribute it,
 dnl with or without modifications, as long as this notice is preserved.
+dnl This file is offered as-is, without any warranty.
 
-AC_DEFUN([gl_FUNC_LOG1P],
+AC_DEFUN_ONCE([gl_FUNC_LOG1P],
 [
   m4_divert_text([DEFAULTS], [gl_log1p_required=plain])
   AC_REQUIRE([gl_MATH_H_DEFAULTS])
@@ -16,10 +18,10 @@ AC_DEFUN([gl_FUNC_LOG1P],
   gl_COMMON_DOUBLE_MATHFUNC([log1p])
 
   dnl Test whether log1p() exists.
-  save_LIBS="$LIBS"
+  saved_LIBS="$LIBS"
   LIBS="$LIBS $LOG1P_LIBM"
   AC_CHECK_FUNCS([log1p])
-  LIBS="$save_LIBS"
+  LIBS="$saved_LIBS"
   if test $ac_cv_func_log1p = yes; then
     :
     m4_ifdef([gl_FUNC_LOG1P_IEEE], [
@@ -28,7 +30,7 @@ AC_DEFUN([gl_FUNC_LOG1P],
         AC_CACHE_CHECK([whether log1p works according to ISO C 99 with IEC 60559],
           [gl_cv_func_log1p_ieee],
           [
-            save_LIBS="$LIBS"
+            saved_LIBS="$LIBS"
             LIBS="$LIBS $LOG1P_LIBM"
             AC_RUN_IFELSE(
               [AC_LANG_SOURCE([[
@@ -52,17 +54,17 @@ int main (int argc, char *argv[])
               [gl_cv_func_log1p_ieee=yes],
               [gl_cv_func_log1p_ieee=no],
               [case "$host_os" in
-                                # Guess yes on glibc systems.
-                 *-gnu* | gnu*) gl_cv_func_log1p_ieee="guessing yes" ;;
-                                # Guess yes on musl systems.
-                 *-musl*)       gl_cv_func_log1p_ieee="guessing yes" ;;
-                                # Guess yes on native Windows.
-                 mingw*)        gl_cv_func_log1p_ieee="guessing yes" ;;
-                                # If we don't know, obey --enable-cross-guesses.
-                 *)             gl_cv_func_log1p_ieee="$gl_cross_guess_normal" ;;
+                                     # Guess yes on glibc systems.
+                 *-gnu* | gnu*)      gl_cv_func_log1p_ieee="guessing yes" ;;
+                                     # Guess yes on musl systems.
+                 *-musl* | midipix*) gl_cv_func_log1p_ieee="guessing yes" ;;
+                                     # Guess yes on native Windows.
+                 mingw* | windows*)  gl_cv_func_log1p_ieee="guessing yes" ;;
+                                     # If we don't know, obey --enable-cross-guesses.
+                 *)                  gl_cv_func_log1p_ieee="$gl_cross_guess_normal" ;;
                esac
               ])
-            LIBS="$save_LIBS"
+            LIBS="$saved_LIBS"
           ])
         case "$gl_cv_func_log1p_ieee" in
           *yes) ;;

@@ -1,7 +1,7 @@
 /* Header for poll(2) emulation
    Contributed by Paolo Bonzini.
 
-   Copyright 2001-2003, 2007, 2009-2023 Free Software Foundation, Inc.
+   Copyright 2001-2003, 2007, 2009-2026 Free Software Foundation, Inc.
 
    This file is part of gnulib.
 
@@ -32,6 +32,11 @@
 
 #ifndef _@GUARD_PREFIX@_POLL_H
 #define _@GUARD_PREFIX@_POLL_H
+
+/* This file uses GNULIB_POSIXCHECK, HAVE_RAW_DECL_*.  */
+#if !_GL_CONFIG_H_INCLUDED
+ #error "Please include config.h first."
+#endif
 
 /* On native Windows, get the 'struct pollfd' type and the POLL* macro
    definitions before we override them.  mingw defines them in <winsock2.h>
@@ -103,17 +108,16 @@ typedef unsigned long nfds_t;
 #   undef poll
 #   define poll rpl_poll
 #  endif
-_GL_FUNCDECL_RPL (poll, int, (struct pollfd *pfd, nfds_t nfd, int timeout));
+_GL_FUNCDECL_RPL (poll, int, (struct pollfd *pfd, nfds_t nfd, int timeout), );
 _GL_CXXALIAS_RPL (poll, int, (struct pollfd *pfd, nfds_t nfd, int timeout));
 # else
 #  if !@HAVE_POLL@
-_GL_FUNCDECL_SYS (poll, int, (struct pollfd *pfd, nfds_t nfd, int timeout));
+_GL_FUNCDECL_SYS (poll, int, (struct pollfd *pfd, nfds_t nfd, int timeout), );
 #  endif
 _GL_CXXALIAS_SYS (poll, int, (struct pollfd *pfd, nfds_t nfd, int timeout));
 # endif
 _GL_CXXALIASWARN (poll);
 #elif defined GNULIB_POSIXCHECK
-# undef poll
 # if HAVE_RAW_DECL_POLL
 _GL_WARN_ON_USE (poll, "poll is unportable - "
                  "use gnulib module poll for portability");

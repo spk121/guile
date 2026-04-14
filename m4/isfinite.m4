@@ -1,8 +1,10 @@
-# isfinite.m4 serial 17
-dnl Copyright (C) 2007-2023 Free Software Foundation, Inc.
+# isfinite.m4
+# serial 24
+dnl Copyright (C) 2007-2026 Free Software Foundation, Inc.
 dnl This file is free software; the Free Software Foundation
 dnl gives unlimited permission to copy and/or distribute it,
 dnl with or without modifications, as long as this notice is preserved.
+dnl This file is offered as-is, without any warranty.
 
 AC_DEFUN([gl_ISFINITE],
 [
@@ -12,8 +14,8 @@ AC_DEFUN([gl_ISFINITE],
   AC_REQUIRE([gl_USE_SYSTEM_EXTENSIONS])
   AC_CHECK_DECLS([isfinite], , , [[#include <math.h>]])
   if test "$ac_cv_have_decl_isfinite" = yes; then
-    gl_CHECK_MATH_LIB([ISFINITE_LIBM],
-     [x = isfinite (x) + isfinite ((float) x);])
+    gl_CHECK_MATH_LIB([ISFINITE_LIBM], [double],
+      [x = isfinite (x) + isfinite ((float) x);])
     if test "$ISFINITE_LIBM" != missing; then
       dnl Test whether isfinite() on 'long double' works.
       gl_ISFINITEL_WORKS
@@ -46,10 +48,13 @@ AC_DEFUN([gl_ISFINITEL_WORKS],
 [
   AC_REQUIRE([AC_PROG_CC])
   AC_REQUIRE([gl_BIGENDIAN])
+  AC_REQUIRE([gl_LONG_DOUBLE_EXPONENT_LOCATION])
   AC_REQUIRE([gl_LONG_DOUBLE_VS_DOUBLE])
   AC_REQUIRE([AC_CANONICAL_HOST]) dnl for cross-compiles
   AC_CACHE_CHECK([whether isfinite(long double) works], [gl_cv_func_isfinitel_works],
     [
+      saved_LIBS="$LIBS"
+      LIBS="$LIBS $ISFINITE_LIBM"
       AC_RUN_IFELSE([AC_LANG_SOURCE([[
 #include <float.h>
 #include <limits.h>
@@ -58,17 +63,7 @@ AC_DEFUN([gl_ISFINITEL_WORKS],
   ((sizeof (long double) + sizeof (unsigned int) - 1) / sizeof (unsigned int))
 typedef union { unsigned int word[NWORDS]; long double value; }
         memory_long_double;
-/* On Irix 6.5, gcc 3.4.3 can't compute compile-time NaN, and needs the
-   runtime type conversion.  */
-#ifdef __sgi
-static long double NaNl ()
-{
-  double zero = 0.0;
-  return zero / zero;
-}
-#else
-# define NaNl() (0.0L / 0.0L)
-#endif
+#define NaNl() (0.0L / 0.0L)
 int main ()
 {
   int result = 0;
@@ -87,6 +82,31 @@ int main ()
       m.word[i] |= 1;
     if (isfinite (m.value))
       result |= 1;
+
+#if defined LDBL_EXPBIT0_WORD && defined LDBL_EXPBIT0_BIT
+    /* Another NaN, more precisely crafted.  */
+    m.value = NaNl ();
+    #if defined _ARCH_PPC && LDBL_MANT_DIG == 106
+      /* This is PowerPC "double double", a pair of two doubles.  Inf and NaN are
+         represented as the corresponding 64-bit IEEE values in the first double;
+         the second is ignored.  Manipulate only the first double.  */
+      #define HNWORDS \
+        ((sizeof (double) + sizeof (unsigned int) - 1) / sizeof (unsigned int))
+    #else
+      #define HNWORDS NWORDS
+    #endif
+    #if LDBL_EXPBIT0_BIT > 0
+      m.word[LDBL_EXPBIT0_WORD] ^= (unsigned int) 1 << (LDBL_EXPBIT0_BIT - 1);
+    #else
+      m.word[LDBL_EXPBIT0_WORD + (LDBL_EXPBIT0_WORD < HNWORDS / 2 ? 1 : - 1)]
+        ^= (unsigned int) 1 << (sizeof (unsigned int) * CHAR_BIT - 1);
+    #endif
+    m.word[LDBL_EXPBIT0_WORD + (LDBL_EXPBIT0_WORD < HNWORDS / 2 ? 1 : - 1)]
+      |= (unsigned int) 1 << LDBL_EXPBIT0_BIT;
+    #undef HNWORDS
+    if (isfinite (m.value))
+      result |= 1;
+#endif
   }
 
 #if ((defined __ia64 && LDBL_MANT_DIG == 64) || (defined __x86_64__ || defined __amd64__) || (defined __i386 || defined __i386__ || defined _I386 || defined _M_IX86 || defined _X86_)) && !HAVE_SAME_LONG_DOUBLE_AS_DOUBLE
@@ -153,10 +173,11 @@ int main ()
       [gl_cv_func_isfinitel_works=yes],
       [gl_cv_func_isfinitel_works=no],
       [case "$host_os" in
-                 # Guess no on native Windows.
-         mingw*) gl_cv_func_isfinitel_works="guessing no" ;;
-         *)      gl_cv_func_isfinitel_works="guessing yes" ;;
+                            # Guess no on native Windows.
+         mingw* | windows*) gl_cv_func_isfinitel_works="guessing no" ;;
+         *)                 gl_cv_func_isfinitel_works="guessing yes" ;;
        esac
       ])
+      LIBS="$saved_LIBS"
     ])
 ])

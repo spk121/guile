@@ -1,5 +1,5 @@
 /* Natural logarithm of 1 plus argument.
-   Copyright (C) 2012-2023 Free Software Foundation, Inc.
+   Copyright (C) 2012-2026 Free Software Foundation, Inc.
 
    This file is free software: you can redistribute it and/or modify
    it under the terms of the GNU Lesser General Public License as
@@ -33,7 +33,7 @@ log1p (double x)
       else
         {
           /* Return NaN.  */
-#if defined _MSC_VER || (defined __sgi && !defined __GNUC__)
+#if defined _MSC_VER
           static double zero;
           return zero / zero;
 #else

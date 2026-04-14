@@ -1,8 +1,10 @@
-# round.m4 serial 23
-dnl Copyright (C) 2007, 2009-2023 Free Software Foundation, Inc.
+# round.m4
+# serial 29
+dnl Copyright (C) 2007, 2009-2026 Free Software Foundation, Inc.
 dnl This file is free software; the Free Software Foundation
 dnl gives unlimited permission to copy and/or distribute it,
 dnl with or without modifications, as long as this notice is preserved.
+dnl This file is offered as-is, without any warranty.
 
 AC_DEFUN([gl_FUNC_ROUND],
 [
@@ -12,7 +14,7 @@ AC_DEFUN([gl_FUNC_ROUND],
   dnl Persuade glibc <math.h> to declare round().
   AC_REQUIRE([gl_USE_SYSTEM_EXTENSIONS])
 
-  gl_CHECK_MATH_LIB([ROUND_LIBM], [x = round (x);],
+  gl_CHECK_MATH_LIB([ROUND_LIBM], [double], [x = round (x);],
     [extern
      #ifdef __cplusplus
      "C"
@@ -21,17 +23,13 @@ AC_DEFUN([gl_FUNC_ROUND],
     ])
   if test "$ROUND_LIBM" != missing; then
     HAVE_ROUND=1
-    dnl Also check whether it's declared.
-    dnl IRIX 6.5 has round() in libm but doesn't declare it in <math.h>.
-    AC_CHECK_DECLS([round], , [HAVE_DECL_ROUND=0], [[#include <math.h>]])
-
     dnl Test whether round() produces correct results. On NetBSD 3.0, for
     dnl x = 1/2 - 2^-54, the system's round() returns a wrong result.
     AC_REQUIRE([AC_PROG_CC])
     AC_REQUIRE([AC_CANONICAL_HOST]) dnl for cross-compiles
     AC_CACHE_CHECK([whether round works], [gl_cv_func_round_works],
       [
-        save_LIBS="$LIBS"
+        saved_LIBS="$LIBS"
         LIBS="$LIBS $ROUND_LIBM"
         AC_RUN_IFELSE([AC_LANG_SOURCE([[
 #include <float.h>
@@ -60,20 +58,21 @@ int main()
   return (x < 0.5 && round (x) != 0.0);
 }]])], [gl_cv_func_round_works=yes], [gl_cv_func_round_works=no],
         [case "$host_os" in
-           netbsd* | aix*) gl_cv_func_round_works="guessing no" ;;
-                           # Guess yes on MSVC, no on mingw.
-           mingw*)         AC_EGREP_CPP([Known], [
+           netbsd* | aix*)    gl_cv_func_round_works="guessing no" ;;
+                              # Guess yes on MSVC, no on mingw.
+           windows*-msvc*)    gl_cv_func_round_works="guessing yes" ;;
+           mingw* | windows*) AC_EGREP_CPP([Known], [
 #ifdef _MSC_VER
  Known
 #endif
-                             ],
-                             [gl_cv_func_round_works="guessing yes"],
-                             [gl_cv_func_round_works="guessing no"])
-                           ;;
-           *)              gl_cv_func_round_works="guessing yes" ;;
+                                ],
+                                [gl_cv_func_round_works="guessing yes"],
+                                [gl_cv_func_round_works="guessing no"])
+                              ;;
+           *)                 gl_cv_func_round_works="guessing yes" ;;
          esac
         ])
-        LIBS="$save_LIBS"
+        LIBS="$saved_LIBS"
       ])
     case "$gl_cv_func_round_works" in
       *no) REPLACE_ROUND=1 ;;
@@ -85,7 +84,7 @@ int main()
         AC_CACHE_CHECK([whether round works according to ISO C 99 with IEC 60559],
           [gl_cv_func_round_ieee],
           [
-            save_LIBS="$LIBS"
+            saved_LIBS="$LIBS"
             LIBS="$LIBS $ROUND_LIBM"
             AC_RUN_IFELSE(
               [AC_LANG_SOURCE([[
@@ -113,24 +112,25 @@ int main (int argc, char *argv[])
               [gl_cv_func_round_ieee=yes],
               [gl_cv_func_round_ieee=no],
               [case "$host_os" in
-                                # Guess yes on glibc systems.
-                 *-gnu* | gnu*) gl_cv_func_round_ieee="guessing yes" ;;
-                                # Guess yes on musl systems.
-                 *-musl*)       gl_cv_func_round_ieee="guessing yes" ;;
-                                # Guess yes on MSVC, no on mingw.
-                 mingw*)        AC_EGREP_CPP([Known], [
+                                     # Guess yes on glibc systems.
+                 *-gnu* | gnu*)      gl_cv_func_round_ieee="guessing yes" ;;
+                                     # Guess yes on musl systems.
+                 *-musl* | midipix*) gl_cv_func_round_ieee="guessing yes" ;;
+                                     # Guess yes on MSVC, no on mingw.
+                 windows*-msvc*)     gl_cv_func_round_ieee="guessing yes" ;;
+                 mingw* | windows*)  AC_EGREP_CPP([Known], [
 #ifdef _MSC_VER
  Known
 #endif
-                                  ],
-                                  [gl_cv_func_round_ieee="guessing yes"],
-                                  [gl_cv_func_round_ieee="guessing no"])
-                                ;;
-                                # If we don't know, obey --enable-cross-guesses.
-                 *)             gl_cv_func_round_ieee="$gl_cross_guess_normal" ;;
+                                       ],
+                                       [gl_cv_func_round_ieee="guessing yes"],
+                                       [gl_cv_func_round_ieee="guessing no"])
+                                     ;;
+                                     # If we don't know, obey --enable-cross-guesses.
+                 *)                  gl_cv_func_round_ieee="$gl_cross_guess_normal" ;;
                esac
               ])
-            LIBS="$save_LIBS"
+            LIBS="$saved_LIBS"
           ])
         case "$gl_cv_func_round_ieee" in
           *yes) ;;
@@ -140,7 +140,6 @@ int main (int argc, char *argv[])
     ])
   else
     HAVE_ROUND=0
-    HAVE_DECL_ROUND=0
   fi
   if test $HAVE_ROUND = 0 || test $REPLACE_ROUND = 1; then
     dnl Find libraries needed to link lib/round.c.

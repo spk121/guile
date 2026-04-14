@@ -1,14 +1,18 @@
-# getrandom.m4 serial 10
-dnl Copyright 2020-2023 Free Software Foundation, Inc.
+# getrandom.m4
+# serial 13
+dnl Copyright 2020-2026 Free Software Foundation, Inc.
 dnl This file is free software; the Free Software Foundation
 dnl gives unlimited permission to copy and/or distribute it,
 dnl with or without modifications, as long as this notice is preserved.
+dnl This file is offered as-is, without any warranty.
 
 dnl Written by Paul Eggert.
 
 AC_DEFUN([gl_FUNC_GETRANDOM],
 [
   AC_REQUIRE([gl_SYS_RANDOM_H_DEFAULTS])
+  AC_REQUIRE([AC_CANONICAL_HOST])
+
   gl_CHECK_FUNCS_ANDROID([getrandom],
     [[/* Additional includes are needed before <sys/random.h> on uClibc
          and Mac OS X.  */
@@ -18,6 +22,9 @@ AC_DEFUN([gl_FUNC_GETRANDOM],
     ]])
   if test "$ac_cv_func_getrandom" != yes; then
     HAVE_GETRANDOM=0
+    case "$gl_cv_onwards_func_getrandom" in
+      future*) REPLACE_GETRANDOM=1 ;;
+    esac
   else
     dnl On Solaris 11.4 the return type is 'int', not 'ssize_t'.
     AC_CACHE_CHECK([whether getrandom is compatible with its GNU+BSD signature],
@@ -42,7 +49,7 @@ AC_DEFUN([gl_FUNC_GETRANDOM],
   fi
 
   case "$host_os" in
-    mingw*)
+    mingw* | windows*)
       AC_CHECK_HEADERS([bcrypt.h], [], [],
         [[#include <windows.h>
         ]])

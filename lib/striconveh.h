@@ -1,5 +1,5 @@
 /* Character set conversion with error handling.
-   Copyright (C) 2001-2007, 2009-2023 Free Software Foundation, Inc.
+   Copyright (C) 2001-2007, 2009-2026 Free Software Foundation, Inc.
    Written by Bruno Haible and Simon Josefsson.
 
    This file is free software: you can redistribute it and/or modify
@@ -17,6 +17,11 @@
 
 #ifndef _STRICONVEH_H
 #define _STRICONVEH_H
+
+/* This file uses _GL_ATTRIBUTE_MALLOC, HAVE_ICONV.  */
+#if !_GL_CONFIG_H_INCLUDED
+ #error "Please include config.h first."
+#endif
 
 #include <stdlib.h>
 #if HAVE_ICONV

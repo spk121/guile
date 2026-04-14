@@ -1,8 +1,10 @@
-# spawn_h.m4 serial 23
-dnl Copyright (C) 2008-2023 Free Software Foundation, Inc.
+# spawn_h.m4
+# serial 24
+dnl Copyright (C) 2008-2026 Free Software Foundation, Inc.
 dnl This file is free software; the Free Software Foundation
 dnl gives unlimited permission to copy and/or distribute it,
 dnl with or without modifications, as long as this notice is preserved.
+dnl This file is offered as-is, without any warranty.
 
 dnl Written by Bruno Haible.
 
@@ -79,6 +81,9 @@ AC_DEFUN([gl_HAVE_POSIX_SPAWN],
 
   if test $ac_cv_func_posix_spawn != yes; then
     HAVE_POSIX_SPAWN=0
+    case "$gl_cv_onwards_func_posix_spawn" in
+      future*) REPLACE_POSIX_SPAWN=1 ;;
+    esac
   fi
 ])
 

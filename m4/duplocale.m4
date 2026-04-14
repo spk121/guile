@@ -1,25 +1,28 @@
-# duplocale.m4 serial 14
-dnl Copyright (C) 2009-2023 Free Software Foundation, Inc.
+# duplocale.m4
+# serial 18
+dnl Copyright (C) 2009-2026 Free Software Foundation, Inc.
 dnl This file is free software; the Free Software Foundation
 dnl gives unlimited permission to copy and/or distribute it,
 dnl with or without modifications, as long as this notice is preserved.
+dnl This file is offered as-is, without any warranty.
 
 AC_DEFUN([gl_FUNC_DUPLOCALE],
 [
   AC_REQUIRE([gl_LOCALE_H_DEFAULTS])
   AC_REQUIRE([AC_CANONICAL_HOST])
   AC_REQUIRE([gl_FUNC_SETLOCALE_NULL])
-  AC_CHECK_FUNCS_ONCE([duplocale])
+  gl_CHECK_FUNCS_ANDROID([duplocale], [[#include <locale.h>]])
   if test $ac_cv_func_duplocale = yes; then
     dnl Check against glibc bug where duplocale crashes.
-    dnl See <https://sourceware.org/bugzilla/show_bug.cgi?id=10969>.
+    dnl See <https://sourceware.org/PR10969>.
     dnl Also, on AIX 7.1, duplocale(LC_GLOBAL_LOCALE) returns (locale_t)0 with
     dnl errno set to EINVAL.
     dnl Also, on NetBSD 7.0, duplocale(LC_GLOBAL_LOCALE) returns a locale that
     dnl corresponds to the C locale.
     AC_REQUIRE([gl_LOCALE_H])
     if test $HAVE_LOCALE_T = 1; then
-      AC_CHECK_FUNCS_ONCE([snprintf_l nl_langinfo_l])
+      AC_CHECK_FUNCS_ONCE([snprintf_l])
+      gl_CHECK_FUNCS_ANDROID([nl_langinfo_l], [[#include <langinfo.h>]])
       AC_CACHE_CHECK([whether duplocale(LC_GLOBAL_LOCALE) works],
         [gl_cv_func_duplocale_works],
         [AC_RUN_IFELSE(
@@ -109,6 +112,9 @@ int main ()
     fi
   else
     HAVE_DUPLOCALE=0
+    case "$gl_cv_onwards_func_duplocale" in
+      future*) REPLACE_DUPLOCALE=1 ;;
+    esac
   fi
   if test $REPLACE_DUPLOCALE = 1; then
     DUPLOCALE_LIB="$SETLOCALE_NULL_LIB"
